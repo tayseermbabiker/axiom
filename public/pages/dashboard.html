@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Axiom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">Axiom</div>
+      <div class="sidebar-org">
+        <div class="sidebar-org-name" id="org-name">—</div>
+        <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="team.html">Team</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="text-sm text-muted mb-16" id="user-email"></div>
+        <button onclick="signOut()">Sign out</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1>Engagements</h1>
+        <button class="btn btn-primary" id="btn-new-eng-top" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
+      </div>
+
+      <!-- Engagements list -->
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Year End</th>
+                <th>Type</th>
+                <th>Progress</th>
+                <th>Status</th>
+                <th>Created By</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="engagements-table">
+            </tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="empty-state" style="display:none;">
+          <p id="empty-msg">No engagements yet.</p>
+          <button class="btn btn-primary" id="btn-new-eng-empty" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- New Engagement Modal -->
+  <div class="modal-overlay" id="modal-new-engagement">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>New Engagement</h3>
+        <button class="modal-close" onclick="closeModal('modal-new-engagement')">&times;</button>
+      </div>
+      <form id="form-new-engagement">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="client-name">Client Name</label>
+            <input type="text" id="client-name" class="form-control" placeholder="e.g. ABC Company" required>
+          </div>
+          <div class="form-group">
+            <label for="year-end">Year End Date</label>
+            <input type="date" id="year-end" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="eng-type">Engagement Type</label>
+            <select id="eng-type" class="form-control">
+              <option value="audit">Audit</option>
+              <option value="review">Review</option>
+              <option value="compilation">Compilation</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="shared-folder">Shared Folder URL</label>
+            <input type="url" id="shared-folder" class="form-control" placeholder="Google Drive, OneDrive, or SharePoint folder link">
+            <small style="color:var(--gray-500); font-size:12px;">All team members must have access. Documents linked outside this folder will be flagged.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-new-engagement')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-create-eng">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/activity.js"></script>
+  <script>
+    let currentUser = null;
+    let currentOrg = null;
+    let currentRole = null;
+
+    async function init() {
+      currentUser = await requireAuth();
+      if (!currentUser) return;
+
+      const orgAndRole = await getUserOrgAndRole();
+      currentOrg = orgAndRole.org;
+      currentRole = orgAndRole.role;
+
+      document.getElementById('user-email').textContent = currentUser.email;
+
+      if (currentOrg) {
+        document.getElementById('org-name').textContent = currentOrg.name;
+      }
+
+      if (currentRole) {
+        const badge = document.getElementById('user-role-badge');
+        badge.textContent = currentRole;
+        badge.className = 'role-badge role-' + currentRole;
+        badge.style.display = 'inline-block';
+      }
+
+      // Show create buttons only for admin
+      if (can('create_engagement')) {
+        document.getElementById('btn-new-eng-top').style.display = '';
+        document.getElementById('btn-new-eng-empty').style.display = '';
+        document.getElementById('empty-msg').textContent = 'No engagements yet. Create your first one to get started.';
+      } else {
+        document.getElementById('empty-msg').textContent = 'No engagements yet. Ask an admin to create one.';
+      }
+
+      await loadEngagements();
+    }
+
+    async function loadEngagements() {
+      // Fetch engagements scoped to organization
+      const { data: engagements, error } = await supabaseClient
+        .from('engagements')
+        .select('*, profiles:created_by(full_name, email)')
+        .eq('organization_id', currentOrg.id)
+        .order('created_at', { ascending: false });
+
+      if (error) { console.error(error); return; }
+
+      const tbody = document.getElementById('engagements-table');
+      const emptyState = document.getElementById('empty-state');
+
+      if (!engagements || engagements.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      // Get section counts per engagement
+      const engIds = engagements.map(e => e.id);
+      const { data: sections } = await supabaseClient
+        .from('audit_sections')
+        .select('id, engagement_id, status')
+        .in('engagement_id', engIds);
+
+      // Build counts
+      const sectionCounts = {};
+      const approvedCounts = {};
+      engIds.forEach(id => { sectionCounts[id] = 0; approvedCounts[id] = 0; });
+
+      (sections || []).forEach(s => {
+        sectionCounts[s.engagement_id]++;
+        if (s.status === 'approved') approvedCounts[s.engagement_id]++;
+      });
+
+      tbody.innerHTML = engagements.map(e => {
+        const total = sectionCounts[e.id] || 0;
+        const approved = approvedCounts[e.id] || 0;
+        const pct = total > 0 ? Math.round((approved / total) * 100) : 0;
+        const date = new Date(e.created_at).toLocaleDateString();
+        const yearEnd = new Date(e.year_end_date).toLocaleDateString();
+        const createdBy = e.profiles?.full_name || e.profiles?.email || 'Unknown';
+
+        return `
+          <tr onclick="window.location.href='engagement.html#${e.id}'">
+            <td><strong>${escHtml(e.client_name)}</strong></td>
+            <td>${yearEnd}</td>
+            <td style="text-transform:capitalize">${e.engagement_type}</td>
+            <td style="min-width:150px">
+              <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+              <div class="progress-text">${approved}/${total} sections approved</div>
+            </td>
+            <td><span class="badge badge-${e.status === 'active' ? 'in-progress' : 'approved'}">${e.status}</span></td>
+            <td class="text-sm">${escHtml(createdBy)}</td>
+            <td class="text-muted text-sm">${date}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openNewEngagement() {
+      if (!can('create_engagement')) { alert('Only admins can create engagements.'); return; }
+      document.getElementById('modal-new-engagement').classList.add('active');
+      document.getElementById('client-name').focus();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    document.getElementById('form-new-engagement').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-create-eng');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      const clientName = document.getElementById('client-name').value.trim();
+      const yearEnd = document.getElementById('year-end').value;
+      const engType = document.getElementById('eng-type').value;
+      const sharedFolder = document.getElementById('shared-folder').value.trim() || null;
+
+      const { data, error } = await supabaseClient.from('engagements').insert({
+        organization_id: currentOrg.id,
+        created_by: currentUser.id,
+        client_name: clientName,
+        year_end_date: yearEnd,
+        engagement_type: engType,
+        shared_folder_url: sharedFolder
+      }).select().single();
+
+      if (error) {
+        alert('Error: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'Create';
+        return;
+      }
+
+      await logActivity(data.id, 'created_engagement', 'engagement', data.id, { client_name: clientName });
+
+      closeModal('modal-new-engagement');
+      document.getElementById('form-new-engagement').reset();
+      btn.disabled = false;
+      btn.textContent = 'Create';
+
+      // Go directly to the new engagement
+      window.location.href = `engagement.html#${data.id}`;
+    });
+
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+      });
+    });
+
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>

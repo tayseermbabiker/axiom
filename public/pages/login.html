@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — Axiom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1 id="auth-title">Sign in</h1>
+      <p id="auth-subtitle">Manage your audit engagements</p>
+
+      <div class="error-msg" id="error-msg"></div>
+
+      <form id="auth-form">
+        <div class="form-group" id="name-group" style="display:none;">
+          <label for="full-name">Full Name</label>
+          <input type="text" id="full-name" class="form-control" placeholder="Your full name">
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" class="form-control" placeholder="you@firm.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" class="form-control" placeholder="Min 6 characters" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="auth-btn">Sign in</button>
+      </form>
+
+      <div class="auth-toggle">
+        <span id="toggle-text">Don't have an account?</span>
+        <a href="#" id="toggle-link">Sign up</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script>
+    let isSignUp = false;
+    const form = document.getElementById('auth-form');
+    const errorMsg = document.getElementById('error-msg');
+    const authTitle = document.getElementById('auth-title');
+    const authSubtitle = document.getElementById('auth-subtitle');
+    const authBtn = document.getElementById('auth-btn');
+    const toggleText = document.getElementById('toggle-text');
+    const toggleLink = document.getElementById('toggle-link');
+    const nameGroup = document.getElementById('name-group');
+
+    // Check if already logged in
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = '/pages/dashboard.html';
+    });
+
+    // Pre-fill email from invite link (?invite=email@example.com)
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteEmail = urlParams.get('invite');
+    if (inviteEmail) {
+      document.getElementById('email').value = decodeURIComponent(inviteEmail);
+      // Auto-switch to sign-up mode
+      toggleLink.click();
+    }
+
+    toggleLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      isSignUp = !isSignUp;
+      if (isSignUp) {
+        authTitle.textContent = 'Create account';
+        authSubtitle.textContent = 'Start managing your audit files';
+        authBtn.textContent = 'Sign up';
+        toggleText.textContent = 'Already have an account?';
+        toggleLink.textContent = 'Sign in';
+        nameGroup.style.display = 'block';
+      } else {
+        authTitle.textContent = 'Sign in';
+        authSubtitle.textContent = 'Manage your audit engagements';
+        authBtn.textContent = 'Sign in';
+        toggleText.textContent = "Don't have an account?";
+        toggleLink.textContent = 'Sign up';
+        nameGroup.style.display = 'none';
+      }
+      errorMsg.style.display = 'none';
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.style.display = 'none';
+      authBtn.disabled = true;
+      authBtn.textContent = isSignUp ? 'Creating account...' : 'Signing in...';
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const fullName = document.getElementById('full-name').value.trim();
+
+      try {
+        if (isSignUp) {
+          const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: { data: { full_name: fullName } }
+          });
+          if (error) throw error;
+          if (data.user && !data.session) {
+            errorMsg.textContent = 'Check your email to confirm your account.';
+            errorMsg.style.background = '#dcfce7';
+            errorMsg.style.color = '#16a34a';
+            errorMsg.style.display = 'block';
+            authBtn.textContent = 'Sign up';
+            authBtn.disabled = false;
+            return;
+          }
+        } else {
+          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+        }
+        window.location.href = '/pages/dashboard.html';
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.style.display = 'block';
+        authBtn.textContent = isSignUp ? 'Sign up' : 'Sign in';
+        authBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

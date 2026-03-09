@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Started — Axiom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="onboarding-container">
+    <div class="onboarding-card">
+      <h1>Welcome to Axiom</h1>
+      <p class="text-muted">Set up your firm to get started.</p>
+
+      <div class="error-msg" id="error-msg"></div>
+      <div class="success-msg" id="success-msg"></div>
+
+      <!-- Choice buttons -->
+      <div id="choice-section">
+        <div class="onboarding-options">
+          <button class="onboarding-option" onclick="showCreateFirm()">
+            <div class="onboarding-option-title">Create a new firm</div>
+            <div class="onboarding-option-desc">You are starting a new organization on Axiom.</div>
+          </button>
+          <button class="onboarding-option" onclick="showPendingInvites()">
+            <div class="onboarding-option-title">I was invited</div>
+            <div class="onboarding-option-desc">Someone from your firm already sent you an invite.</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Create firm form -->
+      <div id="create-firm-section" style="display:none;">
+        <form id="form-create-firm">
+          <div class="form-group">
+            <label for="firm-name">Firm Name</label>
+            <input type="text" id="firm-name" class="form-control" placeholder="e.g. Smith & Associates CPAs" required>
+          </div>
+          <div class="flex gap-8">
+            <button type="button" class="btn btn-outline" onclick="showChoice()">Back</button>
+            <button type="submit" class="btn btn-primary" id="btn-create-firm">Create Firm</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Pending invites -->
+      <div id="invites-section" style="display:none;">
+        <div id="invites-list">
+          <div class="empty-state"><p>Checking for invites...</p></div>
+        </div>
+        <div class="mt-16">
+          <button type="button" class="btn btn-outline" onclick="showChoice()">Back</button>
+        </div>
+      </div>
+
+      <div class="onboarding-footer">
+        <button class="btn btn-outline btn-sm" onclick="signOutOnboarding()">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    let currentUser = null;
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = '/pages/login.html';
+        return;
+      }
+      currentUser = session.user;
+
+      // If user already has an org, go to dashboard
+      const org = await getUserOrg();
+      if (org) {
+        window.location.href = '/pages/dashboard.html';
+        return;
+      }
+    }
+
+    function showChoice() {
+      document.getElementById('choice-section').style.display = 'block';
+      document.getElementById('create-firm-section').style.display = 'none';
+      document.getElementById('invites-section').style.display = 'none';
+      hideMessages();
+    }
+
+    function showCreateFirm() {
+      document.getElementById('choice-section').style.display = 'none';
+      document.getElementById('create-firm-section').style.display = 'block';
+      document.getElementById('invites-section').style.display = 'none';
+      hideMessages();
+      document.getElementById('firm-name').focus();
+    }
+
+    async function showPendingInvites() {
+      document.getElementById('choice-section').style.display = 'none';
+      document.getElementById('create-firm-section').style.display = 'none';
+      document.getElementById('invites-section').style.display = 'block';
+      hideMessages();
+
+      const listEl = document.getElementById('invites-list');
+      listEl.innerHTML = '<div class="empty-state"><p>Loading invites...</p></div>';
+
+      const { data: invites, error } = await supabaseClient
+        .from('organization_invites')
+        .select('*, organizations(name)')
+        .eq('email', currentUser.email)
+        .eq('status', 'pending');
+
+      if (error) {
+        listEl.innerHTML = '<div class="empty-state"><p>Error loading invites.</p></div>';
+        return;
+      }
+
+      if (!invites || invites.length === 0) {
+        listEl.innerHTML = '<div class="empty-state"><p>No pending invites found for ' + escHtml(currentUser.email) + '.</p></div>';
+        return;
+      }
+
+      listEl.innerHTML = invites.map(inv => `
+        <div class="invite-item">
+          <div>
+            <div class="invite-firm">${escHtml(inv.organizations?.name || 'Unknown Firm')}</div>
+            <div class="text-sm text-muted">Role: <span class="role-badge role-${inv.role}">${inv.role}</span></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="acceptInvite('${inv.id}', '${inv.organization_id}', '${inv.role}')">Accept</button>
+        </div>
+      `).join('');
+    }
+
+    // Create firm
+    document.getElementById('form-create-firm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-create-firm');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+      hideMessages();
+
+      const firmName = document.getElementById('firm-name').value.trim();
+
+      try {
+        // Create organization
+        const { data: org, error: orgErr } = await supabaseClient
+          .from('organizations')
+          .insert({
+            name: firmName,
+            created_by: currentUser.id
+          })
+          .select()
+          .single();
+
+        if (orgErr) throw orgErr;
+
+        // Add current user as admin
+        const { error: memErr } = await supabaseClient
+          .from('organization_members')
+          .insert({
+            organization_id: org.id,
+            user_id: currentUser.id,
+            role: 'admin'
+          });
+
+        if (memErr) throw memErr;
+
+        window.location.href = '/pages/dashboard.html';
+      } catch (err) {
+        showError(err.message);
+        btn.disabled = false;
+        btn.textContent = 'Create Firm';
+      }
+    });
+
+    // Accept invite
+    async function acceptInvite(inviteId, orgId, role) {
+      hideMessages();
+
+      try {
+        // Add user to organization
+        const { error: memErr } = await supabaseClient
+          .from('organization_members')
+          .insert({
+            organization_id: orgId,
+            user_id: currentUser.id,
+            role: role
+          });
+
+        if (memErr) throw memErr;
+
+        // Mark invite as accepted
+        await supabaseClient
+          .from('organization_invites')
+          .update({ status: 'accepted' })
+          .eq('id', inviteId);
+
+        window.location.href = '/pages/dashboard.html';
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    function signOutOnboarding() {
+      supabaseClient.auth.signOut();
+      window.location.href = '/pages/login.html';
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function hideMessages() {
+      document.getElementById('error-msg').style.display = 'none';
+      document.getElementById('success-msg').style.display = 'none';
+    }
+
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>

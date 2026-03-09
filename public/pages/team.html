@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team — Axiom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">Axiom</div>
+      <div class="sidebar-org">
+        <div class="sidebar-org-name" id="org-name">—</div>
+        <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="team.html" class="active">Team</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="text-sm text-muted mb-16" id="user-email"></div>
+        <button onclick="signOut()">Sign out</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1>Team</h1>
+        <div id="plan-info" class="text-sm text-muted"></div>
+      </div>
+
+      <!-- Invite form (admin only) -->
+      <div class="card mb-24" id="invite-section" style="display:none;">
+        <div class="card-header">
+          <h2>Invite a Team Member</h2>
+        </div>
+        <div class="card-body">
+          <form id="form-invite" class="invite-form">
+            <div class="form-group" style="margin:0; flex:1;">
+              <input type="email" id="invite-email" class="form-control" placeholder="colleague@firm.com" required>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <select id="invite-role" class="form-control">
+                <option value="preparer">Preparer</option>
+                <option value="reviewer">Reviewer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary" id="btn-invite">Send Invite</button>
+          </form>
+          <div class="error-msg mt-8" id="invite-error"></div>
+          <div class="success-msg mt-8" id="invite-success"></div>
+        </div>
+      </div>
+
+      <!-- Members list -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2>Members</h2>
+        </div>
+        <div id="members-list" class="card-body">
+          <div class="empty-state"><p>Loading...</p></div>
+        </div>
+      </div>
+
+      <!-- Pending invites -->
+      <div class="card" id="pending-invites-card" style="display:none;">
+        <div class="card-header">
+          <h2>Pending Invites</h2>
+        </div>
+        <div id="pending-invites-list" class="card-body"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/activity.js"></script>
+  <script>
+    let currentUser = null;
+    let currentOrg = null;
+    let currentRole = null;
+    let members = [];
+
+    async function init() {
+      currentUser = await requireAuth();
+      if (!currentUser) return;
+
+      const orgAndRole = await getUserOrgAndRole();
+      currentOrg = orgAndRole.org;
+      currentRole = orgAndRole.role;
+
+      document.getElementById('user-email').textContent = currentUser.email;
+
+      if (currentOrg) {
+        document.getElementById('org-name').textContent = currentOrg.name;
+      }
+
+      if (currentRole) {
+        const badge = document.getElementById('user-role-badge');
+        badge.textContent = currentRole;
+        badge.className = 'role-badge role-' + currentRole;
+        badge.style.display = 'inline-block';
+      }
+
+      // Show admin controls
+      if (currentRole === 'admin') {
+        document.getElementById('invite-section').style.display = 'block';
+      }
+
+      await loadMembers();
+      await loadPendingInvites();
+      updatePlanInfo();
+    }
+
+    async function loadMembers() {
+      const { data, error } = await supabaseClient
+        .from('organization_members')
+        .select('*, profiles:user_id(id, full_name, email)')
+        .eq('organization_id', currentOrg.id)
+        .order('created_at');
+
+      if (error) { console.error(error); return; }
+
+      members = data || [];
+      const container = document.getElementById('members-list');
+
+      if (members.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No members found.</p></div>';
+        return;
+      }
+
+      container.innerHTML = members.map(m => {
+        const name = m.profiles?.full_name || 'Unknown';
+        const email = m.profiles?.email || '';
+        const isCurrentUser = m.user_id === currentUser.id;
+        const isAdmin = currentRole === 'admin';
+
+        return `
+          <div class="team-member-item">
+            <div class="team-member-info">
+              <div class="team-member-avatar">${escHtml(name.charAt(0).toUpperCase())}</div>
+              <div>
+                <div class="team-member-name">${escHtml(name)} ${isCurrentUser ? '<span class="text-sm text-muted">(you)</span>' : ''}</div>
+                <div class="text-sm text-muted">${escHtml(email)}</div>
+              </div>
+            </div>
+            <div class="team-member-actions">
+              <span class="role-badge role-${m.role}">${m.role}</span>
+              ${isAdmin && !isCurrentUser ? `
+                <select class="form-control form-control-inline" onchange="changeRole('${m.id}', this.value)" style="width:auto; padding:4px 8px; font-size:12px;">
+                  <option value="preparer" ${m.role === 'preparer' ? 'selected' : ''}>Preparer</option>
+                  <option value="reviewer" ${m.role === 'reviewer' ? 'selected' : ''}>Reviewer</option>
+                  <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>Admin</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="removeMember('${m.id}', '${escHtml(name)}')" style="color: var(--danger);">Remove</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadPendingInvites() {
+      const { data: invites, error } = await supabaseClient
+        .from('organization_invites')
+        .select('*')
+        .eq('organization_id', currentOrg.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) { console.error(error); return; }
+
+      const card = document.getElementById('pending-invites-card');
+      const container = document.getElementById('pending-invites-list');
+
+      if (!invites || invites.length === 0) {
+        card.style.display = 'none';
+        return;
+      }
+
+      card.style.display = 'block';
+      container.innerHTML = invites.map(inv => `
+        <div class="team-member-item">
+          <div class="team-member-info">
+            <div class="team-member-avatar" style="background: var(--gray-200); color: var(--gray-500);">?</div>
+            <div>
+              <div class="team-member-name">${escHtml(inv.email)}</div>
+              <div class="text-sm text-muted">Invited ${new Date(inv.created_at).toLocaleDateString()}</div>
+            </div>
+          </div>
+          <div class="team-member-actions">
+            <span class="role-badge role-${inv.role}">${inv.role}</span>
+            ${currentRole === 'admin' ? `
+              <button class="btn btn-outline btn-sm" onclick="cancelInvite('${inv.id}')" style="color: var(--danger);">Cancel</button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Pricing: starter=$99, team=$149, firm=$299
+    function updatePlanInfo() {
+      const plan = currentOrg.plan || 'free';
+      const max = currentOrg.max_members || 5;
+      const count = members.length;
+      document.getElementById('plan-info').textContent =
+        `${plan.charAt(0).toUpperCase() + plan.slice(1)} plan — ${count}/${max} members`;
+    }
+
+    // Invite member
+    document.getElementById('form-invite').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-invite');
+      const errorEl = document.getElementById('invite-error');
+      const successEl = document.getElementById('invite-success');
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      const email = document.getElementById('invite-email').value.trim().toLowerCase();
+      const role = document.getElementById('invite-role').value;
+
+      // Check max members
+      const max = currentOrg.max_members || 5;
+      if (members.length >= max) {
+        errorEl.textContent = 'You have reached the maximum number of members for your plan.';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Send Invite';
+        return;
+      }
+
+      // Check if already a member
+      const alreadyMember = members.find(m => m.profiles?.email === email);
+      if (alreadyMember) {
+        errorEl.textContent = 'This person is already a member of your organization.';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Send Invite';
+        return;
+      }
+
+      const { error } = await supabaseClient.from('organization_invites').insert({
+        organization_id: currentOrg.id,
+        email: email,
+        role: role,
+        invited_by: currentUser.id,
+        status: 'pending'
+      });
+
+      if (error) {
+        errorEl.textContent = 'Error: ' + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        // Send invite email via Netlify function
+        try {
+          const inviterProfile = await getUserProfile();
+          await fetch('/.netlify/functions/send-invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email,
+              role: role,
+              orgName: currentOrg.name,
+              inviterName: inviterProfile?.full_name || currentUser.email
+            })
+          });
+        } catch (emailErr) {
+          console.warn('Invite email failed (invite still created):', emailErr);
+        }
+
+        successEl.textContent = 'Invite sent to ' + email;
+        successEl.style.display = 'block';
+        document.getElementById('invite-email').value = '';
+        await loadPendingInvites();
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Send Invite';
+    });
+
+    // Change member role
+    async function changeRole(memberId, newRole) {
+      const { error } = await supabaseClient
+        .from('organization_members')
+        .update({ role: newRole })
+        .eq('id', memberId);
+
+      if (error) {
+        alert('Error: ' + error.message);
+        return;
+      }
+
+      await loadMembers();
+    }
+
+    // Remove member
+    async function removeMember(memberId, name) {
+      if (!confirm('Remove ' + name + ' from the organization? They will lose access to all engagements.')) return;
+
+      const { error } = await supabaseClient
+        .from('organization_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) {
+        alert('Error: ' + error.message);
+        return;
+      }
+
+      await loadMembers();
+      updatePlanInfo();
+    }
+
+    // Cancel invite
+    async function cancelInvite(inviteId) {
+      if (!confirm('Cancel this invite?')) return;
+
+      const { error } = await supabaseClient
+        .from('organization_invites')
+        .delete()
+        .eq('id', inviteId);
+
+      if (error) {
+        alert('Error: ' + error.message);
+        return;
+      }
+
+      await loadPendingInvites();
+    }
+
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>

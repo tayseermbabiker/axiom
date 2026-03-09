@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engagement — Axiom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .class-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid var(--gray-300);
+      background: var(--gray-50);
+      color: var(--gray-700);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .class-tag:hover { border-color: var(--primary); }
+    .class-tag.selected {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .class-tag.taken {
+      opacity: 0.4;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--gray-200);
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-500);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { color: var(--gray-700); }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* TB read-only view */
+    .tb-section-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .tb-section-badge.unassigned {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .finding-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .finding-grid .full-width { grid-column: 1 / -1; }
+    .finding-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .finding-field p {
+      font-size: 14px;
+      color: var(--gray-800);
+      line-height: 1.6;
+    }
+    .finding-field p:empty::after {
+      content: '—';
+      color: var(--gray-400);
+    }
+
+    .modal-wide { max-width: 700px; }
+
+    .badge-high { background: var(--danger-light); color: var(--danger); }
+    .badge-medium { background: var(--warning-light); color: var(--warning); }
+    .badge-low { background: var(--gray-100); color: var(--gray-500); }
+    .badge-open { background: var(--warning-light); color: var(--warning); }
+    .badge-resolved { background: var(--success-light); color: var(--success); }
+    .badge-reported { background: var(--primary-light); color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">Axiom</div>
+      <div class="sidebar-org">
+        <div class="sidebar-org-name" id="org-name">&mdash;</div>
+        <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="team.html">Team</a>
+        <a href="#" class="active" id="nav-engagement">Engagement</a>
+        <a href="#" id="nav-activity" onclick="switchTab('activity')">Activity Log</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="text-sm text-muted mb-16" id="user-email"></div>
+        <button onclick="signOut()">Sign out</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <!-- Header -->
+      <div class="page-header">
+        <div>
+          <h1 id="eng-title">Loading...</h1>
+          <span class="text-sm text-muted" id="eng-meta"></span>
+          <div id="shared-folder-bar" style="display:none; margin-top:8px;">
+            <span class="text-sm" style="color:var(--gray-600);">Shared Folder:</span>
+            <a id="shared-folder-link" href="#" target="_blank" class="text-sm" style="color:var(--primary); margin-left:4px;"></a>
+            <button class="text-sm role-admin-reviewer" style="display:none; background:none; border:none; color:var(--gray-400); cursor:pointer; margin-left:8px;" onclick="editSharedFolder()" title="Change folder">Edit</button>
+          </div>
+          <div id="shared-folder-missing" style="display:none; margin-top:8px;">
+            <span class="text-sm" style="color:#dc2626;">No shared folder set.</span>
+            <button class="text-sm role-admin-reviewer" style="display:none; background:none; border:none; color:var(--primary); cursor:pointer; text-decoration:underline; margin-left:4px;" onclick="editSharedFolder()">Set folder</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-sections">0</div>
+          <div class="stat-label">Total Sections</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-procedures">0 / 0</div>
+          <div class="stat-label">Procedures Done</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-findings">0</div>
+          <div class="stat-label">Open Findings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-approved">0 / 0</div>
+          <div class="stat-label">Sections Approved</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('sections')">Sections</button>
+        <button class="tab-btn" onclick="switchTab('tb')">Trial Balance</button>
+        <button class="tab-btn" onclick="switchTab('findings')">Findings</button>
+        <button class="tab-btn" onclick="switchTab('activity')">Activity Log</button>
+      </div>
+
+      <!-- Sections Tab -->
+      <div class="tab-panel active" id="tab-sections">
+        <div class="card">
+          <div class="card-header">
+            <h2>Audit Sections</h2>
+            <button class="btn btn-primary btn-sm" id="btn-new-section" onclick="openNewSection()" style="display:none;">+ New Section</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Section Name</th>
+                  <th>Assigned To</th>
+                  <th>TB Lines</th>
+                  <th>Procedures</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="sections-table"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="sections-empty" style="display:none;">
+            <p id="sections-empty-msg">No sections yet.</p>
+            <button class="btn btn-primary" id="btn-new-section-empty" onclick="openNewSection()" style="display:none;">+ New Section</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trial Balance Tab -->
+      <div class="tab-panel" id="tab-tb">
+        <div class="card">
+          <div class="card-header">
+            <h2>Trial Balance</h2>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-primary btn-sm" id="btn-upload-tb" onclick="openUploadTB()" style="display:none;">Upload Excel/CSV</button>
+              <button class="btn btn-outline btn-sm" id="btn-replace-tb" onclick="replaceTB()" style="display:none; color:#dc2626; border-color:#dc2626;">Replace TB</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Account Name</th>
+                  <th style="text-align:right;">Balance</th>
+                  <th>Classification</th>
+                  <th>Section</th>
+                </tr>
+              </thead>
+              <tbody id="tb-table"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="tb-empty" style="display:none;">
+            <p id="tb-empty-msg">No trial balance uploaded yet.</p>
+            <button class="btn btn-primary" id="btn-upload-tb-empty" onclick="openUploadTB()" style="display:none;">Upload Excel/CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Findings Tab -->
+      <div class="tab-panel" id="tab-findings">
+        <div class="card">
+          <div class="card-header">
+            <h2>Findings</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Section</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                  <th>Reported By</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="findings-table"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="findings-empty" style="display:none;">
+            <p>No findings reported yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Log Tab -->
+      <div class="tab-panel" id="tab-activity">
+        <div class="card">
+          <div class="card-header"><h2>Activity Log</h2></div>
+          <div class="card-body" id="activity-list">
+            <div class="empty-state"><p>Loading...</p></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- New Section Modal -->
+  <div class="modal-overlay" id="modal-new-section">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>New Audit Section</h3>
+        <button class="modal-close" onclick="closeModal('modal-new-section')">&times;</button>
+      </div>
+      <form id="form-new-section">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="section-template">Section Name</label>
+            <select id="section-template" class="form-control" onchange="onSectionTemplateChange(this.value)">
+              <option value="">-- Pick a common section or type custom --</option>
+              <option value="Cash & Bank">Cash & Bank</option>
+              <option value="Accounts Receivable">Accounts Receivable</option>
+              <option value="Accounts Payable">Accounts Payable</option>
+              <option value="Revenue">Revenue</option>
+              <option value="PPE / Fixed Assets">PPE / Fixed Assets</option>
+              <option value="Inventory">Inventory</option>
+              <option value="Payroll & HR">Payroll & HR</option>
+              <option value="Operating Expenses">Operating Expenses</option>
+              <option value="Tax">Tax</option>
+              <option value="Loans & Borrowings">Loans & Borrowings</option>
+              <option value="custom">Custom section...</option>
+            </select>
+            <input type="text" id="section-name" class="form-control mt-8" placeholder="Type your section name" required style="display:none;">
+          </div>
+          <div class="form-group" id="classification-tags-group" style="display:none;">
+            <label>Classification Tags <span class="text-sm text-muted">(which TB classifications does this section cover?)</span></label>
+            <div id="classification-tags-list" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;"></div>
+            <p class="text-sm text-muted" style="margin-top:4px;">Click to select. You can assign multiple classifications to one section.</p>
+          </div>
+          <div class="form-group">
+            <label>Assertions <span class="text-sm text-muted">(which audit assertions apply to this section?)</span></label>
+            <div id="section-assertions-list" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;"></div>
+          </div>
+          <div class="form-group">
+            <label for="section-assign">Assign To</label>
+            <select id="section-assign" class="form-control">
+              <option value="">-- Unassigned --</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-new-section')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-create-section">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Upload TB Modal -->
+  <div class="modal-overlay" id="modal-upload-tb">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3>Upload Trial Balance</h3>
+        <button class="modal-close" onclick="closeModal('modal-upload-tb')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted mb-16">Upload your TB with a <strong>Classification</strong> column from your ERP. Sections are created automatically from the distinct classification values.</p>
+        <input type="file" id="tb-file" accept=".csv,.xlsx,.xls" class="form-control">
+        <div id="tb-mapping" class="mt-16" style="display:none;">
+          <p class="text-sm" style="font-weight:600; margin-bottom:8px;">Map your columns:</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+            <div class="form-group" style="margin:0;">
+              <label class="text-sm">Account Code *</label>
+              <select id="map-code" class="form-control" onchange="applyMapping()"></select>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="text-sm">Account Name</label>
+              <select id="map-name" class="form-control" onchange="applyMapping()"></select>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="text-sm">Balance (or Debit) *</label>
+              <select id="map-bal" class="form-control" onchange="applyMapping()"></select>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="text-sm">Credit (optional)</label>
+              <select id="map-credit" class="form-control" onchange="applyMapping()"><option value="">-- None --</option></select>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="text-sm" style="font-weight:600; color:var(--primary);">Classification *</label>
+              <select id="map-class" class="form-control" onchange="applyMapping()"><option value="">-- Select --</option></select>
+            </div>
+          </div>
+          <div id="tb-preview" class="mt-16"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-upload-tb')">Cancel</button>
+        <button class="btn btn-primary" id="btn-import-tb" onclick="importTB()" style="display:none;">Import &amp; Create Sections</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Finding Detail Modal -->
+  <div class="modal-overlay" id="modal-finding">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3 id="finding-modal-title">Finding</h3>
+        <button class="modal-close" onclick="closeModal('modal-finding')">&times;</button>
+      </div>
+      <div class="modal-body" id="finding-detail"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/activity.js"></script>
+  <script>
+    let currentUser = null;
+    let currentOrg = null;
+    let currentRole = null;
+    let engagementId = null;
+    let engagement = null;
+    let orgMembers = [];
+    let sections = [];
+    let tbLines = [];
+    let sectionTbMap = {};      // sectionId -> [tbLineId, ...] (built from classification_tags)
+    let tbToSectionMap = {};    // tbLineId -> sectionId (built from classification_tags)
+    let procedures = [];
+    let procedureResponses = [];
+    let findings = [];
+    let parsedCSV = [];
+    let rawRows = [];
+    let fileColumns = [];
+    let profileCache = {};
+
+    // ---- Init ----
+    async function init() {
+      currentUser = await requireAuth();
+      if (!currentUser) return;
+
+      const orgAndRole = await getUserOrgAndRole();
+      currentOrg = orgAndRole.org;
+      currentRole = orgAndRole.role;
+
+      document.getElementById('user-email').textContent = currentUser.email;
+
+      if (currentOrg) {
+        document.getElementById('org-name').textContent = currentOrg.name;
+      }
+
+      if (currentRole) {
+        const badge = document.getElementById('user-role-badge');
+        badge.textContent = currentRole;
+        badge.className = 'role-badge role-' + currentRole;
+        badge.style.display = 'inline-block';
+      }
+
+      engagementId = window.location.hash.replace('#', '');
+      if (!engagementId) { window.location.href = 'dashboard.html'; return; }
+
+      // Role-based button visibility
+      if (can('create_section')) {
+        document.getElementById('btn-new-section').style.display = '';
+        document.getElementById('btn-new-section-empty').style.display = '';
+        document.getElementById('sections-empty-msg').textContent = 'No sections yet. Create your first audit section.';
+      }
+      if (can('upload_tb')) {
+        document.getElementById('btn-upload-tb').style.display = '';
+        document.getElementById('btn-upload-tb-empty').style.display = '';
+      }
+      if (can('edit_shared_folder')) {
+        document.querySelectorAll('.role-admin-reviewer').forEach(el => el.style.display = '');
+      }
+
+      await loadEngagement();
+      await Promise.all([loadOrgMembers(), loadSections(), loadTBLines(), loadFindings()]);
+      updateStats();
+    }
+
+    async function resolveProfileName(userId) {
+      if (!userId) return null;
+      if (profileCache[userId]) return profileCache[userId];
+      const { data } = await supabaseClient
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', userId)
+        .single();
+      const name = data?.full_name || data?.email || 'Unknown';
+      profileCache[userId] = name;
+      return name;
+    }
+
+    // ---- Load Data ----
+    async function loadEngagement() {
+      const { data, error } = await supabaseClient
+        .from('engagements')
+        .select('*')
+        .eq('id', engagementId)
+        .single();
+
+      if (error || !data) {
+        alert('Error loading engagement: ' + (error?.message || 'not found'));
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      engagement = data;
+      document.getElementById('eng-title').textContent = data.client_name;
+      document.getElementById('eng-meta').textContent =
+        data.engagement_type.charAt(0).toUpperCase() + data.engagement_type.slice(1) +
+        ' — Year end: ' + new Date(data.year_end_date).toLocaleDateString();
+      document.getElementById('nav-engagement').textContent = data.client_name;
+
+      // Shared folder display
+      if (data.shared_folder_url) {
+        const link = document.getElementById('shared-folder-link');
+        link.href = data.shared_folder_url;
+        link.textContent = shortenUrl(data.shared_folder_url);
+        document.getElementById('shared-folder-bar').style.display = 'block';
+        document.getElementById('shared-folder-missing').style.display = 'none';
+      } else {
+        document.getElementById('shared-folder-bar').style.display = 'none';
+        document.getElementById('shared-folder-missing').style.display = 'block';
+      }
+    }
+
+    function shortenUrl(url) {
+      try {
+        const u = new URL(url);
+        const path = u.pathname.length > 30 ? u.pathname.substring(0, 30) + '...' : u.pathname;
+        return u.hostname + path;
+      } catch { return url.length > 50 ? url.substring(0, 50) + '...' : url; }
+    }
+
+    async function editSharedFolder() {
+      if (!can('edit_shared_folder')) { alert('Only admins and reviewers can edit the shared folder.'); return; }
+      const current = engagement.shared_folder_url || '';
+      const url = prompt('Paste the shared Google Drive, OneDrive, or SharePoint folder URL.\n\nAll team members must have access to this folder.', current);
+      if (url === null) return; // cancelled
+
+      const val = url.trim() || null;
+      const { error } = await supabaseClient
+        .from('engagements')
+        .update({ shared_folder_url: val })
+        .eq('id', engagementId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      engagement.shared_folder_url = val;
+
+      if (val) {
+        const link = document.getElementById('shared-folder-link');
+        link.href = val;
+        link.textContent = shortenUrl(val);
+        document.getElementById('shared-folder-bar').style.display = 'block';
+        document.getElementById('shared-folder-missing').style.display = 'none';
+      } else {
+        document.getElementById('shared-folder-bar').style.display = 'none';
+        document.getElementById('shared-folder-missing').style.display = 'block';
+      }
+    }
+
+    async function loadOrgMembers() {
+      const { data } = await supabaseClient
+        .from('organization_members')
+        .select('*, profiles:user_id(id, full_name, email)')
+        .eq('organization_id', currentOrg.id)
+        .order('created_at');
+
+      orgMembers = data || [];
+
+      // Cache profile names
+      orgMembers.forEach(m => {
+        if (m.profiles) {
+          profileCache[m.profiles.id] = m.profiles.full_name || m.profiles.email || 'Unknown';
+        }
+      });
+    }
+
+    async function loadSections() {
+      const { data: secs } = await supabaseClient
+        .from('audit_sections')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('sort_order', { ascending: true });
+
+      sections = secs || [];
+
+      // Build classification-to-section map (dynamic, no junction table)
+      buildClassificationMap();
+
+      // Load procedures for all sections
+      if (sections.length > 0) {
+        const secIds = sections.map(s => s.id);
+        const { data: procs } = await supabaseClient
+          .from('audit_procedures')
+          .select('*')
+          .in('section_id', secIds);
+
+        procedures = procs || [];
+
+        if (procedures.length > 0) {
+          const procIds = procedures.map(p => p.id);
+          const { data: resps } = await supabaseClient
+            .from('procedure_responses')
+            .select('*')
+            .in('procedure_id', procIds);
+
+          procedureResponses = resps || [];
+        }
+      }
+
+      renderSections();
+    }
+
+    // Build maps from classification tags — called after loading sections or TB
+    function buildClassificationMap() {
+      tbToSectionMap = {};
+      sectionTbMap = {};
+
+      for (const sec of sections) {
+        sectionTbMap[sec.id] = [];
+        const tags = sec.classification_tags || [];
+        for (const line of tbLines) {
+          if (tags.includes(line.classification)) {
+            sectionTbMap[sec.id].push(line.id);
+            tbToSectionMap[line.id] = sec.id;
+          }
+        }
+      }
+    }
+
+    async function loadTBLines() {
+      const { data } = await supabaseClient
+        .from('trial_balance_lines')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('account_code');
+
+      tbLines = data || [];
+      buildClassificationMap();
+      renderTB();
+    }
+
+    async function loadFindings() {
+      const { data } = await supabaseClient
+        .from('findings')
+        .select('*, profiles:reported_by(full_name, email)')
+        .eq('section_id', sections.length > 0 ? undefined : undefined);
+
+      // Findings need to be fetched by section_ids within this engagement
+      if (sections.length > 0) {
+        const secIds = sections.map(s => s.id);
+        const { data: f } = await supabaseClient
+          .from('findings')
+          .select('*, profiles:reported_by(full_name, email)')
+          .in('section_id', secIds)
+          .order('created_at', { ascending: false });
+
+        findings = f || [];
+      } else {
+        findings = [];
+      }
+
+      renderFindings();
+    }
+
+    // ---- Stats ----
+    function updateStats() {
+      const totalSections = sections.length;
+
+      // Procedures done: count responses with status=done vs total procedures
+      const totalProcs = procedures.length;
+      const doneProcs = procedureResponses.filter(r => r.status === 'done').length;
+
+      // Open findings
+      const openFindings = findings.filter(f => f.status === 'open').length;
+
+      // Sections approved
+      const approvedSections = sections.filter(s => s.status === 'approved').length;
+
+      document.getElementById('stat-sections').textContent = totalSections;
+      document.getElementById('stat-procedures').textContent = doneProcs + ' / ' + totalProcs;
+      document.getElementById('stat-findings').textContent = openFindings;
+      document.getElementById('stat-approved').textContent = approvedSections + ' / ' + totalSections;
+    }
+
+    // ---- Tab Switching ----
+    function switchTab(tab) {
+      // Update tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+      const tabMap = { sections: 0, tb: 1, findings: 2, activity: 3 };
+      const idx = tabMap[tab];
+      if (idx !== undefined) {
+        document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+      }
+
+      const panel = document.getElementById('tab-' + tab);
+      if (panel) panel.classList.add('active');
+
+      if (tab === 'activity') loadActivityLog();
+    }
+
+    // ---- Sections Tab ----
+    function renderSections() {
+      const tbody = document.getElementById('sections-table');
+      const empty = document.getElementById('sections-empty');
+
+      if (sections.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      tbody.innerHTML = sections.map(sec => {
+        const assignedName = sec.assigned_to ? (profileCache[sec.assigned_to] || 'Unknown') : 'Unassigned';
+        const statusLabel = sec.status.replace(/_/g, ' ');
+
+        // Count procedures for this section
+        const secProcs = procedures.filter(p => p.section_id === sec.id);
+        const totalP = secProcs.length;
+        const doneP = secProcs.reduce((count, p) => {
+          const resp = procedureResponses.find(r => r.procedure_id === p.id && r.status === 'done');
+          return count + (resp ? 1 : 0);
+        }, 0);
+
+        const tbCount = (sectionTbMap[sec.id] || []).length;
+        const tags = (sec.classification_tags || []).map(t => escHtml(t)).join(', ');
+
+        return `
+          <tr onclick="window.location.href='section.html#${sec.id}'">
+            <td>
+              <strong>${escHtml(sec.name)}</strong>
+              ${tags ? '<br><span class="text-sm text-muted">' + tags + '</span>' : ''}
+            </td>
+            <td class="text-sm">${escHtml(assignedName)}</td>
+            <td class="text-sm">${tbCount} lines</td>
+            <td class="text-sm">${doneP} / ${totalP}</td>
+            <td><span class="badge badge-${sec.status.replace(/_/g, '-')}">${statusLabel}</span></td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.location.href='section.html#${sec.id}'">Open</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function onSectionTemplateChange(value) {
+      const nameInput = document.getElementById('section-name');
+      if (value === 'custom') {
+        nameInput.style.display = 'block';
+        nameInput.value = '';
+        nameInput.focus();
+      } else if (value) {
+        nameInput.style.display = 'none';
+        nameInput.value = value;
+      } else {
+        nameInput.style.display = 'none';
+        nameInput.value = '';
+      }
+    }
+
+    const ALL_ASSERTIONS = ['Existence', 'Completeness', 'Accuracy', 'Valuation', 'Rights & Obligations', 'Presentation', 'Cut-off'];
+    let selectedTags = [];
+    let selectedAssertions = [];
+
+    function openNewSection() {
+      if (!can('create_section')) { alert('Only admins and reviewers can create sections.'); return; }
+      // Populate member dropdown
+      const sel = document.getElementById('section-assign');
+      sel.innerHTML = '<option value="">-- Unassigned --</option>';
+      orgMembers.forEach(m => {
+        const name = m.profiles?.full_name || m.profiles?.email || 'Unknown';
+        const opt = document.createElement('option');
+        opt.value = m.profiles?.id || m.user_id;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+
+      document.getElementById('section-template').value = '';
+      document.getElementById('section-name').value = '';
+      document.getElementById('section-name').style.display = 'none';
+
+      // Build classification tags from TB
+      selectedTags = [];
+      const tagsGroup = document.getElementById('classification-tags-group');
+      const tagsList = document.getElementById('classification-tags-list');
+
+      if (tbLines.length > 0) {
+        // Get all distinct classifications from TB
+        const allClassifications = [...new Set(tbLines.map(l => l.classification).filter(Boolean))].sort();
+        // Get already-taken classifications
+        const takenTags = new Set();
+        for (const sec of sections) {
+          (sec.classification_tags || []).forEach(t => takenTags.add(t));
+        }
+
+        tagsList.innerHTML = allClassifications.map(tag => {
+          const taken = takenTags.has(tag);
+          const lineCount = tbLines.filter(l => l.classification === tag).length;
+          return `<span class="class-tag${taken ? ' taken' : ''}" data-tag="${escHtml(tag)}" onclick="${taken ? '' : 'toggleTag(this)'}" title="${taken ? 'Already assigned to another section' : lineCount + ' TB lines'}">${escHtml(tag)} (${lineCount})</span>`;
+        }).join('');
+
+        tagsGroup.style.display = allClassifications.length > 0 ? 'block' : 'none';
+      } else {
+        tagsList.innerHTML = '';
+        tagsGroup.style.display = 'none';
+      }
+
+      // Render assertion chips
+      selectedAssertions = [];
+      const assertList = document.getElementById('section-assertions-list');
+      assertList.innerHTML = ALL_ASSERTIONS.map(a =>
+        '<span class="class-tag" data-assertion="' + escHtml(a) + '" onclick="toggleAssertion(this)">' + escHtml(a) + '</span>'
+      ).join('');
+
+      document.getElementById('modal-new-section').classList.add('active');
+    }
+
+    function toggleAssertion(el) {
+      const a = el.dataset.assertion;
+      if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+        selectedAssertions = selectedAssertions.filter(x => x !== a);
+      } else {
+        el.classList.add('selected');
+        selectedAssertions.push(a);
+      }
+    }
+
+    function toggleTag(el) {
+      const tag = el.dataset.tag;
+      if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+        selectedTags = selectedTags.filter(t => t !== tag);
+      } else {
+        el.classList.add('selected');
+        selectedTags.push(tag);
+      }
+    }
+
+    document.getElementById('form-new-section').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-create-section');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      const name = document.getElementById('section-name').value.trim();
+      const assignTo = document.getElementById('section-assign').value || null;
+
+      // Determine sort_order
+      const maxOrder = sections.reduce((max, s) => Math.max(max, s.sort_order || 0), 0);
+
+      const { data, error } = await supabaseClient.from('audit_sections').insert({
+        engagement_id: engagementId,
+        name: name,
+        assigned_to: assignTo,
+        classification_tags: selectedTags,
+        assertions: selectedAssertions,
+        status: 'not_started',
+        sort_order: maxOrder + 1
+      }).select().single();
+
+      if (error) {
+        alert('Error: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'Create';
+        return;
+      }
+
+      await logActivity(engagementId, 'created_section', 'audit_section', data.id, { name: name });
+
+      closeModal('modal-new-section');
+      btn.disabled = false;
+      btn.textContent = 'Create';
+
+      await loadSections();
+      updateStats();
+    });
+
+    // ---- Trial Balance Tab (read-only view) ----
+    function renderTB() {
+      const tbody = document.getElementById('tb-table');
+      const empty = document.getElementById('tb-empty');
+      const replaceBtn = document.getElementById('btn-replace-tb');
+
+      if (tbLines.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        if (replaceBtn) replaceBtn.style.display = 'none';
+        return;
+      }
+
+      empty.style.display = 'none';
+      if (replaceBtn && can('replace_tb')) replaceBtn.style.display = 'inline-flex';
+
+      tbody.innerHTML = tbLines.map(line => {
+        const sectionId = tbToSectionMap[line.id];
+        const sec = sectionId ? sections.find(s => s.id === sectionId) : null;
+        const balance = Number(line.balance).toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+        return `
+          <tr>
+            <td><strong>${escHtml(line.account_code)}</strong></td>
+            <td>${escHtml(line.account_name)}</td>
+            <td style="text-align:right;">${balance}</td>
+            <td style="text-transform:capitalize;">${escHtml(line.classification || '')}</td>
+            <td>${sec
+              ? '<span class="tb-section-badge">' + escHtml(sec.name) + '</span>'
+              : '<span class="tb-section-badge unassigned">Unassigned</span>'
+            }</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ---- Upload TB ----
+    function openUploadTB() {
+      if (!can('upload_tb')) { alert('Only admins and reviewers can upload the trial balance.'); return; }
+      document.getElementById('modal-upload-tb').classList.add('active');
+      document.getElementById('tb-file').value = '';
+      document.getElementById('tb-preview').innerHTML = '';
+      document.getElementById('tb-mapping').style.display = 'none';
+      document.getElementById('btn-import-tb').style.display = 'none';
+      parsedCSV = [];
+      rawRows = [];
+      fileColumns = [];
+    }
+
+    function guessColumn(cols, patterns) {
+      const lower = cols.map(c => c.toLowerCase().trim());
+      for (const p of patterns) {
+        const idx = lower.findIndex(h => h.includes(p));
+        if (idx !== -1) return cols[idx];
+      }
+      return '';
+    }
+
+    function classifyByCode(code) {
+      const num = parseInt(String(code).replace(/[^0-9]/g, ''));
+      if (isNaN(num)) return 'unclassified';
+      if (num < 2000) return 'asset';
+      if (num < 3000) return 'liability';
+      if (num < 4000) return 'equity';
+      if (num < 5000) return 'revenue';
+      return 'expense';
+    }
+
+    document.getElementById('tb-file').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          if (isExcel) {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          } else {
+            const text = evt.target.result;
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            if (lines.length < 2) { alert('File must have a header row and at least one data row.'); return; }
+            const header = lines[0].split(',').map(h => h.trim());
+            rawRows = [];
+            for (let i = 1; i < lines.length; i++) {
+              const cols = lines[i].split(',').map(c => c.trim());
+              const obj = {};
+              header.forEach((h, idx) => { obj[h] = cols[idx] || ''; });
+              rawRows.push(obj);
+            }
+          }
+
+          if (!rawRows || rawRows.length === 0) { alert('No data found in file.'); return; }
+
+          fileColumns = Object.keys(rawRows[0]);
+
+          // Populate mapping selects
+          const selects = ['map-code', 'map-name', 'map-bal', 'map-credit', 'map-class'];
+          const keepFirst = { 'map-credit': true };
+
+          selects.forEach(id => {
+            const sel = document.getElementById(id);
+            const firstOpt = keepFirst[id] ? sel.options[0] : null;
+            sel.innerHTML = '';
+            if (firstOpt) {
+              sel.appendChild(firstOpt);
+            } else {
+              const blank = document.createElement('option');
+              blank.value = '';
+              blank.textContent = '-- Select --';
+              sel.appendChild(blank);
+            }
+            fileColumns.forEach(col => {
+              const opt = document.createElement('option');
+              opt.value = col;
+              opt.textContent = col;
+              sel.appendChild(opt);
+            });
+          });
+
+          // Auto-detect columns
+          document.getElementById('map-code').value = guessColumn(fileColumns, ['code', 'accno', 'acc_no', 'account_code', 'acctno', 'acct_no', 'gl_code', 'glcode', 'no']);
+          document.getElementById('map-name').value = guessColumn(fileColumns, ['name', 'acname', 'ac_name', 'account_name', 'description', 'desc', 'acctname']);
+          document.getElementById('map-bal').value = guessColumn(fileColumns, ['balance', 'bal', 'amount', 'dr_bal', 'debit', 'dr']);
+          document.getElementById('map-credit').value = guessColumn(fileColumns, ['cr_bal', 'credit', 'cr']);
+          document.getElementById('map-class').value = guessColumn(fileColumns, ['class', 'classification', 'type', 'category', 'section', 'group', 'account group', 'account_group', 'detail type', 'nominal group', 'sub-category', 'subcategory', 'gl group', 'fs group', 'schedule']);
+
+          document.getElementById('tb-mapping').style.display = 'block';
+          applyMapping();
+        } catch (err) {
+          alert('Error reading file: ' + err.message);
+          console.error(err);
+        }
+      };
+
+      if (isExcel) {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
+
+    function applyMapping() {
+      const codeCol = document.getElementById('map-code').value;
+      const nameCol = document.getElementById('map-name').value;
+      const balCol = document.getElementById('map-bal').value;
+      const creditCol = document.getElementById('map-credit').value;
+      const classCol = document.getElementById('map-class').value;
+
+      if (!codeCol || !balCol) {
+        document.getElementById('tb-preview').innerHTML = '<p class="text-sm text-muted">Map at least Account Code and Balance.</p>';
+        document.getElementById('btn-import-tb').style.display = 'none';
+        return;
+      }
+
+      const hasClassCol = !!classCol;
+
+      parsedCSV = [];
+      for (const row of rawRows) {
+        const code = String(row[codeCol] || '').trim();
+        if (!code) continue;
+
+        const name = nameCol ? String(row[nameCol] || code).trim() : code;
+
+        let balance;
+        const drVal = parseFloat(String(row[balCol] || '0').replace(/[^0-9.\-]/g, '')) || 0;
+        if (creditCol) {
+          const crVal = parseFloat(String(row[creditCol] || '0').replace(/[^0-9.\-]/g, '')) || 0;
+          balance = drVal - crVal;
+        } else {
+          balance = drVal;
+        }
+
+        const classification = hasClassCol
+          ? (String(row[classCol] || '').trim() || 'Unclassified')
+          : classifyByCode(code);
+
+        parsedCSV.push({ account_code: code, account_name: name, balance, classification });
+      }
+
+      const preview = document.getElementById('tb-preview');
+      if (parsedCSV.length === 0) {
+        preview.innerHTML = '<p class="text-sm text-muted">No valid rows found. Check your column mapping.</p>';
+        document.getElementById('btn-import-tb').style.display = 'none';
+        return;
+      }
+
+      // Build classification summary
+      const groupMap = {};
+      for (const r of parsedCSV) {
+        if (!groupMap[r.classification]) {
+          groupMap[r.classification] = { lines: 0, balance: 0 };
+        }
+        groupMap[r.classification].lines++;
+        groupMap[r.classification].balance += r.balance;
+      }
+
+      const groupEntries = Object.entries(groupMap).sort((a, b) => b[1].lines - a[1].lines);
+
+      if (hasClassCol) {
+        preview.innerHTML =
+          '<p class="text-sm" style="margin-bottom:8px;"><strong>' + parsedCSV.length + ' lines</strong> across <strong>' + groupEntries.length + ' classifications</strong>:</p>' +
+          '<table style="font-size:13px; width:100%;">' +
+          '<thead><tr><th>Classification</th><th style="text-align:center;">Lines</th><th style="text-align:right;">Balance</th></tr></thead>' +
+          '<tbody>' + groupEntries.map(([name, g]) =>
+            '<tr>' +
+            '<td><strong>' + escHtml(name) + '</strong></td>' +
+            '<td style="text-align:center;">' + g.lines + '</td>' +
+            '<td style="text-align:right;">' + g.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) + '</td>' +
+            '</tr>'
+          ).join('') +
+          '</tbody></table>' +
+          '<p class="text-sm text-muted" style="margin-top:8px;">After import, create sections and assign classifications to them.</p>';
+      } else {
+        preview.innerHTML =
+          '<p class="text-sm" style="margin-bottom:8px;"><strong>' + parsedCSV.length + ' lines</strong> found.</p>' +
+          '<table style="font-size:13px;">' +
+          '<thead><tr><th>Code</th><th>Account</th><th style="text-align:right;">Balance</th></tr></thead>' +
+          '<tbody>' + parsedCSV.slice(0, 5).map(r =>
+            '<tr><td>' + escHtml(r.account_code) + '</td><td>' + escHtml(r.account_name) + '</td><td style="text-align:right;">' + r.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) + '</td></tr>'
+          ).join('') +
+          (parsedCSV.length > 5 ? '<tr><td colspan="3" class="text-muted">...and ' + (parsedCSV.length - 5) + ' more</td></tr>' : '') +
+          '</tbody></table>';
+      }
+
+      document.getElementById('btn-import-tb').textContent = 'Import TB';
+      document.getElementById('btn-import-tb').style.display = 'inline-flex';
+    }
+
+    async function importTB() {
+      if (parsedCSV.length === 0) return;
+
+      const btn = document.getElementById('btn-import-tb');
+      btn.disabled = true;
+      btn.textContent = 'Importing...';
+
+      try {
+        const allLines = parsedCSV.map(r => ({
+          engagement_id: engagementId,
+          account_code: r.account_code,
+          account_name: r.account_name,
+          balance: r.balance,
+          classification: r.classification
+        }));
+
+        const { error: tbError } = await supabaseClient.from('trial_balance_lines').insert(allLines);
+        if (tbError) throw new Error('TB import failed: ' + tbError.message);
+
+        await logActivity(engagementId, 'uploaded_tb', 'trial_balance', engagementId, { line_count: allLines.length });
+
+        closeModal('modal-upload-tb');
+
+        await loadTBLines();
+        buildClassificationMap();
+        renderSections();
+        updateStats();
+        switchTab('tb');
+
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Import TB';
+    }
+
+    // ---- Replace TB ----
+    async function replaceTB() {
+      if (!can('replace_tb')) { alert('Only admins and reviewers can replace the trial balance.'); return; }
+      if (!confirm('This will delete the current Trial Balance lines and let you upload a new one.\n\nSections and all audit work (procedures, findings, review notes) will NOT be affected.\n\nContinue?')) return;
+
+      try {
+        const { error: tbErr } = await supabaseClient
+          .from('trial_balance_lines')
+          .delete()
+          .eq('engagement_id', engagementId);
+
+        if (tbErr) throw new Error('Failed to delete TB lines: ' + tbErr.message);
+
+        await logActivity(engagementId, 'replaced_tb', 'trial_balance', engagementId, {
+          deleted_lines: tbLines.length
+        });
+
+        tbLines = [];
+        tbToSectionMap = {};
+        sectionTbMap = {};
+        renderTB();
+        renderSections();
+        updateStats();
+
+        openUploadTB();
+
+      } catch (err) {
+        alert('Error replacing TB: ' + err.message);
+      }
+    }
+
+    // ---- Findings Tab ----
+    function renderFindings() {
+      const tbody = document.getElementById('findings-table');
+      const empty = document.getElementById('findings-empty');
+
+      if (findings.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      tbody.innerHTML = findings.map(f => {
+        const sec = sections.find(s => s.id === f.section_id);
+        const sectionName = sec ? sec.name : '--';
+        const reportedBy = f.profiles?.full_name || f.profiles?.email || 'Unknown';
+        const date = new Date(f.created_at).toLocaleDateString();
+
+        return `
+          <tr onclick="openFinding('${f.id}')">
+            <td><strong>${escHtml(f.title)}</strong></td>
+            <td class="text-sm">${escHtml(sectionName)}</td>
+            <td><span class="badge badge-${f.severity}">${f.severity}</span></td>
+            <td><span class="badge badge-${f.status}">${f.status}</span></td>
+            <td class="text-sm">${escHtml(reportedBy)}</td>
+            <td class="text-sm text-muted">${date}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openFinding(findingId) {
+      const f = findings.find(x => x.id === findingId);
+      if (!f) return;
+
+      document.getElementById('finding-modal-title').textContent = escHtml(f.title);
+
+      const sec = sections.find(s => s.id === f.section_id);
+      const sectionName = sec ? sec.name : '--';
+      const reportedBy = f.profiles?.full_name || f.profiles?.email || 'Unknown';
+      const monetaryImpact = f.monetary_impact
+        ? Number(f.monetary_impact).toLocaleString(undefined, { minimumFractionDigits: 2 })
+        : null;
+
+      document.getElementById('finding-detail').innerHTML = `
+        <div class="flex gap-8 items-center mb-16">
+          <span class="badge badge-${f.severity}">${escHtml(f.severity)}</span>
+          <span class="badge badge-${f.status}">${escHtml(f.status)}</span>
+          ${monetaryImpact ? '<span class="text-sm text-muted">Monetary impact: ' + monetaryImpact + '</span>' : ''}
+        </div>
+        <div class="finding-grid">
+          <div class="finding-field">
+            <label>Section</label>
+            <p>${escHtml(sectionName)}</p>
+          </div>
+          <div class="finding-field">
+            <label>Reported By</label>
+            <p>${escHtml(reportedBy)}</p>
+          </div>
+          <div class="finding-field full-width">
+            <label>Condition</label>
+            <p>${escHtml(f.condition || '')}</p>
+          </div>
+          <div class="finding-field full-width">
+            <label>Criteria</label>
+            <p>${escHtml(f.criteria || '')}</p>
+          </div>
+          <div class="finding-field full-width">
+            <label>Cause</label>
+            <p>${escHtml(f.cause || '')}</p>
+          </div>
+          <div class="finding-field full-width">
+            <label>Effect</label>
+            <p>${escHtml(f.effect || '')}</p>
+          </div>
+          <div class="finding-field full-width">
+            <label>Recommendation</label>
+            <p>${escHtml(f.recommendation || '')}</p>
+          </div>
+          <div class="finding-field full-width">
+            <label>Management Response</label>
+            <p>${escHtml(f.management_response || '')}</p>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('modal-finding').classList.add('active');
+    }
+
+    // ---- Activity Log Tab ----
+    async function loadActivityLog() {
+      const { data: logs } = await supabaseClient
+        .from('activity_log')
+        .select('*, profiles:user_id(full_name, email)')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      const container = document.getElementById('activity-list');
+
+      if (!logs || logs.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No activity yet.</p></div>';
+        return;
+      }
+
+      container.innerHTML = logs.map(log => {
+        const who = log.profiles?.full_name || log.profiles?.email || 'User';
+        const when = new Date(log.created_at).toLocaleString();
+        const action = log.action.replace(/_/g, ' ');
+        const details = log.details && Object.keys(log.details).length > 0
+          ? ' — ' + Object.entries(log.details).map(([k, v]) => k.replace(/_/g, ' ') + ': ' + v).join(', ')
+          : '';
+
+        return `
+          <div class="activity-item">
+            <div class="activity-dot"></div>
+            <div>
+              <div><strong>${escHtml(who)}</strong> ${escHtml(action)}${escHtml(details)}</div>
+              <div class="activity-time">${when}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ---- Utils ----
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+      });
+    });
+
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>

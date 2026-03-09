@@ -1,0 +1,21 @@
+account_code,account_name,balance,classification
+1010,Cash and Bank,500000,asset
+1020,Accounts Receivable,320000,asset
+1030,Prepaid Expenses,45000,asset
+1050,Fixed Assets,780000,asset
+2010,Accounts Payable,210000,liability
+2020,Accrued Liabilities,85000,liability
+2030,Short-term Loans,150000,liability
+3010,Share Capital,100000,equity
+3020,Retained Earnings,450000,equity
+4010,Revenue - Services,1200000,revenue
+4020,Revenue - Products,380000,revenue
+5010,Cost of Services,620000,expense
+5020,Cost of Goods Sold,195000,expense
+6010,Salaries and Wages,480000,expense
+6020,Rent Expense,120000,expense
+6030,Utilities,36000,expense
+6040,Marketing,55000,expense
+6050,Professional Fees,28000,expense
+6060,Depreciation,65000,expense
+6070,Insurance,22000,expense

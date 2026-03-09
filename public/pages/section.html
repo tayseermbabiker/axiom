@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Section — Axiom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* ---- Classification tag chips (edit tags modal + engagement) ---- */
+    .class-tag {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 6px;
+      border: 1px solid var(--gray-300);
+      background: var(--gray-50);
+      color: var(--gray-700);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .class-tag:hover { border-color: var(--primary); background: white; }
+    .class-tag.selected { background: var(--primary); color: white; border-color: var(--primary); }
+    .class-tag.taken { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+
+    /* ---- Back link ---- */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--gray-500);
+      text-decoration: none;
+      margin-bottom: 12px;
+    }
+    .back-link:hover { color: var(--primary); }
+
+    /* ---- Section hero header ---- */
+    .section-hero {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .section-header h1 { margin: 0; font-size: 22px; }
+    .section-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+    .section-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* Assertion chips */
+    .assertion-chip {
+      display: inline-block;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 20px;
+      background: #EEF2FF;
+      color: #4338CA;
+      letter-spacing: 0.2px;
+    }
+    .assertions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .assertions-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-right: 4px;
+      line-height: 24px;
+    }
+
+    /* Progress bar */
+    .progress-bar-wrap {
+      height: 4px;
+      background: var(--gray-100);
+      border-radius: 2px;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* ---- Content sections ---- */
+    .content-section { margin-bottom: 28px; }
+
+    /* ---- Collapsible TB card ---- */
+    .tb-collapse-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      cursor: pointer;
+      user-select: none;
+      background: var(--gray-50);
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      transition: background 0.15s;
+    }
+    .tb-collapse-header:hover { background: var(--gray-100); }
+    .tb-collapse-header h2 { font-size: 14px; margin: 0; color: var(--gray-700); }
+    .tb-collapse-body {
+      display: none;
+      border: 1px solid var(--gray-200);
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      overflow: hidden;
+    }
+    .tb-collapse-body.open { display: block; }
+
+    /* ---- Procedure cards (elevated) ---- */
+    .procedure-card {
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      margin-bottom: 14px;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+    .procedure-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-color: var(--gray-300); }
+    .procedure-card.done { border-left: 3px solid var(--success); }
+
+    .procedure-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .procedure-header:hover { background: var(--gray-50); border-radius: 10px; }
+    .procedure-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .procedure-chevron {
+      font-size: 12px;
+      color: var(--gray-400);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .procedure-chevron.open { transform: rotate(90deg); }
+    .procedure-desc {
+      font-size: 14px;
+      color: var(--gray-800);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .procedure-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    .procedure-body {
+      display: none;
+      padding: 4px 18px 18px;
+      border-top: 1px solid var(--gray-100);
+    }
+    .procedure-body.open { display: block; }
+    .procedure-assertions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    /* Badge types */
+    .badge-type {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--gray-100);
+      color: var(--gray-600);
+    }
+    .badge-type-test_of_detail { background: var(--primary-light); color: var(--primary); }
+    .badge-type-analytical { background: var(--warning-light); color: var(--warning); }
+    .badge-type-controls { background: var(--returned-light); color: var(--returned); }
+    .badge-type-other { background: var(--gray-100); color: var(--gray-600); }
+    .badge-pending { background: var(--gray-100); color: var(--gray-500); }
+    .badge-done { background: var(--success-light); color: var(--success); }
+
+    /* ---- Document items ---- */
+    .doc-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--gray-50);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      border: 1px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .doc-item:hover { border-color: var(--gray-200); }
+    .doc-item a { color: var(--primary); text-decoration: none; font-weight: 500; }
+    .doc-item a:hover { text-decoration: underline; }
+    .doc-source {
+      font-size: 11px;
+      color: var(--gray-400);
+      background: var(--gray-100);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .doc-type-label { font-size: 11px; color: var(--gray-400); }
+    .doc-desc { display: block; font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+    .link-doc-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 12px;
+      background: var(--gray-50);
+      border-radius: 8px;
+    }
+    .link-doc-form .full-width { grid-column: 1 / -1; }
+
+    /* ---- Finding cards ---- */
+    .finding-card {
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      margin-bottom: 14px;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .finding-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .finding-header:hover { background: var(--gray-50); border-radius: 10px; }
+    .finding-header-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .finding-title { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+    .finding-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: 12px; }
+    .finding-body { display: none; padding: 4px 18px 18px; border-top: 1px solid var(--gray-100); }
+    .finding-body.open { display: block; }
+    .finding-field { margin-top: 12px; }
+    .finding-field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .finding-field-value { font-size: 14px; color: var(--gray-800); white-space: pre-wrap; }
+    .badge-severity-low { background: var(--gray-100); color: var(--gray-600); }
+    .badge-severity-medium { background: var(--warning-light); color: var(--warning); }
+    .badge-severity-high { background: var(--danger-light); color: var(--danger); }
+    .badge-severity-critical { background: #450a0a; color: #fca5a5; }
+    .badge-status-open { background: var(--danger-light); color: var(--danger); }
+    .badge-status-resolved { background: var(--success-light); color: var(--success); }
+    .badge-status-accepted { background: var(--primary-light); color: var(--primary); }
+
+    /* ---- Conclusion ---- */
+    .conclusion-meta { font-size: 13px; color: var(--gray-500); margin-top: 8px; }
+
+    /* ---- Review notes (chat-style) ---- */
+    .review-note-bubble {
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      max-width: 85%;
+    }
+    .review-note-bubble.review_comment {
+      background: #FFF7ED;
+      border: 1px solid #FED7AA;
+      margin-right: auto;
+    }
+    .review-note-bubble.preparer_response {
+      background: #F0F9FF;
+      border: 1px solid #BAE6FD;
+      margin-left: auto;
+    }
+    .review-note-meta {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    /* ---- Sticky actions footer ---- */
+    .sticky-actions {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      border-top: 1px solid var(--gray-200);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+      border-radius: 10px 10px 0 0;
+      z-index: 10;
+    }
+
+    .actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px;
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .approved-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--success-light);
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+    }
+    .approved-banner .badge { font-size: 14px; padding: 4px 14px; }
+
+    /* TB total row */
+    .tb-total td {
+      font-weight: 700;
+      border-top: 2px solid var(--gray-300);
+      background: var(--gray-50);
+    }
+
+    /* Add forms */
+    .add-form {
+      padding: 16px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+    .add-form .form-group { margin-bottom: 12px; }
+    .add-form .form-group:last-of-type { margin-bottom: 0; }
+
+    /* Section card wrapper */
+    .section-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .section-card .card-header { padding: 16px 20px; }
+    .section-card .card-body { padding: 4px 20px 20px; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">Axiom</div>
+      <div class="sidebar-org">
+        <div class="sidebar-org-name" id="org-name">—</div>
+        <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="team.html">Team</a>
+        <a href="#" id="nav-engagement">Engagement</a>
+        <a href="#" class="active" id="nav-section">Section</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="text-sm text-muted mb-16" id="user-email"></div>
+        <button onclick="signOut()">Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <!-- Back link -->
+      <a href="#" class="back-link" id="back-to-engagement">&#8592; Back to engagement</a>
+
+      <!-- Section Hero Header -->
+      <div class="section-hero">
+        <div class="section-header">
+          <h1 id="section-title">Loading...</h1>
+          <span class="badge" id="section-status-badge"></span>
+        </div>
+        <div class="section-meta">
+          <span id="section-assigned">Assigned to: —</span>
+          <span id="section-tb-total" style="display:none;"></span>
+        </div>
+        <div class="assertions-row" id="section-assertions-row" style="display:none;">
+          <span class="assertions-label">Assertions</span>
+          <span id="section-assertions-chips"></span>
+        </div>
+        <div class="progress-bar-wrap" id="progress-wrap" style="display:none;">
+          <div class="progress-bar-fill" id="progress-fill" style="width:0%;"></div>
+        </div>
+        <div class="text-sm text-muted" id="progress-label" style="margin-top:6px; display:none;"></div>
+      </div>
+
+      <div id="page-content">
+        <!-- 1. Collapsible TB -->
+        <div class="content-section" id="sec-tb-lines">
+          <div class="tb-collapse-header" onclick="toggleTBCollapse()">
+            <h2 id="tb-collapse-title">Trial Balance</h2>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editSectionTags()" id="btn-edit-tags" style="display:none;">Edit Tags</button>
+              <span id="tb-chevron" style="font-size:12px; color:var(--gray-400); transition:transform 0.2s;">&#9654;</span>
+            </div>
+          </div>
+          <div class="tb-collapse-body" id="tb-collapse-body">
+            <div id="section-tags-bar" style="padding:8px 16px; background:var(--gray-50); border-bottom:1px solid var(--gray-200); display:none;">
+              <span class="text-sm text-muted">Classifications:</span>
+              <span id="section-tags-display" class="text-sm"></span>
+            </div>
+            <div id="section-tags-stale" style="padding:8px 16px; background:#fef2f2; border-bottom:1px solid #fecaca; display:none;">
+              <span class="text-sm" style="color:#dc2626;">Some classification tags no longer match the current TB. Click "Edit Tags" to update.</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Account Name</th>
+                    <th style="text-align:right;">Balance</th>
+                  </tr>
+                </thead>
+                <tbody id="tb-lines-table"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="tb-lines-empty" style="display:none;">
+              <p>No trial balance lines linked to this section.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Audit Procedures -->
+        <div class="content-section" id="sec-procedures">
+          <div class="section-card">
+            <div class="card-header">
+              <h2>Audit Procedures</h2>
+              <button class="btn btn-primary btn-sm" id="btn-show-add-procedure" style="display:none;" onclick="toggleAddProcedure()">+ Add Procedure</button>
+            </div>
+            <div class="card-body">
+              <div id="procedures-list"></div>
+              <div class="empty-state" id="procedures-empty" style="display:none;">
+                <p>No procedures added yet.</p>
+                <p class="text-sm text-muted">The audit partner or manager adds procedures here. Click "+ Add Procedure" above to get started.</p>
+              </div>
+              <!-- Add Procedure form (admin/reviewer only) -->
+              <div id="add-procedure-form" style="display:none;">
+                <div class="add-form">
+                  <div class="form-group">
+                    <label>Description</label>
+                    <textarea class="form-control" id="new-proc-desc" rows="2" placeholder="Describe the audit procedure..."></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label>Procedure Type</label>
+                    <select class="form-control" id="new-proc-type">
+                      <option value="test_of_detail">Test of Detail</option>
+                      <option value="analytical">Analytical</option>
+                      <option value="controls">Controls</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Assertions <span class="text-sm text-muted">(which assertions does this procedure address?)</span></label>
+                    <div id="new-proc-assertions" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;"></div>
+                  </div>
+                  <div class="flex gap-8">
+                    <button class="btn btn-primary btn-sm" onclick="addProcedure()">Add Procedure</button>
+                    <button class="btn btn-outline btn-sm" onclick="toggleAddProcedure()">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Findings -->
+        <div class="content-section" id="sec-findings">
+          <div class="section-card">
+            <div class="card-header">
+              <h2>Findings</h2>
+              <button class="btn btn-primary btn-sm" id="btn-add-finding" onclick="openFindingModal()" style="display:none;">+ Add Finding</button>
+            </div>
+            <div class="card-body">
+              <div id="findings-list"></div>
+              <div class="empty-state" id="findings-empty" style="display:none;">
+                <p>No findings recorded for this section.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Section Conclusion -->
+        <div class="content-section" id="sec-conclusion">
+          <div class="section-card">
+            <div class="card-header">
+              <h2>Section Conclusion</h2>
+            </div>
+            <div class="card-body">
+              <div class="form-group" style="margin:0;">
+                <textarea class="form-control" id="conclusion-text" rows="4" placeholder="Enter your section conclusion..."></textarea>
+              </div>
+              <div class="conclusion-meta" id="conclusion-meta"></div>
+              <button class="btn btn-primary btn-sm mt-8" id="btn-save-conclusion" onclick="saveConclusion()" style="display:none;">Save Conclusion</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Review Notes -->
+        <div class="content-section" id="sec-review-notes">
+          <div class="section-card">
+            <div class="card-header">
+              <h2>Review Notes</h2>
+            </div>
+            <div class="card-body">
+              <div class="notes-thread" id="review-notes-thread"></div>
+              <div class="empty-state" id="review-notes-empty" style="display:none;">
+                <p>No review notes yet.</p>
+              </div>
+              <div class="mt-16" id="add-note-area">
+                <textarea class="form-control" id="new-review-note" placeholder="Add a review note or response..." rows="2"></textarea>
+                <div class="flex gap-8 mt-8">
+                  <button class="btn btn-outline btn-sm" id="btn-review-comment" onclick="addReviewNote('review_comment')" style="display:none;">Add Review Comment</button>
+                  <button class="btn btn-outline btn-sm" id="btn-preparer-response" onclick="addReviewNote('preparer_response')" style="display:none;">Add Response</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Actions Bar -->
+        <div class="content-section" id="sec-actions">
+          <div id="actions-container"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Document Modal -->
+  <div class="modal-overlay" id="modal-document">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3 id="doc-modal-title">Add Working Paper</h3>
+        <button class="modal-close" onclick="closeModal('modal-document')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="doc-modal-proc-id" value="">
+        <input type="hidden" id="doc-modal-category" value="working_paper">
+        <div class="form-group">
+          <label>Document Category</label>
+          <select class="form-control" id="doc-modal-cat-select" onchange="updateDocModalTitle(this.value)">
+            <option value="working_paper">Working Paper (auditor's work)</option>
+            <option value="source_document">Source Document (client evidence)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>File Name</label>
+          <input type="text" class="form-control" id="doc-modal-name" placeholder="e.g. PPE_Depreciation_Test.xlsx">
+        </div>
+        <div class="form-group">
+          <label>URL (paste link from Drive / OneDrive / SharePoint)</label>
+          <input type="text" class="form-control" id="doc-modal-url" placeholder="https://drive.google.com/...">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" class="form-control" id="doc-modal-desc" placeholder="e.g. Recalculation for sample of 5 assets">
+        </div>
+        <div class="form-group">
+          <label>Source</label>
+          <select class="form-control" id="doc-modal-source">
+            <option value="google_drive">Google Drive</option>
+            <option value="onedrive">OneDrive</option>
+            <option value="sharepoint">SharePoint</option>
+            <option value="dropbox">Dropbox</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>File Type</label>
+          <select class="form-control" id="doc-modal-type">
+            <option value="excel">Excel</option>
+            <option value="pdf">PDF</option>
+            <option value="word">Word</option>
+            <option value="image">Image</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-document')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-doc" onclick="saveDocumentFromModal()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Finding Modal -->
+  <div class="modal-overlay" id="modal-finding">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h3 id="finding-modal-title">Add Finding</h3>
+        <button class="modal-close" onclick="closeModal('modal-finding')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" class="form-control" id="finding-title" placeholder="Brief description of the finding">
+        </div>
+        <div class="form-group">
+          <label>Severity</label>
+          <select class="form-control" id="finding-severity">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Condition</label>
+          <textarea class="form-control" id="finding-condition" rows="2" placeholder="What was found (the current state)"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Criteria</label>
+          <textarea class="form-control" id="finding-criteria" rows="2" placeholder="What should be (the standard or expectation)"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Cause</label>
+          <textarea class="form-control" id="finding-cause" rows="2" placeholder="Why the condition exists"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Effect</label>
+          <textarea class="form-control" id="finding-effect" rows="2" placeholder="The impact of the condition"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Recommendation</label>
+          <textarea class="form-control" id="finding-recommendation" rows="2" placeholder="Suggested corrective action"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Monetary Impact (optional)</label>
+          <input type="number" class="form-control" id="finding-monetary" placeholder="0.00" step="0.01">
+        </div>
+        <input type="hidden" id="finding-edit-id" value="">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-finding')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-finding" onclick="saveFinding()">Save Finding</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Tags Modal -->
+  <div class="modal-overlay" id="modal-edit-tags">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3>Edit Classification Tags</h3>
+        <button class="modal-close" onclick="closeModal('modal-edit-tags')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted" style="margin-bottom:12px;">Select which TB classifications this section covers. Greyed-out tags are already assigned to another section.</p>
+        <div id="edit-tags-list" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-edit-tags')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-tags" onclick="saveSectionTags()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/activity.js"></script>
+  <script>
+    let currentUser = null;
+    let currentOrg = null;
+    let currentRole = null;
+    let sectionId = null;
+    let engagementId = null;
+    let section = null;
+    let procedures = [];
+    let responses = [];
+    let documents = [];
+    let findings = [];
+    let reviewNotes = [];
+    let tbLines = [];
+    let profileCache = {};
+    let isApproved = false;
+    let sharedFolderUrl = '';
+
+    const ALL_ASSERTIONS = ['Existence', 'Completeness', 'Accuracy', 'Valuation', 'Rights & Obligations', 'Presentation', 'Cut-off'];
+    let newProcAssertions = [];
+
+    async function init() {
+      currentUser = await requireAuth();
+      if (!currentUser) return;
+
+      const orgAndRole = await getUserOrgAndRole();
+      currentOrg = orgAndRole.org;
+      currentRole = orgAndRole.role;
+
+      document.getElementById('user-email').textContent = currentUser.email;
+
+      if (currentOrg) {
+        document.getElementById('org-name').textContent = currentOrg.name;
+      }
+
+      if (currentRole) {
+        const badge = document.getElementById('user-role-badge');
+        badge.textContent = currentRole;
+        badge.className = 'role-badge role-' + currentRole;
+        badge.style.display = 'inline-block';
+      }
+
+      sectionId = window.location.hash.replace('#', '');
+      if (!sectionId) { window.location.href = 'dashboard.html'; return; }
+
+      // Role-based button visibility
+      if (can('add_finding')) {
+        document.getElementById('btn-add-finding').style.display = '';
+      }
+      if (can('save_conclusion')) {
+        document.getElementById('btn-save-conclusion').style.display = '';
+      } else {
+        document.getElementById('conclusion-text').disabled = true;
+      }
+      if (can('edit_section_tags')) {
+        document.getElementById('btn-edit-tags').style.display = '';
+      }
+      if (can('add_review_comment')) {
+        document.getElementById('btn-review-comment').style.display = '';
+      }
+      if (can('add_preparer_response')) {
+        document.getElementById('btn-preparer-response').style.display = '';
+      }
+      // Hide review note textarea if user can't do either
+      if (!can('add_review_comment') && !can('add_preparer_response')) {
+        document.getElementById('add-note-area').style.display = 'none';
+      }
+
+      await loadSection();
+      if (!section) return;
+
+      await Promise.all([
+        loadTBLines(),
+        loadProcedures(),
+        loadFindings(),
+        loadReviewNotes()
+      ]);
+
+      applyApprovedState();
+
+      await logActivity(engagementId, 'viewed_section', 'section', sectionId, { name: section.name });
+    }
+
+    // ---- Profile resolution ----
+    async function resolveProfileName(userId) {
+      if (!userId) return null;
+      if (profileCache[userId]) return profileCache[userId];
+
+      const { data } = await supabaseClient
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', userId)
+        .single();
+
+      const name = data?.full_name || data?.email || 'Unknown';
+      profileCache[userId] = name;
+      return name;
+    }
+
+    async function resolveUserRole(userId) {
+      if (!userId || !currentOrg) return null;
+      const { data } = await supabaseClient
+        .from('organization_members')
+        .select('role')
+        .eq('organization_id', currentOrg.id)
+        .eq('user_id', userId)
+        .single();
+      return data?.role || null;
+    }
+
+    // ---- Load section ----
+    async function loadSection() {
+      const { data, error } = await supabaseClient
+        .from('audit_sections')
+        .select('*')
+        .eq('id', sectionId)
+        .single();
+
+      if (error || !data) {
+        alert('Error loading section: ' + (error?.message || 'not found'));
+        return;
+      }
+
+      section = data;
+      engagementId = section.engagement_id;
+      isApproved = !!section.approved_at;
+
+      // Fetch engagement for breadcrumb + shared folder
+      const { data: eng } = await supabaseClient
+        .from('engagements')
+        .select('client_name, shared_folder_url')
+        .eq('id', engagementId)
+        .single();
+
+      sharedFolderUrl = eng?.shared_folder_url || '';
+
+      // Update navigation
+      const engLink = 'engagement.html#' + engagementId;
+      document.getElementById('nav-engagement').href = engLink;
+      document.getElementById('nav-engagement').textContent = eng?.client_name || 'Engagement';
+      document.getElementById('back-to-engagement').href = engLink;
+      document.getElementById('back-to-engagement').textContent = '\u2190 Back to ' + (eng?.client_name || 'engagement');
+      document.getElementById('nav-section').textContent = section.name;
+
+      // Header
+      document.getElementById('section-title').textContent = section.name;
+
+      const statusLabel = (section.status || 'not_started').replace(/_/g, ' ');
+      const statusBadge = document.getElementById('section-status-badge');
+      statusBadge.textContent = statusLabel;
+      statusBadge.className = 'badge badge-' + (section.status || 'not-started').replace(/_/g, '-');
+
+      // Assigned to
+      if (section.assigned_to) {
+        const assignedName = await resolveProfileName(section.assigned_to);
+        document.getElementById('section-assigned').textContent = 'Assigned to: ' + assignedName;
+      }
+
+      // Show assertions
+      const sectionAssertions = section.assertions || [];
+      if (sectionAssertions.length > 0) {
+        document.getElementById('section-assertions-row').style.display = 'flex';
+        document.getElementById('section-assertions-chips').innerHTML = sectionAssertions
+          .map(a => '<span class="assertion-chip">' + escHtml(a) + '</span>').join('');
+      }
+
+      // Show "Add Procedure" button based on permission
+      if (can('add_procedure')) {
+        document.getElementById('btn-show-add-procedure').style.display = 'inline-flex';
+      }
+    }
+
+    function toggleTBCollapse() {
+      const body = document.getElementById('tb-collapse-body');
+      const chevron = document.getElementById('tb-chevron');
+      body.classList.toggle('open');
+      chevron.style.transform = body.classList.contains('open') ? 'rotate(90deg)' : '';
+    }
+
+    function updateProgressBar() {
+      const totalProcs = procedures.length;
+      if (totalProcs === 0) {
+        document.getElementById('progress-wrap').style.display = 'none';
+        document.getElementById('progress-label').style.display = 'none';
+        return;
+      }
+      const doneProcs = procedures.filter(p => {
+        return responses.some(r => r.procedure_id === p.id && r.status === 'done');
+      }).length;
+      const pct = Math.round((doneProcs / totalProcs) * 100);
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-wrap').style.display = 'block';
+      document.getElementById('progress-label').style.display = 'block';
+      document.getElementById('progress-label').textContent = doneProcs + ' of ' + totalProcs + ' procedures done (' + pct + '%)';
+    }
+
+    // ---- TB Lines (matched by classification_tags) ----
+    async function loadTBLines() {
+      const tags = section.classification_tags || [];
+
+      // Show tags bar
+      const tagsBar = document.getElementById('section-tags-bar');
+      const tagsDisplay = document.getElementById('section-tags-display');
+      if (tags.length > 0) {
+        tagsDisplay.textContent = tags.join(', ');
+        tagsBar.style.display = 'block';
+      } else {
+        tagsBar.style.display = 'none';
+      }
+
+      if (tags.length === 0) {
+        tbLines = [];
+        document.getElementById('tb-lines-table').innerHTML = '';
+        document.getElementById('tb-lines-empty').style.display = 'block';
+        document.getElementById('section-tags-stale').style.display = 'none';
+        return;
+      }
+
+      const { data: lines } = await supabaseClient
+        .from('trial_balance_lines')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .in('classification', tags)
+        .order('account_code');
+
+      tbLines = lines || [];
+
+      // Check for stale tags (tags that match zero TB lines)
+      const tbClassifications = new Set(tbLines.map(l => l.classification));
+      const staleTags = tags.filter(t => !tbClassifications.has(t));
+      const staleBar = document.getElementById('section-tags-stale');
+      staleBar.style.display = staleTags.length > 0 ? 'block' : 'none';
+
+      if (tbLines.length === 0) {
+        document.getElementById('tb-lines-table').innerHTML = '';
+        document.getElementById('tb-lines-empty').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('tb-lines-empty').style.display = 'none';
+
+      // Update hero TB total
+      const total = tbLines.reduce((s, l) => s + (Number(l.balance) || 0), 0);
+      const totalEl = document.getElementById('section-tb-total');
+      totalEl.textContent = 'TB Total: ' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+      totalEl.style.display = 'inline';
+
+      // Update collapse header
+      document.getElementById('tb-collapse-title').textContent = 'Trial Balance (' + tbLines.length + ' lines)';
+
+      renderTBLines();
+    }
+
+    function renderTBLines() {
+      const tbody = document.getElementById('tb-lines-table');
+      const empty = document.getElementById('tb-lines-empty');
+
+      if (tbLines.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      let total = 0;
+
+      tbody.innerHTML = tbLines.map(line => {
+        const bal = Number(line.balance) || 0;
+        total += bal;
+        return `
+          <tr style="cursor:default;">
+            <td><strong>${escHtml(line.account_code)}</strong></td>
+            <td>${escHtml(line.account_name)}</td>
+            <td style="text-align:right">${bal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+        `;
+      }).join('') + `
+        <tr class="tb-total" style="cursor:default;">
+          <td colspan="2"><strong>Total</strong></td>
+          <td style="text-align:right"><strong>${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></td>
+        </tr>
+      `;
+    }
+
+    // ---- Edit Classification Tags ----
+    let editTagsSelected = [];
+
+    async function editSectionTags() {
+      if (!can('edit_section_tags')) { alert('Only admins and reviewers can edit tags.'); return; }
+      const { data: allLines } = await supabaseClient
+        .from('trial_balance_lines')
+        .select('classification')
+        .eq('engagement_id', engagementId);
+
+      if (!allLines || allLines.length === 0) {
+        alert('No trial balance uploaded yet. Upload a TB first from the engagement page.');
+        return;
+      }
+
+      const allClassifications = [...new Set(allLines.map(l => l.classification).filter(Boolean))].sort();
+
+      const { data: allSections } = await supabaseClient
+        .from('audit_sections')
+        .select('id, name, classification_tags')
+        .eq('engagement_id', engagementId);
+
+      const takenByOthers = {};
+      for (const s of (allSections || [])) {
+        if (s.id === sectionId) continue;
+        (s.classification_tags || []).forEach(t => { takenByOthers[t] = s.name; });
+      }
+
+      const currentTags = new Set(section.classification_tags || []);
+      editTagsSelected = [...currentTags].filter(t => !takenByOthers[t]);
+
+      const tagsList = document.getElementById('edit-tags-list');
+      tagsList.innerHTML = allClassifications.map(tag => {
+        const taken = takenByOthers[tag];
+        const selected = currentTags.has(tag) && !taken;
+        const lineCount = allLines.filter(l => l.classification === tag).length;
+        const title = taken ? 'Assigned to: ' + taken : lineCount + ' TB lines';
+        return `<span class="class-tag${selected ? ' selected' : ''}${taken ? ' taken' : ''}" data-tag="${escHtml(tag)}" onclick="${taken ? '' : 'toggleEditTag(this)'}" title="${escHtml(title)}">${escHtml(tag)} (${lineCount})</span>`;
+      }).join('');
+
+      document.getElementById('modal-edit-tags').classList.add('active');
+    }
+
+    function toggleEditTag(el) {
+      const tag = el.dataset.tag;
+      if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+        editTagsSelected = editTagsSelected.filter(t => t !== tag);
+      } else {
+        el.classList.add('selected');
+        editTagsSelected.push(tag);
+      }
+    }
+
+    async function saveSectionTags() {
+      const btn = document.getElementById('btn-save-tags');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const { error } = await supabaseClient
+        .from('audit_sections')
+        .update({ classification_tags: editTagsSelected })
+        .eq('id', sectionId);
+
+      btn.disabled = false;
+      btn.textContent = 'Save';
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.classification_tags = [...editTagsSelected];
+      closeModal('modal-edit-tags');
+      await loadTBLines();
+    }
+
+    // ---- Procedures ----
+    async function loadProcedures() {
+      const { data: procs } = await supabaseClient
+        .from('audit_procedures')
+        .select('*')
+        .eq('section_id', sectionId)
+        .order('sort_order');
+
+      procedures = procs || [];
+
+      // Load all responses for these procedures
+      if (procedures.length > 0) {
+        const procIds = procedures.map(p => p.id);
+        const { data: resps } = await supabaseClient
+          .from('procedure_responses')
+          .select('*')
+          .in('procedure_id', procIds);
+        responses = resps || [];
+
+        // Load documents linked to responses
+        const respIds = responses.map(r => r.id);
+        let procDocs = [];
+        if (respIds.length > 0) {
+          const { data: rd } = await supabaseClient
+            .from('documents')
+            .select('*')
+            .in('procedure_response_id', respIds)
+            .order('created_at');
+          procDocs = rd || [];
+        }
+
+        // Also load documents linked directly to section (no procedure_response_id)
+        const { data: secDocs } = await supabaseClient
+          .from('documents')
+          .select('*')
+          .eq('section_id', sectionId)
+          .is('procedure_response_id', null)
+          .order('created_at');
+
+        documents = [...procDocs, ...(secDocs || [])];
+      } else {
+        responses = [];
+        documents = [];
+      }
+
+      renderProcedures();
+      updateProgressBar();
+    }
+
+    function renderProcedures() {
+      const container = document.getElementById('procedures-list');
+      const empty = document.getElementById('procedures-empty');
+
+      if (procedures.length === 0) {
+        container.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      container.innerHTML = procedures.map(proc => {
+        const resp = responses.find(r => r.procedure_id === proc.id && r.user_id === currentUser.id);
+        const allResps = responses.filter(r => r.procedure_id === proc.id);
+        const respDocs = resp ? documents.filter(d => d.procedure_response_id === resp.id) : [];
+        const typeLabel = proc.procedure_type.replace(/_/g, ' ');
+        const status = resp?.status || 'pending';
+
+        const procAssertions = (proc.assertions || []);
+        const assertionChips = procAssertions.length > 0
+          ? '<div class="procedure-assertions">' + procAssertions.map(a => '<span class="assertion-chip" style="font-size:10px; padding:2px 7px;">' + escHtml(a) + '</span>').join('') + '</div>'
+          : '';
+
+        return `
+          <div class="procedure-card${status === 'done' ? ' done' : ''}" id="proc-${proc.id}">
+            <div class="procedure-header" onclick="toggleProcedure('${proc.id}')">
+              <div class="procedure-header-left">
+                <span class="procedure-chevron" id="chevron-${proc.id}">&#9654;</span>
+                <div>
+                  <span class="procedure-desc">${escHtml(proc.description)}</span>
+                  ${assertionChips}
+                </div>
+              </div>
+              <div class="procedure-header-right">
+                <span class="badge-type badge-type-${proc.procedure_type}">${typeLabel}</span>
+                <span class="badge badge-${status}">${status}</span>
+              </div>
+            </div>
+            <div class="procedure-body" id="body-${proc.id}">
+              <div style="padding-top:12px;">
+                <!-- What you did -->
+                <div class="form-group">
+                  <label>What you did</label>
+                  <textarea class="form-control proc-response" id="resp-${proc.id}" rows="3" placeholder="Describe what you did for this procedure..."${isApproved ? ' disabled' : ''}>${escHtml(resp?.response || '')}</textarea>
+                </div>
+
+                ${!isApproved ? `
+                  <div class="flex gap-8 mb-16">
+                    <button class="btn btn-primary btn-sm" onclick="saveResponse('${proc.id}')">Save</button>
+                    <button class="btn btn-outline btn-sm" onclick="toggleResponseStatus('${proc.id}')">
+                      Mark as ${status === 'pending' ? 'Done' : 'Pending'}
+                    </button>
+                  </div>
+                ` : ''}
+
+                <!-- Working Papers -->
+                <div class="mb-16">
+                  <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Working Papers</label>
+                  <div id="wp-docs-${proc.id}">
+                    ${respDocs.filter(d => d.doc_category === 'working_paper').length > 0 ? respDocs.filter(d => d.doc_category === 'working_paper').map(d => `
+                      <div class="doc-item">
+                        <a href="${escHtml(d.file_url)}" target="_blank" rel="noopener">${escHtml(d.file_name)}</a>
+                        ${d.description ? `<span class="doc-desc">${escHtml(d.description)}</span>` : ''}
+                        <span class="doc-source">${escHtml(d.source_type || '')}</span>
+                      </div>
+                    `).join('') : '<p class="text-sm text-muted">No working papers linked.</p>'}
+                  </div>
+                  ${!isApproved ? `<button class="btn btn-outline btn-sm mt-8" onclick="openDocModal('${proc.id}', 'working_paper')">+ Add Working Paper</button>` : ''}
+                </div>
+
+                <!-- Source Documents -->
+                <div class="mb-16">
+                  <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Source Documents</label>
+                  <div id="sd-docs-${proc.id}">
+                    ${respDocs.filter(d => d.doc_category === 'source_document').length > 0 ? respDocs.filter(d => d.doc_category === 'source_document').map(d => `
+                      <div class="doc-item">
+                        <a href="${escHtml(d.file_url)}" target="_blank" rel="noopener">${escHtml(d.file_name)}</a>
+                        ${d.description ? `<span class="doc-desc">${escHtml(d.description)}</span>` : ''}
+                        <span class="doc-source">${escHtml(d.source_type || '')}</span>
+                      </div>
+                    `).join('') : '<p class="text-sm text-muted">No source documents linked.</p>'}
+                  </div>
+                  ${!isApproved ? `<button class="btn btn-outline btn-sm mt-8" onclick="openDocModal('${proc.id}', 'source_document')">+ Add Source Document</button>` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleProcedure(procId) {
+      const body = document.getElementById('body-' + procId);
+      const chevron = document.getElementById('chevron-' + procId);
+      const isOpen = body.classList.contains('open');
+      body.classList.toggle('open');
+      chevron.classList.toggle('open');
+    }
+
+    function openDocModal(procId, category) {
+      document.getElementById('doc-modal-proc-id').value = procId;
+      document.getElementById('doc-modal-category').value = category;
+      document.getElementById('doc-modal-cat-select').value = category;
+      updateDocModalTitle(category);
+
+      // Reset fields
+      document.getElementById('doc-modal-name').value = '';
+      document.getElementById('doc-modal-url').value = '';
+      document.getElementById('doc-modal-desc').value = '';
+      document.getElementById('doc-modal-source').value = 'google_drive';
+      document.getElementById('doc-modal-type').value = 'excel';
+
+      document.getElementById('modal-document').classList.add('active');
+    }
+
+    function updateDocModalTitle(category) {
+      document.getElementById('doc-modal-category').value = category;
+      document.getElementById('doc-modal-title').textContent =
+        category === 'working_paper' ? 'Add Working Paper' : 'Add Source Document';
+    }
+
+    function toggleAddProcedure() {
+      const form = document.getElementById('add-procedure-form');
+      const showing = form.style.display === 'none';
+      form.style.display = showing ? 'block' : 'none';
+
+      // Render assertion chips for new procedure
+      if (showing) {
+        newProcAssertions = [];
+        const container = document.getElementById('new-proc-assertions');
+        container.innerHTML = ALL_ASSERTIONS.map(a =>
+          '<span class="assertion-chip" style="cursor:pointer; opacity:0.5;" data-assertion="' + escHtml(a) + '" onclick="toggleNewProcAssertion(this)">' + escHtml(a) + '</span>'
+        ).join('');
+      }
+    }
+
+    function toggleNewProcAssertion(el) {
+      const a = el.dataset.assertion;
+      if (newProcAssertions.includes(a)) {
+        newProcAssertions = newProcAssertions.filter(x => x !== a);
+        el.style.opacity = '0.5';
+      } else {
+        newProcAssertions.push(a);
+        el.style.opacity = '1';
+      }
+    }
+
+    async function addProcedure() {
+      if (!can('add_procedure')) { alert('Only admins and reviewers can add procedures.'); return; }
+
+      const desc = document.getElementById('new-proc-desc').value.trim();
+      const type = document.getElementById('new-proc-type').value;
+
+      if (!desc) { alert('Please enter a procedure description.'); return; }
+
+      const maxSort = procedures.reduce((max, p) => Math.max(max, p.sort_order || 0), 0);
+
+      const { data, error } = await supabaseClient.from('audit_procedures').insert({
+        section_id: sectionId,
+        description: desc,
+        procedure_type: type,
+        assertions: newProcAssertions,
+        sort_order: maxSort + 1
+      }).select().single();
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      await logActivity(engagementId, 'added_procedure', 'procedure', data.id, { description: desc, type: type });
+
+      document.getElementById('new-proc-desc').value = '';
+      document.getElementById('add-procedure-form').style.display = 'none';
+      newProcAssertions = [];
+      await loadProcedures();
+      updateProgressBar();
+      applyApprovedState();
+    }
+
+    async function saveResponse(procId) {
+      const text = document.getElementById('resp-' + procId).value.trim();
+      const existing = responses.find(r => r.procedure_id === procId && r.user_id === currentUser.id);
+
+      if (existing) {
+        const { error } = await supabaseClient
+          .from('procedure_responses')
+          .update({ response: text })
+          .eq('id', existing.id);
+        if (error) { alert('Error: ' + error.message); return; }
+
+        await logActivity(engagementId, 'updated_response', 'procedure_response', existing.id, { procedure_id: procId });
+      } else {
+        const { data, error } = await supabaseClient.from('procedure_responses').insert({
+          procedure_id: procId,
+          user_id: currentUser.id,
+          response: text,
+          status: 'pending'
+        }).select().single();
+        if (error) { alert('Error: ' + error.message); return; }
+
+        await logActivity(engagementId, 'added_response', 'procedure_response', data.id, { procedure_id: procId });
+      }
+
+      alert('Response saved.');
+      await loadProcedures();
+      applyApprovedState();
+    }
+
+    async function toggleResponseStatus(procId) {
+      const existing = responses.find(r => r.procedure_id === procId && r.user_id === currentUser.id);
+
+      if (!existing) {
+        // Create a response first
+        const text = document.getElementById('resp-' + procId).value.trim();
+        const { data, error } = await supabaseClient.from('procedure_responses').insert({
+          procedure_id: procId,
+          user_id: currentUser.id,
+          response: text,
+          status: 'done'
+        }).select().single();
+        if (error) { alert('Error: ' + error.message); return; }
+
+        await logActivity(engagementId, 'completed_procedure', 'procedure_response', data.id, { procedure_id: procId });
+      } else {
+        const newStatus = existing.status === 'pending' ? 'done' : 'pending';
+        const { error } = await supabaseClient
+          .from('procedure_responses')
+          .update({ status: newStatus })
+          .eq('id', existing.id);
+        if (error) { alert('Error: ' + error.message); return; }
+
+        await logActivity(engagementId, 'toggled_procedure_status', 'procedure_response', existing.id, { new_status: newStatus });
+      }
+
+      await loadProcedures();
+      applyApprovedState();
+    }
+
+    function isLinkInsideSharedFolder(fileUrl) {
+      if (!sharedFolderUrl) return true; // no folder set, skip validation
+      try {
+        const shared = new URL(sharedFolderUrl);
+        const file = new URL(fileUrl);
+        // Same domain check (drive.google.com, onedrive.live.com, sharepoint.com, etc.)
+        if (file.hostname !== shared.hostname) return false;
+        // For Google Drive: check if folder ID appears in the file URL
+        const gDriveFolderMatch = sharedFolderUrl.match(/folders\/([a-zA-Z0-9_-]+)/);
+        if (gDriveFolderMatch) return true; // Google Drive doesn't embed parent folder in file URLs, so domain match is best we can do
+        // For SharePoint/OneDrive: check if file path starts with shared folder path
+        return file.pathname.startsWith(shared.pathname);
+      } catch {
+        return true; // if URLs can't be parsed, don't block
+      }
+    }
+
+    async function saveDocumentFromModal() {
+      const procId = document.getElementById('doc-modal-proc-id').value;
+      const category = document.getElementById('doc-modal-category').value;
+      const fileName = document.getElementById('doc-modal-name').value.trim();
+      const fileUrl = document.getElementById('doc-modal-url').value.trim();
+      const description = document.getElementById('doc-modal-desc').value.trim();
+      const sourceType = document.getElementById('doc-modal-source').value;
+      const fileType = document.getElementById('doc-modal-type').value;
+
+      if (!fileName || !fileUrl) { alert('Please enter both a file name and URL.'); return; }
+
+      // Validate link is inside shared engagement folder
+      if (sharedFolderUrl && !isLinkInsideSharedFolder(fileUrl)) {
+        const proceed = confirm(
+          'This file does not appear to be inside the engagement\'s shared folder.\n\n' +
+          'Shared folder: ' + sharedFolderUrl + '\n\n' +
+          'Other team members may not be able to open it. Move the file to the shared folder and update the link, or click OK to save anyway.'
+        );
+        if (!proceed) return;
+      }
+
+      const btn = document.getElementById('btn-save-doc');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      // Ensure a response exists for this procedure to link the document to
+      let resp = responses.find(r => r.procedure_id === procId && r.user_id === currentUser.id);
+      if (!resp) {
+        const text = document.getElementById('resp-' + procId)?.value?.trim() || '';
+        const { data, error } = await supabaseClient.from('procedure_responses').insert({
+          procedure_id: procId,
+          user_id: currentUser.id,
+          response: text,
+          status: 'pending'
+        }).select().single();
+        if (error) { alert('Error creating response: ' + error.message); btn.disabled = false; btn.textContent = 'Save'; return; }
+        resp = data;
+      }
+
+      const { data: doc, error } = await supabaseClient.from('documents').insert({
+        section_id: sectionId,
+        procedure_response_id: resp.id,
+        file_name: fileName,
+        file_url: fileUrl,
+        source_type: sourceType,
+        file_type: fileType,
+        doc_category: category,
+        description: description,
+        linked_by: currentUser.id
+      }).select().single();
+
+      btn.disabled = false;
+      btn.textContent = 'Save';
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      await logActivity(engagementId, 'linked_document', 'document', doc.id, { file_name: fileName, category: category, source: sourceType });
+
+      closeModal('modal-document');
+      await loadProcedures();
+      applyApprovedState();
+    }
+
+    // ---- Findings ----
+    async function loadFindings() {
+      const { data } = await supabaseClient
+        .from('findings')
+        .select('*')
+        .eq('section_id', sectionId)
+        .order('created_at');
+
+      findings = data || [];
+      renderFindings();
+    }
+
+    function renderFindings() {
+      const container = document.getElementById('findings-list');
+      const empty = document.getElementById('findings-empty');
+
+      if (findings.length === 0) {
+        container.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      container.innerHTML = findings.map(f => {
+        const sevLabel = f.severity || 'medium';
+        const statusLabel = f.status || 'open';
+        const monetary = f.monetary_impact ? Number(f.monetary_impact).toLocaleString(undefined, { minimumFractionDigits: 2 }) : null;
+
+        return `
+          <div class="finding-card">
+            <div class="finding-header" onclick="toggleFinding('${f.id}')">
+              <div class="finding-header-left">
+                <span class="procedure-chevron" id="fchevron-${f.id}">&#9654;</span>
+                <span class="finding-title">${escHtml(f.title)}</span>
+              </div>
+              <div class="finding-header-right">
+                <span class="badge badge-severity-${sevLabel}">${sevLabel}</span>
+                <span class="badge badge-status-${statusLabel}">${statusLabel}</span>
+                ${!isApproved && can('edit_finding') ? `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editFinding('${f.id}')">Edit</button>` : ''}
+              </div>
+            </div>
+            <div class="finding-body" id="fbody-${f.id}">
+              ${f.condition ? `<div class="finding-field"><div class="finding-field-label">Condition</div><div class="finding-field-value">${escHtml(f.condition)}</div></div>` : ''}
+              ${f.criteria ? `<div class="finding-field"><div class="finding-field-label">Criteria</div><div class="finding-field-value">${escHtml(f.criteria)}</div></div>` : ''}
+              ${f.cause ? `<div class="finding-field"><div class="finding-field-label">Cause</div><div class="finding-field-value">${escHtml(f.cause)}</div></div>` : ''}
+              ${f.effect ? `<div class="finding-field"><div class="finding-field-label">Effect</div><div class="finding-field-value">${escHtml(f.effect)}</div></div>` : ''}
+              ${f.recommendation ? `<div class="finding-field"><div class="finding-field-label">Recommendation</div><div class="finding-field-value">${escHtml(f.recommendation)}</div></div>` : ''}
+              ${f.management_response ? `<div class="finding-field"><div class="finding-field-label">Management Response</div><div class="finding-field-value">${escHtml(f.management_response)}</div></div>` : ''}
+              ${monetary ? `<div class="finding-field"><div class="finding-field-label">Monetary Impact</div><div class="finding-field-value">${monetary}</div></div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleFinding(findingId) {
+      const body = document.getElementById('fbody-' + findingId);
+      const chevron = document.getElementById('fchevron-' + findingId);
+      body.classList.toggle('open');
+      chevron.classList.toggle('open');
+    }
+
+    function openFindingModal(findingId) {
+      // Reset form
+      document.getElementById('finding-title').value = '';
+      document.getElementById('finding-severity').value = 'medium';
+      document.getElementById('finding-condition').value = '';
+      document.getElementById('finding-criteria').value = '';
+      document.getElementById('finding-cause').value = '';
+      document.getElementById('finding-effect').value = '';
+      document.getElementById('finding-recommendation').value = '';
+      document.getElementById('finding-monetary').value = '';
+      document.getElementById('finding-edit-id').value = '';
+      document.getElementById('finding-modal-title').textContent = 'Add Finding';
+
+      if (findingId) {
+        const f = findings.find(x => x.id === findingId);
+        if (f) {
+          document.getElementById('finding-title').value = f.title || '';
+          document.getElementById('finding-severity').value = f.severity || 'medium';
+          document.getElementById('finding-condition').value = f.condition || '';
+          document.getElementById('finding-criteria').value = f.criteria || '';
+          document.getElementById('finding-cause').value = f.cause || '';
+          document.getElementById('finding-effect').value = f.effect || '';
+          document.getElementById('finding-recommendation').value = f.recommendation || '';
+          document.getElementById('finding-monetary').value = f.monetary_impact || '';
+          document.getElementById('finding-edit-id').value = f.id;
+          document.getElementById('finding-modal-title').textContent = 'Edit Finding';
+        }
+      }
+
+      document.getElementById('modal-finding').classList.add('active');
+    }
+
+    function editFinding(findingId) {
+      if (!can('edit_finding')) { alert('Only admins and reviewers can edit findings.'); return; }
+      openFindingModal(findingId);
+    }
+
+    async function saveFinding() {
+      const title = document.getElementById('finding-title').value.trim();
+      const severity = document.getElementById('finding-severity').value;
+      const condition = document.getElementById('finding-condition').value.trim();
+      const criteria = document.getElementById('finding-criteria').value.trim();
+      const cause = document.getElementById('finding-cause').value.trim();
+      const effect = document.getElementById('finding-effect').value.trim();
+      const recommendation = document.getElementById('finding-recommendation').value.trim();
+      const monetaryRaw = document.getElementById('finding-monetary').value;
+      const monetary = monetaryRaw ? parseFloat(monetaryRaw) : null;
+      const editId = document.getElementById('finding-edit-id').value;
+
+      if (!title) { alert('Please enter a finding title.'); return; }
+
+      const btn = document.getElementById('btn-save-finding');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      if (editId) {
+        const { error } = await supabaseClient.from('findings').update({
+          title, severity, condition, criteria, cause, effect, recommendation,
+          monetary_impact: monetary
+        }).eq('id', editId);
+
+        if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Save Finding'; return; }
+        await logActivity(engagementId, 'updated_finding', 'finding', editId, { title });
+      } else {
+        const { data, error } = await supabaseClient.from('findings').insert({
+          section_id: sectionId,
+          reported_by: currentUser.id,
+          title, severity, condition, criteria, cause, effect, recommendation,
+          monetary_impact: monetary,
+          status: 'open'
+        }).select().single();
+
+        if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Save Finding'; return; }
+        await logActivity(engagementId, 'added_finding', 'finding', data.id, { title, severity });
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Save Finding';
+      closeModal('modal-finding');
+      await loadFindings();
+      applyApprovedState();
+    }
+
+    // ---- Conclusion ----
+    async function saveConclusion() {
+      if (!can('save_conclusion')) { alert('Only admins and reviewers can write conclusions.'); return; }
+      const text = document.getElementById('conclusion-text').value.trim();
+
+      const { error } = await supabaseClient.from('audit_sections').update({
+        conclusion: text,
+        conclusion_by: currentUser.id
+      }).eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.conclusion = text;
+      section.conclusion_by = currentUser.id;
+
+      await logActivity(engagementId, 'saved_conclusion', 'section', sectionId, {});
+
+      const name = await resolveProfileName(currentUser.id);
+      document.getElementById('conclusion-meta').textContent = 'Written by ' + name;
+
+      alert('Conclusion saved.');
+    }
+
+    // ---- Review Notes ----
+    async function loadReviewNotes() {
+      const { data } = await supabaseClient
+        .from('review_notes')
+        .select('*, profiles:user_id(full_name, email)')
+        .eq('section_id', sectionId)
+        .order('created_at');
+
+      reviewNotes = data || [];
+
+      // Resolve roles
+      const noteRoles = {};
+      for (const n of reviewNotes) {
+        if (n.user_id && !noteRoles[n.user_id]) {
+          noteRoles[n.user_id] = await resolveUserRole(n.user_id);
+        }
+      }
+
+      renderReviewNotes(noteRoles);
+    }
+
+    function renderReviewNotes(noteRoles) {
+      const container = document.getElementById('review-notes-thread');
+      const empty = document.getElementById('review-notes-empty');
+
+      if (reviewNotes.length === 0) {
+        container.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      container.innerHTML = reviewNotes.map(n => {
+        const who = n.profiles?.full_name || n.profiles?.email || 'User';
+        const role = noteRoles[n.user_id] || '';
+        const time = new Date(n.created_at).toLocaleString();
+
+        return `
+          <div class="review-note-bubble ${n.note_type}">
+            <div class="review-note-meta">${escHtml(who)}${role ? ' (' + role + ')' : ''} &middot; ${time}</div>
+            <div>${escHtml(n.note)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function addReviewNote(noteType) {
+      if (noteType === 'review_comment' && !can('add_review_comment')) { alert('Only admins and reviewers can add review comments.'); return; }
+      if (noteType === 'preparer_response' && !can('add_preparer_response')) { alert('Only admins and preparers can add responses.'); return; }
+      const noteText = document.getElementById('new-review-note').value.trim();
+      if (!noteText) { alert('Please type a note.'); return; }
+
+      const { data, error } = await supabaseClient.from('review_notes').insert({
+        section_id: sectionId,
+        user_id: currentUser.id,
+        note: noteText,
+        note_type: noteType
+      }).select().single();
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      await logActivity(engagementId, 'added_review_note', 'review_note', data.id, { note_type: noteType });
+
+      document.getElementById('new-review-note').value = '';
+      await loadReviewNotes();
+      applyApprovedState();
+    }
+
+    // ---- Actions ----
+    function renderActions() {
+      const container = document.getElementById('actions-container');
+
+      if (isApproved) {
+        const approvedDate = section.approved_at ? new Date(section.approved_at).toLocaleString() : '';
+        container.innerHTML = `
+          <div class="approved-banner">
+            <span class="badge badge-approved">Approved</span>
+            <span class="text-sm text-muted">This section was approved on ${approvedDate}. All fields are read-only.</span>
+          </div>
+        `;
+        return;
+      }
+
+      const status = section.status || 'not_started';
+      let actionBtns = '';
+
+      // Submit for Review — any role that has submit_for_review permission
+      if (status !== 'ready_for_review' && can('submit_for_review')) {
+        actionBtns += '<button class="btn btn-primary btn-sm" onclick="submitForReview()">Submit for Review</button>';
+      }
+      // Approve — admin/reviewer only
+      if (can('approve_section')) {
+        actionBtns += '<button class="btn btn-success btn-sm" onclick="approveSection()">Approve Section</button>';
+      }
+      // Return — admin/reviewer only, when ready for review
+      if (status === 'ready_for_review' && can('return_to_preparer')) {
+        actionBtns += '<button class="btn btn-returned btn-sm" onclick="returnToPreparer()">Return to Preparer</button>';
+      }
+
+      if (actionBtns) {
+        container.innerHTML = '<div class="actions-bar">' + actionBtns + '</div>';
+      } else {
+        container.innerHTML = '<div class="text-sm text-muted" style="padding:12px;">No actions available for your role.</div>';
+      }
+    }
+
+    async function submitForReview() {
+      const { error } = await supabaseClient.from('audit_sections')
+        .update({ status: 'ready_for_review' })
+        .eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.status = 'ready_for_review';
+      await logActivity(engagementId, 'submitted_for_review', 'section', sectionId, { name: section.name });
+
+      updateStatusBadge();
+      renderActions();
+    }
+
+    async function approveSection() {
+      if (!can('approve_section')) { alert('Only admins and reviewers can approve sections.'); return; }
+      if (!confirm('Approve this section? This action is permanent and cannot be undone.')) return;
+
+      const now = new Date().toISOString();
+      const { error } = await supabaseClient.from('audit_sections').update({
+        status: 'approved',
+        approved_by: currentUser.id,
+        approved_at: now
+      }).eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.status = 'approved';
+      section.approved_by = currentUser.id;
+      section.approved_at = now;
+      isApproved = true;
+
+      await logActivity(engagementId, 'approved_section', 'section', sectionId, { name: section.name });
+
+      updateStatusBadge();
+      applyApprovedState();
+    }
+
+    async function returnToPreparer() {
+      if (!can('return_to_preparer')) { alert('Only admins and reviewers can return sections.'); return; }
+      const reason = prompt('Reason for returning this section:');
+      if (!reason) return;
+
+      // Add return_reason review note
+      const { data: note } = await supabaseClient.from('review_notes').insert({
+        section_id: sectionId,
+        user_id: currentUser.id,
+        note: reason,
+        note_type: 'return_reason'
+      }).select().single();
+
+      const { error } = await supabaseClient.from('audit_sections')
+        .update({ status: 'returned' })
+        .eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.status = 'returned';
+      await logActivity(engagementId, 'returned_section', 'section', sectionId, { reason });
+
+      updateStatusBadge();
+      renderActions();
+      await loadReviewNotes();
+      applyApprovedState();
+    }
+
+    function updateStatusBadge() {
+      const statusLabel = (section.status || 'not_started').replace(/_/g, ' ');
+      const badge = document.getElementById('section-status-badge');
+      badge.textContent = statusLabel;
+      badge.className = 'badge badge-' + (section.status || 'not-started').replace(/_/g, '-');
+    }
+
+    // ---- Approved state: disable everything ----
+    function applyApprovedState() {
+      // Always render conclusion and actions
+      document.getElementById('conclusion-text').value = section.conclusion || '';
+      if (section.conclusion_by) {
+        resolveProfileName(section.conclusion_by).then(name => {
+          document.getElementById('conclusion-meta').textContent = 'Written by ' + name;
+        });
+      }
+
+      renderActions();
+
+      if (!isApproved) return;
+
+      // Disable all inputs, textareas, selects
+      document.querySelectorAll('#page-content textarea, #page-content input, #page-content select').forEach(el => {
+        el.disabled = true;
+      });
+
+      // Hide all action buttons except back link
+      document.getElementById('btn-save-conclusion').style.display = 'none';
+      document.getElementById('btn-show-add-procedure').style.display = 'none';
+      document.getElementById('btn-add-finding').style.display = 'none';
+      document.getElementById('add-note-area').style.display = 'none';
+      document.getElementById('add-procedure-form').style.display = 'none';
+
+      // Hide individual procedure save/toggle/link buttons
+      document.querySelectorAll('#procedures-list .btn').forEach(btn => {
+        btn.style.display = 'none';
+      });
+
+      // Hide edit buttons on findings
+      document.querySelectorAll('#findings-list .btn').forEach(btn => {
+        btn.style.display = 'none';
+      });
+    }
+
+    // ---- Utilities ----
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+      });
+    });
+
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>
