@@ -1,7 +1,7 @@
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const SITE_URL = process.env.SITE_URL || 'https://axiom-audit.netlify.app';
+const SITE_URL = process.env.SITE_URL || 'https://auditsaas.netlify.app';
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
