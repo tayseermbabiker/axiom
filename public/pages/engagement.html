@@ -711,12 +711,31 @@
             <td class="text-sm">${tbCount} lines</td>
             <td class="text-sm">${doneP} / ${totalP}</td>
             <td><span class="badge badge-${sec.status.replace(/_/g, '-')}">${statusLabel}</span></td>
-            <td>
+            <td style="display:flex; gap:6px;">
               <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.location.href='section.html#${sec.id}'">Open</button>
+              ${can('delete_section') && !sec.approved_at ? `<button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="event.stopPropagation(); deleteSection('${sec.id}', '${escHtml(sec.name)}')">Delete</button>` : ''}
             </td>
           </tr>
         `;
       }).join('');
+    }
+
+    async function deleteSection(sectionId, sectionName) {
+      if (!can('delete_section')) { alert('Only admins can delete sections.'); return; }
+      if (!confirm('Delete section "' + sectionName + '"?\n\nThis will permanently delete all procedures, findings, review notes, and documents in this section.\n\nThis cannot be undone.')) return;
+
+      const { error } = await supabaseClient
+        .from('audit_sections')
+        .delete()
+        .eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      await logActivity(engagementId, 'deleted_section', 'section', sectionId, { name: sectionName });
+
+      // Reload sections and rebuild maps
+      await loadSections();
+      updateStats();
     }
 
     function onSectionTemplateChange(value) {
