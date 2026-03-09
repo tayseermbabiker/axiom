@@ -1666,12 +1666,16 @@
 
       if (isApproved) {
         const approvedDate = section.approved_at ? new Date(section.approved_at).toLocaleString() : '';
-        container.innerHTML = `
+        let approvedHtml = `
           <div class="approved-banner">
             <span class="badge badge-approved">Approved</span>
             <span class="text-sm text-muted">This section was approved on ${approvedDate}. All fields are read-only.</span>
-          </div>
         `;
+        if (currentRole === 'admin') {
+          approvedHtml += `<button class="btn btn-outline btn-sm" style="margin-left:auto; color:#dc2626; border-color:#dc2626;" onclick="reopenSection()">Reopen Section</button>`;
+        }
+        approvedHtml += '</div>';
+        container.innerHTML = approvedHtml;
         return;
       }
 
@@ -1764,6 +1768,50 @@
       applyApprovedState();
     }
 
+    async function reopenSection() {
+      if (currentRole !== 'admin') { alert('Only admins can reopen approved sections.'); return; }
+
+      const reason = prompt('Reason for reopening this approved section:\n\n(This will be logged in the audit trail)');
+      if (!reason || !reason.trim()) return;
+
+      const originalApprover = section.approved_by;
+      const originalApprovedAt = section.approved_at;
+
+      const { error } = await supabaseClient.from('audit_sections').update({
+        status: 'in_progress',
+        approved_by: null,
+        approved_at: null
+      }).eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.status = 'in_progress';
+      section.approved_by = null;
+      section.approved_at = null;
+      isApproved = false;
+
+      // Log with full context for audit trail
+      const approverName = await resolveProfileName(originalApprover);
+      await logActivity(engagementId, 'reopened_section', 'section', sectionId, {
+        name: section.name,
+        reason: reason.trim(),
+        original_approver: approverName,
+        original_approved_at: originalApprovedAt
+      });
+
+      // Add a review note so it's visible in the section thread
+      await supabaseClient.from('review_notes').insert({
+        section_id: sectionId,
+        user_id: currentUser.id,
+        note: 'Section reopened. Reason: ' + reason.trim(),
+        note_type: 'return_reason'
+      });
+
+      updateStatusBadge();
+      await loadReviewNotes();
+      applyApprovedState();
+    }
+
     function updateStatusBadge() {
       const statusLabel = (section.status || 'not_started').replace(/_/g, ' ');
       const badge = document.getElementById('section-status-badge');
@@ -1783,7 +1831,27 @@
 
       renderActions();
 
-      if (!isApproved) return;
+      if (!isApproved) {
+        // Re-enable fields (needed after reopen)
+        document.querySelectorAll('#page-content textarea, #page-content input, #page-content select').forEach(el => {
+          el.disabled = false;
+        });
+        // Restore role-based button visibility
+        if (can('add_procedure')) document.getElementById('btn-show-add-procedure').style.display = 'inline-flex';
+        if (can('add_finding')) document.getElementById('btn-add-finding').style.display = '';
+        if (can('save_conclusion')) {
+          document.getElementById('btn-save-conclusion').style.display = '';
+        } else {
+          document.getElementById('conclusion-text').disabled = true;
+        }
+        if (can('add_review_comment') || can('add_preparer_response')) {
+          document.getElementById('add-note-area').style.display = '';
+        }
+        // Re-render procedures and findings to restore their buttons
+        renderProcedures();
+        renderFindings();
+        return;
+      }
 
       // Disable all inputs, textareas, selects
       document.querySelectorAll('#page-content textarea, #page-content input, #page-content select').forEach(el => {
