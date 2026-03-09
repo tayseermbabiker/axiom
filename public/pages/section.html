@@ -825,14 +825,19 @@
       engagementId = section.engagement_id;
       isApproved = !!section.approved_at;
 
-      // Fetch engagement for breadcrumb + shared folder
+      // Fetch engagement for breadcrumb + shared folder + status
       const { data: eng } = await supabaseClient
         .from('engagements')
-        .select('client_name, shared_folder_url')
+        .select('client_name, shared_folder_url, status')
         .eq('id', engagementId)
         .single();
 
       sharedFolderUrl = eng?.shared_folder_url || '';
+
+      // If engagement is closed, treat as approved (read-only)
+      if (eng?.status === 'completed') {
+        isApproved = true;
+      }
 
       // Update navigation
       const engLink = 'engagement.html#' + engagementId;

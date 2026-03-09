@@ -144,6 +144,13 @@
             <button class="text-sm role-admin-reviewer" style="display:none; background:none; border:none; color:var(--primary); cursor:pointer; text-decoration:underline; margin-left:4px;" onclick="editSharedFolder()">Set folder</button>
           </div>
         </div>
+        <div id="eng-actions" style="display:flex; gap:8px; align-items:flex-start;"></div>
+      </div>
+
+      <!-- Closed banner -->
+      <div id="eng-closed-banner" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; padding:12px 16px; margin-bottom:16px; display:none;">
+        <span class="badge badge-approved" style="background:#dcfce7; color:#16a34a;">Completed</span>
+        <span class="text-sm" style="color:#991b1b; margin-left:8px;" id="eng-closed-text">This engagement has been closed. All sections are read-only.</span>
       </div>
 
       <!-- Stats -->
@@ -653,6 +660,104 @@
       document.getElementById('stat-procedures').textContent = doneProcs + ' / ' + totalProcs;
       document.getElementById('stat-findings').textContent = openFindings;
       document.getElementById('stat-approved').textContent = approvedSections + ' / ' + totalSections;
+
+      renderEngagementActions();
+    }
+
+    function renderEngagementActions() {
+      const container = document.getElementById('eng-actions');
+      const banner = document.getElementById('eng-closed-banner');
+      const isClosed = engagement.status === 'completed';
+
+      if (isClosed) {
+        banner.style.display = 'flex';
+        banner.style.alignItems = 'center';
+        // Hide all create/upload buttons
+        document.getElementById('btn-new-section').style.display = 'none';
+        document.getElementById('btn-upload-tb').style.display = 'none';
+        document.getElementById('btn-replace-tb').style.display = 'none';
+        document.querySelectorAll('.role-admin-reviewer').forEach(el => el.style.display = 'none');
+
+        if (currentRole === 'admin') {
+          container.innerHTML = '<button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="reopenEngagement()">Reopen Engagement</button>';
+        } else {
+          container.innerHTML = '';
+        }
+        return;
+      }
+
+      banner.style.display = 'none';
+
+      if (currentRole === 'admin') {
+        const totalSections = sections.length;
+        const approvedSections = sections.filter(s => s.status === 'approved').length;
+        const allApproved = totalSections > 0 && approvedSections === totalSections;
+        const openFindings = findings.filter(f => f.status === 'open').length;
+
+        if (allApproved && openFindings === 0) {
+          container.innerHTML = '<button class="btn btn-success btn-sm" onclick="closeEngagement()">Close Engagement</button>';
+        } else if (totalSections > 0) {
+          let reasons = [];
+          if (approvedSections < totalSections) reasons.push((totalSections - approvedSections) + ' section(s) not approved');
+          if (openFindings > 0) reasons.push(openFindings + ' open finding(s)');
+          container.innerHTML = `<span class="text-sm text-muted" title="${reasons.join(', ')}">Cannot close: ${reasons.join(', ')}</span>`;
+        } else {
+          container.innerHTML = '';
+        }
+      } else {
+        container.innerHTML = '';
+      }
+    }
+
+    async function closeEngagement() {
+      if (currentRole !== 'admin') { alert('Only admins can close engagements.'); return; }
+      if (!confirm('Close this engagement?\n\nAll sections will become read-only. This marks the final file assembly date per ISA 230.\n\nYou can reopen it later if needed (logged as post-assembly change).')) return;
+
+      const { error } = await supabaseClient.from('engagements')
+        .update({ status: 'completed' })
+        .eq('id', engagementId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      engagement.status = 'completed';
+      await logActivity(engagementId, 'closed_engagement', 'engagement', engagementId, {
+        client_name: engagement.client_name,
+        sections_count: sections.length
+      });
+
+      renderEngagementActions();
+    }
+
+    async function reopenEngagement() {
+      if (currentRole !== 'admin') { alert('Only admins can reopen engagements.'); return; }
+
+      const reason = prompt('Reason for reopening this closed engagement:\n\n(This will be logged as a post-assembly change per ISA 230)');
+      if (!reason || !reason.trim()) return;
+
+      const { error } = await supabaseClient.from('engagements')
+        .update({ status: 'active' })
+        .eq('id', engagementId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      engagement.status = 'active';
+      await logActivity(engagementId, 'reopened_engagement', 'engagement', engagementId, {
+        reason: reason.trim(),
+        client_name: engagement.client_name
+      });
+
+      // Restore role-based buttons
+      if (can('create_section')) {
+        document.getElementById('btn-new-section').style.display = '';
+      }
+      if (can('upload_tb')) {
+        document.getElementById('btn-upload-tb').style.display = '';
+      }
+      if (can('edit_shared_folder')) {
+        document.querySelectorAll('.role-admin-reviewer').forEach(el => el.style.display = '');
+      }
+
+      renderEngagementActions();
     }
 
     // ---- Tab Switching ----
