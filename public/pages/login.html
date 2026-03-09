@@ -38,6 +38,9 @@
         <span id="toggle-text">Don't have an account?</span>
         <a href="#" id="toggle-link">Sign up</a>
       </div>
+      <div class="auth-toggle" id="forgot-link-wrap">
+        <a href="#" id="forgot-link" style="font-size:13px; color:var(--gray-500);">Forgot your password?</a>
+      </div>
     </div>
   </div>
 
@@ -57,6 +60,40 @@
     // Check if already logged in
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
       if (session) window.location.href = '/pages/dashboard.html';
+    });
+
+    // Forgot password
+    const forgotLink = document.getElementById('forgot-link');
+    const forgotWrap = document.getElementById('forgot-link-wrap');
+
+    forgotLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        errorMsg.textContent = 'Enter your email address first, then click "Forgot your password?"';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      forgotLink.textContent = 'Sending reset link...';
+      forgotLink.style.pointerEvents = 'none';
+
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/pages/reset-password.html'
+      });
+
+      if (error) {
+        errorMsg.textContent = error.message;
+        errorMsg.style.display = 'block';
+      } else {
+        errorMsg.textContent = 'Password reset link sent to ' + email + '. Check your inbox.';
+        errorMsg.style.background = '#dcfce7';
+        errorMsg.style.color = '#16a34a';
+        errorMsg.style.display = 'block';
+      }
+
+      forgotLink.textContent = 'Forgot your password?';
+      forgotLink.style.pointerEvents = '';
     });
 
     // Pre-fill email from invite link (?invite=email@example.com)
