@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Axiom — Audit Workpapers Reimagined</title>
-  <meta name="description" content="Ditch Excel chaos. One platform for procedures, evidence, findings, and review — built for small CPA firms that move fast.">
+  <title>Axiom — The Audit Control Room for Modern Firms</title>
+  <meta name="description" content="Structure, review, and sign-off for every audit engagement. Your files stay in your cloud. Built for CPA firms with 3-25 auditors.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -269,72 +269,17 @@
       margin: 0 auto;
     }
 
-    /* ---- VALUE PROPS ---- */
-    .value-section {
+    /* ---- FEATURES (combined section) ---- */
+    .features-section {
       background: #F9FAFB;
       border-top: 1px solid #E5E7EB;
       border-bottom: 1px solid #E5E7EB;
     }
 
-    .value-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
-    }
-
-    .value-card {
-      background: #FFFFFF;
-      border-radius: 12px;
-      padding: 32px 28px;
-      border: 1px solid #E5E7EB;
-      transition: all 0.25s;
-    }
-
-    .value-card:hover {
-      border-color: #3A7BFF;
-      box-shadow: 0 4px 24px rgba(58, 123, 255, 0.08);
-      transform: translateY(-2px);
-    }
-
-    .value-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      background: rgba(58, 123, 255, 0.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .value-icon svg {
-      width: 22px;
-      height: 22px;
-      stroke: #3A7BFF;
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .value-card h3 {
-      font-size: 17px;
-      font-weight: 700;
-      color: #0A1A2F;
-      margin-bottom: 8px;
-    }
-
-    .value-card p {
-      font-size: 14px;
-      color: #6B7280;
-      line-height: 1.65;
-    }
-
-    /* ---- FEATURES ---- */
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
     }
 
     .feature-card {
@@ -348,10 +293,7 @@
     .feature-card:hover {
       border-color: rgba(58, 123, 255, 0.3);
       box-shadow: 0 8px 32px rgba(10, 26, 47, 0.06);
-    }
-
-    .feature-card.feature-wide {
-      grid-column: span 2;
+      transform: translateY(-2px);
     }
 
     .feature-icon {
@@ -386,76 +328,6 @@
       font-size: 15px;
       color: #6B7280;
       line-height: 1.7;
-    }
-
-    /* ---- HOW IT WORKS ---- */
-    .how-section {
-      background: #0A1A2F;
-    }
-
-    .how-section .section-label {
-      color: #4ADE80;
-    }
-
-    .how-section .section-title {
-      color: #FFFFFF;
-    }
-
-    .how-section .section-subtitle {
-      color: rgba(255, 255, 255, 0.5);
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 32px;
-      position: relative;
-    }
-
-    .steps::before {
-      content: '';
-      position: absolute;
-      top: 28px;
-      left: calc(12.5% + 28px);
-      right: calc(12.5% + 28px);
-      height: 2px;
-      background: linear-gradient(90deg, #3A7BFF, #4ADE80);
-      opacity: 0.3;
-    }
-
-    .step {
-      text-align: center;
-      position: relative;
-    }
-
-    .step-number {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: 2px solid rgba(58, 123, 255, 0.4);
-      background: #0A1A2F;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 24px;
-      font-size: 20px;
-      font-weight: 700;
-      color: #3A7BFF;
-      position: relative;
-      z-index: 1;
-    }
-
-    .step h3 {
-      font-size: 17px;
-      font-weight: 700;
-      color: #FFFFFF;
-      margin-bottom: 8px;
-    }
-
-    .step p {
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.45);
-      line-height: 1.65;
     }
 
     /* ---- PRICING ---- */
@@ -554,22 +426,12 @@
     }
 
     .price-features li {
-      font-size: 14px;
-      color: #374151;
       padding: 8px 0;
       display: flex;
       align-items: center;
       gap: 12px;
-    }
-
-    .price-features li::before {
-      content: '';
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: rgba(74, 222, 128, 0.12);
-      flex-shrink: 0;
-      position: relative;
+      font-size: 14px;
+      color: #374151;
     }
 
     .check-wrap {
@@ -591,19 +453,6 @@
       stroke-width: 2.5;
       stroke-linecap: round;
       stroke-linejoin: round;
-    }
-
-    .price-features li {
-      padding: 8px 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 14px;
-      color: #374151;
-    }
-
-    .price-features li::before {
-      display: none;
     }
 
     .price-cta {
@@ -694,18 +543,6 @@
     }
 
     /* ---- RESPONSIVE ---- */
-    @media (max-width: 1024px) {
-      .value-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .features-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-      .feature-card.feature-wide {
-        grid-column: span 1;
-      }
-    }
-
     @media (max-width: 768px) {
       .nav-links {
         gap: 16px;
@@ -719,14 +556,9 @@
       .section {
         padding: 72px 24px;
       }
-      .value-grid,
       .features-grid,
-      .steps,
       .pricing-grid {
         grid-template-columns: 1fr;
-      }
-      .steps::before {
-        display: none;
       }
       .price-card.popular {
         transform: none;
@@ -757,9 +589,9 @@
     <div class="hero-grid"></div>
     <div class="hero-glow"></div>
     <div class="hero-content">
-      <div class="hero-badge">Built for small CPA firms</div>
-      <h1>Audit workpapers reimagined for <em>speed and clarity</em></h1>
-      <p>Ditch Excel chaos. One platform for procedures, evidence, findings, and review &mdash; built for small firms that move fast.</p>
+      <div class="hero-badge">Built for CPA firms with 3&ndash;25 auditors</div>
+      <h1>The audit <em>control room</em> your firm is missing</h1>
+      <p>Structure, review, and sign-off for every engagement &mdash; while your files stay securely in your own cloud.</p>
       <div class="hero-ctas">
         <a href="/pages/login.html" class="btn-primary">Start Free Trial</a>
         <a href="#pricing" class="btn-secondary">See Pricing</a>
@@ -767,135 +599,74 @@
     </div>
   </section>
 
-  <!-- VALUE PROPS -->
-  <section class="section value-section">
+  <!-- WHY AXIOM -->
+  <section class="section features-section" id="features">
     <div class="section-inner">
       <div class="section-header section-header-center">
         <span class="section-label">Why Axiom</span>
-        <h2 class="section-title">Everything your firm needs, nothing it doesn't</h2>
-        <p class="section-subtitle">We built Axiom for firms tired of managing audits across scattered spreadsheets, email threads, and shared drives.</p>
-      </div>
-      <div class="value-grid">
-        <div class="value-card">
-          <div class="value-icon">
-            <svg viewBox="0 0 24 24"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
-          </div>
-          <h3>Faster Prep</h3>
-          <p>Import your trial balance in seconds. Smart mapping takes care of the rest so you can start working immediately.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          </div>
-          <h3>Cleaner Reviews</h3>
-          <p>Structured review workflow with clear sign-offs. Reviewers see exactly what changed and what needs attention.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          </div>
-          <h3>Stronger Documentation</h3>
-          <p>Every action is logged. Immutable audit trail means you are always ready for peer review or regulatory inquiry.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          </div>
-          <h3>Happier Teams</h3>
-          <p>Everyone knows their assignments, deadlines, and progress. No more chasing updates over email or chat.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section class="section" id="features">
-    <div class="section-inner">
-      <div class="section-header">
-        <span class="section-label">Features</span>
         <h2 class="section-title">Purpose-built for the audit workflow</h2>
         <p class="section-subtitle">Not another project management tool. Axiom is designed around how audit teams actually work.</p>
       </div>
       <div class="features-grid">
-        <div class="feature-card feature-wide">
+        <div class="feature-card">
           <div class="feature-icon">
-            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <!-- monitor/dashboard icon -->
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
           </div>
-          <h3>Trial Balance Import</h3>
-          <p>Upload Excel or CSV files and let Axiom intelligently map your accounts. Full debit/credit support with automatic grouping into audit sections. No more manual copy-paste between workbooks.</p>
+          <h3>Review From Anywhere</h3>
+          <p>Partners see every section's status, review notes, and sign-offs from their dashboard. No site visits. No chasing updates over email or chat.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+            <!-- file/TB icon -->
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
           </div>
-          <h3>Audit Sections &amp; Procedures</h3>
-          <p>Group trial balance lines into logical sections. Define custom audit tests, assign them to team members, and track completion in real time.</p>
+          <h3>TB-Driven Structure</h3>
+          <p>Upload your trial balance once. Axiom maps classifications to audit sections, tracks procedures and findings, and keeps everything tied to the numbers.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <!-- shield/lock icon -->
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
           </div>
-          <h3>Findings Tracker</h3>
-          <p>Log findings with severity levels and status tracking. Attach evidence, record management responses, and follow through to resolution.</p>
+          <h3>ISA 230 Audit Trail</h3>
+          <p>Every action logged. Every reopen requires a reason. Immutable, append-only documentation that is always ready for peer review or regulatory inquiry.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">
+            <!-- cloud icon -->
+            <svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+          </div>
+          <h3>Your Files Never Leave Your Cloud</h3>
+          <p>Axiom links to Google Drive or OneDrive &mdash; zero file storage, zero liability, zero vendor lock-in. Your client data stays exactly where it is.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <!-- check-circle icon -->
             <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
           </div>
-          <h3>Review &amp; Sign-off</h3>
-          <p>Immutable approval workflow. Once a section is signed off, it is locked with a full audit trail of who approved what and when.</p>
+          <h3>Review &amp; Sign-off Workflow</h3>
+          <p>Preparer, reviewer, partner &mdash; each with clear permissions. Submit, return with notes, or approve sections. Every sign-off locked and logged.</p>
         </div>
-        <div class="feature-card feature-wide">
+        <div class="feature-card">
           <div class="feature-icon">
+            <!-- users icon -->
             <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           </div>
-          <h3>Team Collaboration</h3>
-          <p>Role-based access for partners, managers, and staff. Real-time progress dashboards and a detailed activity log so nothing falls through the cracks. Everyone stays aligned without constant check-ins.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section class="section how-section">
-    <div class="section-inner">
-      <div class="section-header section-header-center">
-        <span class="section-label">How It Works</span>
-        <h2 class="section-title">From trial balance to sign-off in four steps</h2>
-        <p class="section-subtitle">Get your engagement up and running in minutes, not days.</p>
-      </div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-number">1</div>
-          <h3>Import</h3>
-          <p>Upload your trial balance. Axiom maps accounts and builds your workpaper structure automatically.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">2</div>
-          <h3>Assign</h3>
-          <p>Distribute audit sections and procedures to your team. Set deadlines and priorities.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">3</div>
-          <h3>Complete</h3>
-          <p>Team members execute procedures, attach evidence, and flag findings as they go.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">4</div>
-          <h3>Review</h3>
-          <p>Managers and partners review, leave notes, and sign off. The engagement closes with a full audit trail.</p>
+          <h3>Team Assignments &amp; Progress</h3>
+          <p>Assign sections to team members, track completion in real time, and exchange review notes. Everyone knows their work without constant check-ins.</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- PRICING -->
-  <section class="section" id="pricing" style="background: #F9FAFB; border-top: 1px solid #E5E7EB;">
+  <section class="section" id="pricing">
     <div class="section-inner">
       <div class="section-header section-header-center">
         <span class="section-label">Pricing</span>
         <h2 class="section-title">Simple plans that scale with your firm</h2>
-        <p class="section-subtitle">All plans include unlimited engagements, unlimited storage, and every feature. No hidden fees.</p>
+        <p class="section-subtitle">All plans include unlimited engagements and every feature. No hidden fees.</p>
       </div>
       <div class="pricing-grid">
         <!-- Starter -->
@@ -910,11 +681,11 @@
           <p class="price-includes">Everything you need to get started</p>
           <ul class="price-features">
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Unlimited engagements</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Unlimited storage</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; mapping</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Review &amp; sign-off</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; classification</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Review &amp; sign-off workflow</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Findings tracker</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Full audit trail</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Zero-storage security</li>
           </ul>
           <a href="/pages/login.html" class="price-cta price-cta-outline">Start Free Trial</a>
         </div>
@@ -931,11 +702,11 @@
           <p class="price-includes">For growing firms with multiple teams</p>
           <ul class="price-features">
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Unlimited engagements</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Unlimited storage</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; mapping</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Review &amp; sign-off</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; classification</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Review &amp; sign-off workflow</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Findings tracker</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Full audit trail</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Zero-storage security</li>
           </ul>
           <a href="/pages/login.html" class="price-cta price-cta-filled">Start Free Trial</a>
         </div>
@@ -951,11 +722,11 @@
           <p class="price-includes">For established firms at scale</p>
           <ul class="price-features">
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Unlimited engagements</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Unlimited storage</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; mapping</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Review &amp; sign-off</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; classification</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Review &amp; sign-off workflow</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Findings tracker</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Full audit trail</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Zero-storage security</li>
           </ul>
           <a href="/pages/login.html" class="price-cta price-cta-outline">Start Free Trial</a>
         </div>
@@ -966,7 +737,7 @@
   <!-- FINAL CTA -->
   <section class="final-cta">
     <div class="final-cta-glow"></div>
-    <h2>Start your first engagement in minutes.</h2>
+    <h2>Run your next audit with structure, visibility, and control.</h2>
     <p>No credit card required. Free for 14 days.</p>
     <a href="/pages/login.html" class="btn-primary">Start Free Trial</a>
   </section>
