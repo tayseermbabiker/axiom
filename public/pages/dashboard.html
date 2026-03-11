@@ -6,6 +6,256 @@
   <title>Dashboard — Axiom</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* ---- Engagement cards ---- */
+    .eng-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .eng-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .eng-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+      border-color: var(--gray-300);
+    }
+
+    .eng-card.completed {
+      opacity: 0.7;
+      background: var(--gray-50);
+    }
+
+    .eng-card.completed:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* Card top row */
+    .eng-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .eng-card-identity {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .eng-card-client {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .eng-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .eng-card-year {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .eng-type-pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: capitalize;
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .eng-type-pill.review {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .eng-type-pill.compilation {
+      background: var(--returned-light);
+      color: var(--returned);
+    }
+
+    .eng-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Progress in card */
+    .eng-progress {
+      width: 160px;
+    }
+
+    .eng-progress-bar {
+      height: 6px;
+      background: var(--gray-200);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .eng-progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+      background: var(--primary);
+    }
+
+    .eng-progress-fill.full {
+      background: var(--success);
+    }
+
+    .completed .eng-progress-fill {
+      background: var(--gray-400);
+    }
+
+    .eng-progress-text {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    /* Metrics strip */
+    .eng-metrics {
+      display: flex;
+      gap: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-100);
+    }
+
+    .eng-metric {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .eng-metric-value {
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    .eng-metric-icon {
+      width: 16px;
+      height: 16px;
+      stroke: var(--gray-400);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .eng-metric.has-findings .eng-metric-value {
+      color: var(--warning);
+    }
+
+    .eng-metric.has-findings .eng-metric-icon {
+      stroke: var(--warning);
+    }
+
+    /* Card footer */
+    .eng-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-100);
+    }
+
+    .eng-card-created {
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    /* Empty state elevated */
+    .empty-card {
+      background: white;
+      border: 2px dashed var(--gray-300);
+      border-radius: 12px;
+      padding: 64px 24px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .empty-icon svg {
+      width: 28px;
+      height: 28px;
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .empty-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+
+    .empty-desc {
+      font-size: 14px;
+      color: var(--gray-400);
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .eng-card-top {
+        flex-direction: column;
+      }
+      .eng-card-right {
+        align-items: flex-start;
+        flex-direction: row;
+        gap: 12px;
+      }
+      .eng-progress {
+        width: 100%;
+      }
+      .eng-metrics {
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="app-layout">
@@ -33,27 +283,17 @@
         <button class="btn btn-primary" id="btn-new-eng-top" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
       </div>
 
-      <!-- Engagements list -->
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Client</th>
-                <th>Year End</th>
-                <th>Type</th>
-                <th>Progress</th>
-                <th>Status</th>
-                <th>Created By</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody id="engagements-table">
-            </tbody>
-          </table>
-        </div>
-        <div class="empty-state" id="empty-state" style="display:none;">
-          <p id="empty-msg">No engagements yet.</p>
+      <!-- Engagement cards -->
+      <div class="eng-list" id="engagements-list"></div>
+
+      <!-- Empty state -->
+      <div id="empty-state" style="display:none;">
+        <div class="empty-card">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+          </div>
+          <div class="empty-title" id="empty-msg">No engagements yet</div>
+          <div class="empty-desc">Create your first engagement to start your audit workflow.</div>
           <button class="btn btn-primary" id="btn-new-eng-empty" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
         </div>
       </div>
@@ -129,20 +369,20 @@
         badge.style.display = 'inline-block';
       }
 
-      // Show create buttons only for admin
       if (can('create_engagement')) {
         document.getElementById('btn-new-eng-top').style.display = '';
         document.getElementById('btn-new-eng-empty').style.display = '';
-        document.getElementById('empty-msg').textContent = 'No engagements yet. Create your first one to get started.';
+        document.getElementById('empty-msg').textContent = 'No engagements yet';
+        document.querySelector('.empty-desc').textContent = 'Create your first engagement to start your audit workflow.';
       } else {
-        document.getElementById('empty-msg').textContent = 'No engagements yet. Ask an admin to create one.';
+        document.getElementById('empty-msg').textContent = 'No engagements yet';
+        document.querySelector('.empty-desc').textContent = 'Ask an admin to create one to get started.';
       }
 
       await loadEngagements();
     }
 
     async function loadEngagements() {
-      // Fetch engagements scoped to organization
       const { data: engagements, error } = await supabaseClient
         .from('engagements')
         .select('*, profiles:created_by(full_name, email)')
@@ -151,55 +391,139 @@
 
       if (error) { console.error(error); return; }
 
-      const tbody = document.getElementById('engagements-table');
+      const list = document.getElementById('engagements-list');
       const emptyState = document.getElementById('empty-state');
 
       if (!engagements || engagements.length === 0) {
-        tbody.innerHTML = '';
+        list.innerHTML = '';
         emptyState.style.display = 'block';
         return;
       }
 
       emptyState.style.display = 'none';
 
-      // Get section counts per engagement
       const engIds = engagements.map(e => e.id);
+
+      // Fetch sections
       const { data: sections } = await supabaseClient
         .from('audit_sections')
         .select('id, engagement_id, status')
         .in('engagement_id', engIds);
 
-      // Build counts
-      const sectionCounts = {};
-      const approvedCounts = {};
-      engIds.forEach(id => { sectionCounts[id] = 0; approvedCounts[id] = 0; });
+      // Fetch procedures
+      const sectionIds = (sections || []).map(s => s.id);
+      let procedures = [];
+      if (sectionIds.length > 0) {
+        const { data: procs } = await supabaseClient
+          .from('audit_procedures')
+          .select('id, section_id, status')
+          .in('section_id', sectionIds);
+        procedures = procs || [];
+      }
+
+      // Fetch findings
+      let findings = [];
+      if (sectionIds.length > 0) {
+        const { data: finds } = await supabaseClient
+          .from('findings')
+          .select('id, section_id, status')
+          .in('section_id', sectionIds);
+        findings = finds || [];
+      }
+
+      // Build maps: engagement_id -> counts
+      const sectionsByEng = {};
+      const approvedByEng = {};
+      const sectionToEng = {};
+      engIds.forEach(id => { sectionsByEng[id] = 0; approvedByEng[id] = 0; });
 
       (sections || []).forEach(s => {
-        sectionCounts[s.engagement_id]++;
-        if (s.status === 'approved') approvedCounts[s.engagement_id]++;
+        sectionsByEng[s.engagement_id]++;
+        if (s.status === 'approved') approvedByEng[s.engagement_id]++;
+        sectionToEng[s.id] = s.engagement_id;
       });
 
-      tbody.innerHTML = engagements.map(e => {
-        const total = sectionCounts[e.id] || 0;
-        const approved = approvedCounts[e.id] || 0;
-        const pct = total > 0 ? Math.round((approved / total) * 100) : 0;
-        const date = new Date(e.created_at).toLocaleDateString();
-        const yearEnd = new Date(e.year_end_date).toLocaleDateString();
+      // Procedures per engagement
+      const procTotalByEng = {};
+      const procDoneByEng = {};
+      engIds.forEach(id => { procTotalByEng[id] = 0; procDoneByEng[id] = 0; });
+
+      procedures.forEach(p => {
+        const engId = sectionToEng[p.section_id];
+        if (engId) {
+          procTotalByEng[engId]++;
+          if (p.status === 'done') procDoneByEng[engId]++;
+        }
+      });
+
+      // Open findings per engagement
+      const openFindingsByEng = {};
+      engIds.forEach(id => { openFindingsByEng[id] = 0; });
+
+      findings.forEach(f => {
+        const engId = sectionToEng[f.section_id];
+        if (engId && f.status === 'open') {
+          openFindingsByEng[engId]++;
+        }
+      });
+
+      list.innerHTML = engagements.map(e => {
+        const totalSections = sectionsByEng[e.id] || 0;
+        const approved = approvedByEng[e.id] || 0;
+        const pct = totalSections > 0 ? Math.round((approved / totalSections) * 100) : 0;
+        const totalProcs = procTotalByEng[e.id] || 0;
+        const doneProcs = procDoneByEng[e.id] || 0;
+        const openFindings = openFindingsByEng[e.id] || 0;
+        const isCompleted = e.status === 'completed';
+
+        const yearEnd = new Date(e.year_end_date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+        const createdDate = new Date(e.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
         const createdBy = e.profiles?.full_name || e.profiles?.email || 'Unknown';
 
+        const typePillClass = e.engagement_type === 'review' ? ' review' : e.engagement_type === 'compilation' ? ' compilation' : '';
+        const statusBadgeClass = isCompleted ? 'badge-approved' : 'badge-in-progress';
+        const statusLabel = isCompleted ? 'Completed' : 'Active';
+        const progressFillClass = pct === 100 ? ' full' : '';
+        const findingsClass = openFindings > 0 ? ' has-findings' : '';
+
         return `
-          <tr onclick="window.location.href='engagement.html#${e.id}'">
-            <td><strong>${escHtml(e.client_name)}</strong></td>
-            <td>${yearEnd}</td>
-            <td style="text-transform:capitalize">${e.engagement_type}</td>
-            <td style="min-width:150px">
-              <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-              <div class="progress-text">${approved}/${total} sections approved</div>
-            </td>
-            <td><span class="badge badge-${e.status === 'active' ? 'in-progress' : 'approved'}">${e.status}</span></td>
-            <td class="text-sm">${escHtml(createdBy)}</td>
-            <td class="text-muted text-sm">${date}</td>
-          </tr>
+          <a href="engagement.html#${e.id}" class="eng-card${isCompleted ? ' completed' : ''}">
+            <div class="eng-card-top">
+              <div class="eng-card-identity">
+                <div class="eng-card-client">${escHtml(e.client_name)}</div>
+                <div class="eng-card-meta">
+                  <span class="eng-card-year">YE ${yearEnd}</span>
+                  <span class="eng-type-pill${typePillClass}">${e.engagement_type}</span>
+                  <span class="badge ${statusBadgeClass}">${statusLabel}</span>
+                </div>
+              </div>
+              <div class="eng-card-right">
+                <div class="eng-progress">
+                  <div class="eng-progress-bar">
+                    <div class="eng-progress-fill${progressFillClass}" style="width:${pct}%"></div>
+                  </div>
+                  <div class="eng-progress-text">${approved} / ${totalSections} sections approved</div>
+                </div>
+              </div>
+            </div>
+            <div class="eng-metrics">
+              <div class="eng-metric">
+                <svg class="eng-metric-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                <span class="eng-metric-value">${totalSections}</span> sections
+              </div>
+              <div class="eng-metric">
+                <svg class="eng-metric-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span class="eng-metric-value">${doneProcs} / ${totalProcs}</span> procedures
+              </div>
+              <div class="eng-metric${findingsClass}">
+                <svg class="eng-metric-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span class="eng-metric-value">${openFindings}</span> open finding${openFindings !== 1 ? 's' : ''}
+              </div>
+            </div>
+            <div class="eng-card-footer">
+              <span class="eng-card-created">Created by ${escHtml(createdBy)} &middot; ${createdDate}</span>
+            </div>
+          </a>
         `;
       }).join('');
     }
@@ -248,11 +572,9 @@
       btn.disabled = false;
       btn.textContent = 'Create';
 
-      // Go directly to the new engagement
       window.location.href = `engagement.html#${data.id}`;
     });
 
-    // Close modal on overlay click
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) overlay.classList.remove('active');
