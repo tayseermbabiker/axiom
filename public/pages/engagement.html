@@ -104,6 +104,222 @@
     .badge-open { background: var(--warning-light); color: var(--warning); }
     .badge-resolved { background: var(--success-light); color: var(--success); }
     .badge-reported { background: var(--primary-light); color: var(--primary); }
+
+    /* ---- Section cards ---- */
+    .sec-card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sec-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .sec-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+      border-color: var(--gray-300);
+    }
+
+    .sec-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .sec-card-identity { flex: 1; min-width: 0; }
+
+    .sec-card-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+
+    .sec-card-tags {
+      font-size: 12px;
+      color: var(--gray-400);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sec-card-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .sec-card-metrics {
+      display: flex;
+      gap: 20px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--gray-100);
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .sec-card-metric {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sec-card-metric-value {
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    .sec-card-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .sec-card-avatar.unassigned {
+      background: var(--gray-100);
+      color: var(--gray-400);
+    }
+
+    .sec-card-progress {
+      width: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .sec-card-progress-bar {
+      width: 100%;
+      height: 5px;
+      background: var(--gray-200);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .sec-card-progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .sec-card-progress-fill.full { background: var(--success); }
+
+    .sec-card-progress-text {
+      font-size: 11px;
+      color: var(--gray-400);
+    }
+
+    .sec-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .sec-card-delete {
+      background: none;
+      border: 1px solid var(--gray-200);
+      color: var(--gray-400);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .sec-card-delete:hover {
+      color: #dc2626;
+      border-color: #dc2626;
+      background: #fef2f2;
+    }
+
+    /* ---- Finding cards (engagement level) ---- */
+    .findings-card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .finding-card-eng {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 18px 22px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .finding-card-eng:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+      border-color: var(--gray-300);
+    }
+
+    .finding-card-eng-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .finding-card-eng-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+
+    .finding-card-eng-section {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .finding-card-eng-badges {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .finding-card-eng-footer {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--gray-100);
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    @media (max-width: 768px) {
+      .sec-card-top { flex-direction: column; }
+      .sec-card-right { flex-direction: row; justify-content: space-between; width: 100%; }
+      .sec-card-metrics { flex-wrap: wrap; gap: 12px; }
+      .sec-card-progress { width: 100%; align-items: flex-start; }
+    }
   </style>
 </head>
 <body>
@@ -183,30 +399,14 @@
 
       <!-- Sections Tab -->
       <div class="tab-panel active" id="tab-sections">
-        <div class="card">
-          <div class="card-header">
-            <h2>Audit Sections</h2>
-            <button class="btn btn-primary btn-sm" id="btn-new-section" onclick="openNewSection()" style="display:none;">+ New Section</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Section Name</th>
-                  <th>Assigned To</th>
-                  <th>TB Lines</th>
-                  <th>Procedures</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="sections-table"></tbody>
-            </table>
-          </div>
-          <div class="empty-state" id="sections-empty" style="display:none;">
-            <p id="sections-empty-msg">No sections yet.</p>
-            <button class="btn btn-primary" id="btn-new-section-empty" onclick="openNewSection()" style="display:none;">+ New Section</button>
-          </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2 style="font-size:16px; font-weight:600; color:var(--gray-700);">Audit Sections</h2>
+          <button class="btn btn-primary btn-sm" id="btn-new-section" onclick="openNewSection()" style="display:none;">+ New Section</button>
+        </div>
+        <div class="sec-card-list" id="sections-list"></div>
+        <div class="empty-state" id="sections-empty" style="display:none;">
+          <p id="sections-empty-msg">No sections yet.</p>
+          <button class="btn btn-primary" id="btn-new-section-empty" onclick="openNewSection()" style="display:none;">+ New Section</button>
         </div>
       </div>
 
@@ -243,28 +443,12 @@
 
       <!-- Findings Tab -->
       <div class="tab-panel" id="tab-findings">
-        <div class="card">
-          <div class="card-header">
-            <h2>Findings</h2>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Section</th>
-                  <th>Severity</th>
-                  <th>Status</th>
-                  <th>Reported By</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody id="findings-table"></tbody>
-            </table>
-          </div>
-          <div class="empty-state" id="findings-empty" style="display:none;">
-            <p>No findings reported yet.</p>
-          </div>
+        <div style="margin-bottom:16px;">
+          <h2 style="font-size:16px; font-weight:600; color:var(--gray-700);">Findings</h2>
+        </div>
+        <div class="findings-card-list" id="findings-list"></div>
+        <div class="empty-state" id="findings-empty" style="display:none;">
+          <p>No findings reported yet.</p>
         </div>
       </div>
 
@@ -780,47 +964,67 @@
 
     // ---- Sections Tab ----
     function renderSections() {
-      const tbody = document.getElementById('sections-table');
+      const list = document.getElementById('sections-list');
       const empty = document.getElementById('sections-empty');
 
       if (sections.length === 0) {
-        tbody.innerHTML = '';
+        list.innerHTML = '';
         empty.style.display = 'block';
         return;
       }
 
       empty.style.display = 'none';
 
-      tbody.innerHTML = sections.map(sec => {
-        const assignedName = sec.assigned_to ? (profileCache[sec.assigned_to] || 'Unknown') : 'Unassigned';
+      list.innerHTML = sections.map(sec => {
+        const assignedName = sec.assigned_to ? (profileCache[sec.assigned_to] || 'Unknown') : '';
+        const initials = assignedName ? assignedName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
         const statusLabel = sec.status.replace(/_/g, ' ');
 
-        // Count procedures for this section
         const secProcs = procedures.filter(p => p.section_id === sec.id);
         const totalP = secProcs.length;
         const doneP = secProcs.reduce((count, p) => {
           const resp = procedureResponses.find(r => r.procedure_id === p.id && r.status === 'done');
           return count + (resp ? 1 : 0);
         }, 0);
+        const pct = totalP > 0 ? Math.round((doneP / totalP) * 100) : 0;
 
         const tbCount = (sectionTbMap[sec.id] || []).length;
         const tags = (sec.classification_tags || []).map(t => escHtml(t)).join(', ');
 
+        const secFindings = findings.filter(f => f.section_id === sec.id && f.status === 'open');
+        const openF = secFindings.length;
+
+        const deleteBtn = can('delete_section') && !sec.approved_at
+          ? `<button class="sec-card-delete" onclick="event.preventDefault(); event.stopPropagation(); deleteSection('${sec.id}', '${escHtml(sec.name)}')">Delete</button>`
+          : '';
+
         return `
-          <tr onclick="window.location.href='section.html#${sec.id}'">
-            <td>
-              <strong>${escHtml(sec.name)}</strong>
-              ${tags ? '<br><span class="text-sm text-muted">' + tags + '</span>' : ''}
-            </td>
-            <td class="text-sm">${escHtml(assignedName)}</td>
-            <td class="text-sm">${tbCount} lines</td>
-            <td class="text-sm">${doneP} / ${totalP}</td>
-            <td><span class="badge badge-${sec.status.replace(/_/g, '-')}">${statusLabel}</span></td>
-            <td style="display:flex; gap:6px;">
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.location.href='section.html#${sec.id}'">Open</button>
-              ${can('delete_section') && !sec.approved_at ? `<button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="event.stopPropagation(); deleteSection('${sec.id}', '${escHtml(sec.name)}')">Delete</button>` : ''}
-            </td>
-          </tr>
+          <a href="section.html#${sec.id}" class="sec-card">
+            <div class="sec-card-top">
+              <div class="sec-card-identity">
+                <div class="sec-card-name">${escHtml(sec.name)}</div>
+                ${tags ? '<div class="sec-card-tags">' + tags + '</div>' : ''}
+              </div>
+              <div class="sec-card-right">
+                <div class="sec-card-avatar${assignedName ? '' : ' unassigned'}" title="${assignedName || 'Unassigned'}">${initials}</div>
+                <span class="badge badge-${sec.status.replace(/_/g, '-')}">${statusLabel}</span>
+                <div class="sec-card-progress">
+                  <div class="sec-card-progress-bar"><div class="sec-card-progress-fill${pct === 100 ? ' full' : ''}" style="width:${pct}%"></div></div>
+                  <span class="sec-card-progress-text">${doneP}/${totalP}</span>
+                </div>
+              </div>
+            </div>
+            <div class="sec-card-metrics">
+              <div class="sec-card-metric">
+                <span class="sec-card-metric-value">${tbCount}</span> TB lines
+              </div>
+              <div class="sec-card-metric">
+                <span class="sec-card-metric-value">${totalP}</span> procedures
+              </div>
+              ${openF > 0 ? '<div class="sec-card-metric" style="color:var(--warning);"><span class="sec-card-metric-value" style="color:var(--warning);">' + openF + '</span> open finding' + (openF !== 1 ? 's' : '') + '</div>' : ''}
+              ${deleteBtn ? '<div style="margin-left:auto;">' + deleteBtn + '</div>' : ''}
+            </div>
+          </a>
         `;
       }).join('');
     }
@@ -1279,32 +1483,40 @@
 
     // ---- Findings Tab ----
     function renderFindings() {
-      const tbody = document.getElementById('findings-table');
+      const list = document.getElementById('findings-list');
       const empty = document.getElementById('findings-empty');
 
       if (findings.length === 0) {
-        tbody.innerHTML = '';
+        list.innerHTML = '';
         empty.style.display = 'block';
         return;
       }
 
       empty.style.display = 'none';
 
-      tbody.innerHTML = findings.map(f => {
+      list.innerHTML = findings.map(f => {
         const sec = sections.find(s => s.id === f.section_id);
         const sectionName = sec ? sec.name : '--';
         const reportedBy = f.profiles?.full_name || f.profiles?.email || 'Unknown';
-        const date = new Date(f.created_at).toLocaleDateString();
+        const date = new Date(f.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 
         return `
-          <tr onclick="openFinding('${f.id}')">
-            <td><strong>${escHtml(f.title)}</strong></td>
-            <td class="text-sm">${escHtml(sectionName)}</td>
-            <td><span class="badge badge-${f.severity}">${f.severity}</span></td>
-            <td><span class="badge badge-${f.status}">${f.status}</span></td>
-            <td class="text-sm">${escHtml(reportedBy)}</td>
-            <td class="text-sm text-muted">${date}</td>
-          </tr>
+          <div class="finding-card-eng" onclick="openFinding('${f.id}')">
+            <div class="finding-card-eng-top">
+              <div>
+                <div class="finding-card-eng-title">${escHtml(f.title)}</div>
+                <div class="finding-card-eng-section">${escHtml(sectionName)}</div>
+              </div>
+              <div class="finding-card-eng-badges">
+                <span class="badge badge-${f.severity}">${f.severity}</span>
+                <span class="badge badge-${f.status}">${f.status}</span>
+              </div>
+            </div>
+            <div class="finding-card-eng-footer">
+              <span>Reported by ${escHtml(reportedBy)}</span>
+              <span>${date}</span>
+            </div>
+          </div>
         `;
       }).join('');
     }
