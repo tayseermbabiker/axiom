@@ -50,7 +50,7 @@
           <div class="empty-state"><p>Checking for invites...</p></div>
         </div>
         <div class="mt-16">
-          <button type="button" class="btn btn-outline" onclick="showChoice()">Back</button>
+          <button type="button" class="btn btn-outline" id="invites-back-btn" onclick="showChoice()">Back</button>
         </div>
       </div>
 
@@ -80,6 +80,21 @@
         window.location.href = '/pages/dashboard.html';
         return;
       }
+
+      // Check if user has pending invites — if so, skip choice and show invites directly
+      const { data: invites } = await supabaseClient
+        .from('organization_invites')
+        .select('id')
+        .eq('email', currentUser.email)
+        .eq('status', 'pending')
+        .limit(1);
+
+      if (invites && invites.length > 0) {
+        // Hide the "Create a firm" option — invited users should only accept
+        hasInvites = true;
+        document.getElementById('choice-section').style.display = 'none';
+        showPendingInvites();
+      }
     }
 
     function showChoice() {
@@ -97,10 +112,16 @@
       document.getElementById('firm-name').focus();
     }
 
+    let hasInvites = false;
+
     async function showPendingInvites() {
       document.getElementById('choice-section').style.display = 'none';
       document.getElementById('create-firm-section').style.display = 'none';
       document.getElementById('invites-section').style.display = 'block';
+      // Hide back button if user was auto-directed (has pending invites)
+      if (hasInvites) {
+        document.getElementById('invites-back-btn').style.display = 'none';
+      }
       hideMessages();
 
       const listEl = document.getElementById('invites-list');
