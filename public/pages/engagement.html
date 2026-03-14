@@ -241,18 +241,22 @@
 
     .sec-card-delete {
       background: none;
-      border: 1px solid var(--gray-200);
-      color: var(--gray-400);
-      font-size: 12px;
-      padding: 4px 10px;
+      border: none;
+      color: var(--gray-300);
+      font-size: 14px;
+      width: 28px;
+      height: 28px;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
     .sec-card-delete:hover {
       color: #dc2626;
-      border-color: #dc2626;
       background: #fef2f2;
     }
 
@@ -995,7 +999,7 @@
         const openF = secFindings.length;
 
         const deleteBtn = can('delete_section') && !sec.approved_at
-          ? `<button class="sec-card-delete" onclick="event.preventDefault(); event.stopPropagation(); deleteSection('${sec.id}', '${escHtml(sec.name)}')">Delete</button>`
+          ? `<button class="sec-card-delete" title="Delete section" onclick="event.preventDefault(); event.stopPropagation(); deleteSection('${sec.id}', '${escHtml(sec.name)}')">&#x2715;</button>`
           : '';
 
         return `
@@ -1006,6 +1010,7 @@
                 ${tags ? '<div class="sec-card-tags">' + tags + '</div>' : ''}
               </div>
               <div class="sec-card-right">
+                ${deleteBtn}
                 <div class="sec-card-avatar${assignedName ? '' : ' unassigned'}" title="${assignedName || 'Unassigned'}">${initials}</div>
                 <span class="badge badge-${sec.status.replace(/_/g, '-')}">${statusLabel}</span>
                 <div class="sec-card-progress">
@@ -1022,7 +1027,6 @@
                 <span class="sec-card-metric-value">${totalP}</span> procedures
               </div>
               ${openF > 0 ? '<div class="sec-card-metric" style="color:var(--warning);"><span class="sec-card-metric-value" style="color:var(--warning);">' + openF + '</span> open finding' + (openF !== 1 ? 's' : '') + '</div>' : ''}
-              ${deleteBtn ? '<div style="margin-left:auto;">' + deleteBtn + '</div>' : ''}
             </div>
           </a>
         `;
