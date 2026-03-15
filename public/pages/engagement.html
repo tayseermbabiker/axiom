@@ -364,7 +364,10 @@
             <button class="text-sm role-admin-reviewer" style="display:none; background:none; border:none; color:var(--primary); cursor:pointer; text-decoration:underline; margin-left:4px;" onclick="editSharedFolder()">Set folder</button>
           </div>
         </div>
-        <div id="eng-actions" style="display:flex; gap:8px; align-items:flex-start;"></div>
+        <div style="display:flex; gap:8px; align-items:flex-start;">
+          <button class="btn btn-outline btn-sm" onclick="exportReport()" title="Export engagement report as PDF">Export PDF</button>
+          <div id="eng-actions" style="display:flex; gap:8px; align-items:flex-start;"></div>
+        </div>
       </div>
 
       <!-- Closed banner -->
@@ -466,6 +469,27 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- Reusable Confirm / Prompt Modal -->
+  <div class="modal-overlay" id="modal-action">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 id="modal-action-title">Confirm</h3>
+        <button class="modal-close" onclick="cancelActionModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-action-msg" style="font-size:14px;color:var(--gray-700);white-space:pre-line;"></p>
+        <div id="modal-action-input-wrap" class="form-group mt-16" style="display:none;">
+          <label id="modal-action-input-label" for="modal-action-input">Reason</label>
+          <textarea id="modal-action-input" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="cancelActionModal()">Cancel</button>
+        <button class="btn btn-primary" id="modal-action-ok" onclick="resolveActionModal()">Confirm</button>
+      </div>
+    </div>
   </div>
 
   <!-- New Section Modal -->
@@ -700,7 +724,13 @@
     async function editSharedFolder() {
       if (!can('edit_shared_folder')) { alert('Only admins and reviewers can edit the shared folder.'); return; }
       const current = engagement.shared_folder_url || '';
-      const url = prompt('Paste the shared Google Drive, OneDrive, or SharePoint folder URL.\n\nAll team members must have access to this folder.', current);
+      const url = await showActionModal({
+        title: 'Shared Folder',
+        message: 'Paste the shared Google Drive, OneDrive, or SharePoint folder URL.\n\nAll team members must have access to this folder.',
+        inputLabel: 'Folder URL',
+        inputDefault: current,
+        okLabel: 'Save'
+      });
       if (url === null) return; // cancelled
 
       const val = url.trim() || null;
@@ -899,7 +929,13 @@
 
     async function closeEngagement() {
       if (currentRole !== 'admin') { alert('Only admins can close engagements.'); return; }
-      if (!confirm('Close this engagement?\n\nAll sections will become read-only. This marks the final file assembly date per ISA 230.\n\nYou can reopen it later if needed (logged as post-assembly change).')) return;
+      const ok = await showActionModal({
+        title: 'Close Engagement',
+        message: 'Close this engagement?\n\nAll sections will become read-only. This marks the final file assembly date per ISA 230.\n\nYou can reopen it later if needed (logged as post-assembly change).',
+        okLabel: 'Close Engagement',
+        okClass: 'btn-danger'
+      });
+      if (!ok) return;
 
       const { error } = await supabaseClient.from('engagements')
         .update({ status: 'completed' })
@@ -919,7 +955,13 @@
     async function reopenEngagement() {
       if (currentRole !== 'admin') { alert('Only admins can reopen engagements.'); return; }
 
-      const reason = prompt('Reason for reopening this closed engagement:\n\n(This will be logged as a post-assembly change per ISA 230)');
+      const reason = await showActionModal({
+        title: 'Reopen Engagement',
+        message: 'This will be logged as a post-assembly change per ISA 230.',
+        inputLabel: 'Reason for reopening',
+        okLabel: 'Reopen',
+        okClass: 'btn-returned'
+      });
       if (!reason || !reason.trim()) return;
 
       const { error } = await supabaseClient.from('engagements')
@@ -1035,7 +1077,13 @@
 
     async function deleteSection(sectionId, sectionName) {
       if (!can('delete_section')) { alert('Only admins can delete sections.'); return; }
-      if (!confirm('Delete section "' + sectionName + '"?\n\nThis will permanently delete all procedures, findings, review notes, and documents in this section.\n\nThis cannot be undone.')) return;
+      const ok = await showActionModal({
+        title: 'Delete Section',
+        message: 'Delete section "' + sectionName + '"?\n\nThis will permanently delete all procedures, findings, review notes, and documents in this section.\n\nThis cannot be undone.',
+        okLabel: 'Delete',
+        okClass: 'btn-danger'
+      });
+      if (!ok) return;
 
       const { error } = await supabaseClient
         .from('audit_sections')
@@ -1457,7 +1505,13 @@
     // ---- Replace TB ----
     async function replaceTB() {
       if (!can('replace_tb')) { alert('Only admins and reviewers can replace the trial balance.'); return; }
-      if (!confirm('This will delete the current Trial Balance lines and let you upload a new one.\n\nSections and all audit work (procedures, findings, review notes) will NOT be affected.\n\nContinue?')) return;
+      const ok = await showActionModal({
+        title: 'Replace Trial Balance',
+        message: 'This will delete the current Trial Balance lines and let you upload a new one.\n\nSections and all audit work (procedures, findings, review notes) will NOT be affected.',
+        okLabel: 'Replace TB',
+        okClass: 'btn-danger'
+      });
+      if (!ok) return;
 
       try {
         const { error: tbErr } = await supabaseClient
@@ -1634,6 +1688,48 @@
       const div = document.createElement('div');
       div.textContent = str || '';
       return div.innerHTML;
+    }
+
+    function exportReport() {
+      window.open('report.html?id=' + engagementId, '_blank');
+    }
+
+    // ---- Reusable action modal (replaces prompt/confirm) ----
+    let _actionResolve = null;
+
+    function showActionModal({ title, message, inputLabel, inputDefault, okLabel, okClass }) {
+      document.getElementById('modal-action-title').textContent = title || 'Confirm';
+      document.getElementById('modal-action-msg').textContent = message || '';
+      const inputWrap = document.getElementById('modal-action-input-wrap');
+      const inputEl = document.getElementById('modal-action-input');
+      if (inputLabel) {
+        inputWrap.style.display = 'block';
+        document.getElementById('modal-action-input-label').textContent = inputLabel;
+        inputEl.value = inputDefault || '';
+      } else {
+        inputWrap.style.display = 'none';
+        inputEl.value = '';
+      }
+      const okBtn = document.getElementById('modal-action-ok');
+      okBtn.textContent = okLabel || 'Confirm';
+      okBtn.className = 'btn ' + (okClass || 'btn-primary');
+      document.getElementById('modal-action').classList.add('active');
+      if (inputLabel) inputEl.focus();
+      return new Promise(resolve => { _actionResolve = resolve; });
+    }
+
+    function resolveActionModal() {
+      const inputWrap = document.getElementById('modal-action-input-wrap');
+      const val = inputWrap.style.display !== 'none'
+        ? document.getElementById('modal-action-input').value.trim()
+        : true;
+      document.getElementById('modal-action').classList.remove('active');
+      if (_actionResolve) { _actionResolve(val); _actionResolve = null; }
+    }
+
+    function cancelActionModal() {
+      document.getElementById('modal-action').classList.remove('active');
+      if (_actionResolve) { _actionResolve(null); _actionResolve = null; }
     }
 
     init();

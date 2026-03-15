@@ -565,6 +565,27 @@
     </main>
   </div>
 
+  <!-- Reusable Confirm / Prompt Modal -->
+  <div class="modal-overlay" id="modal-action">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 id="modal-action-title">Confirm</h3>
+        <button class="modal-close" onclick="cancelActionModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-action-msg" style="font-size:14px;color:var(--gray-700);white-space:pre-line;"></p>
+        <div id="modal-action-input-wrap" class="form-group mt-16" style="display:none;">
+          <label id="modal-action-input-label" for="modal-action-input">Reason</label>
+          <textarea id="modal-action-input" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="cancelActionModal()">Cancel</button>
+        <button class="btn btn-primary" id="modal-action-ok" onclick="resolveActionModal()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Document Modal -->
   <div class="modal-overlay" id="modal-document">
     <div class="modal" style="max-width:520px;">
@@ -1376,11 +1397,12 @@
 
       // Validate link is inside shared engagement folder
       if (sharedFolderUrl && !isLinkInsideSharedFolder(fileUrl)) {
-        const proceed = confirm(
-          'This file does not appear to be inside the engagement\'s shared folder.\n\n' +
-          'Shared folder: ' + sharedFolderUrl + '\n\n' +
-          'Other team members may not be able to open it. Move the file to the shared folder and update the link, or click OK to save anyway.'
-        );
+        const proceed = await showActionModal({
+          title: 'File Outside Shared Folder',
+          message: 'This file does not appear to be inside the engagement\'s shared folder.\n\nShared folder: ' + sharedFolderUrl + '\n\nOther team members may not be able to open it. Move the file to the shared folder and update the link, or save anyway.',
+          okLabel: 'Save Anyway',
+          okClass: 'btn-primary'
+        });
         if (!proceed) return;
       }
 
@@ -1722,7 +1744,13 @@
 
     async function approveSection() {
       if (!can('approve_section')) { alert('Only admins and reviewers can approve sections.'); return; }
-      if (!confirm('Approve this section? This action is permanent and cannot be undone.')) return;
+      const ok = await showActionModal({
+        title: 'Approve Section',
+        message: 'Approve this section? This action is permanent and cannot be undone.',
+        okLabel: 'Approve',
+        okClass: 'btn-success'
+      });
+      if (!ok) return;
 
       const now = new Date().toISOString();
       const { error } = await supabaseClient.from('audit_sections').update({
@@ -1746,7 +1774,13 @@
 
     async function returnToPreparer() {
       if (!can('return_to_preparer')) { alert('Only admins and reviewers can return sections.'); return; }
-      const reason = prompt('Reason for returning this section:');
+      const reason = await showActionModal({
+        title: 'Return to Preparer',
+        message: 'Provide a reason for returning this section. The preparer will see this note.',
+        inputLabel: 'Reason',
+        okLabel: 'Return Section',
+        okClass: 'btn-returned'
+      });
       if (!reason) return;
 
       // Add return_reason review note
@@ -1775,7 +1809,13 @@
     async function reopenSection() {
       if (currentRole !== 'admin') { alert('Only admins can reopen approved sections.'); return; }
 
-      const reason = prompt('Reason for reopening this approved section:\n\n(This will be logged in the audit trail)');
+      const reason = await showActionModal({
+        title: 'Reopen Section',
+        message: 'This will be logged in the audit trail as a post-approval change.',
+        inputLabel: 'Reason for reopening',
+        okLabel: 'Reopen',
+        okClass: 'btn-returned'
+      });
       if (!reason || !reason.trim()) return;
 
       const originalApprover = section.approved_by;
@@ -1895,6 +1935,44 @@
       const div = document.createElement('div');
       div.textContent = str || '';
       return div.innerHTML;
+    }
+
+    // ---- Reusable action modal (replaces prompt/confirm) ----
+    let _actionResolve = null;
+
+    function showActionModal({ title, message, inputLabel, inputDefault, okLabel, okClass }) {
+      document.getElementById('modal-action-title').textContent = title || 'Confirm';
+      document.getElementById('modal-action-msg').textContent = message || '';
+      const inputWrap = document.getElementById('modal-action-input-wrap');
+      const inputEl = document.getElementById('modal-action-input');
+      if (inputLabel) {
+        inputWrap.style.display = 'block';
+        document.getElementById('modal-action-input-label').textContent = inputLabel;
+        inputEl.value = inputDefault || '';
+      } else {
+        inputWrap.style.display = 'none';
+        inputEl.value = '';
+      }
+      const okBtn = document.getElementById('modal-action-ok');
+      okBtn.textContent = okLabel || 'Confirm';
+      okBtn.className = 'btn ' + (okClass || 'btn-primary');
+      document.getElementById('modal-action').classList.add('active');
+      if (inputLabel) inputEl.focus();
+      return new Promise(resolve => { _actionResolve = resolve; });
+    }
+
+    function resolveActionModal() {
+      const inputWrap = document.getElementById('modal-action-input-wrap');
+      const val = inputWrap.style.display !== 'none'
+        ? document.getElementById('modal-action-input').value.trim()
+        : true;
+      document.getElementById('modal-action').classList.remove('active');
+      if (_actionResolve) { _actionResolve(val); _actionResolve = null; }
+    }
+
+    function cancelActionModal() {
+      document.getElementById('modal-action').classList.remove('active');
+      if (_actionResolve) { _actionResolve(null); _actionResolve = null; }
     }
 
     init();

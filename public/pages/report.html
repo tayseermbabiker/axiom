@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engagement Report — Axiom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; color: #1f2937; line-height: 1.6; padding: 40px; max-width: 900px; margin: 0 auto; }
+
+    .report-header { margin-bottom: 32px; border-bottom: 2px solid #111827; padding-bottom: 16px; }
+    .report-header h1 { font-size: 24px; font-weight: 700; }
+    .report-meta { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    .report-meta span { margin-right: 16px; }
+
+    .report-stamp { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+    h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: #374151; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-box { border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; text-align: center; }
+    .stat-box .val { font-size: 22px; font-weight: 700; }
+    .stat-box .lbl { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+    th { text-align: left; padding: 8px 10px; font-weight: 600; color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; }
+    td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge-approved { background: #dcfce7; color: #16a34a; }
+    .badge-in-progress { background: #eff6ff; color: #3A7BFF; }
+    .badge-not-started { background: #f3f4f6; color: #6b7280; }
+    .badge-ready-for-review { background: #fef3c7; color: #d97706; }
+    .badge-returned { background: #f3e8ff; color: #9333ea; }
+    .severity-high { background: #fee2e2; color: #dc2626; }
+    .severity-medium { background: #fef3c7; color: #d97706; }
+    .severity-low { background: #f3f4f6; color: #6b7280; }
+    .badge-open { background: #fef3c7; color: #d97706; }
+    .badge-resolved { background: #dcfce7; color: #16a34a; }
+
+    .section-block { margin-bottom: 24px; page-break-inside: avoid; }
+    .section-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .section-meta { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+
+    .no-data { font-size: 13px; color: #9ca3af; font-style: italic; padding: 8px 0; }
+
+    .print-bar { display: flex; gap: 8px; margin-bottom: 24px; }
+    .print-bar button { padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer; border: none; }
+    .btn-print { background: #3A7BFF; color: white; }
+    .btn-back { background: white; color: #374151; border: 1px solid #d1d5db; }
+
+    @media print {
+      .print-bar { display: none; }
+      body { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-bar">
+    <button class="btn-print" onclick="window.print()">Save as PDF</button>
+    <button class="btn-back" onclick="window.close()">Close</button>
+  </div>
+
+  <div id="report-content">
+    <div class="report-header">
+      <h1 id="rpt-title">Loading...</h1>
+      <div class="report-meta">
+        <span id="rpt-type"></span>
+        <span id="rpt-year-end"></span>
+        <span id="rpt-status"></span>
+      </div>
+      <div class="report-stamp" id="rpt-stamp"></div>
+    </div>
+
+    <div class="stats-grid" id="rpt-stats"></div>
+
+    <h2>Sections</h2>
+    <div id="rpt-sections"><p class="no-data">Loading...</p></div>
+
+    <h2>Trial Balance Summary</h2>
+    <div id="rpt-tb"><p class="no-data">Loading...</p></div>
+
+    <h2>Findings</h2>
+    <div id="rpt-findings"><p class="no-data">Loading...</p></div>
+
+    <h2>Activity Log</h2>
+    <div id="rpt-activity"><p class="no-data">Loading...</p></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    const engagementId = new URLSearchParams(window.location.search).get('id');
+    if (!engagementId) { document.body.innerHTML = '<p>No engagement ID.</p>'; }
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '/pages/login.html'; return; }
+
+      const currentUser = session.user;
+      const org = await getUserOrg();
+      if (!org) { window.location.href = '/pages/onboarding.html'; return; }
+
+      // Load engagement
+      const { data: eng } = await supabaseClient.from('engagements').select('*').eq('id', engagementId).single();
+      if (!eng || eng.organization_id !== org.organization_id) { document.body.innerHTML = '<p>Engagement not found.</p>'; return; }
+
+      // Load all data in parallel
+      const [sectionsRes, tbRes, findingsRes, activityRes, proceduresRes, responsesRes, profilesRes] = await Promise.all([
+        supabaseClient.from('audit_sections').select('*').eq('engagement_id', engagementId).order('sort_order'),
+        supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code'),
+        supabaseClient.from('findings').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false }),
+        supabaseClient.from('activity_log').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false }).limit(50),
+        supabaseClient.from('audit_procedures').select('*').eq('engagement_id', engagementId).order('sort_order'),
+        supabaseClient.from('procedure_responses').select('*').eq('engagement_id', engagementId),
+        supabaseClient.from('organization_members').select('*, profiles:user_id(id, full_name, email)').eq('organization_id', org.organization_id)
+      ]);
+
+      const sections = sectionsRes.data || [];
+      const tbLines = tbRes.data || [];
+      const findings = findingsRes.data || [];
+      const activity = activityRes.data || [];
+      const procedures = proceduresRes.data || [];
+      const responses = responsesRes.data || [];
+      const profiles = {};
+      (profilesRes.data || []).forEach(m => { if (m.profiles) profiles[m.profiles.id] = m.profiles.full_name || m.profiles.email; });
+
+      // Header
+      document.getElementById('rpt-title').textContent = eng.client_name;
+      document.getElementById('rpt-type').textContent = 'Type: ' + (eng.engagement_type || 'audit');
+      document.getElementById('rpt-year-end').textContent = 'Year-end: ' + (eng.year_end_date || '—');
+      document.getElementById('rpt-status').textContent = 'Status: ' + (eng.status || 'active');
+      document.getElementById('rpt-stamp').textContent = 'Generated on ' + new Date().toLocaleString() + ' by ' + (currentUser.email);
+
+      // Stats
+      const totalP = procedures.length;
+      const doneP = responses.filter(r => r.status === 'done').length;
+      const approvedS = sections.filter(s => s.status === 'approved').length;
+      const openF = findings.filter(f => f.status === 'open').length;
+
+      document.getElementById('rpt-stats').innerHTML = `
+        <div class="stat-box"><div class="val">${sections.length}</div><div class="lbl">Sections</div></div>
+        <div class="stat-box"><div class="val">${doneP} / ${totalP}</div><div class="lbl">Procedures Done</div></div>
+        <div class="stat-box"><div class="val">${approvedS} / ${sections.length}</div><div class="lbl">Approved</div></div>
+        <div class="stat-box"><div class="val">${openF}</div><div class="lbl">Open Findings</div></div>
+      `;
+
+      // Sections with procedures
+      if (sections.length === 0) {
+        document.getElementById('rpt-sections').innerHTML = '<p class="no-data">No sections.</p>';
+      } else {
+        document.getElementById('rpt-sections').innerHTML = sections.map(s => {
+          const secProcs = procedures.filter(p => p.section_id === s.id);
+          const secFindings = findings.filter(f => f.section_id === s.id);
+          const assignee = s.assigned_to ? (profiles[s.assigned_to] || '—') : 'Unassigned';
+
+          let procsHtml = '';
+          if (secProcs.length > 0) {
+            procsHtml = '<table><thead><tr><th>Procedure</th><th>Type</th><th>Status</th></tr></thead><tbody>' +
+              secProcs.map(p => {
+                const resp = responses.find(r => r.procedure_id === p.id);
+                const status = resp ? resp.status : 'not started';
+                return `<tr><td>${esc(p.description)}</td><td>${esc(p.procedure_type || '')}</td><td><span class="badge badge-${status.replace(/_/g, '-')}">${status}</span></td></tr>`;
+              }).join('') + '</tbody></table>';
+          }
+
+          return `
+            <div class="section-block">
+              <div class="section-title">${esc(s.name)} <span class="badge badge-${s.status.replace(/_/g, '-')}">${s.status.replace(/_/g, ' ')}</span></div>
+              <div class="section-meta">Assigned: ${esc(assignee)} | ${secProcs.length} procedures | ${secFindings.filter(f => f.status === 'open').length} open findings</div>
+              ${procsHtml || '<p class="no-data">No procedures.</p>'}
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Trial Balance
+      if (tbLines.length === 0) {
+        document.getElementById('rpt-tb').innerHTML = '<p class="no-data">No trial balance imported.</p>';
+      } else {
+        // Group by classification
+        const groups = {};
+        tbLines.forEach(line => {
+          const cls = line.classification || 'Unclassified';
+          if (!groups[cls]) groups[cls] = { lines: [], total: 0 };
+          groups[cls].lines.push(line);
+          groups[cls].total += parseFloat(line.balance) || 0;
+        });
+
+        document.getElementById('rpt-tb').innerHTML = '<table><thead><tr><th>Classification</th><th>Lines</th><th>Total Balance</th></tr></thead><tbody>' +
+          Object.entries(groups).map(([cls, g]) =>
+            `<tr><td>${esc(cls)}</td><td>${g.lines.length}</td><td>${g.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>`
+          ).join('') + '</tbody></table>';
+      }
+
+      // Findings
+      if (findings.length === 0) {
+        document.getElementById('rpt-findings').innerHTML = '<p class="no-data">No findings.</p>';
+      } else {
+        document.getElementById('rpt-findings').innerHTML = '<table><thead><tr><th>Title</th><th>Section</th><th>Severity</th><th>Status</th></tr></thead><tbody>' +
+          findings.map(f => {
+            const secName = sections.find(s => s.id === f.section_id)?.name || '—';
+            return `<tr><td>${esc(f.title)}</td><td>${esc(secName)}</td><td><span class="badge severity-${f.severity}">${f.severity}</span></td><td><span class="badge badge-${f.status}">${f.status}</span></td></tr>`;
+          }).join('') + '</tbody></table>';
+      }
+
+      // Activity log
+      if (activity.length === 0) {
+        document.getElementById('rpt-activity').innerHTML = '<p class="no-data">No activity.</p>';
+      } else {
+        document.getElementById('rpt-activity').innerHTML = '<table><thead><tr><th>Action</th><th>Target</th><th>Date</th></tr></thead><tbody>' +
+          activity.map(a => {
+            const details = a.details ? (typeof a.details === 'string' ? JSON.parse(a.details) : a.details) : {};
+            const name = details.name || details.reason || details.client_name || '';
+            return `<tr><td>${esc(a.action.replace(/_/g, ' '))}</td><td>${esc(name)}</td><td>${new Date(a.created_at).toLocaleString()}</td></tr>`;
+          }).join('') + '</tbody></table>';
+      }
+
+      document.title = eng.client_name + ' — Engagement Report — Axiom';
+    }
+
+    function esc(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>
