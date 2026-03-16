@@ -46,8 +46,8 @@
             <div class="form-group" style="margin:0;">
               <select id="invite-role" class="form-control">
                 <option value="preparer">Preparer</option>
-                <option value="reviewer">Reviewer</option>
-                <option value="admin">Admin</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="admin">Partner</option>
               </select>
             </div>
             <button type="submit" class="btn btn-primary" id="btn-invite">Send Invite</button>
@@ -155,8 +155,8 @@
               ${isAdmin && !isCurrentUser ? `
                 <select class="form-control form-control-inline" onchange="changeRole('${m.id}', this.value)" style="width:auto; padding:4px 8px; font-size:12px;">
                   <option value="preparer" ${m.role === 'preparer' ? 'selected' : ''}>Preparer</option>
-                  <option value="reviewer" ${m.role === 'reviewer' ? 'selected' : ''}>Reviewer</option>
-                  <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>Admin</option>
+                  <option value="supervisor" ${m.role === 'supervisor' ? 'selected' : ''}>Supervisor</option>
+                  <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>Partner</option>
                 </select>
                 <button class="btn btn-outline btn-sm" onclick="removeMember('${m.id}', '${escHtml(name)}')" style="color: var(--danger);">Remove</button>
               ` : ''}

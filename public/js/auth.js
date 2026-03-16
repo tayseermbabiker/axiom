@@ -87,43 +87,46 @@ async function getUserOrgAndRole() {
 }
 
 // ---- Role-based permission helpers ----
-// Roles hierarchy: admin > reviewer > preparer
+// Roles hierarchy: admin (partner) > supervisor > preparer
 const PERMISSIONS = {
   // Engagements
-  create_engagement:    ['admin'],
-  edit_shared_folder:   ['admin', 'reviewer'],
-  upload_tb:            ['admin', 'reviewer'],
-  replace_tb:           ['admin', 'reviewer'],
+  create_engagement:        ['admin'],
+  edit_shared_folder:       ['admin', 'supervisor'],
+  upload_tb:                ['admin', 'supervisor'],
+  replace_tb:               ['admin', 'supervisor'],
 
   // Sections
-  create_section:       ['admin', 'reviewer'],
-  delete_section:       ['admin'],
-  edit_section_tags:    ['admin', 'reviewer'],
+  create_section:           ['admin', 'supervisor'],
+  delete_section:           ['admin'],
+  edit_section_tags:        ['admin', 'supervisor'],
 
   // Procedures
-  add_procedure:        ['admin', 'reviewer'],
-  respond_procedure:    ['admin', 'reviewer', 'preparer'],
-  toggle_procedure:     ['admin', 'reviewer', 'preparer'],
+  add_procedure:            ['admin', 'supervisor'],
+  respond_procedure:        ['admin', 'supervisor', 'preparer'],
+  toggle_procedure:         ['admin', 'supervisor', 'preparer'],
 
   // Findings
-  add_finding:          ['admin', 'reviewer', 'preparer'],
-  edit_finding:         ['admin', 'reviewer'],
+  add_finding:              ['admin', 'supervisor', 'preparer'],
+  edit_finding:             ['admin', 'supervisor'],
 
   // Documents
-  add_document:         ['admin', 'reviewer', 'preparer'],
+  add_document:             ['admin', 'supervisor', 'preparer'],
 
-  // Review
-  add_review_comment:   ['admin', 'reviewer'],
-  add_preparer_response:['admin', 'preparer'],
-  submit_for_review:    ['admin', 'reviewer', 'preparer'],
-  approve_section:      ['admin', 'reviewer'],
-  return_to_preparer:   ['admin', 'reviewer'],
+  // Review — three-level sign-off
+  add_review_comment:       ['admin', 'supervisor'],
+  add_preparer_response:    ['admin', 'preparer'],
+  submit_for_review:        ['preparer'],
+  supervisor_approve:       ['supervisor'],
+  supervisor_return:        ['supervisor'],
+  partner_approve:          ['admin'],
+  partner_return:           ['admin'],
+  reopen_section:           ['admin'],
 
   // Conclusion
-  save_conclusion:      ['admin', 'reviewer'],
+  save_conclusion:          ['admin', 'supervisor'],
 
-  // Team (handled separately in team.html already)
-  manage_team:          ['admin']
+  // Team
+  manage_team:              ['admin']
 };
 
 function can(action) {

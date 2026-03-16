@@ -357,11 +357,11 @@
           <div id="shared-folder-bar" style="display:none; margin-top:8px;">
             <span class="text-sm" style="color:var(--gray-600);">Shared Folder:</span>
             <a id="shared-folder-link" href="#" target="_blank" class="text-sm" style="color:var(--primary); margin-left:4px;"></a>
-            <button class="text-sm role-admin-reviewer" style="display:none; background:none; border:none; color:var(--gray-400); cursor:pointer; margin-left:8px;" onclick="editSharedFolder()" title="Change folder">Edit</button>
+            <button class="text-sm role-admin-supervisor" style="display:none; background:none; border:none; color:var(--gray-400); cursor:pointer; margin-left:8px;" onclick="editSharedFolder()" title="Change folder">Edit</button>
           </div>
           <div id="shared-folder-missing" style="display:none; margin-top:8px;">
             <span class="text-sm" style="color:#dc2626;">No shared folder set.</span>
-            <button class="text-sm role-admin-reviewer" style="display:none; background:none; border:none; color:var(--primary); cursor:pointer; text-decoration:underline; margin-left:4px;" onclick="editSharedFolder()">Set folder</button>
+            <button class="text-sm role-admin-supervisor" style="display:none; background:none; border:none; color:var(--primary); cursor:pointer; text-decoration:underline; margin-left:4px;" onclick="editSharedFolder()">Set folder</button>
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start;">
@@ -658,7 +658,7 @@
         document.getElementById('btn-upload-tb-empty').style.display = '';
       }
       if (can('edit_shared_folder')) {
-        document.querySelectorAll('.role-admin-reviewer').forEach(el => el.style.display = '');
+        document.querySelectorAll('.role-admin-supervisor').forEach(el => el.style.display = '');
       }
 
       await loadEngagement();
@@ -722,7 +722,7 @@
     }
 
     async function editSharedFolder() {
-      if (!can('edit_shared_folder')) { alert('Only admins and reviewers can edit the shared folder.'); return; }
+      if (!can('edit_shared_folder')) { alert('Only partners and supervisors can edit the shared folder.'); return; }
       const current = engagement.shared_folder_url || '';
       const url = await showActionModal({
         title: 'Shared Folder',
@@ -894,7 +894,7 @@
         document.getElementById('btn-new-section').style.display = 'none';
         document.getElementById('btn-upload-tb').style.display = 'none';
         document.getElementById('btn-replace-tb').style.display = 'none';
-        document.querySelectorAll('.role-admin-reviewer').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.role-admin-supervisor').forEach(el => el.style.display = 'none');
 
         if (currentRole === 'admin') {
           container.innerHTML = '<button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="reopenEngagement()">Reopen Engagement</button>';
@@ -928,7 +928,7 @@
     }
 
     async function closeEngagement() {
-      if (currentRole !== 'admin') { alert('Only admins can close engagements.'); return; }
+      if (currentRole !== 'admin') { alert('Only partners can close engagements.'); return; }
       const ok = await showActionModal({
         title: 'Close Engagement',
         message: 'Close this engagement?\n\nAll sections will become read-only. This marks the final file assembly date per ISA 230.\n\nYou can reopen it later if needed (logged as post-assembly change).',
@@ -953,7 +953,7 @@
     }
 
     async function reopenEngagement() {
-      if (currentRole !== 'admin') { alert('Only admins can reopen engagements.'); return; }
+      if (currentRole !== 'admin') { alert('Only partners can reopen engagements.'); return; }
 
       const reason = await showActionModal({
         title: 'Reopen Engagement',
@@ -984,7 +984,7 @@
         document.getElementById('btn-upload-tb').style.display = '';
       }
       if (can('edit_shared_folder')) {
-        document.querySelectorAll('.role-admin-reviewer').forEach(el => el.style.display = '');
+        document.querySelectorAll('.role-admin-supervisor').forEach(el => el.style.display = '');
       }
 
       renderEngagementActions();
@@ -1024,7 +1024,14 @@
       list.innerHTML = sections.map(sec => {
         const assignedName = sec.assigned_to ? (profileCache[sec.assigned_to] || 'Unknown') : '';
         const initials = assignedName ? assignedName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
-        const statusLabel = sec.status.replace(/_/g, ' ');
+        const STATUS_LABELS = {
+          'not_started': 'Not Started', 'in_progress': 'In Progress',
+          'ready_for_supervisor_review': 'With Supervisor', 'in_supervisor_review': 'Supervisor Reviewing',
+          'ready_for_partner_review': 'With Partner', 'in_partner_review': 'Partner Reviewing',
+          'returned_to_preparer': 'Returned', 'returned_to_supervisor': 'Returned to Supervisor',
+          'approved': 'Approved'
+        };
+        const statusLabel = STATUS_LABELS[sec.status] || sec.status.replace(/_/g, ' ');
 
         const secProcs = procedures.filter(p => p.section_id === sec.id);
         const totalP = secProcs.length;
@@ -1040,7 +1047,7 @@
         const secFindings = findings.filter(f => f.section_id === sec.id && f.status === 'open');
         const openF = secFindings.length;
 
-        const deleteBtn = can('delete_section') && !sec.approved_at
+        const deleteBtn = can('delete_section') && !sec.partner_approved_at
           ? `<button class="sec-card-delete" title="Delete section" onclick="event.preventDefault(); event.stopPropagation(); deleteSection('${sec.id}', '${escHtml(sec.name)}')">&#x2715;</button>`
           : '';
 
@@ -1076,7 +1083,7 @@
     }
 
     async function deleteSection(sectionId, sectionName) {
-      if (!can('delete_section')) { alert('Only admins can delete sections.'); return; }
+      if (!can('delete_section')) { alert('Only partners can delete sections.'); return; }
       const ok = await showActionModal({
         title: 'Delete Section',
         message: 'Delete section "' + sectionName + '"?\n\nThis will permanently delete all procedures, findings, review notes, and documents in this section.\n\nThis cannot be undone.',
@@ -1116,7 +1123,7 @@
     let selectedAssertions = [];
 
     function openNewSection() {
-      if (!can('create_section')) { alert('Only admins and reviewers can create sections.'); return; }
+      if (!can('create_section')) { alert('Only partners and supervisors can create sections.'); return; }
       // Populate member dropdown
       const sel = document.getElementById('section-assign');
       sel.innerHTML = '<option value="">-- Unassigned --</option>';
@@ -1267,7 +1274,7 @@
 
     // ---- Upload TB ----
     function openUploadTB() {
-      if (!can('upload_tb')) { alert('Only admins and reviewers can upload the trial balance.'); return; }
+      if (!can('upload_tb')) { alert('Only partners and supervisors can upload the trial balance.'); return; }
       document.getElementById('modal-upload-tb').classList.add('active');
       document.getElementById('tb-file').value = '';
       document.getElementById('tb-preview').innerHTML = '';
@@ -1501,7 +1508,7 @@
 
     // ---- Replace TB ----
     async function replaceTB() {
-      if (!can('replace_tb')) { alert('Only admins and reviewers can replace the trial balance.'); return; }
+      if (!can('replace_tb')) { alert('Only partners and supervisors can replace the trial balance.'); return; }
       const ok = await showActionModal({
         title: 'Replace Trial Balance',
         message: 'This will delete the current Trial Balance lines and let you upload a new one.\n\nSections and all audit work (procedures, findings, review notes) will NOT be affected.',

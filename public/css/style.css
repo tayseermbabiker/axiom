@@ -241,8 +241,12 @@ tbody tr { cursor: pointer; }
 
 .badge-not-started { background: var(--gray-100); color: var(--gray-500); }
 .badge-in-progress { background: var(--primary-light); color: var(--primary); }
-.badge-ready-for-review { background: var(--warning-light); color: var(--warning); }
-.badge-returned { background: var(--returned-light); color: var(--returned); }
+.badge-ready-for-supervisor-review { background: var(--warning-light); color: var(--warning); }
+.badge-in-supervisor-review { background: var(--warning-light); color: var(--warning); }
+.badge-ready-for-partner-review { background: #FEF3C7; color: #B45309; }
+.badge-in-partner-review { background: #FEF3C7; color: #B45309; }
+.badge-returned-to-preparer { background: var(--returned-light); color: var(--returned); }
+.badge-returned-to-supervisor { background: var(--returned-light); color: var(--returned); }
 .badge-approved { background: var(--success-light); color: var(--success); }
 
 /* ---- Role badges ---- */
@@ -260,7 +264,7 @@ tbody tr { cursor: pointer; }
   color: var(--returned);
 }
 
-.role-reviewer {
+.role-supervisor {
   background: var(--primary-light);
   color: var(--primary);
 }

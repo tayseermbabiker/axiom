@@ -473,7 +473,7 @@
                 <p>No procedures added yet.</p>
                 <p class="text-sm text-muted">The audit partner or manager adds procedures here. Click "+ Add Procedure" above to get started.</p>
               </div>
-              <!-- Add Procedure form (admin/reviewer only) -->
+              <!-- Add Procedure form (admin/supervisor only) -->
               <div id="add-procedure-form" style="display:none;">
                 <div class="add-form">
                   <div class="form-group">
@@ -652,41 +652,101 @@
         <button class="modal-close" onclick="closeModal('modal-finding')">&times;</button>
       </div>
       <div class="modal-body">
+        <!-- Core fields (always visible) -->
         <div class="form-group">
           <label>Title</label>
           <input type="text" class="form-control" id="finding-title" placeholder="Brief description of the finding">
         </div>
-        <div class="form-group">
-          <label>Severity</label>
-          <select class="form-control" id="finding-severity">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Condition</label>
-          <textarea class="form-control" id="finding-condition" rows="2" placeholder="What was found (the current state)"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Criteria</label>
-          <textarea class="form-control" id="finding-criteria" rows="2" placeholder="What should be (the standard or expectation)"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Cause</label>
-          <textarea class="form-control" id="finding-cause" rows="2" placeholder="Why the condition exists"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Effect</label>
-          <textarea class="form-control" id="finding-effect" rows="2" placeholder="The impact of the condition"></textarea>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin:0;">
+            <label>Severity</label>
+            <select class="form-control" id="finding-severity">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Finding Type</label>
+            <select class="form-control" id="finding-type" onchange="toggleAdjustingPanel()">
+              <option value="observation">Observation</option>
+              <option value="misstatement">Misstatement (Adjusting Entry)</option>
+              <option value="control_deficiency">Control Deficiency</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label>Recommendation</label>
           <textarea class="form-control" id="finding-recommendation" rows="2" placeholder="Suggested corrective action"></textarea>
         </div>
-        <div class="form-group">
-          <label>Monetary Impact (optional)</label>
-          <input type="number" class="form-control" id="finding-monetary" placeholder="0.00" step="0.01">
+        <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="finding-ml-flag" style="width:auto;">
+          <label for="finding-ml-flag" style="margin:0; font-weight:500;">Include in Management Letter</label>
+        </div>
+
+        <!-- Adjusting entry panel (shown when type = misstatement) -->
+        <div id="adjusting-entry-panel" style="display:none; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:14px; margin-bottom:12px;">
+          <label style="font-weight:600; font-size:13px; display:block; margin-bottom:8px;">Adjusting Entry</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:12px;">Debit Account</label>
+              <input type="text" class="form-control" id="adj-debit" placeholder="e.g. Accounts Receivable">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:12px;">Credit Account</label>
+              <input type="text" class="form-control" id="adj-credit" placeholder="e.g. Revenue">
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:12px;">Amount</label>
+              <input type="number" class="form-control" id="adj-amount" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:12px;">Posted by client?</label>
+              <select class="form-control" id="adj-posted">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin:8px 0 0;">
+            <label style="font-size:12px;">Narration</label>
+            <input type="text" class="form-control" id="adj-narration" placeholder="Description of the adjustment">
+          </div>
+        </div>
+
+        <!-- ISA 265 details (collapsible) -->
+        <div style="margin-top:4px;">
+          <a href="#" onclick="event.preventDefault(); document.getElementById('finding-details-section').style.display = document.getElementById('finding-details-section').style.display === 'none' ? 'block' : 'none';" style="font-size:13px; color:var(--primary);">
+            Show/hide detailed documentation (condition, criteria, cause, effect...)
+          </a>
+          <div id="finding-details-section" style="display:none; margin-top:8px;">
+            <div class="form-group">
+              <label>Condition <span class="text-sm text-muted">— What is happening?</span></label>
+              <textarea class="form-control" id="finding-condition" rows="2" placeholder="What was found (the current state)"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Criteria <span class="text-sm text-muted">— What should happen?</span></label>
+              <textarea class="form-control" id="finding-criteria" rows="2" placeholder="The standard, policy, or expectation"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Cause <span class="text-sm text-muted">— Why did it happen?</span></label>
+              <textarea class="form-control" id="finding-cause" rows="2" placeholder="Why the condition exists"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Effect <span class="text-sm text-muted">— What is the impact?</span></label>
+              <textarea class="form-control" id="finding-effect" rows="2" placeholder="The impact of the condition"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Management Response</label>
+              <textarea class="form-control" id="finding-mgmt-response" rows="2" placeholder="Client's response to the finding"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Monetary Impact</label>
+              <input type="number" class="form-control" id="finding-monetary" placeholder="0.00" step="0.01">
+            </div>
+          </div>
         </div>
         <input type="hidden" id="finding-edit-id" value="">
       </div>
@@ -843,7 +903,7 @@
 
       section = data;
       engagementId = section.engagement_id;
-      isApproved = !!section.approved_at;
+      isApproved = !!section.partner_approved_at;
 
       // Fetch engagement for breadcrumb + shared folder + status
       const { data: eng } = await supabaseClient
@@ -1011,7 +1071,7 @@
     let editTagsSelected = [];
 
     async function editSectionTags() {
-      if (!can('edit_section_tags')) { alert('Only admins and reviewers can edit tags.'); return; }
+      if (!can('edit_section_tags')) { alert('Only partners and supervisors can edit tags.'); return; }
       const { data: allLines } = await supabaseClient
         .from('trial_balance_lines')
         .select('classification')
@@ -1279,7 +1339,7 @@
     }
 
     async function addProcedure() {
-      if (!can('add_procedure')) { alert('Only admins and reviewers can add procedures.'); return; }
+      if (!can('add_procedure')) { alert('Only partners and supervisors can add procedures.'); return; }
 
       const desc = document.getElementById('new-proc-desc').value.trim();
       const type = document.getElementById('new-proc-type').value;
@@ -1476,6 +1536,8 @@
         const sevLabel = f.severity || 'medium';
         const statusLabel = f.status || 'open';
         const monetary = f.monetary_impact ? Number(f.monetary_impact).toLocaleString(undefined, { minimumFractionDigits: 2 }) : null;
+        const typeLabel = (f.finding_type || 'observation').replace(/_/g, ' ');
+        const locked = isLockedForCurrentUser();
 
         return `
           <div class="finding-card">
@@ -1483,19 +1545,21 @@
               <div class="finding-header-left">
                 <span class="procedure-chevron" id="fchevron-${f.id}">&#9654;</span>
                 <span class="finding-title">${escHtml(f.title)}</span>
+                ${f.is_management_letter_point ? '<span class="badge" style="background:#E0E7FF;color:#4338CA;font-size:10px;margin-left:6px;">ML</span>' : ''}
               </div>
               <div class="finding-header-right">
+                <span class="badge" style="background:var(--gray-100);color:var(--gray-600);font-size:10px;">${typeLabel}</span>
                 <span class="badge badge-severity-${sevLabel}">${sevLabel}</span>
                 <span class="badge badge-status-${statusLabel}">${statusLabel}</span>
-                ${!isApproved && can('edit_finding') ? `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editFinding('${f.id}')">Edit</button>` : ''}
+                ${!locked && can('edit_finding') ? `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editFinding('${f.id}')">Edit</button>` : ''}
               </div>
             </div>
             <div class="finding-body" id="fbody-${f.id}">
+              ${f.recommendation ? `<div class="finding-field"><div class="finding-field-label">Recommendation</div><div class="finding-field-value">${escHtml(f.recommendation)}</div></div>` : ''}
               ${f.condition ? `<div class="finding-field"><div class="finding-field-label">Condition</div><div class="finding-field-value">${escHtml(f.condition)}</div></div>` : ''}
               ${f.criteria ? `<div class="finding-field"><div class="finding-field-label">Criteria</div><div class="finding-field-value">${escHtml(f.criteria)}</div></div>` : ''}
               ${f.cause ? `<div class="finding-field"><div class="finding-field-label">Cause</div><div class="finding-field-value">${escHtml(f.cause)}</div></div>` : ''}
               ${f.effect ? `<div class="finding-field"><div class="finding-field-label">Effect</div><div class="finding-field-value">${escHtml(f.effect)}</div></div>` : ''}
-              ${f.recommendation ? `<div class="finding-field"><div class="finding-field-label">Recommendation</div><div class="finding-field-value">${escHtml(f.recommendation)}</div></div>` : ''}
               ${f.management_response ? `<div class="finding-field"><div class="finding-field-label">Management Response</div><div class="finding-field-value">${escHtml(f.management_response)}</div></div>` : ''}
               ${monetary ? `<div class="finding-field"><div class="finding-field-label">Monetary Impact</div><div class="finding-field-value">${monetary}</div></div>` : ''}
             </div>
@@ -1511,32 +1575,55 @@
       chevron.classList.toggle('open');
     }
 
+    function toggleAdjustingPanel() {
+      const type = document.getElementById('finding-type').value;
+      document.getElementById('adjusting-entry-panel').style.display = type === 'misstatement' ? 'block' : 'none';
+    }
+
     function openFindingModal(findingId) {
       // Reset form
       document.getElementById('finding-title').value = '';
       document.getElementById('finding-severity').value = 'medium';
+      document.getElementById('finding-type').value = 'observation';
+      document.getElementById('finding-ml-flag').checked = false;
       document.getElementById('finding-condition').value = '';
       document.getElementById('finding-criteria').value = '';
       document.getElementById('finding-cause').value = '';
       document.getElementById('finding-effect').value = '';
       document.getElementById('finding-recommendation').value = '';
+      document.getElementById('finding-mgmt-response').value = '';
       document.getElementById('finding-monetary').value = '';
       document.getElementById('finding-edit-id').value = '';
       document.getElementById('finding-modal-title').textContent = 'Add Finding';
+      document.getElementById('adjusting-entry-panel').style.display = 'none';
+      document.getElementById('finding-details-section').style.display = 'none';
+      document.getElementById('adj-debit').value = '';
+      document.getElementById('adj-credit').value = '';
+      document.getElementById('adj-amount').value = '';
+      document.getElementById('adj-narration').value = '';
+      document.getElementById('adj-posted').value = 'false';
 
       if (findingId) {
         const f = findings.find(x => x.id === findingId);
         if (f) {
           document.getElementById('finding-title').value = f.title || '';
           document.getElementById('finding-severity').value = f.severity || 'medium';
+          document.getElementById('finding-type').value = f.finding_type || 'observation';
+          document.getElementById('finding-ml-flag').checked = !!f.is_management_letter_point;
           document.getElementById('finding-condition').value = f.condition || '';
           document.getElementById('finding-criteria').value = f.criteria || '';
           document.getElementById('finding-cause').value = f.cause || '';
           document.getElementById('finding-effect').value = f.effect || '';
           document.getElementById('finding-recommendation').value = f.recommendation || '';
+          document.getElementById('finding-mgmt-response').value = f.management_response || '';
           document.getElementById('finding-monetary').value = f.monetary_impact || '';
           document.getElementById('finding-edit-id').value = f.id;
           document.getElementById('finding-modal-title').textContent = 'Edit Finding';
+          toggleAdjustingPanel();
+          // Show details section if any ISA fields are filled
+          if (f.condition || f.criteria || f.cause || f.effect || f.management_response || f.monetary_impact) {
+            document.getElementById('finding-details-section').style.display = 'block';
+          }
         }
       }
 
@@ -1544,18 +1631,21 @@
     }
 
     function editFinding(findingId) {
-      if (!can('edit_finding')) { alert('Only admins and reviewers can edit findings.'); return; }
+      if (!can('edit_finding')) { alert('Only partners and supervisors can edit findings.'); return; }
       openFindingModal(findingId);
     }
 
     async function saveFinding() {
       const title = document.getElementById('finding-title').value.trim();
       const severity = document.getElementById('finding-severity').value;
+      const findingType = document.getElementById('finding-type').value;
+      const isMlPoint = document.getElementById('finding-ml-flag').checked;
       const condition = document.getElementById('finding-condition').value.trim();
       const criteria = document.getElementById('finding-criteria').value.trim();
       const cause = document.getElementById('finding-cause').value.trim();
       const effect = document.getElementById('finding-effect').value.trim();
       const recommendation = document.getElementById('finding-recommendation').value.trim();
+      const mgmtResponse = document.getElementById('finding-mgmt-response').value.trim();
       const monetaryRaw = document.getElementById('finding-monetary').value;
       const monetary = monetaryRaw ? parseFloat(monetaryRaw) : null;
       const editId = document.getElementById('finding-edit-id').value;
@@ -1566,25 +1656,52 @@
       btn.disabled = true;
       btn.textContent = 'Saving...';
 
-      if (editId) {
-        const { error } = await supabaseClient.from('findings').update({
-          title, severity, condition, criteria, cause, effect, recommendation,
-          monetary_impact: monetary
-        }).eq('id', editId);
+      const findingData = {
+        title, severity, condition, criteria, cause, effect, recommendation,
+        management_response: mgmtResponse,
+        monetary_impact: monetary,
+        finding_type: findingType,
+        is_management_letter_point: isMlPoint
+      };
 
+      let savedId = editId;
+
+      if (editId) {
+        const { error } = await supabaseClient.from('findings').update(findingData).eq('id', editId);
         if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Save Finding'; return; }
         await logActivity(engagementId, 'updated_finding', 'finding', editId, { title });
       } else {
         const { data, error } = await supabaseClient.from('findings').insert({
+          ...findingData,
           section_id: sectionId,
           reported_by: currentUser.id,
-          title, severity, condition, criteria, cause, effect, recommendation,
-          monetary_impact: monetary,
           status: 'open'
         }).select().single();
-
         if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Save Finding'; return; }
-        await logActivity(engagementId, 'added_finding', 'finding', data.id, { title, severity });
+        savedId = data.id;
+        await logActivity(engagementId, 'added_finding', 'finding', data.id, { title, severity, finding_type: findingType });
+      }
+
+      // Save adjusting entry if misstatement
+      if (findingType === 'misstatement') {
+        const debit = document.getElementById('adj-debit').value.trim();
+        const credit = document.getElementById('adj-credit').value.trim();
+        const amount = parseFloat(document.getElementById('adj-amount').value) || 0;
+        const narration = document.getElementById('adj-narration').value.trim();
+        const isPosted = document.getElementById('adj-posted').value === 'true';
+
+        if (debit && credit && amount > 0) {
+          // Delete existing entries for this finding, then insert new one
+          await supabaseClient.from('adjusting_entries').delete().eq('finding_id', savedId);
+          await supabaseClient.from('adjusting_entries').insert({
+            finding_id: savedId,
+            debit_account: debit,
+            credit_account: credit,
+            amount: amount,
+            narration: narration,
+            is_posted: isPosted
+          });
+        }
       }
 
       btn.disabled = false;
@@ -1596,7 +1713,7 @@
 
     // ---- Conclusion ----
     async function saveConclusion() {
-      if (!can('save_conclusion')) { alert('Only admins and reviewers can write conclusions.'); return; }
+      if (!can('save_conclusion')) { alert('Only partners and supervisors can write conclusions.'); return; }
       const text = document.getElementById('conclusion-text').value.trim();
 
       const { error } = await supabaseClient.from('audit_sections').update({
@@ -1665,7 +1782,7 @@
     }
 
     async function addReviewNote(noteType) {
-      if (noteType === 'review_comment' && !can('add_review_comment')) { alert('Only admins and reviewers can add review comments.'); return; }
+      if (noteType === 'review_comment' && !can('add_review_comment')) { alert('Only partners and supervisors can add review comments.'); return; }
       if (noteType === 'preparer_response' && !can('add_preparer_response')) { alert('Only admins and preparers can add responses.'); return; }
       const noteText = document.getElementById('new-review-note').value.trim();
       if (!noteText) { alert('Please type a note.'); return; }
@@ -1686,67 +1803,109 @@
       applyApprovedState();
     }
 
-    // ---- Actions ----
+    // ---- Actions (three-level sign-off) ----
+    const STATUS_LABELS = {
+      'not_started': 'Not Started',
+      'in_progress': 'In Progress',
+      'ready_for_supervisor_review': 'With Supervisor',
+      'in_supervisor_review': 'Supervisor Reviewing',
+      'ready_for_partner_review': 'With Partner',
+      'in_partner_review': 'Partner Reviewing',
+      'returned_to_preparer': 'Returned to Preparer',
+      'returned_to_supervisor': 'Returned to Supervisor',
+      'approved': 'Approved'
+    };
+
     function renderActions() {
       const container = document.getElementById('actions-container');
+      const status = section.status || 'not_started';
 
+      // Fully approved — read-only
       if (isApproved) {
-        const approvedDate = section.approved_at ? new Date(section.approved_at).toLocaleString() : '';
-        let approvedHtml = `
+        const approvedDate = section.partner_approved_at ? new Date(section.partner_approved_at).toLocaleString() : '';
+        let html = `
           <div class="approved-banner">
             <span class="badge badge-approved">Approved</span>
-            <span class="text-sm text-muted">This section was approved on ${approvedDate}. All fields are read-only.</span>
+            <span class="text-sm text-muted">Final approval on ${approvedDate}. All fields are read-only.</span>
         `;
-        if (currentRole === 'admin') {
-          approvedHtml += `<button class="btn btn-outline btn-sm" style="margin-left:auto; color:#dc2626; border-color:#dc2626;" onclick="reopenSection()">Reopen Section</button>`;
+        if (can('reopen_section')) {
+          html += `<button class="btn btn-outline btn-sm" style="margin-left:auto; color:#dc2626; border-color:#dc2626;" onclick="reopenSection()">Reopen Section</button>`;
         }
-        approvedHtml += '</div>';
-        container.innerHTML = approvedHtml;
+        html += '</div>';
+        container.innerHTML = html;
         return;
       }
 
-      const status = section.status || 'not_started';
       let actionBtns = '';
+      let statusMsg = '';
 
-      // Submit for Review — any role that has submit_for_review permission
-      if (status !== 'ready_for_review' && can('submit_for_review')) {
-        actionBtns += '<button class="btn btn-primary btn-sm" onclick="submitForReview()">Submit for Review</button>';
+      // ---- Preparer actions ----
+      if (can('submit_for_review')) {
+        if (['not_started', 'in_progress', 'returned_to_preparer'].includes(status)) {
+          actionBtns += '<button class="btn btn-primary btn-sm" onclick="submitForReview()">Send to Supervisor for Review</button>';
+        } else if (status === 'ready_for_supervisor_review' || status === 'in_supervisor_review') {
+          statusMsg = 'This section is with your supervisor for review. You cannot edit until it is returned.';
+        } else if (['ready_for_partner_review', 'in_partner_review'].includes(status)) {
+          statusMsg = 'This section is with the engagement partner for final approval.';
+        }
       }
-      // Approve — admin/reviewer only
-      if (can('approve_section')) {
-        actionBtns += '<button class="btn btn-success btn-sm" onclick="approveSection()">Approve Section</button>';
+
+      // ---- Supervisor actions ----
+      if (can('supervisor_approve')) {
+        if (['ready_for_supervisor_review', 'in_supervisor_review', 'returned_to_supervisor'].includes(status)) {
+          actionBtns += '<button class="btn btn-success btn-sm" onclick="supervisorApprove()">Approve (Supervisor)</button>';
+          actionBtns += '<button class="btn btn-returned btn-sm" onclick="returnToPreparer()">Return to Preparer</button>';
+        } else if (['ready_for_partner_review', 'in_partner_review'].includes(status)) {
+          statusMsg = 'Supervisor review complete. Awaiting partner approval.';
+        }
       }
-      // Return — admin/reviewer only, when ready for review
-      if (status === 'ready_for_review' && can('return_to_preparer')) {
-        actionBtns += '<button class="btn btn-returned btn-sm" onclick="returnToPreparer()">Return to Preparer</button>';
+
+      // ---- Partner (admin) actions ----
+      if (can('partner_approve')) {
+        if (['ready_for_partner_review', 'in_partner_review'].includes(status)) {
+          actionBtns += '<button class="btn btn-success btn-sm" onclick="partnerApprove()">Final Approve (Partner)</button>';
+          actionBtns += '<button class="btn btn-returned btn-sm" onclick="returnToSupervisor()">Return to Supervisor</button>';
+        }
       }
 
       if (actionBtns) {
         container.innerHTML = '<div class="actions-bar">' + actionBtns + '</div>';
+      } else if (statusMsg) {
+        container.innerHTML = '<div class="actions-bar"><span class="text-sm text-muted">' + statusMsg + '</span></div>';
       } else {
-        container.innerHTML = '<div class="text-sm text-muted" style="padding:12px;">No actions available for your role.</div>';
+        container.innerHTML = '';
       }
     }
 
+    // ---- Preparer submits to supervisor ----
     async function submitForReview() {
+      const ok = await showActionModal({
+        title: 'Send to Supervisor',
+        message: 'This will lock your edits and send the section to your supervisor for review.\n\nYou will not be able to edit until it is returned.',
+        okLabel: 'Send for Review',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+
       const { error } = await supabaseClient.from('audit_sections')
-        .update({ status: 'ready_for_review' })
+        .update({ status: 'ready_for_supervisor_review' })
         .eq('id', sectionId);
 
       if (error) { alert('Error: ' + error.message); return; }
 
-      section.status = 'ready_for_review';
+      section.status = 'ready_for_supervisor_review';
       await logActivity(engagementId, 'submitted_for_review', 'section', sectionId, { name: section.name });
 
       updateStatusBadge();
       renderActions();
+      applyApprovedState();
     }
 
-    async function approveSection() {
-      if (!can('approve_section')) { alert('Only admins and reviewers can approve sections.'); return; }
+    // ---- Supervisor approves → moves to partner ----
+    async function supervisorApprove() {
       const ok = await showActionModal({
-        title: 'Approve Section',
-        message: 'Approve this section? This action is permanent and cannot be undone.',
+        title: 'Supervisor Approval',
+        message: 'Approve this section and send it to the engagement partner for final sign-off.',
         okLabel: 'Approve',
         okClass: 'btn-success'
       });
@@ -1754,26 +1913,55 @@
 
       const now = new Date().toISOString();
       const { error } = await supabaseClient.from('audit_sections').update({
+        status: 'ready_for_partner_review',
+        supervisor_approved_by: currentUser.id,
+        supervisor_approved_at: now
+      }).eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.status = 'ready_for_partner_review';
+      section.supervisor_approved_by = currentUser.id;
+      section.supervisor_approved_at = now;
+
+      await logActivity(engagementId, 'supervisor_approved', 'section', sectionId, { name: section.name });
+
+      updateStatusBadge();
+      renderActions();
+    }
+
+    // ---- Partner gives final approval ----
+    async function partnerApprove() {
+      const ok = await showActionModal({
+        title: 'Final Approval (Partner)',
+        message: 'Give final sign-off on this section. This marks it as complete.',
+        okLabel: 'Final Approve',
+        okClass: 'btn-success'
+      });
+      if (!ok) return;
+
+      const now = new Date().toISOString();
+      const { error } = await supabaseClient.from('audit_sections').update({
         status: 'approved',
-        approved_by: currentUser.id,
-        approved_at: now
+        partner_approved_by: currentUser.id,
+        partner_approved_at: now
       }).eq('id', sectionId);
 
       if (error) { alert('Error: ' + error.message); return; }
 
       section.status = 'approved';
-      section.approved_by = currentUser.id;
-      section.approved_at = now;
+      section.partner_approved_by = currentUser.id;
+      section.partner_approved_at = now;
       isApproved = true;
 
-      await logActivity(engagementId, 'approved_section', 'section', sectionId, { name: section.name });
+      await logActivity(engagementId, 'partner_approved', 'section', sectionId, { name: section.name });
 
       updateStatusBadge();
       applyApprovedState();
     }
 
+    // ---- Supervisor returns to preparer ----
     async function returnToPreparer() {
-      if (!can('return_to_preparer')) { alert('Only admins and reviewers can return sections.'); return; }
       const reason = await showActionModal({
         title: 'Return to Preparer',
         message: 'Provide a reason for returning this section. The preparer will see this note.',
@@ -1783,22 +1971,21 @@
       });
       if (!reason) return;
 
-      // Add return_reason review note
-      const { data: note } = await supabaseClient.from('review_notes').insert({
+      await supabaseClient.from('review_notes').insert({
         section_id: sectionId,
         user_id: currentUser.id,
         note: reason,
         note_type: 'return_reason'
-      }).select().single();
+      });
 
       const { error } = await supabaseClient.from('audit_sections')
-        .update({ status: 'returned' })
+        .update({ status: 'returned_to_preparer' })
         .eq('id', sectionId);
 
       if (error) { alert('Error: ' + error.message); return; }
 
-      section.status = 'returned';
-      await logActivity(engagementId, 'returned_section', 'section', sectionId, { reason });
+      section.status = 'returned_to_preparer';
+      await logActivity(engagementId, 'returned_to_preparer', 'section', sectionId, { reason });
 
       updateStatusBadge();
       renderActions();
@@ -1806,48 +1993,91 @@
       applyApprovedState();
     }
 
+    // ---- Partner returns to supervisor ----
+    async function returnToSupervisor() {
+      const reason = await showActionModal({
+        title: 'Return to Supervisor',
+        message: 'Provide a reason for returning this section to the supervisor.',
+        inputLabel: 'Reason',
+        okLabel: 'Return to Supervisor',
+        okClass: 'btn-returned'
+      });
+      if (!reason) return;
+
+      await supabaseClient.from('review_notes').insert({
+        section_id: sectionId,
+        user_id: currentUser.id,
+        note: reason,
+        note_type: 'return_reason'
+      });
+
+      const { error } = await supabaseClient.from('audit_sections')
+        .update({
+          status: 'returned_to_supervisor',
+          partner_approved_by: null,
+          partner_approved_at: null
+        })
+        .eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.status = 'returned_to_supervisor';
+      section.partner_approved_by = null;
+      section.partner_approved_at = null;
+
+      await logActivity(engagementId, 'returned_to_supervisor', 'section', sectionId, { reason });
+
+      updateStatusBadge();
+      renderActions();
+      await loadReviewNotes();
+    }
+
+    // ---- Admin reopens fully approved section ----
     async function reopenSection() {
-      if (currentRole !== 'admin') { alert('Only admins can reopen approved sections.'); return; }
+      if (!can('reopen_section')) { alert('Only partners can reopen approved sections.'); return; }
 
       const reason = await showActionModal({
         title: 'Reopen Section',
-        message: 'This will be logged in the audit trail as a post-approval change.',
+        message: 'This will clear all approvals and return the section to the supervisor. This will be logged in the audit trail.',
         inputLabel: 'Reason for reopening',
         okLabel: 'Reopen',
         okClass: 'btn-returned'
       });
       if (!reason || !reason.trim()) return;
 
-      const originalApprover = section.approved_by;
-      const originalApprovedAt = section.approved_at;
+      const origSupervisor = section.supervisor_approved_by;
+      const origPartner = section.partner_approved_by;
 
       const { error } = await supabaseClient.from('audit_sections').update({
-        status: 'in_progress',
-        approved_by: null,
-        approved_at: null
+        status: 'returned_to_supervisor',
+        supervisor_approved_by: null,
+        supervisor_approved_at: null,
+        partner_approved_by: null,
+        partner_approved_at: null
       }).eq('id', sectionId);
 
       if (error) { alert('Error: ' + error.message); return; }
 
-      section.status = 'in_progress';
-      section.approved_by = null;
-      section.approved_at = null;
+      section.status = 'returned_to_supervisor';
+      section.supervisor_approved_by = null;
+      section.supervisor_approved_at = null;
+      section.partner_approved_by = null;
+      section.partner_approved_at = null;
       isApproved = false;
 
-      // Log with full context for audit trail
-      const approverName = await resolveProfileName(originalApprover);
+      const supervisorName = await resolveProfileName(origSupervisor);
+      const partnerName = await resolveProfileName(origPartner);
       await logActivity(engagementId, 'reopened_section', 'section', sectionId, {
         name: section.name,
         reason: reason.trim(),
-        original_approver: approverName,
-        original_approved_at: originalApprovedAt
+        original_supervisor: supervisorName,
+        original_partner: partnerName
       });
 
-      // Add a review note so it's visible in the section thread
       await supabaseClient.from('review_notes').insert({
         section_id: sectionId,
         user_id: currentUser.id,
-        note: 'Section reopened. Reason: ' + reason.trim(),
+        note: 'Section reopened by partner. Reason: ' + reason.trim(),
         note_type: 'return_reason'
       });
 
@@ -1857,13 +2087,27 @@
     }
 
     function updateStatusBadge() {
-      const statusLabel = (section.status || 'not_started').replace(/_/g, ' ');
+      const status = section.status || 'not_started';
       const badge = document.getElementById('section-status-badge');
-      badge.textContent = statusLabel;
-      badge.className = 'badge badge-' + (section.status || 'not-started').replace(/_/g, '-');
+      badge.textContent = STATUS_LABELS[status] || status.replace(/_/g, ' ');
+      badge.className = 'badge badge-' + status.replace(/_/g, '-');
     }
 
-    // ---- Approved state: disable everything ----
+    // ---- Lock state: disable editing based on status + role ----
+    function isLockedForCurrentUser() {
+      const status = section.status || 'not_started';
+      if (isApproved) return true;
+      // Preparer locked when in any review state
+      if (currentRole === 'preparer') {
+        return ['ready_for_supervisor_review', 'in_supervisor_review', 'ready_for_partner_review', 'in_partner_review'].includes(status);
+      }
+      // Supervisor locked when with partner
+      if (currentRole === 'supervisor') {
+        return ['ready_for_partner_review', 'in_partner_review'].includes(status);
+      }
+      return false;
+    }
+
     function applyApprovedState() {
       // Always render conclusion and actions
       document.getElementById('conclusion-text').value = section.conclusion || '';
@@ -1875,8 +2119,10 @@
 
       renderActions();
 
-      if (!isApproved) {
-        // Re-enable fields (needed after reopen)
+      const locked = isLockedForCurrentUser();
+
+      if (!locked) {
+        // Re-enable fields (needed after reopen/return)
         document.querySelectorAll('#page-content textarea, #page-content input, #page-content select').forEach(el => {
           el.disabled = false;
         });
@@ -1891,30 +2137,25 @@
         if (can('add_review_comment') || can('add_preparer_response')) {
           document.getElementById('add-note-area').style.display = '';
         }
-        // Re-render procedures and findings to restore their buttons
         renderProcedures();
         renderFindings();
         return;
       }
 
-      // Disable all inputs, textareas, selects
+      // Locked — disable all inputs
       document.querySelectorAll('#page-content textarea, #page-content input, #page-content select').forEach(el => {
         el.disabled = true;
       });
 
-      // Hide all action buttons except back link
       document.getElementById('btn-save-conclusion').style.display = 'none';
       document.getElementById('btn-show-add-procedure').style.display = 'none';
       document.getElementById('btn-add-finding').style.display = 'none';
       document.getElementById('add-note-area').style.display = 'none';
       document.getElementById('add-procedure-form').style.display = 'none';
 
-      // Hide individual procedure save/toggle/link buttons
       document.querySelectorAll('#procedures-list .btn').forEach(btn => {
         btn.style.display = 'none';
       });
-
-      // Hide edit buttons on findings
       document.querySelectorAll('#findings-list .btn').forEach(btn => {
         btn.style.display = 'none';
       });
