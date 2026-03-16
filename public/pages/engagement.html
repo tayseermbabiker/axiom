@@ -1085,16 +1085,9 @@
       });
       if (!ok) return;
 
-      const { error, status, statusText, count } = await supabaseClient
-        .from('audit_sections')
-        .delete()
-        .eq('id', sectionId);
+      const { error } = await supabaseClient.rpc('delete_section', { p_section_id: sectionId });
 
-      if (error) { alert('Delete error: ' + error.message + ' (code: ' + error.code + ', details: ' + error.details + ')'); return; }
-
-      // Debug: check if row still exists
-      const { data: check } = await supabaseClient.from('audit_sections').select('id').eq('id', sectionId).maybeSingle();
-      if (check) { alert('Delete returned no error but section still exists. HTTP status: ' + status + '. This is likely an RLS policy issue.'); return; }
+      if (error) { alert('Delete error: ' + error.message); return; }
 
       await logActivity(engagementId, 'deleted_section', 'section', sectionId, { name: sectionName });
 
