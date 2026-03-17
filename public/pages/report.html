@@ -106,7 +106,7 @@
 
       // Load engagement
       const { data: eng } = await supabaseClient.from('engagements').select('*').eq('id', engagementId).single();
-      if (!eng || eng.organization_id !== org.organization_id) { document.body.innerHTML = '<p>Engagement not found.</p>'; return; }
+      if (!eng || eng.organization_id !== org.id) { document.body.innerHTML = '<p>Engagement not found.</p>'; return; }
 
       // Load all data in parallel
       const [sectionsRes, tbRes, findingsRes, activityRes, proceduresRes, responsesRes, profilesRes] = await Promise.all([
