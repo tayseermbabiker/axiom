@@ -1979,12 +1979,18 @@
       });
 
       const { error } = await supabaseClient.from('audit_sections')
-        .update({ status: 'returned_to_preparer' })
+        .update({
+          status: 'returned_to_preparer',
+          supervisor_approved_by: null,
+          supervisor_approved_at: null
+        })
         .eq('id', sectionId);
 
       if (error) { alert('Error: ' + error.message); return; }
 
       section.status = 'returned_to_preparer';
+      section.supervisor_approved_by = null;
+      section.supervisor_approved_at = null;
       await logActivity(engagementId, 'returned_to_preparer', 'section', sectionId, { reason });
 
       updateStatusBadge();
@@ -2014,6 +2020,8 @@
       const { error } = await supabaseClient.from('audit_sections')
         .update({
           status: 'returned_to_supervisor',
+          supervisor_approved_by: null,
+          supervisor_approved_at: null,
           partner_approved_by: null,
           partner_approved_at: null
         })
@@ -2022,6 +2030,8 @@
       if (error) { alert('Error: ' + error.message); return; }
 
       section.status = 'returned_to_supervisor';
+      section.supervisor_approved_by = null;
+      section.supervisor_approved_at = null;
       section.partner_approved_by = null;
       section.partner_approved_at = null;
 
