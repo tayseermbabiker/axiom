@@ -466,6 +466,8 @@
             <div class="card-header">
               <h2>Audit Procedures</h2>
               <button class="btn btn-primary btn-sm" id="btn-show-add-procedure" style="display:none;" onclick="toggleAddProcedure()">+ Add Procedure</button>
+              <button class="btn btn-outline btn-sm" id="btn-upload-procedures" style="display:none;" onclick="document.getElementById('proc-file-input').click()">Upload from Excel</button>
+              <input type="file" id="proc-file-input" accept=".csv,.xlsx,.xls" style="display:none;" onchange="handleProcUpload(event)">
             </div>
             <div class="card-body">
               <div id="procedures-list"></div>
@@ -783,6 +785,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
   <script src="../js/auth.js"></script>
@@ -966,9 +969,10 @@
           .map(a => '<span class="assertion-chip">' + escHtml(a) + '</span>').join('');
       }
 
-      // Show "Add Procedure" button based on permission
+      // Show "Add Procedure" buttons based on permission
       if (can('add_procedure')) {
         document.getElementById('btn-show-add-procedure').style.display = 'inline-flex';
+        document.getElementById('btn-upload-procedures').style.display = 'inline-flex';
       }
     }
 
@@ -1393,6 +1397,99 @@
       await loadProcedures();
       updateProgressBar();
       applyApprovedState();
+    }
+
+    // ---- Bulk upload procedures from Excel/CSV ----
+    async function handleProcUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = ''; // reset so same file can be re-uploaded
+
+      const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          let rows;
+          if (isExcel) {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          } else {
+            const text = evt.target.result;
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            if (lines.length < 2) { alert('File must have a header row and at least one data row.'); return; }
+            const header = lines[0].split(',').map(h => h.trim());
+            rows = [];
+            for (let i = 1; i < lines.length; i++) {
+              const cols = lines[i].split(',').map(c => c.trim());
+              const obj = {};
+              header.forEach((h, idx) => { obj[h] = cols[idx] || ''; });
+              rows.push(obj);
+            }
+          }
+
+          if (!rows || rows.length === 0) { alert('No data found in file.'); return; }
+
+          // Auto-detect columns
+          const cols = Object.keys(rows[0]);
+          const lower = cols.map(c => c.toLowerCase());
+          const descCol = cols[lower.findIndex(h => h.includes('description') || h.includes('procedure') || h.includes('desc'))] || cols[0];
+          const typeCol = cols[lower.findIndex(h => h.includes('type'))] || null;
+          const assertCol = cols[lower.findIndex(h => h.includes('assertion'))] || null;
+
+          const validTypes = ['test_of_detail', 'analytical', 'controls', 'other'];
+          const maxSort = procedures.reduce((max, p) => Math.max(max, p.sort_order || 0), 0);
+
+          const toInsert = [];
+          for (let i = 0; i < rows.length; i++) {
+            const desc = String(rows[i][descCol] || '').trim();
+            if (!desc) continue;
+
+            let type = typeCol ? String(rows[i][typeCol] || '').trim().toLowerCase().replace(/ /g, '_') : 'other';
+            if (!validTypes.includes(type)) type = 'other';
+
+            let assertions = [];
+            if (assertCol) {
+              const raw = String(rows[i][assertCol] || '');
+              assertions = raw.split(/[,;|]/).map(a => a.trim()).filter(a => a);
+            }
+
+            toInsert.push({
+              section_id: sectionId,
+              description: desc,
+              procedure_type: type,
+              assertions: assertions,
+              sort_order: maxSort + i + 1
+            });
+          }
+
+          if (toInsert.length === 0) { alert('No valid procedures found in file.'); return; }
+
+          const ok = await showActionModal({
+            title: 'Upload Procedures',
+            message: toInsert.length + ' procedures found in file. Import them into this section?',
+            okLabel: 'Import ' + toInsert.length + ' Procedures',
+            okClass: 'btn-primary'
+          });
+          if (!ok) return;
+
+          const { error } = await supabaseClient.from('audit_procedures').insert(toInsert);
+          if (error) { alert('Error: ' + error.message); return; }
+
+          await logActivity(engagementId, 'uploaded_procedures', 'section', sectionId, { count: toInsert.length });
+          await loadProcedures();
+          updateProgressBar();
+          applyApprovedState();
+
+        } catch (err) {
+          alert('Error reading file: ' + err.message);
+        }
+      };
+
+      if (isExcel) reader.readAsArrayBuffer(file);
+      else reader.readAsText(file);
     }
 
     async function saveResponse(procId) {
@@ -2195,7 +2292,10 @@
           el.disabled = false;
         });
         // Restore role-based button visibility
-        if (can('add_procedure')) document.getElementById('btn-show-add-procedure').style.display = 'inline-flex';
+        if (can('add_procedure')) {
+          document.getElementById('btn-show-add-procedure').style.display = 'inline-flex';
+          document.getElementById('btn-upload-procedures').style.display = 'inline-flex';
+        }
         if (can('add_finding')) document.getElementById('btn-add-finding').style.display = '';
         if (can('save_conclusion')) {
           document.getElementById('btn-save-conclusion').style.display = '';
@@ -2217,6 +2317,7 @@
 
       document.getElementById('btn-save-conclusion').style.display = 'none';
       document.getElementById('btn-show-add-procedure').style.display = 'none';
+      document.getElementById('btn-upload-procedures').style.display = 'none';
       document.getElementById('btn-add-finding').style.display = 'none';
       document.getElementById('add-note-area').style.display = 'none';
       document.getElementById('add-procedure-form').style.display = 'none';
