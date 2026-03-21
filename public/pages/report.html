@@ -18,7 +18,7 @@
     .cover-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 40px; text-align: left; max-width: 500px; margin: 0 auto 40px; font-size: 13px; }
     .cover-details dt { font-weight: 600; color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
     .cover-details dd { color: #1A1A2E; font-weight: 500; margin-bottom: 8px; }
-    .cover-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 600px; margin: 0 auto; }
+    .cover-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 500px; margin: 0 auto; }
     .cover-metric { border: 1px solid #D9D9D9; border-radius: 8px; padding: 16px 8px; text-align: center; background: #F5F7FA; }
     .cover-metric .val { font-size: 22px; font-weight: 700; color: #1A3A5F; }
     .cover-metric .lbl { font-size: 9px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
@@ -236,6 +236,8 @@
             <div class="cover-metric"><div class="val">${doneP}/${totalP}</div><div class="lbl">Procedures</div></div>
             <div class="cover-metric"><div class="val">${approvedS}/${filtSections.length}</div><div class="lbl">Approved</div></div>
             <div class="cover-metric"><div class="val">${openF}</div><div class="lbl">Open Findings</div></div>
+            <div class="cover-metric"><div class="val">${adjustingEntries.length}</div><div class="lbl">Adj. Entries</div></div>
+            <div class="cover-metric"><div class="val">${filtFindings.filter(f => f.is_management_letter_point).length}</div><div class="lbl">ML Points</div></div>
           </div>
           <div class="cover-footer">Audexon Audit File — Confidential — Generated ${new Date().toLocaleDateString()} by ${esc(currentUser.email)}</div>
         </div>
@@ -246,18 +248,18 @@
       if (filtFindings.length === 0) {
         html += '<p class="no-data">No findings recorded.</p>';
       } else {
-        html += '<table><thead><tr><th>Title</th><th>Section</th><th>Type</th><th>Severity</th><th>Status</th><th>Impact</th><th>ML</th></tr></thead><tbody>';
+        const adjFindingIds = new Set(adjustingEntries.map(a => a.finding_id));
+        html += '<table><thead><tr><th>Title</th><th>Section</th><th>Type</th><th>Severity</th><th>Status</th><th>ML</th><th>Adj. Entry</th></tr></thead><tbody>';
         html += filtFindings.map(f => {
           const secName = sections.find(s => s.id === f.section_id)?.name || '—';
-          const amt = f.monetary_impact ? Number(f.monetary_impact).toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—';
           return `<tr>
             <td>${esc(f.title)}</td>
             <td>${esc(secName)}</td>
             <td>${(f.finding_type || 'observation').replace(/_/g, ' ')}</td>
             <td><span class="badge b-${f.severity}">${f.severity}</span></td>
             <td><span class="badge b-${f.status}">${f.status}</span></td>
-            <td>${amt}</td>
             <td>${f.is_management_letter_point ? 'Yes' : ''}</td>
+            <td>${adjFindingIds.has(f.id) ? 'Yes' : ''}</td>
           </tr>`;
         }).join('');
         html += '</tbody></table>';
