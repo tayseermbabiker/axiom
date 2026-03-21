@@ -37,6 +37,12 @@
             <label for="firm-name">Firm Name</label>
             <input type="text" id="firm-name" class="form-control" placeholder="e.g. Smith & Associates CPAs" required>
           </div>
+          <div class="form-group">
+            <label for="access-code">Access Code</label>
+            <input type="text" id="access-code" class="form-control" placeholder="Enter your access code" required>
+            <small style="color:var(--gray-500); font-size:11px; margin-top:4px; display:block;">Contact us to get an access code for your firm.</small>
+          </div>
+          <div id="code-error" class="error-msg" style="display:none;"></div>
           <div class="flex gap-8">
             <button type="button" class="btn btn-outline" onclick="showChoice()">Back</button>
             <button type="submit" class="btn btn-primary" id="btn-create-firm">Create Firm</button>
@@ -154,6 +160,9 @@
       `).join('');
     }
 
+    // Valid access codes (change these as needed)
+    const VALID_CODES = ['AXIOM-BETA-2026', 'AXIOM-PILOT-2026'];
+
     // Create firm
     document.getElementById('form-create-firm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -163,6 +172,17 @@
       hideMessages();
 
       const firmName = document.getElementById('firm-name').value.trim();
+      const accessCode = document.getElementById('access-code').value.trim().toUpperCase();
+
+      // Validate access code
+      if (!VALID_CODES.includes(accessCode)) {
+        const errEl = document.getElementById('code-error');
+        errEl.textContent = 'Invalid access code. Contact us to get your code.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Firm';
+        return;
+      }
 
       try {
         // Create organization
