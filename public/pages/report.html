@@ -10,7 +10,7 @@
     body { font-family: 'Inter', sans-serif; color: #1A1A2E; line-height: 1.6; padding: 0; max-width: 900px; margin: 0 auto; font-size: 12px; }
 
     /* ---- Cover ---- */
-    .cover { padding: 80px 48px 48px; margin-bottom: 0; page-break-after: always; text-align: center; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+    .cover { padding: 60px 48px 40px; margin-bottom: 0; page-break-after: always; text-align: center; }
     .cover-brand { font-size: 13px; font-weight: 700; color: #1A3A5F; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 48px; }
     .cover-divider { width: 60px; height: 3px; background: #1A3A5F; margin: 0 auto 40px; }
     .cover h1 { font-size: 32px; font-weight: 700; color: #1A1A2E; margin-bottom: 8px; }
@@ -53,7 +53,7 @@
     .b-ml { background: #E0E7FF; color: #3730A3; }
 
     /* ---- Section workpaper ---- */
-    .wp-section { margin-bottom: 32px; page-break-inside: avoid; }
+    .wp-section { margin-bottom: 24px; }
     .wp-header { background: #F5F7FA; border: 1px solid #D9D9D9; border-radius: 4px; padding: 14px 18px; margin-bottom: 16px; }
     .wp-title { font-size: 15px; font-weight: 700; color: #1A1A2E; }
     .wp-meta { font-size: 10px; color: #6b7280; margin-top: 4px; line-height: 1.5; }
@@ -97,9 +97,13 @@
     @media print {
       .print-bar { display: none; }
       body { padding: 24px; font-size: 10px; }
-      .cover { page-break-after: always; min-height: auto; padding: 60px 40px; }
-      .wp-section { page-break-inside: avoid; }
+      .cover { page-break-after: always; min-height: auto; padding: 48px 40px; }
+      .wp-header { page-break-inside: avoid; page-break-after: avoid; }
+      .proc-block { page-break-inside: avoid; }
+      .finding-block { page-break-inside: avoid; }
       h2 { page-break-after: avoid; }
+      h4 { page-break-after: avoid; }
+      .phase-divider { page-break-after: avoid; }
       .page-hdr { display: flex; }
     }
 
