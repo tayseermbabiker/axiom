@@ -95,6 +95,11 @@
 </head>
 <body>
   <div class="print-bar">
+    <select id="phase-filter" onchange="init()" style="padding:8px 12px; font-size:14px; border-radius:6px; border:1px solid #d1d5db;">
+      <option value="all">All Phases</option>
+      <option value="interim">Interim Only</option>
+      <option value="final">Final Only</option>
+    </select>
     <button class="btn-print" onclick="window.print()">Save as PDF</button>
     <button class="btn-back" onclick="window.close()">Close</button>
   </div>
@@ -119,16 +124,14 @@
       if (!eng || eng.organization_id !== org.id) { document.getElementById('report-content').innerHTML = '<p>Engagement not found.</p>'; return; }
 
       // Load all data
-      const [sectionsRes, tbRes, profilesRes, activityRes] = await Promise.all([
+      const [sectionsRes, tbRes, profilesRes] = await Promise.all([
         supabaseClient.from('audit_sections').select('*').eq('engagement_id', engagementId).order('sort_order'),
         supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code'),
-        supabaseClient.from('organization_members').select('*, profiles:user_id(id, full_name, email)').eq('organization_id', org.id),
-        supabaseClient.from('activity_log').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false })
+        supabaseClient.from('organization_members').select('*, profiles:user_id(id, full_name, email)').eq('organization_id', org.id)
       ]);
 
       const sections = sectionsRes.data || [];
       const tbLines = tbRes.data || [];
-      const activity = activityRes.data || [];
 
       const profiles = {};
       (profilesRes.data || []).forEach(m => { if (m.profiles) profiles[m.profiles.id] = m.profiles.full_name || m.profiles.email; });
@@ -169,13 +172,22 @@
         }
       }
 
-      // Compute stats
-      const totalP = procedures.length;
-      const doneP = responses.filter(r => r.status === 'done').length;
-      const approvedS = sections.filter(s => s.status === 'approved').length;
-      const openF = findings.filter(f => f.status === 'open').length;
-      const highF = findings.filter(f => f.severity === 'high').length;
-      const totalMisstatement = findings.filter(f => f.finding_type === 'misstatement').reduce((s, f) => s + (Number(f.monetary_impact) || 0), 0);
+      // Compute stats (filtered by phase)
+      const phaseFilter = document.getElementById('phase-filter').value;
+      const filtSections = phaseFilter === 'all' ? sections
+        : sections.filter(s => phaseFilter === 'interim' ? s.phase === 'interim' : s.phase !== 'interim');
+      const filtSecIds = new Set(filtSections.map(s => s.id));
+      const filtProcs = procedures.filter(p => filtSecIds.has(p.section_id));
+      const filtProcIds = new Set(filtProcs.map(p => p.id));
+      const filtResps = responses.filter(r => filtProcIds.has(r.procedure_id));
+      const filtFindings = findings.filter(f => filtSecIds.has(f.section_id));
+
+      const totalP = filtProcs.length;
+      const doneP = filtResps.filter(r => r.status === 'done').length;
+      const approvedS = filtSections.filter(s => s.status === 'approved').length;
+      const openF = filtFindings.filter(f => f.status === 'open').length;
+      const highF = filtFindings.filter(f => f.severity === 'high').length;
+      const totalMisstatement = filtFindings.filter(f => f.finding_type === 'misstatement').reduce((s, f) => s + (Number(f.monetary_impact) || 0), 0);
 
       // Find partner and supervisor names
       const partnerMember = (profilesRes.data || []).find(m => m.role === 'admin');
@@ -190,7 +202,7 @@
         <div class="cover">
           <div class="cover-logo">Axiom Audit File</div>
           <h1>${esc(eng.client_name)}</h1>
-          <div class="cover-subtitle">Audit Engagement — Year ended ${eng.year_end_date || '—'}</div>
+          <div class="cover-subtitle">Audit Engagement — Year ended ${eng.year_end_date || '—'}${phaseFilter !== 'all' ? ' — ' + phaseFilter.charAt(0).toUpperCase() + phaseFilter.slice(1) + ' Phase' : ''}</div>
           <div class="cover-grid">
             <div><span class="cover-label">Status:</span> <span class="cover-value">${eng.status === 'completed' ? 'Closed' : 'Active'}</span></div>
             <div><span class="cover-label">Engagement Partner:</span> <span class="cover-value">${esc(partnerName)}</span></div>
@@ -199,9 +211,9 @@
             ${eng.closed_at ? `<div><span class="cover-label">File Closed:</span> <span class="cover-value">${new Date(eng.closed_at).toLocaleDateString()}</span></div>` : ''}
           </div>
           <div class="cover-metrics">
-            <div class="cover-metric"><div class="val">${sections.length}</div><div class="lbl">Sections</div></div>
+            <div class="cover-metric"><div class="val">${filtSections.length}</div><div class="lbl">Sections</div></div>
             <div class="cover-metric"><div class="val">${doneP}/${totalP}</div><div class="lbl">Procedures Done</div></div>
-            <div class="cover-metric"><div class="val">${approvedS}/${sections.length}</div><div class="lbl">Approved</div></div>
+            <div class="cover-metric"><div class="val">${approvedS}/${filtSections.length}</div><div class="lbl">Approved</div></div>
             <div class="cover-metric"><div class="val">${openF}</div><div class="lbl">Open Findings</div></div>
           </div>
           <div class="cover-stamp">Generated on ${new Date().toLocaleString()} by ${esc(currentUser.email)}</div>
@@ -210,11 +222,11 @@
 
       // ===== 2. FINDINGS & MISSTATEMENTS SUMMARY =====
       html += '<h2>Summary of Findings</h2>';
-      if (findings.length === 0) {
+      if (filtFindings.length === 0) {
         html += '<p class="no-data">No findings recorded.</p>';
       } else {
         html += '<table><thead><tr><th>Title</th><th>Section</th><th>Type</th><th>Severity</th><th>Status</th><th>Impact</th><th>ML</th></tr></thead><tbody>';
-        html += findings.map(f => {
+        html += filtFindings.map(f => {
           const secName = sections.find(s => s.id === f.section_id)?.name || '—';
           const amt = f.monetary_impact ? Number(f.monetary_impact).toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—';
           return `<tr>
@@ -231,7 +243,7 @@
       }
 
       // Unadjusted misstatements
-      const unadjusted = findings.filter(f => f.finding_type === 'misstatement' && f.status === 'open');
+      const unadjusted = filtFindings.filter(f => f.finding_type === 'misstatement' && f.status === 'open');
       if (unadjusted.length > 0) {
         html += '<h3>Summary of Unadjusted Misstatements (ISA 450)</h3>';
         html += '<table><thead><tr><th>Finding</th><th>Section</th><th>Amount</th><th>Categorization</th></tr></thead><tbody>';
@@ -250,8 +262,8 @@
       // ===== 3. SECTION-BY-SECTION WORKPAPERS =====
       html += '<h2>Section Workpapers</h2>';
 
-      const interimSections = sections.filter(s => s.phase === 'interim');
-      const finalSections = sections.filter(s => s.phase !== 'interim');
+      const interimSections = filtSections.filter(s => s.phase === 'interim');
+      const finalSections = filtSections.filter(s => s.phase !== 'interim');
       const orderedSections = [...interimSections, ...finalSections];
 
       if (orderedSections.length === 0) {
@@ -374,7 +386,7 @@
       }
 
       // ===== 4. MANAGEMENT LETTER POINTS =====
-      const mlFindings = findings.filter(f => f.is_management_letter_point);
+      const mlFindings = filtFindings.filter(f => f.is_management_letter_point);
       html += '<h2>Management Letter Points</h2>';
       if (mlFindings.length === 0) {
         html += '<p class="no-data">No management letter points.</p>';
@@ -403,26 +415,6 @@
         html += Object.entries(groups).map(([cls, g]) =>
           `<tr><td>${esc(cls)}</td><td>${g.count}</td><td style="text-align:right;">${g.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>`
         ).join('');
-        html += '</tbody></table>';
-      }
-
-      // ===== 6. AUDIT TRAIL (filtered) =====
-      html += '<h2>Audit Trail</h2>';
-      const meaningfulActions = ['submitted_for_review', 'supervisor_approved', 'partner_approved',
-        'returned_to_preparer', 'returned_to_supervisor', 'reopened_section', 'closed_engagement',
-        'reopened_engagement', 'added_finding', 'updated_finding_status', 'created_section', 'deleted_section'];
-      const filtered = activity.filter(a => meaningfulActions.includes(a.action));
-
-      if (filtered.length === 0) {
-        html += '<p class="no-data">No significant audit trail events.</p>';
-      } else {
-        html += '<table><thead><tr><th>Event</th><th>Detail</th><th>User</th><th>Date</th></tr></thead><tbody>';
-        filtered.forEach(a => {
-          const details = a.details ? (typeof a.details === 'string' ? JSON.parse(a.details) : a.details) : {};
-          const detail = details.name || details.reason || details.client_name || '';
-          const userName = profiles[a.user_id] || '—';
-          html += `<tr><td>${esc(a.action.replace(/_/g, ' '))}</td><td>${esc(detail)}</td><td>${esc(userName)}</td><td>${new Date(a.created_at).toLocaleString()}</td></tr>`;
-        });
         html += '</tbody></table>';
       }
 
