@@ -1018,12 +1018,19 @@
         return;
       }
 
-      const { data: lines } = await supabaseClient
+      // Load TB lines from section's linked version (or all if no version set)
+      let query = supabaseClient
         .from('trial_balance_lines')
         .select('*')
         .eq('engagement_id', engagementId)
         .in('classification', tags)
         .order('account_code');
+
+      if (section.tb_version_id) {
+        query = query.eq('tb_version_id', section.tb_version_id);
+      }
+
+      const { data: lines } = await query;
 
       tbLines = lines || [];
 

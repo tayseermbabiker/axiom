@@ -423,10 +423,11 @@
           <div class="card-header">
             <h2>Trial Balance</h2>
             <div style="display:flex; gap:8px;">
-              <button class="btn btn-primary btn-sm" id="btn-upload-tb" onclick="openUploadTB()" style="display:none;">Upload Excel/CSV</button>
-              <button class="btn btn-outline btn-sm" id="btn-replace-tb" onclick="replaceTB()" style="display:none; color:#dc2626; border-color:#dc2626;">Replace TB</button>
+              <button class="btn btn-primary btn-sm" id="btn-upload-tb" onclick="openUploadTB()" style="display:none;">Upload TB</button>
+              <button class="btn btn-outline btn-sm" id="btn-replace-tb" onclick="uploadNewVersion()" style="display:none;">Upload New Version</button>
             </div>
           </div>
+          <div id="tb-version-info" style="display:none; padding:8px 20px; background:var(--gray-50); border-bottom:1px solid var(--gray-200);"></div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -578,7 +579,15 @@
         <button class="modal-close" onclick="closeModal('modal-upload-tb')">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="text-sm text-muted mb-16">Upload your TB with a <strong>Classification</strong> column from your ERP. Sections are created automatically from the distinct classification values.</p>
+        <p class="text-sm text-muted mb-16">Upload your TB with a <strong>Classification</strong> column from your ERP.</p>
+        <div class="form-group">
+          <label class="text-sm">Version Label</label>
+          <select id="tb-version-label" class="form-control">
+            <option value="Interim">Interim</option>
+            <option value="Final">Final</option>
+            <option value="Final Adjusted">Final Adjusted</option>
+          </select>
+        </div>
         <input type="file" id="tb-file" accept=".csv,.xlsx,.xls" class="form-control">
         <div id="tb-mapping" class="mt-16" style="display:none;">
           <p class="text-sm" style="font-weight:600; margin-bottom:8px;">Map your columns:</p>
@@ -639,6 +648,8 @@
     let orgMembers = [];
     let sections = [];
     let tbLines = [];
+    let tbVersions = [];
+    let currentTbVersion = null;  // latest version
     let sectionTbMap = {};      // sectionId -> [tbLineId, ...] (built from classification_tags)
     let tbToSectionMap = {};    // tbLineId -> sectionId (built from classification_tags)
     let procedures = [];
@@ -853,13 +864,33 @@
     }
 
     async function loadTBLines() {
-      const { data } = await supabaseClient
-        .from('trial_balance_lines')
+      // Load all TB versions for this engagement
+      const { data: versions } = await supabaseClient
+        .from('tb_versions')
         .select('*')
         .eq('engagement_id', engagementId)
-        .order('account_code');
+        .order('uploaded_at', { ascending: false });
 
-      tbLines = data || [];
+      tbVersions = versions || [];
+      currentTbVersion = tbVersions.length > 0 ? tbVersions[0] : null;
+
+      if (currentTbVersion) {
+        const { data } = await supabaseClient
+          .from('trial_balance_lines')
+          .select('*')
+          .eq('tb_version_id', currentTbVersion.id)
+          .order('account_code');
+        tbLines = data || [];
+      } else {
+        // Fallback: load all lines for this engagement (pre-migration data)
+        const { data } = await supabaseClient
+          .from('trial_balance_lines')
+          .select('*')
+          .eq('engagement_id', engagementId)
+          .order('account_code');
+        tbLines = data || [];
+      }
+
       buildClassificationMap();
       renderTB();
     }
@@ -1335,7 +1366,8 @@
         assertions: selectedAssertions,
         status: 'not_started',
         sort_order: maxOrder + 1,
-        phase: phase
+        phase: phase,
+        tb_version_id: currentTbVersion?.id || null
       }).select().single();
 
       if (error) {
@@ -1360,6 +1392,18 @@
       const tbody = document.getElementById('tb-table');
       const empty = document.getElementById('tb-empty');
       const replaceBtn = document.getElementById('btn-replace-tb');
+
+      // Show version info
+      const versionInfo = document.getElementById('tb-version-info');
+      if (versionInfo && currentTbVersion) {
+        const date = new Date(currentTbVersion.uploaded_at).toLocaleDateString();
+        const vCount = tbVersions.length;
+        versionInfo.innerHTML = '<span class="text-sm" style="color:var(--gray-500);">Showing: <strong>' + escHtml(currentTbVersion.label) + '</strong> (' + date + ')' +
+          (vCount > 1 ? ' &mdash; ' + vCount + ' version' + (vCount !== 1 ? 's' : '') + ' total' : '') + '</span>';
+        versionInfo.style.display = 'block';
+      } else if (versionInfo) {
+        versionInfo.style.display = 'none';
+      }
 
       if (tbLines.length === 0) {
         tbody.innerHTML = '';
@@ -1596,8 +1640,20 @@
       btn.textContent = 'Importing...';
 
       try {
+        const versionLabel = document.getElementById('tb-version-label').value || 'Initial';
+
+        // Create TB version
+        const { data: version, error: verErr } = await supabaseClient.from('tb_versions').insert({
+          engagement_id: engagementId,
+          label: versionLabel,
+          uploaded_by: currentUser.id
+        }).select().single();
+
+        if (verErr) throw new Error('Failed to create TB version: ' + verErr.message);
+
         const allLines = parsedCSV.map(r => ({
           engagement_id: engagementId,
+          tb_version_id: version.id,
           account_code: r.account_code,
           account_name: r.account_name,
           balance: r.balance,
@@ -1607,7 +1663,10 @@
         const { error: tbError } = await supabaseClient.from('trial_balance_lines').insert(allLines);
         if (tbError) throw new Error('TB import failed: ' + tbError.message);
 
-        await logActivity(engagementId, 'uploaded_tb', 'trial_balance', engagementId, { line_count: allLines.length });
+        await logActivity(engagementId, 'uploaded_tb', 'trial_balance', engagementId, {
+          line_count: allLines.length,
+          version: versionLabel
+        });
 
         closeModal('modal-upload-tb');
 
@@ -1625,41 +1684,12 @@
       btn.textContent = 'Import TB';
     }
 
-    // ---- Replace TB ----
-    async function replaceTB() {
-      if (!can('replace_tb')) { alert('Only partners and supervisors can replace the trial balance.'); return; }
-      const ok = await showActionModal({
-        title: 'Replace Trial Balance',
-        message: 'This will delete the current Trial Balance lines and let you upload a new one.\n\nSections and all audit work (procedures, findings, review notes) will NOT be affected.',
-        okLabel: 'Replace TB',
-        okClass: 'btn-danger'
-      });
-      if (!ok) return;
-
-      try {
-        const { error: tbErr } = await supabaseClient
-          .from('trial_balance_lines')
-          .delete()
-          .eq('engagement_id', engagementId);
-
-        if (tbErr) throw new Error('Failed to delete TB lines: ' + tbErr.message);
-
-        await logActivity(engagementId, 'replaced_tb', 'trial_balance', engagementId, {
-          deleted_lines: tbLines.length
-        });
-
-        tbLines = [];
-        tbToSectionMap = {};
-        sectionTbMap = {};
-        renderTB();
-        renderSections();
-        updateStats();
-
-        openUploadTB();
-
-      } catch (err) {
-        alert('Error replacing TB: ' + err.message);
-      }
+    // ---- Upload New TB Version ----
+    function uploadNewVersion() {
+      if (!can('replace_tb')) { alert('Only partners and supervisors can upload a new TB version.'); return; }
+      // Default to "Final" for new versions
+      document.getElementById('tb-version-label').value = 'Final';
+      openUploadTB();
     }
 
     // ---- Findings Tab ----
