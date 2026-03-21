@@ -1576,9 +1576,9 @@
               <div class="finding-field" style="display:flex; align-items:center; gap:10px;">
                 <div class="finding-field-label" style="margin:0;">Status</div>
                 <select class="form-control" style="width:auto; padding:4px 8px; font-size:12px;" onchange="updateFindingStatus('${f.id}', this.value)">
-                  <option value="open" ${f.status === 'open' ? 'selected' : ''}>Open</option>
-                  <option value="resolved" ${f.status === 'resolved' ? 'selected' : ''}>Resolved</option>
-                  <option value="reported" ${f.status === 'reported' ? 'selected' : ''}>Reported</option>
+                  <option value="open" ${f.status === 'open' ? 'selected' : ''}>Open — not yet addressed</option>
+                  <option value="resolved" ${f.status === 'resolved' ? 'selected' : ''}>Resolved — client corrected</option>
+                  <option value="reported" ${f.status === 'reported' ? 'selected' : ''}>Reported — communicated to management</option>
                 </select>
               </div>` : ''}
               ${f.condition ? `<div class="finding-field"><div class="finding-field-label">Description</div><div class="finding-field-value">${escHtml(f.condition)}</div></div>` : ''}
