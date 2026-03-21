@@ -119,28 +119,29 @@
       if (!eng || eng.organization_id !== org.id) { document.getElementById('report-content').innerHTML = '<p>Engagement not found.</p>'; return; }
 
       // Load all data
-      const sectionIds = [];
-      const [sectionsRes, tbRes, proceduresRes, profilesRes, activityRes] = await Promise.all([
+      const [sectionsRes, tbRes, profilesRes, activityRes] = await Promise.all([
         supabaseClient.from('audit_sections').select('*').eq('engagement_id', engagementId).order('sort_order'),
         supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code'),
-        supabaseClient.from('audit_procedures').select('*').eq('engagement_id', engagementId).order('sort_order'),
         supabaseClient.from('organization_members').select('*, profiles:user_id(id, full_name, email)').eq('organization_id', org.id),
         supabaseClient.from('activity_log').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false })
       ]);
 
       const sections = sectionsRes.data || [];
       const tbLines = tbRes.data || [];
-      const procedures = proceduresRes.data || [];
       const activity = activityRes.data || [];
 
       const profiles = {};
       (profilesRes.data || []).forEach(m => { if (m.profiles) profiles[m.profiles.id] = m.profiles.full_name || m.profiles.email; });
 
-      // Load responses, documents, findings, review notes, adjusting entries per section
+      // Load procedures, responses, documents, findings, review notes, adjusting entries per section
       const secIds = sections.map(s => s.id);
-      let responses = [], documents = [], findings = [], reviewNotes = [], adjustingEntries = [];
+      let procedures = [], responses = [], documents = [], findings = [], reviewNotes = [], adjustingEntries = [];
 
       if (secIds.length > 0) {
+        // Load procedures by section_id (not engagement_id)
+        const { data: procs } = await supabaseClient.from('audit_procedures').select('*').in('section_id', secIds).order('sort_order');
+        procedures = procs || [];
+
         const procIds = procedures.map(p => p.id);
         const [respRes, findRes, notesRes] = await Promise.all([
           procIds.length > 0 ? supabaseClient.from('procedure_responses').select('*').in('procedure_id', procIds) : { data: [] },
@@ -340,8 +341,8 @@
               ${f.is_management_letter_point ? ' <span class="badge b-ml">ML</span>' : ''}
               </div>`;
 
-            if (f.condition) html += `<div class="finding-detail-label">Condition</div><div class="finding-detail">${esc(f.condition)}</div>`;
-            if (f.effect) html += `<div class="finding-detail-label">Effect</div><div class="finding-detail">${esc(f.effect)}</div>`;
+            if (f.condition) html += `<div class="finding-detail-label">Description</div><div class="finding-detail">${esc(f.condition)}</div>`;
+            if (f.effect) html += `<div class="finding-detail-label">Impact</div><div class="finding-detail">${esc(f.effect)}</div>`;
             if (f.recommendation) html += `<div class="finding-detail-label">Recommendation</div><div class="finding-detail">${esc(f.recommendation)}</div>`;
             if (f.management_response) html += `<div class="finding-detail-label">Management Response</div><div class="finding-detail">${esc(f.management_response)}</div>`;
 
