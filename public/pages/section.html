@@ -1555,6 +1555,15 @@
               </div>
             </div>
             <div class="finding-body" id="fbody-${f.id}">
+              ${!locked && can('edit_finding') ? `
+              <div class="finding-field" style="display:flex; align-items:center; gap:10px;">
+                <div class="finding-field-label" style="margin:0;">Status</div>
+                <select class="form-control" style="width:auto; padding:4px 8px; font-size:12px;" onchange="updateFindingStatus('${f.id}', this.value)">
+                  <option value="open" ${f.status === 'open' ? 'selected' : ''}>Open</option>
+                  <option value="resolved" ${f.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+                  <option value="reported" ${f.status === 'reported' ? 'selected' : ''}>Reported</option>
+                </select>
+              </div>` : ''}
               ${f.recommendation ? `<div class="finding-field"><div class="finding-field-label">Recommendation</div><div class="finding-field-value">${escHtml(f.recommendation)}</div></div>` : ''}
               ${f.condition ? `<div class="finding-field"><div class="finding-field-label">Condition</div><div class="finding-field-value">${escHtml(f.condition)}</div></div>` : ''}
               ${f.criteria ? `<div class="finding-field"><div class="finding-field-label">Criteria</div><div class="finding-field-value">${escHtml(f.criteria)}</div></div>` : ''}
@@ -1573,6 +1582,23 @@
       const chevron = document.getElementById('fchevron-' + findingId);
       body.classList.toggle('open');
       chevron.classList.toggle('open');
+    }
+
+    async function updateFindingStatus(findingId, newStatus) {
+      const { error } = await supabaseClient.from('findings')
+        .update({ status: newStatus })
+        .eq('id', findingId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      const f = findings.find(x => x.id === findingId);
+      if (f) f.status = newStatus;
+
+      await logActivity(engagementId, 'updated_finding_status', 'finding', findingId, { status: newStatus });
+
+      // Re-render to update badge
+      renderFindings();
+      applyApprovedState();
     }
 
     function toggleAdjustingPanel() {
