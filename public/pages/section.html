@@ -1110,12 +1110,14 @@
 
       const { data: allSections } = await supabaseClient
         .from('audit_sections')
-        .select('id, name, classification_tags')
+        .select('id, name, classification_tags, phase')
         .eq('engagement_id', engagementId);
 
+      // Only block tags taken by other sections in the SAME phase
       const takenByOthers = {};
       for (const s of (allSections || [])) {
         if (s.id === sectionId) continue;
+        if (s.phase !== section.phase) continue;
         (s.classification_tags || []).forEach(t => { takenByOthers[t] = s.name; });
       }
 

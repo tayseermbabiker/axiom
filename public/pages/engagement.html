@@ -551,7 +551,7 @@
           </div>
           <div class="form-group">
             <label for="section-phase">Phase</label>
-            <select id="section-phase" class="form-control">
+            <select id="section-phase" class="form-control" onchange="refreshClassificationTags()">
               <option value="interim">Interim</option>
               <option value="final" selected>Final</option>
             </select>
@@ -1266,6 +1266,27 @@
       }
     }
 
+    function refreshClassificationTags() {
+      selectedTags = [];
+      const tagsList = document.getElementById('classification-tags-list');
+      if (tbLines.length === 0) return;
+
+      const allClassifications = [...new Set(tbLines.map(l => l.classification).filter(Boolean))].sort();
+      const selectedPhase = document.getElementById('section-phase').value;
+      const takenTags = new Set();
+      for (const sec of sections) {
+        if (sec.phase === selectedPhase) {
+          (sec.classification_tags || []).forEach(t => takenTags.add(t));
+        }
+      }
+
+      tagsList.innerHTML = allClassifications.map(tag => {
+        const taken = takenTags.has(tag);
+        const lineCount = tbLines.filter(l => l.classification === tag).length;
+        return `<span class="class-tag${taken ? ' taken' : ''}" data-tag="${escHtml(tag)}" onclick="${taken ? '' : 'toggleTag(this)'}" title="${taken ? 'Already assigned in this phase' : lineCount + ' TB lines'}">${escHtml(tag)} (${lineCount})</span>`;
+      }).join('');
+    }
+
     const ALL_ASSERTIONS = ['Existence', 'Completeness', 'Accuracy', 'Valuation', 'Rights & Obligations', 'Presentation', 'Cut-off'];
     let selectedTags = [];
     let selectedAssertions = [];
@@ -1295,10 +1316,13 @@
       if (tbLines.length > 0) {
         // Get all distinct classifications from TB
         const allClassifications = [...new Set(tbLines.map(l => l.classification).filter(Boolean))].sort();
-        // Get already-taken classifications
+        // Get already-taken classifications (scoped to same phase)
+        const selectedPhase = document.getElementById('section-phase').value;
         const takenTags = new Set();
         for (const sec of sections) {
-          (sec.classification_tags || []).forEach(t => takenTags.add(t));
+          if (sec.phase === selectedPhase) {
+            (sec.classification_tags || []).forEach(t => takenTags.add(t));
+          }
         }
 
         tagsList.innerHTML = allClassifications.map(tag => {
