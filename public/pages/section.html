@@ -1229,9 +1229,10 @@
       empty.style.display = 'none';
 
       container.innerHTML = procedures.map(proc => {
-        const resp = responses.find(r => r.procedure_id === proc.id && r.user_id === currentUser.id);
+        // Show the preparer's response (or current user's if they responded)
         const allResps = responses.filter(r => r.procedure_id === proc.id);
-        const respDocs = resp ? documents.filter(d => d.procedure_response_id === resp.id) : [];
+        const resp = allResps.find(r => r.user_id === currentUser.id) || allResps[0] || null;
+        const respDocs = allResps.length > 0 ? documents.filter(d => allResps.some(r => r.id === d.procedure_response_id)) : [];
         const typeLabel = proc.procedure_type.replace(/_/g, ' ');
         const status = resp?.status || 'pending';
 
