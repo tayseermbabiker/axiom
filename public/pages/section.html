@@ -467,6 +467,7 @@
               <h2>Audit Procedures</h2>
               <button class="btn btn-primary btn-sm" id="btn-show-add-procedure" style="display:none;" onclick="toggleAddProcedure()">+ Add Procedure</button>
               <button class="btn btn-outline btn-sm" id="btn-upload-procedures" style="display:none;" onclick="document.getElementById('proc-file-input').click()">Upload from Excel</button>
+              <button class="btn btn-outline btn-sm" id="btn-download-template" style="display:none; font-size:11px; color:var(--gray-500);" onclick="downloadProcTemplate()">Template</button>
               <input type="file" id="proc-file-input" accept=".csv,.xlsx,.xls" style="display:none;" onchange="handleProcUpload(event)">
             </div>
             <div class="card-body">
@@ -490,10 +491,6 @@
                       <option value="controls">Controls</option>
                       <option value="other">Other</option>
                     </select>
-                  </div>
-                  <div class="form-group">
-                    <label>Assertions <span class="text-sm text-muted">(which assertions does this procedure address?)</span></label>
-                    <div id="new-proc-assertions" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;"></div>
                   </div>
                   <div class="flex gap-8">
                     <button class="btn btn-primary btn-sm" onclick="addProcedure()">Add Procedure</button>
@@ -808,7 +805,6 @@
     let sharedFolderUrl = '';
 
     const ALL_ASSERTIONS = ['Existence', 'Completeness', 'Accuracy', 'Valuation', 'Rights & Obligations', 'Presentation', 'Cut-off'];
-    let newProcAssertions = [];
 
     async function init() {
       currentUser = await requireAuth();
@@ -1240,10 +1236,7 @@
         const typeLabel = proc.procedure_type.replace(/_/g, ' ');
         const status = resp?.status || 'pending';
 
-        const procAssertions = (proc.assertions || []);
-        const assertionChips = procAssertions.length > 0
-          ? '<div class="procedure-assertions">' + procAssertions.map(a => '<span class="assertion-chip" style="font-size:10px; padding:2px 7px;">' + escHtml(a) + '</span>').join('') + '</div>'
-          : '';
+        // Assertions shown at section level only
 
         return `
           <div class="procedure-card${status === 'done' ? ' done' : ''}" id="proc-${proc.id}">
@@ -1252,7 +1245,6 @@
                 <span class="procedure-chevron" id="chevron-${proc.id}">&#9654;</span>
                 <div>
                   <span class="procedure-desc">${escHtml(proc.description)}</span>
-                  ${assertionChips}
                 </div>
               </div>
               <div class="procedure-header-right">
@@ -1345,28 +1337,7 @@
 
     function toggleAddProcedure() {
       const form = document.getElementById('add-procedure-form');
-      const showing = form.style.display === 'none';
-      form.style.display = showing ? 'block' : 'none';
-
-      // Render assertion chips for new procedure
-      if (showing) {
-        newProcAssertions = [];
-        const container = document.getElementById('new-proc-assertions');
-        container.innerHTML = ALL_ASSERTIONS.map(a =>
-          '<span class="assertion-chip" style="cursor:pointer; opacity:0.5;" data-assertion="' + escHtml(a) + '" onclick="toggleNewProcAssertion(this)">' + escHtml(a) + '</span>'
-        ).join('');
-      }
-    }
-
-    function toggleNewProcAssertion(el) {
-      const a = el.dataset.assertion;
-      if (newProcAssertions.includes(a)) {
-        newProcAssertions = newProcAssertions.filter(x => x !== a);
-        el.style.opacity = '0.5';
-      } else {
-        newProcAssertions.push(a);
-        el.style.opacity = '1';
-      }
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
     }
 
     async function addProcedure() {
@@ -1383,7 +1354,6 @@
         section_id: sectionId,
         description: desc,
         procedure_type: type,
-        assertions: newProcAssertions,
         sort_order: maxSort + 1
       }).select().single();
 
@@ -1393,95 +1363,101 @@
 
       document.getElementById('new-proc-desc').value = '';
       document.getElementById('add-procedure-form').style.display = 'none';
-      newProcAssertions = [];
       await loadProcedures();
       updateProgressBar();
       applyApprovedState();
     }
 
     // ---- Bulk upload procedures from Excel/CSV ----
-    async function handleProcUpload(event) {
+    let procUploadRows = [];
+    let procUploadCols = [];
+
+    function downloadProcTemplate() {
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['Description', 'Type'],
+        ['Obtain bank confirmations for year-end balances', 'test_of_detail'],
+        ['Perform analytical review of interest income', 'analytical'],
+        ['Test controls over cash disbursements', 'controls']
+      ]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Procedures');
+      XLSX.writeFile(wb, 'procedure_template.xlsx');
+    }
+
+    function handleProcUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
-      event.target.value = ''; // reset so same file can be re-uploaded
+      event.target.value = '';
 
       const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
 
       const reader = new FileReader();
-      reader.onload = async (evt) => {
+      reader.onload = (evt) => {
         try {
-          let rows;
           if (isExcel) {
             const data = new Uint8Array(evt.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+            procUploadRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
           } else {
             const text = evt.target.result;
             const lines = text.split('\n').map(l => l.trim()).filter(l => l);
             if (lines.length < 2) { alert('File must have a header row and at least one data row.'); return; }
             const header = lines[0].split(',').map(h => h.trim());
-            rows = [];
+            procUploadRows = [];
             for (let i = 1; i < lines.length; i++) {
               const cols = lines[i].split(',').map(c => c.trim());
               const obj = {};
               header.forEach((h, idx) => { obj[h] = cols[idx] || ''; });
-              rows.push(obj);
+              procUploadRows.push(obj);
             }
           }
 
-          if (!rows || rows.length === 0) { alert('No data found in file.'); return; }
+          if (!procUploadRows || procUploadRows.length === 0) { alert('No data found.'); return; }
 
-          // Auto-detect columns
-          const cols = Object.keys(rows[0]);
-          const lower = cols.map(c => c.toLowerCase());
-          const descCol = cols[lower.findIndex(h => h.includes('description') || h.includes('procedure') || h.includes('desc'))] || cols[0];
-          const typeCol = cols[lower.findIndex(h => h.includes('type'))] || null;
-          const assertCol = cols[lower.findIndex(h => h.includes('assertion'))] || null;
+          procUploadCols = Object.keys(procUploadRows[0]);
 
-          const validTypes = ['test_of_detail', 'analytical', 'controls', 'other'];
-          const maxSort = procedures.reduce((max, p) => Math.max(max, p.sort_order || 0), 0);
-
-          const toInsert = [];
-          for (let i = 0; i < rows.length; i++) {
-            const desc = String(rows[i][descCol] || '').trim();
-            if (!desc) continue;
-
-            let type = typeCol ? String(rows[i][typeCol] || '').trim().toLowerCase().replace(/ /g, '_') : 'other';
-            if (!validTypes.includes(type)) type = 'other';
-
-            let assertions = [];
-            if (assertCol) {
-              const raw = String(rows[i][assertCol] || '');
-              assertions = raw.split(/[,;|]/).map(a => a.trim()).filter(a => a);
-            }
-
-            toInsert.push({
-              section_id: sectionId,
-              description: desc,
-              procedure_type: type,
-              assertions: assertions,
-              sort_order: maxSort + i + 1
-            });
+          // If single column, skip mapping
+          if (procUploadCols.length === 1) {
+            importProcedures(procUploadCols[0], null);
+            return;
           }
 
-          if (toInsert.length === 0) { alert('No valid procedures found in file.'); return; }
+          // Show mapping modal
+          const lower = procUploadCols.map(c => c.toLowerCase());
+          const guessDesc = procUploadCols[lower.findIndex(h => h.includes('description') || h.includes('procedure') || h.includes('desc'))] || procUploadCols[0];
+          const guessType = procUploadCols[lower.findIndex(h => h.includes('type'))] || '';
 
-          const ok = await showActionModal({
-            title: 'Upload Procedures',
-            message: toInsert.length + ' procedures found in file. Import them into this section?',
-            okLabel: 'Import ' + toInsert.length + ' Procedures',
-            okClass: 'btn-primary'
-          });
-          if (!ok) return;
+          const opts = procUploadCols.map(c => '<option value="' + escHtml(c) + '">' + escHtml(c) + '</option>').join('');
 
-          const { error } = await supabaseClient.from('audit_procedures').insert(toInsert);
-          if (error) { alert('Error: ' + error.message); return; }
+          document.getElementById('modal-action-title').textContent = 'Map Columns';
+          document.getElementById('modal-action-msg').innerHTML =
+            '<p style="margin-bottom:12px;">' + procUploadRows.length + ' rows found. Map your columns:</p>' +
+            '<div class="form-group" style="margin-bottom:8px;"><label style="font-size:12px;">Description *</label>' +
+            '<select class="form-control" id="proc-map-desc"><option value="">-- Select --</option>' + opts + '</select></div>' +
+            '<div class="form-group"><label style="font-size:12px;">Type (optional)</label>' +
+            '<select class="form-control" id="proc-map-type"><option value="">-- None --</option>' + opts + '</select></div>';
 
-          await logActivity(engagementId, 'uploaded_procedures', 'section', sectionId, { count: toInsert.length });
-          await loadProcedures();
-          updateProgressBar();
-          applyApprovedState();
+          // Set guesses
+          setTimeout(() => {
+            if (guessDesc) document.getElementById('proc-map-desc').value = guessDesc;
+            if (guessType) document.getElementById('proc-map-type').value = guessType;
+          }, 50);
+
+          document.getElementById('modal-action-input-wrap').style.display = 'none';
+          const okBtn = document.getElementById('modal-action-ok');
+          okBtn.textContent = 'Import Procedures';
+          okBtn.className = 'btn btn-primary';
+
+          // Override resolve to call importProcedures
+          document.getElementById('modal-action').classList.add('active');
+          _actionResolve = (val) => {
+            if (val === null) return;
+            const descCol = document.getElementById('proc-map-desc').value;
+            const typeCol = document.getElementById('proc-map-type').value;
+            if (!descCol) { alert('Please select a Description column.'); return; }
+            importProcedures(descCol, typeCol || null);
+          };
 
         } catch (err) {
           alert('Error reading file: ' + err.message);
@@ -1490,6 +1466,44 @@
 
       if (isExcel) reader.readAsArrayBuffer(file);
       else reader.readAsText(file);
+    }
+
+    async function importProcedures(descCol, typeCol) {
+      const validTypes = ['test_of_detail', 'analytical', 'controls', 'other'];
+      const maxSort = procedures.reduce((max, p) => Math.max(max, p.sort_order || 0), 0);
+
+      const toInsert = [];
+      for (let i = 0; i < procUploadRows.length; i++) {
+        const desc = String(procUploadRows[i][descCol] || '').trim();
+        if (!desc) continue;
+
+        let type = 'test_of_detail';
+        if (typeCol) {
+          const raw = String(procUploadRows[i][typeCol] || '').trim().toLowerCase().replace(/ /g, '_');
+          if (validTypes.includes(raw)) type = raw;
+        }
+
+        toInsert.push({
+          section_id: sectionId,
+          description: desc,
+          procedure_type: type,
+          sort_order: maxSort + i + 1
+        });
+      }
+
+      if (toInsert.length === 0) { alert('No valid procedures found.'); return; }
+
+      document.getElementById('modal-action').classList.remove('active');
+
+      const { error } = await supabaseClient.from('audit_procedures').insert(toInsert);
+      if (error) { alert('Error: ' + error.message); return; }
+
+      await logActivity(engagementId, 'uploaded_procedures', 'section', sectionId, { count: toInsert.length });
+      await loadProcedures();
+      updateProgressBar();
+      applyApprovedState();
+
+      alert(toInsert.length + ' procedures imported.');
     }
 
     async function saveResponse(procId) {
@@ -2295,6 +2309,7 @@
         if (can('add_procedure')) {
           document.getElementById('btn-show-add-procedure').style.display = 'inline-flex';
           document.getElementById('btn-upload-procedures').style.display = 'inline-flex';
+          document.getElementById('btn-download-template').style.display = 'inline-flex';
         }
         if (can('add_finding')) document.getElementById('btn-add-finding').style.display = '';
         if (can('save_conclusion')) {
@@ -2318,6 +2333,7 @@
       document.getElementById('btn-save-conclusion').style.display = 'none';
       document.getElementById('btn-show-add-procedure').style.display = 'none';
       document.getElementById('btn-upload-procedures').style.display = 'none';
+      document.getElementById('btn-download-template').style.display = 'none';
       document.getElementById('btn-add-finding').style.display = 'none';
       document.getElementById('add-note-area').style.display = 'none';
       document.getElementById('add-procedure-form').style.display = 'none';
