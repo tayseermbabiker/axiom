@@ -305,6 +305,8 @@
 
             if (resp?.response) {
               html += `<div class="proc-response-label">Work Performed</div><div class="proc-response">${esc(resp.response)}</div>`;
+            } else {
+              html += `<div class="proc-response-label" style="color:#dc2626;">Work Performed</div><div class="proc-response" style="color:#9ca3af; font-style:italic;">No response recorded.</div>`;
             }
 
             if (procDocs.length > 0) {
