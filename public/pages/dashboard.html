@@ -317,14 +317,7 @@
             <label for="year-end">Year End Date</label>
             <input type="date" id="year-end" class="form-control" required>
           </div>
-          <div class="form-group">
-            <label for="eng-type">Engagement Type</label>
-            <select id="eng-type" class="form-control">
-              <option value="audit">Audit</option>
-              <option value="review">Review</option>
-              <option value="compilation">Compilation</option>
-            </select>
-          </div>
+          <input type="hidden" id="eng-type" value="audit">
           <div class="form-group">
             <label for="shared-folder">Shared Folder URL <span style="color:#dc2626;">*</span></label>
             <input type="url" id="shared-folder" class="form-control" placeholder="Google Drive, OneDrive, or SharePoint folder link" required>
@@ -493,7 +486,6 @@
                 <div class="eng-card-client">${escHtml(e.client_name)}</div>
                 <div class="eng-card-meta">
                   <span class="eng-card-year">YE ${yearEnd}</span>
-                  <span class="eng-type-pill${typePillClass}">${e.engagement_type}</span>
                   <span class="badge ${statusBadgeClass}">${statusLabel}</span>
                 </div>
               </div>
