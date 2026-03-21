@@ -19,20 +19,20 @@ exports.handler = async (event) => {
     const roleName = (role || 'preparer').charAt(0).toUpperCase() + (role || 'preparer').slice(1);
 
     const { data, error } = await resend.emails.send({
-      from: 'Axiom <noreply@conferix.com>',
+      from: 'Audexon <noreply@conferix.com>',
       to: email,
-      subject: `You've been invited to ${orgName} on Axiom`,
+      subject: `You've been invited to ${orgName} on Audexon`,
       html: `
         <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 0;">
           <div style="background: #0A1A2F; padding: 24px 28px; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 22px; font-weight: 700;">Axiom</h1>
+            <h1 style="color: white; margin: 0; font-size: 22px; font-weight: 700;">Audexon</h1>
           </div>
           <div style="background: white; border: 1px solid #e5e7eb; border-top: none; padding: 28px; border-radius: 0 0 12px 12px;">
             <p style="font-size: 15px; color: #374151; line-height: 1.6; margin: 0 0 16px;">
-              ${inviterName ? `<strong>${inviterName}</strong> has` : 'You have been'} invited you to join <strong>${orgName}</strong> on Axiom as a <strong>${roleName}</strong>.
+              ${inviterName ? `<strong>${inviterName}</strong> has` : 'You have been'} invited you to join <strong>${orgName}</strong> on Audexon as a <strong>${roleName}</strong>.
             </p>
             <p style="font-size: 14px; color: #6b7280; line-height: 1.6; margin: 0 0 24px;">
-              Axiom is an audit workpaper and workflow platform. Click below to create your account and join the team.
+              Audexon is an audit workpaper and workflow platform. Click below to create your account and join the team.
             </p>
             <a href="${signUpUrl}" style="display: inline-block; background: #3A7BFF; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
               Join ${orgName}
@@ -43,7 +43,7 @@ exports.handler = async (event) => {
             </p>
           </div>
           <p style="font-size: 11px; color: #9ca3af; text-align: center; margin-top: 16px;">
-            Axiom Audit Platform
+            Audexon Audit Platform
           </p>
         </div>
       `

@@ -1,5 +1,5 @@
 -- ============================================================
--- AXIOM v0.3 — Complete Schema (Fresh Install)
+-- AUDEXON v0.3 — Complete Schema (Fresh Install)
 -- Sections, Procedures, Responses, Findings
 -- Relay model: zero file storage, links only
 -- Run this in Supabase SQL Editor
@@ -579,7 +579,7 @@ create policy "Create activity log entries" on activity_log for insert
 
 
 -- ============================================================
--- NO STORAGE POLICIES — Axiom Relay: zero file storage
+-- NO STORAGE POLICIES — Audexon Relay: zero file storage
 -- Files stay on client's Google Drive / OneDrive / SharePoint
 -- We only store document links (file_url) in the documents table
 -- ============================================================

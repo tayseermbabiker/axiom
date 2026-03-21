@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Audit File — Axiom</title>
+  <title>Audit File — Audexon</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -200,7 +200,7 @@
       // ===== 1. COVER PAGE =====
       html += `
         <div class="cover">
-          <div class="cover-logo">Axiom Audit File</div>
+          <div class="cover-logo">Audexon Audit File</div>
           <h1>${esc(eng.client_name)}</h1>
           <div class="cover-subtitle">Audit Engagement — Year ended ${eng.year_end_date || '—'}${phaseFilter !== 'all' ? ' — ' + phaseFilter.charAt(0).toUpperCase() + phaseFilter.slice(1) + ' Phase' : ''}</div>
           <div class="cover-grid">
@@ -419,7 +419,7 @@
       }
 
       document.getElementById('report-content').innerHTML = html;
-      document.title = eng.client_name + ' — Audit File — Axiom';
+      document.title = eng.client_name + ' — Audit File — Audexon';
     }
 
     function esc(str) {
