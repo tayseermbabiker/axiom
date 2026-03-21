@@ -322,46 +322,41 @@
           html += `<div class="wp-conclusion"><div class="wp-conclusion-label">Section Conclusion</div>${esc(s.conclusion)}</div>`;
         }
 
-        // Procedures & Responses
+        // Procedures table
         html += '<h4>Procedures & Work Performed</h4>';
         if (secProcs.length === 0) {
           html += '<p class="no-data">No procedures.</p>';
         } else {
+          html += '<table><thead><tr><th>Procedure</th><th>Type</th><th>Assertions</th><th>Work Performed</th><th>Status</th></tr></thead><tbody>';
           for (const p of secProcs) {
             const resp = responses.find(r => r.procedure_id === p.id);
             const status = resp?.status || 'pending';
             const assertions = (p.assertions || []).join(', ');
-            const procDocs = resp ? documents.filter(d => d.procedure_response_id === resp.id) : [];
-
-            html += `<div class="proc-block">
-              <div class="proc-desc">${esc(p.description)} <span class="badge b-${status}">${status}</span></div>
-              <div class="proc-meta">${esc(p.procedure_type.replace(/_/g, ' '))}${assertions ? ' | Assertions: ' + esc(assertions) : ''}</div>`;
-
-            if (resp?.response) {
-              html += `<div class="proc-response-label">Work Performed</div><div class="proc-response">${esc(resp.response)}</div>`;
-            } else {
-              html += `<div class="proc-response-label" style="color:#dc2626;">Work Performed</div><div class="proc-response" style="color:#9ca3af; font-style:italic;">No response recorded.</div>`;
-            }
-
-            if (procDocs.length > 0) {
-              html += '<div style="margin-top:4px;">';
-              procDocs.forEach(d => {
-                html += `<div class="doc-row"><span class="doc-cat">${esc(d.doc_category === 'working_paper' ? 'WP' : 'SD')}</span> ${esc(d.file_name)}${d.description ? ' — ' + esc(d.description) : ''}</div>`;
-              });
-              html += '</div>';
-            }
-
-            html += '</div>';
+            const work = resp?.response || '<span style="color:#9ca3af;font-style:italic;">No response</span>';
+            html += `<tr>
+              <td>${esc(p.description)}</td>
+              <td>${esc(p.procedure_type.replace(/_/g, ' '))}</td>
+              <td style="font-size:10px;">${esc(assertions) || '—'}</td>
+              <td>${resp?.response ? esc(resp.response) : '<span style="color:#dc2626;font-style:italic;">Not recorded</span>'}</td>
+              <td><span class="badge b-${status}">${status}</span></td>
+            </tr>`;
           }
+          html += '</tbody></table>';
         }
 
-        // Section documents (not linked to procedures)
-        const unlinkedDocs = secDocs.filter(d => !d.procedure_response_id);
-        if (unlinkedDocs.length > 0) {
-          html += '<h4>Additional Documents</h4>';
-          unlinkedDocs.forEach(d => {
-            html += `<div class="doc-row"><span class="doc-cat">${esc(d.doc_category === 'working_paper' ? 'WP' : 'SD')}</span> ${esc(d.file_name)}${d.description ? ' — ' + esc(d.description) : ''}</div>`;
+        // Documents table
+        const allSecDocs = [...documents.filter(d => {
+          const procIds = secProcs.map(p => p.id);
+          const respIds = responses.filter(r => procIds.includes(r.procedure_id)).map(r => r.id);
+          return respIds.includes(d.procedure_response_id) || d.section_id === s.id;
+        })];
+        if (allSecDocs.length > 0) {
+          html += '<h4>Documents Referenced</h4>';
+          html += '<table><thead><tr><th>File Name</th><th>Category</th><th>Description</th></tr></thead><tbody>';
+          allSecDocs.forEach(d => {
+            html += `<tr><td>${esc(d.file_name)}</td><td><span class="doc-cat">${d.doc_category === 'working_paper' ? 'Working Paper' : 'Source Document'}</span></td><td>${esc(d.description || '—')}</td></tr>`;
           });
+          html += '</tbody></table>';
         }
 
         // Section findings
@@ -391,16 +386,18 @@
           }
         }
 
-        // Review notes (filtered — only return_reason and review_comment, skip viewed/preparer chatter)
+        // Review notes table
         const significantNotes = secNotes.filter(n => n.note_type === 'review_comment' || n.note_type === 'return_reason');
         if (significantNotes.length > 0) {
           html += '<h4>Review Notes</h4>';
+          html += '<table><thead><tr><th>Reviewer</th><th>Date</th><th>Note</th><th>Type</th></tr></thead><tbody>';
           significantNotes.forEach(n => {
             const who = n.profiles?.full_name || n.profiles?.email || 'User';
             const date = new Date(n.created_at).toLocaleDateString();
-            const typeLabel = n.note_type === 'return_reason' ? 'Returned' : 'Review';
-            html += `<div class="rn-item"><span class="rn-meta">${typeLabel} | ${esc(who)} | ${date}</span><br>${esc(n.note)}</div>`;
+            const typeLabel = n.note_type === 'return_reason' ? 'Return' : 'Review';
+            html += `<tr><td>${esc(who)}</td><td>${date}</td><td>${esc(n.note)}</td><td>${typeLabel}</td></tr>`;
           });
+          html += '</tbody></table>';
         }
 
         html += '</div>'; // wp-section
