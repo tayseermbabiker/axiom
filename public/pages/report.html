@@ -358,33 +358,6 @@
           html += '</tbody></table>';
         }
 
-        // Section findings
-        if (secFindings.length > 0) {
-          html += '<h4>Findings</h4>';
-          for (const f of secFindings) {
-            const adjEntries = adjustingEntries.filter(a => a.finding_id === f.id);
-            html += `<div class="finding-block">
-              <div class="finding-title">${esc(f.title)} <span class="badge b-${f.severity}">${f.severity}</span> <span class="badge b-${f.status}">${f.status}</span>
-              ${f.is_management_letter_point ? ' <span class="badge b-ml">ML</span>' : ''}
-              </div>`;
-
-            if (f.condition) html += `<div class="finding-detail-label">Description</div><div class="finding-detail">${esc(f.condition)}</div>`;
-            if (f.effect) html += `<div class="finding-detail-label">Impact</div><div class="finding-detail">${esc(f.effect)}</div>`;
-            if (f.recommendation) html += `<div class="finding-detail-label">Recommendation</div><div class="finding-detail">${esc(f.recommendation)}</div>`;
-            if (f.management_response) html += `<div class="finding-detail-label">Management Response</div><div class="finding-detail">${esc(f.management_response)}</div>`;
-
-            for (const a of adjEntries) {
-              html += `<div class="adj-entry">
-                <strong>Adjusting Entry:</strong> Dr ${esc(a.debit_account)} / Cr ${esc(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                ${a.narration ? ' (' + esc(a.narration) + ')' : ''}
-                ${a.is_posted ? ' <span class="badge b-approved">Posted</span>' : ' <span class="badge b-open">Not posted</span>'}
-              </div>`;
-            }
-
-            html += '</div>';
-          }
-        }
-
         // Review notes table
         const significantNotes = secNotes.filter(n => n.note_type === 'review_comment' || n.note_type === 'return_reason');
         if (significantNotes.length > 0) {
@@ -402,7 +375,38 @@
         html += '</div>'; // wp-section
       }
 
-      // ===== 4. MANAGEMENT LETTER POINTS =====
+      // ===== 4. FINDINGS DETAIL =====
+      html += '<h2>Findings Detail</h2>';
+      if (filtFindings.length === 0) {
+        html += '<p class="no-data">No findings recorded.</p>';
+      } else {
+        for (const f of filtFindings) {
+          const secName = sections.find(s => s.id === f.section_id)?.name || '—';
+          const adjEntries = adjustingEntries.filter(a => a.finding_id === f.id);
+          html += `<div class="finding-block">
+            <div class="finding-title">${esc(f.title)} <span class="badge b-${f.severity}">${f.severity}</span> <span class="badge b-${f.status}">${f.status}</span>
+            ${f.is_management_letter_point ? ' <span class="badge b-ml">ML</span>' : ''}
+            </div>
+            <div class="finding-detail-label">Section</div><div class="finding-detail">${esc(secName)}</div>`;
+
+          if (f.condition) html += `<div class="finding-detail-label">Description</div><div class="finding-detail">${esc(f.condition)}</div>`;
+          if (f.effect) html += `<div class="finding-detail-label">Impact</div><div class="finding-detail">${esc(f.effect)}</div>`;
+          if (f.recommendation) html += `<div class="finding-detail-label">Recommendation</div><div class="finding-detail">${esc(f.recommendation)}</div>`;
+          if (f.management_response) html += `<div class="finding-detail-label">Management Response</div><div class="finding-detail">${esc(f.management_response)}</div>`;
+
+          for (const a of adjEntries) {
+            html += `<div class="adj-entry">
+              <strong>Adjusting Entry:</strong> Dr ${esc(a.debit_account)} / Cr ${esc(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              ${a.narration ? ' (' + esc(a.narration) + ')' : ''}
+              ${a.is_posted ? ' <span class="badge b-approved">Posted</span>' : ' <span class="badge b-open">Not posted</span>'}
+            </div>`;
+          }
+
+          html += '</div>';
+        }
+      }
+
+      // ===== 5. MANAGEMENT LETTER POINTS =====
       const mlFindings = filtFindings.filter(f => f.is_management_letter_point);
       html += '<h2>Management Letter Points</h2>';
       if (mlFindings.length === 0) {
