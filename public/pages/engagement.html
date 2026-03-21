@@ -896,12 +896,6 @@
     }
 
     async function loadFindings() {
-      const { data } = await supabaseClient
-        .from('findings')
-        .select('*, profiles:reported_by(full_name, email)')
-        .eq('section_id', sections.length > 0 ? undefined : undefined);
-
-      // Findings need to be fetched by section_ids within this engagement
       if (sections.length > 0) {
         const secIds = sections.map(s => s.id);
         const { data: f } = await supabaseClient
