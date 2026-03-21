@@ -3,48 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Engagement Report — Axiom</title>
+  <title>Audit File — Axiom</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; color: #1f2937; line-height: 1.6; padding: 40px; max-width: 900px; margin: 0 auto; }
+    body { font-family: 'Inter', sans-serif; color: #1f2937; line-height: 1.6; padding: 40px; max-width: 900px; margin: 0 auto; font-size: 13px; }
 
-    .report-header { margin-bottom: 32px; border-bottom: 2px solid #111827; padding-bottom: 16px; }
-    .report-header h1 { font-size: 24px; font-weight: 700; }
-    .report-meta { font-size: 13px; color: #6b7280; margin-top: 4px; }
-    .report-meta span { margin-right: 16px; }
+    /* Cover */
+    .cover { border: 2px solid #111827; border-radius: 8px; padding: 40px; margin-bottom: 32px; page-break-after: always; }
+    .cover-logo { font-size: 14px; font-weight: 700; color: #6b7280; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 32px; }
+    .cover h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+    .cover-subtitle { font-size: 15px; color: #6b7280; margin-bottom: 24px; }
+    .cover-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; font-size: 13px; }
+    .cover-label { font-weight: 600; color: #6b7280; }
+    .cover-value { color: #111827; }
+    .cover-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 28px; }
+    .cover-metric { border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; text-align: center; }
+    .cover-metric .val { font-size: 20px; font-weight: 700; }
+    .cover-metric .lbl { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .cover-stamp { font-size: 11px; color: #9ca3af; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 12px; }
 
-    .report-stamp { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+    /* Headings */
+    h2 { font-size: 17px; font-weight: 700; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #111827; page-break-after: avoid; }
+    h3 { font-size: 14px; font-weight: 600; margin: 20px 0 6px; color: #374151; page-break-after: avoid; }
+    h4 { font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 6px; }
 
-    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
-    h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: #374151; }
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
+    th { text-align: left; padding: 6px 8px; font-weight: 600; color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #d1d5db; background: #f9fafb; }
+    td { padding: 6px 8px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-    .stat-box { border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; text-align: center; }
-    .stat-box .val { font-size: 22px; font-weight: 700; }
-    .stat-box .lbl { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    /* Badges */
+    .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+    .b-approved { background: #dcfce7; color: #16a34a; }
+    .b-open { background: #fef3c7; color: #d97706; }
+    .b-resolved { background: #dcfce7; color: #16a34a; }
+    .b-reported { background: #eff6ff; color: #3A7BFF; }
+    .b-high { background: #fee2e2; color: #dc2626; }
+    .b-medium { background: #fef3c7; color: #d97706; }
+    .b-low { background: #f3f4f6; color: #6b7280; }
+    .b-done { background: #dcfce7; color: #16a34a; }
+    .b-pending { background: #f3f4f6; color: #6b7280; }
+    .b-interim { background: #EEF2FF; color: #4338CA; }
+    .b-ml { background: #E0E7FF; color: #4338CA; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
-    th { text-align: left; padding: 8px 10px; font-weight: 600; color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; }
-    td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
+    /* Section workpaper blocks */
+    .wp-section { margin-bottom: 28px; page-break-inside: avoid; }
+    .wp-header { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 16px; margin-bottom: 10px; }
+    .wp-title { font-size: 15px; font-weight: 700; }
+    .wp-meta { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .wp-conclusion { background: #f0fdf4; border-left: 3px solid #16a34a; padding: 10px 14px; margin: 10px 0; font-size: 13px; }
+    .wp-conclusion-label { font-size: 10px; font-weight: 600; color: #16a34a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
 
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-    .badge-approved { background: #dcfce7; color: #16a34a; }
-    .badge-in-progress { background: #eff6ff; color: #3A7BFF; }
-    .badge-not-started { background: #f3f4f6; color: #6b7280; }
-    .badge-ready-for-review { background: #fef3c7; color: #d97706; }
-    .badge-returned { background: #f3e8ff; color: #9333ea; }
-    .severity-high { background: #fee2e2; color: #dc2626; }
-    .severity-medium { background: #fef3c7; color: #d97706; }
-    .severity-low { background: #f3f4f6; color: #6b7280; }
-    .badge-open { background: #fef3c7; color: #d97706; }
-    .badge-resolved { background: #dcfce7; color: #16a34a; }
+    /* Procedure response */
+    .proc-block { margin-bottom: 10px; padding: 8px 12px; border: 1px solid #f3f4f6; border-radius: 6px; }
+    .proc-desc { font-weight: 600; font-size: 12px; margin-bottom: 2px; }
+    .proc-meta { font-size: 11px; color: #6b7280; }
+    .proc-response { font-size: 12px; margin-top: 4px; white-space: pre-wrap; color: #374151; }
+    .proc-response-label { font-size: 10px; font-weight: 600; color: #3A7BFF; margin-top: 4px; }
 
-    .section-block { margin-bottom: 24px; page-break-inside: avoid; }
-    .section-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-    .section-meta { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+    /* Finding detail */
+    .finding-block { border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px; }
+    .finding-title { font-weight: 600; font-size: 13px; }
+    .finding-detail { font-size: 12px; color: #374151; margin-top: 4px; }
+    .finding-detail-label { font-size: 10px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-top: 6px; }
+    .adj-entry { background: #fffbeb; border: 1px solid #fde68a; border-radius: 4px; padding: 6px 10px; margin-top: 6px; font-size: 12px; }
 
-    .no-data { font-size: 13px; color: #9ca3af; font-style: italic; padding: 8px 0; }
+    /* Review note */
+    .rn-item { font-size: 12px; margin-bottom: 6px; padding: 4px 0; border-bottom: 1px solid #f9fafb; }
+    .rn-meta { font-size: 10px; color: #9ca3af; }
+
+    /* Documents */
+    .doc-row { font-size: 12px; padding: 3px 0; }
+    .doc-cat { font-size: 10px; color: #6b7280; background: #f3f4f6; padding: 1px 5px; border-radius: 3px; }
+
+    .no-data { font-size: 12px; color: #9ca3af; font-style: italic; padding: 6px 0; }
 
     .print-bar { display: flex; gap: 8px; margin-bottom: 24px; }
     .print-bar button { padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer; border: none; }
@@ -53,7 +86,10 @@
 
     @media print {
       .print-bar { display: none; }
-      body { padding: 20px; }
+      body { padding: 20px; font-size: 11px; }
+      .cover { page-break-after: always; }
+      .wp-section { page-break-inside: avoid; }
+      h2 { page-break-after: avoid; }
     }
   </style>
 </head>
@@ -63,37 +99,7 @@
     <button class="btn-back" onclick="window.close()">Close</button>
   </div>
 
-  <div id="report-content">
-    <div class="report-header">
-      <h1 id="rpt-title">Loading...</h1>
-      <div class="report-meta">
-        <span id="rpt-type"></span>
-        <span id="rpt-year-end"></span>
-        <span id="rpt-status"></span>
-      </div>
-      <div class="report-stamp" id="rpt-stamp"></div>
-    </div>
-
-    <div class="stats-grid" id="rpt-stats"></div>
-
-    <h2>Sections</h2>
-    <div id="rpt-sections"><p class="no-data">Loading...</p></div>
-
-    <h2>Trial Balance Summary</h2>
-    <div id="rpt-tb"><p class="no-data">Loading...</p></div>
-
-    <h2>Findings</h2>
-    <div id="rpt-findings"><p class="no-data">Loading...</p></div>
-
-    <h2>Summary of Unadjusted Misstatements (ISA 450)</h2>
-    <div id="rpt-unadjusted"><p class="no-data">Loading...</p></div>
-
-    <h2>Outstanding Findings at Filing</h2>
-    <div id="rpt-outstanding"><p class="no-data">Loading...</p></div>
-
-    <h2>Activity Log</h2>
-    <div id="rpt-activity"><p class="no-data">Loading...</p></div>
-  </div>
+  <div id="report-content">Loading...</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
@@ -105,158 +111,320 @@
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '/pages/login.html'; return; }
-
       const currentUser = session.user;
       const org = await getUserOrg();
       if (!org) { window.location.href = '/pages/onboarding.html'; return; }
 
-      // Load engagement
       const { data: eng } = await supabaseClient.from('engagements').select('*').eq('id', engagementId).single();
-      if (!eng || eng.organization_id !== org.id) { document.body.innerHTML = '<p>Engagement not found.</p>'; return; }
+      if (!eng || eng.organization_id !== org.id) { document.getElementById('report-content').innerHTML = '<p>Engagement not found.</p>'; return; }
 
-      // Load all data in parallel
-      const [sectionsRes, tbRes, findingsRes, activityRes, proceduresRes, responsesRes, profilesRes] = await Promise.all([
+      // Load all data
+      const sectionIds = [];
+      const [sectionsRes, tbRes, proceduresRes, profilesRes, activityRes] = await Promise.all([
         supabaseClient.from('audit_sections').select('*').eq('engagement_id', engagementId).order('sort_order'),
         supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code'),
-        supabaseClient.from('findings').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false }),
-        supabaseClient.from('activity_log').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false }).limit(50),
         supabaseClient.from('audit_procedures').select('*').eq('engagement_id', engagementId).order('sort_order'),
-        supabaseClient.from('procedure_responses').select('*').eq('engagement_id', engagementId),
-        supabaseClient.from('organization_members').select('*, profiles:user_id(id, full_name, email)').eq('organization_id', org.organization_id)
+        supabaseClient.from('organization_members').select('*, profiles:user_id(id, full_name, email)').eq('organization_id', org.id),
+        supabaseClient.from('activity_log').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false })
       ]);
 
       const sections = sectionsRes.data || [];
       const tbLines = tbRes.data || [];
-      const findings = findingsRes.data || [];
-      const activity = activityRes.data || [];
       const procedures = proceduresRes.data || [];
-      const responses = responsesRes.data || [];
+      const activity = activityRes.data || [];
+
       const profiles = {};
       (profilesRes.data || []).forEach(m => { if (m.profiles) profiles[m.profiles.id] = m.profiles.full_name || m.profiles.email; });
 
-      // Header
-      document.getElementById('rpt-title').textContent = eng.client_name;
-      document.getElementById('rpt-type').textContent = 'Type: ' + (eng.engagement_type || 'audit');
-      document.getElementById('rpt-year-end').textContent = 'Year-end: ' + (eng.year_end_date || '—');
-      document.getElementById('rpt-status').textContent = 'Status: ' + (eng.status || 'active');
-      document.getElementById('rpt-stamp').textContent = 'Generated on ' + new Date().toLocaleString() + ' by ' + (currentUser.email);
+      // Load responses, documents, findings, review notes, adjusting entries per section
+      const secIds = sections.map(s => s.id);
+      let responses = [], documents = [], findings = [], reviewNotes = [], adjustingEntries = [];
 
-      // Stats
+      if (secIds.length > 0) {
+        const procIds = procedures.map(p => p.id);
+        const [respRes, findRes, notesRes] = await Promise.all([
+          procIds.length > 0 ? supabaseClient.from('procedure_responses').select('*').in('procedure_id', procIds) : { data: [] },
+          supabaseClient.from('findings').select('*').in('section_id', secIds).order('created_at'),
+          supabaseClient.from('review_notes').select('*, profiles:user_id(full_name, email)').in('section_id', secIds).order('created_at')
+        ]);
+        responses = respRes.data || [];
+        findings = findRes.data || [];
+        reviewNotes = notesRes.data || [];
+
+        // Load documents
+        const respIds = responses.map(r => r.id);
+        if (respIds.length > 0) {
+          const { data: docs } = await supabaseClient.from('documents').select('*').in('procedure_response_id', respIds);
+          documents = docs || [];
+        }
+        const { data: secDocs } = await supabaseClient.from('documents').select('*').in('section_id', secIds).is('procedure_response_id', null);
+        documents = [...documents, ...(secDocs || [])];
+
+        // Load adjusting entries
+        const findingIds = findings.map(f => f.id);
+        if (findingIds.length > 0) {
+          const { data: adj } = await supabaseClient.from('adjusting_entries').select('*').in('finding_id', findingIds);
+          adjustingEntries = adj || [];
+        }
+      }
+
+      // Compute stats
       const totalP = procedures.length;
       const doneP = responses.filter(r => r.status === 'done').length;
       const approvedS = sections.filter(s => s.status === 'approved').length;
       const openF = findings.filter(f => f.status === 'open').length;
+      const highF = findings.filter(f => f.severity === 'high').length;
+      const totalMisstatement = findings.filter(f => f.finding_type === 'misstatement').reduce((s, f) => s + (Number(f.monetary_impact) || 0), 0);
 
-      document.getElementById('rpt-stats').innerHTML = `
-        <div class="stat-box"><div class="val">${sections.length}</div><div class="lbl">Sections</div></div>
-        <div class="stat-box"><div class="val">${doneP} / ${totalP}</div><div class="lbl">Procedures Done</div></div>
-        <div class="stat-box"><div class="val">${approvedS} / ${sections.length}</div><div class="lbl">Approved</div></div>
-        <div class="stat-box"><div class="val">${openF}</div><div class="lbl">Open Findings</div></div>
+      // Find partner and supervisor names
+      const partnerMember = (profilesRes.data || []).find(m => m.role === 'admin');
+      const supervisorMember = (profilesRes.data || []).find(m => m.role === 'supervisor');
+      const partnerName = partnerMember?.profiles?.full_name || partnerMember?.profiles?.email || '—';
+      const supervisorName = supervisorMember?.profiles?.full_name || supervisorMember?.profiles?.email || '—';
+
+      let html = '';
+
+      // ===== 1. COVER PAGE =====
+      html += `
+        <div class="cover">
+          <div class="cover-logo">Axiom Audit File</div>
+          <h1>${esc(eng.client_name)}</h1>
+          <div class="cover-subtitle">Audit Engagement — Year ended ${eng.year_end_date || '—'}</div>
+          <div class="cover-grid">
+            <div><span class="cover-label">Status:</span> <span class="cover-value">${eng.status === 'completed' ? 'Closed' : 'Active'}</span></div>
+            <div><span class="cover-label">Engagement Partner:</span> <span class="cover-value">${esc(partnerName)}</span></div>
+            <div><span class="cover-label">Year-End:</span> <span class="cover-value">${eng.year_end_date || '—'}</span></div>
+            <div><span class="cover-label">Supervisor:</span> <span class="cover-value">${esc(supervisorName)}</span></div>
+            ${eng.closed_at ? `<div><span class="cover-label">File Closed:</span> <span class="cover-value">${new Date(eng.closed_at).toLocaleDateString()}</span></div>` : ''}
+          </div>
+          <div class="cover-metrics">
+            <div class="cover-metric"><div class="val">${sections.length}</div><div class="lbl">Sections</div></div>
+            <div class="cover-metric"><div class="val">${doneP}/${totalP}</div><div class="lbl">Procedures Done</div></div>
+            <div class="cover-metric"><div class="val">${approvedS}/${sections.length}</div><div class="lbl">Approved</div></div>
+            <div class="cover-metric"><div class="val">${openF}</div><div class="lbl">Open Findings</div></div>
+          </div>
+          <div class="cover-stamp">Generated on ${new Date().toLocaleString()} by ${esc(currentUser.email)}</div>
+        </div>
       `;
 
-      // Sections with procedures
-      if (sections.length === 0) {
-        document.getElementById('rpt-sections').innerHTML = '<p class="no-data">No sections.</p>';
+      // ===== 2. FINDINGS & MISSTATEMENTS SUMMARY =====
+      html += '<h2>Summary of Findings</h2>';
+      if (findings.length === 0) {
+        html += '<p class="no-data">No findings recorded.</p>';
       } else {
-        document.getElementById('rpt-sections').innerHTML = sections.map(s => {
-          const secProcs = procedures.filter(p => p.section_id === s.id);
-          const secFindings = findings.filter(f => f.section_id === s.id);
-          const assignee = s.assigned_to ? (profiles[s.assigned_to] || '—') : 'Unassigned';
-
-          let procsHtml = '';
-          if (secProcs.length > 0) {
-            procsHtml = '<table><thead><tr><th>Procedure</th><th>Type</th><th>Status</th></tr></thead><tbody>' +
-              secProcs.map(p => {
-                const resp = responses.find(r => r.procedure_id === p.id);
-                const status = resp ? resp.status : 'not started';
-                return `<tr><td>${esc(p.description)}</td><td>${esc(p.procedure_type || '')}</td><td><span class="badge badge-${status.replace(/_/g, '-')}">${status}</span></td></tr>`;
-              }).join('') + '</tbody></table>';
-          }
-
-          return `
-            <div class="section-block">
-              <div class="section-title">${esc(s.name)} <span class="badge badge-${s.status.replace(/_/g, '-')}">${s.status.replace(/_/g, ' ')}</span></div>
-              <div class="section-meta">Assigned: ${esc(assignee)} | ${secProcs.length} procedures | ${secFindings.filter(f => f.status === 'open').length} open findings</div>
-              ${procsHtml || '<p class="no-data">No procedures.</p>'}
-            </div>
-          `;
+        html += '<table><thead><tr><th>Title</th><th>Section</th><th>Type</th><th>Severity</th><th>Status</th><th>Impact</th><th>ML</th></tr></thead><tbody>';
+        html += findings.map(f => {
+          const secName = sections.find(s => s.id === f.section_id)?.name || '—';
+          const amt = f.monetary_impact ? Number(f.monetary_impact).toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—';
+          return `<tr>
+            <td>${esc(f.title)}</td>
+            <td>${esc(secName)}</td>
+            <td>${(f.finding_type || 'observation').replace(/_/g, ' ')}</td>
+            <td><span class="badge b-${f.severity}">${f.severity}</span></td>
+            <td><span class="badge b-${f.status}">${f.status}</span></td>
+            <td>${amt}</td>
+            <td>${f.is_management_letter_point ? 'Yes' : ''}</td>
+          </tr>`;
         }).join('');
+        html += '</tbody></table>';
       }
 
-      // Trial Balance
-      if (tbLines.length === 0) {
-        document.getElementById('rpt-tb').innerHTML = '<p class="no-data">No trial balance imported.</p>';
+      // Unadjusted misstatements
+      const unadjusted = findings.filter(f => f.finding_type === 'misstatement' && f.status === 'open');
+      if (unadjusted.length > 0) {
+        html += '<h3>Summary of Unadjusted Misstatements (ISA 450)</h3>';
+        html += '<table><thead><tr><th>Finding</th><th>Section</th><th>Amount</th><th>Categorization</th></tr></thead><tbody>';
+        let totalUnadj = 0;
+        html += unadjusted.map(f => {
+          const secName = sections.find(s => s.id === f.section_id)?.name || '—';
+          const amt = Number(f.monetary_impact) || 0;
+          totalUnadj += amt;
+          const cat = f.close_category ? f.close_category.replace(/_/g, ' ') : '—';
+          return `<tr><td>${esc(f.title)}</td><td>${esc(secName)}</td><td>${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td><td>${cat}</td></tr>`;
+        }).join('');
+        html += `<tr style="font-weight:700; border-top:2px solid #d1d5db;"><td colspan="2">Total Unadjusted</td><td>${totalUnadj.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td><td></td></tr>`;
+        html += '</tbody></table>';
+      }
+
+      // ===== 3. SECTION-BY-SECTION WORKPAPERS =====
+      html += '<h2>Section Workpapers</h2>';
+
+      const interimSections = sections.filter(s => s.phase === 'interim');
+      const finalSections = sections.filter(s => s.phase !== 'interim');
+      const orderedSections = [...interimSections, ...finalSections];
+
+      if (orderedSections.length === 0) {
+        html += '<p class="no-data">No sections.</p>';
+      }
+
+      let currentPhase = '';
+      for (const s of orderedSections) {
+        const phase = s.phase || 'final';
+        if (phase !== currentPhase) {
+          currentPhase = phase;
+          html += `<div style="margin:16px 0 8px;"><span style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">${phase} Phase</span></div>`;
+        }
+
+        const assignee = s.assigned_to ? (profiles[s.assigned_to] || '—') : 'Unassigned';
+        const secProcs = procedures.filter(p => p.section_id === s.id);
+        const secFindings = findings.filter(f => f.section_id === s.id);
+        const secDocs = documents.filter(d => d.section_id === s.id);
+        const secNotes = reviewNotes.filter(n => n.section_id === s.id);
+
+        // Sign-off info
+        const supApproved = s.supervisor_approved_at ? new Date(s.supervisor_approved_at).toLocaleDateString() : '—';
+        const supName = s.supervisor_approved_by ? (profiles[s.supervisor_approved_by] || '—') : '—';
+        const partApproved = s.partner_approved_at ? new Date(s.partner_approved_at).toLocaleDateString() : '—';
+        const partName2 = s.partner_approved_by ? (profiles[s.partner_approved_by] || '—') : '—';
+
+        html += `<div class="wp-section">`;
+        html += `<div class="wp-header">
+          <div class="wp-title">${esc(s.name)} ${phase === 'interim' ? '<span class="badge b-interim">Interim</span>' : ''} <span class="badge b-${s.status === 'approved' ? 'approved' : 'pending'}">${s.status.replace(/_/g, ' ')}</span></div>
+          <div class="wp-meta">Assigned: ${esc(assignee)} | Supervisor: ${esc(supName)} (${supApproved}) | Partner: ${esc(partName2)} (${partApproved})</div>
+        </div>`;
+
+        // Conclusion
+        if (s.conclusion) {
+          html += `<div class="wp-conclusion"><div class="wp-conclusion-label">Section Conclusion</div>${esc(s.conclusion)}</div>`;
+        }
+
+        // Procedures & Responses
+        html += '<h4>Procedures & Work Performed</h4>';
+        if (secProcs.length === 0) {
+          html += '<p class="no-data">No procedures.</p>';
+        } else {
+          for (const p of secProcs) {
+            const resp = responses.find(r => r.procedure_id === p.id);
+            const status = resp?.status || 'pending';
+            const assertions = (p.assertions || []).join(', ');
+            const procDocs = resp ? documents.filter(d => d.procedure_response_id === resp.id) : [];
+
+            html += `<div class="proc-block">
+              <div class="proc-desc">${esc(p.description)} <span class="badge b-${status}">${status}</span></div>
+              <div class="proc-meta">${esc(p.procedure_type.replace(/_/g, ' '))}${assertions ? ' | Assertions: ' + esc(assertions) : ''}</div>`;
+
+            if (resp?.response) {
+              html += `<div class="proc-response-label">Work Performed</div><div class="proc-response">${esc(resp.response)}</div>`;
+            }
+
+            if (procDocs.length > 0) {
+              html += '<div style="margin-top:4px;">';
+              procDocs.forEach(d => {
+                html += `<div class="doc-row"><span class="doc-cat">${esc(d.doc_category === 'working_paper' ? 'WP' : 'SD')}</span> ${esc(d.file_name)}${d.description ? ' — ' + esc(d.description) : ''}</div>`;
+              });
+              html += '</div>';
+            }
+
+            html += '</div>';
+          }
+        }
+
+        // Section documents (not linked to procedures)
+        const unlinkedDocs = secDocs.filter(d => !d.procedure_response_id);
+        if (unlinkedDocs.length > 0) {
+          html += '<h4>Additional Documents</h4>';
+          unlinkedDocs.forEach(d => {
+            html += `<div class="doc-row"><span class="doc-cat">${esc(d.doc_category === 'working_paper' ? 'WP' : 'SD')}</span> ${esc(d.file_name)}${d.description ? ' — ' + esc(d.description) : ''}</div>`;
+          });
+        }
+
+        // Section findings
+        if (secFindings.length > 0) {
+          html += '<h4>Findings</h4>';
+          for (const f of secFindings) {
+            const adjEntries = adjustingEntries.filter(a => a.finding_id === f.id);
+            html += `<div class="finding-block">
+              <div class="finding-title">${esc(f.title)} <span class="badge b-${f.severity}">${f.severity}</span> <span class="badge b-${f.status}">${f.status}</span>
+              ${f.is_management_letter_point ? ' <span class="badge b-ml">ML</span>' : ''}
+              </div>`;
+
+            if (f.condition) html += `<div class="finding-detail-label">Condition</div><div class="finding-detail">${esc(f.condition)}</div>`;
+            if (f.effect) html += `<div class="finding-detail-label">Effect</div><div class="finding-detail">${esc(f.effect)}</div>`;
+            if (f.recommendation) html += `<div class="finding-detail-label">Recommendation</div><div class="finding-detail">${esc(f.recommendation)}</div>`;
+            if (f.management_response) html += `<div class="finding-detail-label">Management Response</div><div class="finding-detail">${esc(f.management_response)}</div>`;
+
+            for (const a of adjEntries) {
+              html += `<div class="adj-entry">
+                <strong>Adjusting Entry:</strong> Dr ${esc(a.debit_account)} / Cr ${esc(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                ${a.narration ? ' (' + esc(a.narration) + ')' : ''}
+                ${a.is_posted ? ' <span class="badge b-approved">Posted</span>' : ' <span class="badge b-open">Not posted</span>'}
+              </div>`;
+            }
+
+            html += '</div>';
+          }
+        }
+
+        // Review notes (filtered — only return_reason and review_comment, skip viewed/preparer chatter)
+        const significantNotes = secNotes.filter(n => n.note_type === 'review_comment' || n.note_type === 'return_reason');
+        if (significantNotes.length > 0) {
+          html += '<h4>Review Notes</h4>';
+          significantNotes.forEach(n => {
+            const who = n.profiles?.full_name || n.profiles?.email || 'User';
+            const date = new Date(n.created_at).toLocaleDateString();
+            const typeLabel = n.note_type === 'return_reason' ? 'Returned' : 'Review';
+            html += `<div class="rn-item"><span class="rn-meta">${typeLabel} | ${esc(who)} | ${date}</span><br>${esc(n.note)}</div>`;
+          });
+        }
+
+        html += '</div>'; // wp-section
+      }
+
+      // ===== 4. MANAGEMENT LETTER POINTS =====
+      const mlFindings = findings.filter(f => f.is_management_letter_point);
+      html += '<h2>Management Letter Points</h2>';
+      if (mlFindings.length === 0) {
+        html += '<p class="no-data">No management letter points.</p>';
       } else {
-        // Group by classification
+        html += '<table><thead><tr><th>#</th><th>Finding</th><th>Section</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>';
+        mlFindings.forEach((f, i) => {
+          const secName = sections.find(s => s.id === f.section_id)?.name || '—';
+          html += `<tr><td>${i + 1}</td><td>${esc(f.title)}</td><td>${esc(secName)}</td><td><span class="badge b-${f.severity}">${f.severity}</span></td><td>${esc(f.recommendation || '—')}</td></tr>`;
+        });
+        html += '</tbody></table>';
+      }
+
+      // ===== 5. TRIAL BALANCE SUMMARY =====
+      html += '<h2>Trial Balance Summary</h2>';
+      if (tbLines.length === 0) {
+        html += '<p class="no-data">No trial balance imported.</p>';
+      } else {
         const groups = {};
         tbLines.forEach(line => {
           const cls = line.classification || 'Unclassified';
-          if (!groups[cls]) groups[cls] = { lines: [], total: 0 };
-          groups[cls].lines.push(line);
+          if (!groups[cls]) groups[cls] = { count: 0, total: 0 };
+          groups[cls].count++;
           groups[cls].total += parseFloat(line.balance) || 0;
         });
-
-        document.getElementById('rpt-tb').innerHTML = '<table><thead><tr><th>Classification</th><th>Lines</th><th>Total Balance</th></tr></thead><tbody>' +
-          Object.entries(groups).map(([cls, g]) =>
-            `<tr><td>${esc(cls)}</td><td>${g.lines.length}</td><td>${g.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>`
-          ).join('') + '</tbody></table>';
+        html += '<table><thead><tr><th>Classification</th><th>Lines</th><th>Total Balance</th></tr></thead><tbody>';
+        html += Object.entries(groups).map(([cls, g]) =>
+          `<tr><td>${esc(cls)}</td><td>${g.count}</td><td style="text-align:right;">${g.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>`
+        ).join('');
+        html += '</tbody></table>';
       }
 
-      // Findings
-      if (findings.length === 0) {
-        document.getElementById('rpt-findings').innerHTML = '<p class="no-data">No findings.</p>';
+      // ===== 6. AUDIT TRAIL (filtered) =====
+      html += '<h2>Audit Trail</h2>';
+      const meaningfulActions = ['submitted_for_review', 'supervisor_approved', 'partner_approved',
+        'returned_to_preparer', 'returned_to_supervisor', 'reopened_section', 'closed_engagement',
+        'reopened_engagement', 'added_finding', 'updated_finding_status', 'created_section', 'deleted_section'];
+      const filtered = activity.filter(a => meaningfulActions.includes(a.action));
+
+      if (filtered.length === 0) {
+        html += '<p class="no-data">No significant audit trail events.</p>';
       } else {
-        document.getElementById('rpt-findings').innerHTML = '<table><thead><tr><th>Title</th><th>Section</th><th>Type</th><th>Severity</th><th>Status</th></tr></thead><tbody>' +
-          findings.map(f => {
-            const secName = sections.find(s => s.id === f.section_id)?.name || '—';
-            const typeLabel = (f.finding_type || 'observation').replace(/_/g, ' ');
-            return `<tr><td>${esc(f.title)}${f.is_management_letter_point ? ' <span class="badge" style="background:#E0E7FF;color:#4338CA;font-size:9px;">ML</span>' : ''}</td><td>${esc(secName)}</td><td>${typeLabel}</td><td><span class="badge severity-${f.severity}">${f.severity}</span></td><td><span class="badge badge-${f.status}">${f.status}</span></td></tr>`;
-          }).join('') + '</tbody></table>';
+        html += '<table><thead><tr><th>Event</th><th>Detail</th><th>User</th><th>Date</th></tr></thead><tbody>';
+        filtered.forEach(a => {
+          const details = a.details ? (typeof a.details === 'string' ? JSON.parse(a.details) : a.details) : {};
+          const detail = details.name || details.reason || details.client_name || '';
+          const userName = profiles[a.user_id] || '—';
+          html += `<tr><td>${esc(a.action.replace(/_/g, ' '))}</td><td>${esc(detail)}</td><td>${esc(userName)}</td><td>${new Date(a.created_at).toLocaleString()}</td></tr>`;
+        });
+        html += '</tbody></table>';
       }
 
-      // Summary of Unadjusted Misstatements (ISA 450)
-      const unadjusted = findings.filter(f => f.finding_type === 'misstatement' && f.status === 'open');
-      if (unadjusted.length === 0) {
-        document.getElementById('rpt-unadjusted').innerHTML = '<p class="no-data">No unadjusted misstatements.</p>';
-      } else {
-        document.getElementById('rpt-unadjusted').innerHTML =
-          '<table><thead><tr><th>Finding</th><th>Section</th><th>Severity</th><th>Monetary Impact</th><th>Partner Categorization</th></tr></thead><tbody>' +
-          unadjusted.map(f => {
-            const secName = sections.find(s => s.id === f.section_id)?.name || '—';
-            const amt = f.monetary_impact ? Number(f.monetary_impact).toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—';
-            const cat = f.close_category ? f.close_category.replace(/_/g, ' ') : 'Not categorized';
-            return `<tr><td>${esc(f.title)}</td><td>${esc(secName)}</td><td>${f.severity}</td><td>${amt}</td><td>${cat}</td></tr>`;
-          }).join('') + '</tbody></table>';
-      }
-
-      // Outstanding Findings at Filing
-      const outstanding = findings.filter(f => f.status === 'open');
-      if (outstanding.length === 0) {
-        document.getElementById('rpt-outstanding').innerHTML = '<p class="no-data">No outstanding findings at filing.</p>';
-      } else {
-        document.getElementById('rpt-outstanding').innerHTML =
-          '<table><thead><tr><th>Finding</th><th>Section</th><th>Type</th><th>Severity</th><th>Categorization</th><th>ML</th></tr></thead><tbody>' +
-          outstanding.map(f => {
-            const secName = sections.find(s => s.id === f.section_id)?.name || '—';
-            const typeLabel = (f.finding_type || 'observation').replace(/_/g, ' ');
-            const cat = f.close_category ? f.close_category.replace(/_/g, ' ') : '—';
-            return `<tr><td>${esc(f.title)}</td><td>${esc(secName)}</td><td>${typeLabel}</td><td>${f.severity}</td><td>${cat}</td><td>${f.is_management_letter_point ? 'Yes' : '—'}</td></tr>`;
-          }).join('') + '</tbody></table>';
-      }
-
-      // Activity log
-      if (activity.length === 0) {
-        document.getElementById('rpt-activity').innerHTML = '<p class="no-data">No activity.</p>';
-      } else {
-        document.getElementById('rpt-activity').innerHTML = '<table><thead><tr><th>Action</th><th>Target</th><th>Date</th></tr></thead><tbody>' +
-          activity.map(a => {
-            const details = a.details ? (typeof a.details === 'string' ? JSON.parse(a.details) : a.details) : {};
-            const name = details.name || details.reason || details.client_name || '';
-            return `<tr><td>${esc(a.action.replace(/_/g, ' '))}</td><td>${esc(name)}</td><td>${new Date(a.created_at).toLocaleString()}</td></tr>`;
-          }).join('') + '</tbody></table>';
-      }
-
-      document.title = eng.client_name + ' — Engagement Report — Axiom';
+      document.getElementById('report-content').innerHTML = html;
+      document.title = eng.client_name + ' — Audit File — Axiom';
     }
 
     function esc(str) {
