@@ -676,7 +676,15 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Recommendation</label>
+          <label>Description <span class="text-sm text-muted">— What was found?</span></label>
+          <textarea class="form-control" id="finding-description" rows="2" placeholder="Describe what was found"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Impact <span class="text-sm text-muted">— Why does it matter?</span></label>
+          <textarea class="form-control" id="finding-impact" rows="2" placeholder="The effect or consequence of this finding"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Recommendation <span class="text-sm text-muted">— What should be done?</span></label>
           <textarea class="form-control" id="finding-recommendation" rows="2" placeholder="Suggested corrective action"></textarea>
         </div>
         <div class="form-group" style="display:flex; align-items:center; gap:8px;">
@@ -1573,11 +1581,11 @@
                   <option value="reported" ${f.status === 'reported' ? 'selected' : ''}>Reported</option>
                 </select>
               </div>` : ''}
+              ${f.condition ? `<div class="finding-field"><div class="finding-field-label">Description</div><div class="finding-field-value">${escHtml(f.condition)}</div></div>` : ''}
+              ${f.effect ? `<div class="finding-field"><div class="finding-field-label">Impact</div><div class="finding-field-value">${escHtml(f.effect)}</div></div>` : ''}
               ${f.recommendation ? `<div class="finding-field"><div class="finding-field-label">Recommendation</div><div class="finding-field-value">${escHtml(f.recommendation)}</div></div>` : ''}
-              ${f.condition ? `<div class="finding-field"><div class="finding-field-label">Condition</div><div class="finding-field-value">${escHtml(f.condition)}</div></div>` : ''}
               ${f.criteria ? `<div class="finding-field"><div class="finding-field-label">Criteria</div><div class="finding-field-value">${escHtml(f.criteria)}</div></div>` : ''}
               ${f.cause ? `<div class="finding-field"><div class="finding-field-label">Cause</div><div class="finding-field-value">${escHtml(f.cause)}</div></div>` : ''}
-              ${f.effect ? `<div class="finding-field"><div class="finding-field-label">Effect</div><div class="finding-field-value">${escHtml(f.effect)}</div></div>` : ''}
               ${f.management_response ? `<div class="finding-field"><div class="finding-field-label">Management Response</div><div class="finding-field-value">${escHtml(f.management_response)}</div></div>` : ''}
               ${monetary ? `<div class="finding-field"><div class="finding-field-label">Monetary Impact</div><div class="finding-field-value">${monetary}</div></div>` : ''}
             </div>
@@ -1621,11 +1629,13 @@
       document.getElementById('finding-severity').value = 'medium';
       document.getElementById('finding-type').value = 'observation';
       document.getElementById('finding-ml-flag').checked = false;
+      document.getElementById('finding-description').value = '';
+      document.getElementById('finding-impact').value = '';
+      document.getElementById('finding-recommendation').value = '';
       document.getElementById('finding-condition').value = '';
       document.getElementById('finding-criteria').value = '';
       document.getElementById('finding-cause').value = '';
       document.getElementById('finding-effect').value = '';
-      document.getElementById('finding-recommendation').value = '';
       document.getElementById('finding-mgmt-response').value = '';
       document.getElementById('finding-monetary').value = '';
       document.getElementById('finding-edit-id').value = '';
@@ -1645,18 +1655,20 @@
           document.getElementById('finding-severity').value = f.severity || 'medium';
           document.getElementById('finding-type').value = f.finding_type || 'observation';
           document.getElementById('finding-ml-flag').checked = !!f.is_management_letter_point;
+          document.getElementById('finding-description').value = f.condition || '';
+          document.getElementById('finding-impact').value = f.effect || '';
+          document.getElementById('finding-recommendation').value = f.recommendation || '';
           document.getElementById('finding-condition').value = f.condition || '';
           document.getElementById('finding-criteria').value = f.criteria || '';
           document.getElementById('finding-cause').value = f.cause || '';
           document.getElementById('finding-effect').value = f.effect || '';
-          document.getElementById('finding-recommendation').value = f.recommendation || '';
           document.getElementById('finding-mgmt-response').value = f.management_response || '';
           document.getElementById('finding-monetary').value = f.monetary_impact || '';
           document.getElementById('finding-edit-id').value = f.id;
           document.getElementById('finding-modal-title').textContent = 'Edit Finding';
           toggleAdjustingPanel();
-          // Show details section if any ISA fields are filled
-          if (f.condition || f.criteria || f.cause || f.effect || f.management_response || f.monetary_impact) {
+          // Show details section if any extra ISA fields are filled
+          if (f.criteria || f.cause || f.management_response || f.monetary_impact) {
             document.getElementById('finding-details-section').style.display = 'block';
           }
         }
@@ -1675,11 +1687,14 @@
       const severity = document.getElementById('finding-severity').value;
       const findingType = document.getElementById('finding-type').value;
       const isMlPoint = document.getElementById('finding-ml-flag').checked;
-      const condition = document.getElementById('finding-condition').value.trim();
+      const description = document.getElementById('finding-description').value.trim();
+      const impact = document.getElementById('finding-impact').value.trim();
+      const recommendation = document.getElementById('finding-recommendation').value.trim();
+      // ISA details (advanced) — description/impact override condition/effect if filled
+      const condition = description || document.getElementById('finding-condition').value.trim();
       const criteria = document.getElementById('finding-criteria').value.trim();
       const cause = document.getElementById('finding-cause').value.trim();
-      const effect = document.getElementById('finding-effect').value.trim();
-      const recommendation = document.getElementById('finding-recommendation').value.trim();
+      const effect = impact || document.getElementById('finding-effect').value.trim();
       const mgmtResponse = document.getElementById('finding-mgmt-response').value.trim();
       const monetaryRaw = document.getElementById('finding-monetary').value;
       const monetary = monetaryRaw ? parseFloat(monetaryRaw) : null;
