@@ -85,6 +85,12 @@
     <h2>Findings</h2>
     <div id="rpt-findings"><p class="no-data">Loading...</p></div>
 
+    <h2>Summary of Unadjusted Misstatements (ISA 450)</h2>
+    <div id="rpt-unadjusted"><p class="no-data">Loading...</p></div>
+
+    <h2>Outstanding Findings at Filing</h2>
+    <div id="rpt-outstanding"><p class="no-data">Loading...</p></div>
+
     <h2>Activity Log</h2>
     <div id="rpt-activity"><p class="no-data">Loading...</p></div>
   </div>
@@ -200,10 +206,41 @@
       if (findings.length === 0) {
         document.getElementById('rpt-findings').innerHTML = '<p class="no-data">No findings.</p>';
       } else {
-        document.getElementById('rpt-findings').innerHTML = '<table><thead><tr><th>Title</th><th>Section</th><th>Severity</th><th>Status</th></tr></thead><tbody>' +
+        document.getElementById('rpt-findings').innerHTML = '<table><thead><tr><th>Title</th><th>Section</th><th>Type</th><th>Severity</th><th>Status</th></tr></thead><tbody>' +
           findings.map(f => {
             const secName = sections.find(s => s.id === f.section_id)?.name || '—';
-            return `<tr><td>${esc(f.title)}</td><td>${esc(secName)}</td><td><span class="badge severity-${f.severity}">${f.severity}</span></td><td><span class="badge badge-${f.status}">${f.status}</span></td></tr>`;
+            const typeLabel = (f.finding_type || 'observation').replace(/_/g, ' ');
+            return `<tr><td>${esc(f.title)}${f.is_management_letter_point ? ' <span class="badge" style="background:#E0E7FF;color:#4338CA;font-size:9px;">ML</span>' : ''}</td><td>${esc(secName)}</td><td>${typeLabel}</td><td><span class="badge severity-${f.severity}">${f.severity}</span></td><td><span class="badge badge-${f.status}">${f.status}</span></td></tr>`;
+          }).join('') + '</tbody></table>';
+      }
+
+      // Summary of Unadjusted Misstatements (ISA 450)
+      const unadjusted = findings.filter(f => f.finding_type === 'misstatement' && f.status === 'open');
+      if (unadjusted.length === 0) {
+        document.getElementById('rpt-unadjusted').innerHTML = '<p class="no-data">No unadjusted misstatements.</p>';
+      } else {
+        document.getElementById('rpt-unadjusted').innerHTML =
+          '<table><thead><tr><th>Finding</th><th>Section</th><th>Severity</th><th>Monetary Impact</th><th>Partner Categorization</th></tr></thead><tbody>' +
+          unadjusted.map(f => {
+            const secName = sections.find(s => s.id === f.section_id)?.name || '—';
+            const amt = f.monetary_impact ? Number(f.monetary_impact).toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—';
+            const cat = f.close_category ? f.close_category.replace(/_/g, ' ') : 'Not categorized';
+            return `<tr><td>${esc(f.title)}</td><td>${esc(secName)}</td><td>${f.severity}</td><td>${amt}</td><td>${cat}</td></tr>`;
+          }).join('') + '</tbody></table>';
+      }
+
+      // Outstanding Findings at Filing
+      const outstanding = findings.filter(f => f.status === 'open');
+      if (outstanding.length === 0) {
+        document.getElementById('rpt-outstanding').innerHTML = '<p class="no-data">No outstanding findings at filing.</p>';
+      } else {
+        document.getElementById('rpt-outstanding').innerHTML =
+          '<table><thead><tr><th>Finding</th><th>Section</th><th>Type</th><th>Severity</th><th>Categorization</th><th>ML</th></tr></thead><tbody>' +
+          outstanding.map(f => {
+            const secName = sections.find(s => s.id === f.section_id)?.name || '—';
+            const typeLabel = (f.finding_type || 'observation').replace(/_/g, ' ');
+            const cat = f.close_category ? f.close_category.replace(/_/g, ' ') : '—';
+            return `<tr><td>${esc(f.title)}</td><td>${esc(secName)}</td><td>${typeLabel}</td><td>${f.severity}</td><td>${cat}</td><td>${f.is_management_letter_point ? 'Yes' : '—'}</td></tr>`;
           }).join('') + '</tbody></table>';
       }
 

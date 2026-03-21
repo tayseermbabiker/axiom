@@ -903,7 +903,10 @@
 
       section = data;
       engagementId = section.engagement_id;
-      isApproved = !!section.partner_approved_at;
+      // Interim: approved after supervisor sign-off. Final: after partner sign-off.
+      isApproved = section.phase === 'interim'
+        ? !!section.supervisor_approved_at
+        : !!section.partner_approved_at;
 
       // Fetch engagement for breadcrumb + shared folder + status
       const { data: eng } = await supabaseClient
@@ -929,6 +932,12 @@
 
       // Header
       document.getElementById('section-title').textContent = section.name;
+
+      // Phase badge
+      if (section.phase === 'interim') {
+        document.getElementById('section-title').insertAdjacentHTML('afterend',
+          ' <span class="badge" style="background:#EEF2FF;color:#4338CA;font-size:11px;padding:2px 8px;">Interim</span>');
+      }
 
       const statusLabel = (section.status || 'not_started').replace(/_/g, ' ');
       const statusBadge = document.getElementById('section-status-badge');
@@ -1701,7 +1710,8 @@
           ...findingData,
           section_id: sectionId,
           reported_by: currentUser.id,
-          status: 'open'
+          status: 'open',
+          identified_in_phase: section.phase || 'final'
         }).select().single();
         if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Save Finding'; return; }
         savedId = data.id;
@@ -1848,11 +1858,14 @@
 
       // Fully approved — read-only
       if (isApproved) {
-        const approvedDate = section.partner_approved_at ? new Date(section.partner_approved_at).toLocaleString() : '';
+        const approvedDate = section.phase === 'interim'
+          ? (section.supervisor_approved_at ? new Date(section.supervisor_approved_at).toLocaleString() : '')
+          : (section.partner_approved_at ? new Date(section.partner_approved_at).toLocaleString() : '');
+        const approvalLabel = section.phase === 'interim' ? 'Supervisor approval' : 'Final approval';
         let html = `
           <div class="approved-banner">
             <span class="badge badge-approved">Approved</span>
-            <span class="text-sm text-muted">Final approval on ${approvedDate}. All fields are read-only.</span>
+            <span class="text-sm text-muted">${approvalLabel} on ${approvedDate}. All fields are read-only.</span>
         `;
         if (can('reopen_section')) {
           html += `<button class="btn btn-outline btn-sm" style="margin-left:auto; color:#dc2626; border-color:#dc2626;" onclick="reopenSection()">Reopen Section</button>`;
@@ -1927,33 +1940,43 @@
       applyApprovedState();
     }
 
-    // ---- Supervisor approves → moves to partner ----
+    // ---- Supervisor approves ----
     async function supervisorApprove() {
+      const isInterim = section.phase === 'interim';
+      const msg = isInterim
+        ? 'Approve this interim section. This will mark it as complete.'
+        : 'Approve this section and send it to the engagement partner for final sign-off.';
+
       const ok = await showActionModal({
         title: 'Supervisor Approval',
-        message: 'Approve this section and send it to the engagement partner for final sign-off.',
+        message: msg,
         okLabel: 'Approve',
         okClass: 'btn-success'
       });
       if (!ok) return;
 
       const now = new Date().toISOString();
-      const { error } = await supabaseClient.from('audit_sections').update({
-        status: 'ready_for_partner_review',
-        supervisor_approved_by: currentUser.id,
-        supervisor_approved_at: now
-      }).eq('id', sectionId);
+      const updateData = isInterim
+        ? { status: 'approved', supervisor_approved_by: currentUser.id, supervisor_approved_at: now }
+        : { status: 'ready_for_partner_review', supervisor_approved_by: currentUser.id, supervisor_approved_at: now };
+
+      const { error } = await supabaseClient.from('audit_sections')
+        .update(updateData).eq('id', sectionId);
 
       if (error) { alert('Error: ' + error.message); return; }
 
-      section.status = 'ready_for_partner_review';
+      section.status = updateData.status;
       section.supervisor_approved_by = currentUser.id;
       section.supervisor_approved_at = now;
 
-      await logActivity(engagementId, 'supervisor_approved', 'section', sectionId, { name: section.name });
+      if (isInterim) isApproved = true;
+
+      await logActivity(engagementId, 'supervisor_approved', 'section', sectionId, {
+        name: section.name, phase: section.phase
+      });
 
       updateStatusBadge();
-      renderActions();
+      if (isInterim) applyApprovedState(); else renderActions();
     }
 
     // ---- Partner gives final approval ----

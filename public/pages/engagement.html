@@ -492,6 +492,26 @@
     </div>
   </div>
 
+  <!-- Closure Acknowledgment Modal -->
+  <div class="modal-overlay" id="modal-closure">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h3>Close Engagement — Acknowledge Open Findings</h3>
+        <button class="modal-close" onclick="closeModal('modal-closure')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px; color:var(--gray-600); margin-bottom:12px;">
+          The following findings are still open. Per ISA 450 and ISA 265, you must categorize each finding before closing the engagement file. This acknowledgment will be documented in the audit file.
+        </p>
+        <div id="closure-findings-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-closure')">Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-closure" onclick="confirmClosure()">Acknowledge &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- New Section Modal -->
   <div class="modal-overlay" id="modal-new-section">
     <div class="modal">
@@ -527,6 +547,13 @@
           <div class="form-group">
             <label>Assertions <span class="text-sm text-muted">(which audit assertions apply to this section?)</span></label>
             <div id="section-assertions-list" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;"></div>
+          </div>
+          <div class="form-group">
+            <label for="section-phase">Phase</label>
+            <select id="section-phase" class="form-control">
+              <option value="interim">Interim</option>
+              <option value="final" selected>Final</option>
+            </select>
           </div>
           <div class="form-group">
             <label for="section-assign">Assign To</label>
@@ -908,19 +935,22 @@
 
       if (currentRole === 'admin') {
         const totalSections = sections.length;
-        const approvedSections = sections.filter(s => s.status === 'approved').length;
-        const allApproved = totalSections > 0 && approvedSections === totalSections;
+        const finalSections = sections.filter(s => s.phase !== 'interim');
+        const approvedFinal = finalSections.filter(s => s.status === 'approved').length;
+        const allFinalApproved = finalSections.length > 0 && approvedFinal === finalSections.length;
+        const unapprovedFinal = finalSections.length - approvedFinal;
         const openFindings = findings.filter(f => f.status === 'open').length;
 
-        if (allApproved && openFindings === 0) {
-          container.innerHTML = '<button class="btn btn-success btn-sm" onclick="closeEngagement()">Close Engagement</button>';
-        } else if (totalSections > 0) {
-          let reasons = [];
-          if (approvedSections < totalSections) reasons.push((totalSections - approvedSections) + ' section(s) not approved');
-          if (openFindings > 0) reasons.push(openFindings + ' open finding(s)');
-          container.innerHTML = `<span class="text-sm text-muted" title="${reasons.join(', ')}">Cannot close: ${reasons.join(', ')}</span>`;
-        } else {
+        if (totalSections === 0) {
           container.innerHTML = '';
+        } else if (unapprovedFinal > 0) {
+          container.innerHTML = `<span class="text-sm text-muted">${unapprovedFinal} final section(s) not yet approved</span>`;
+        } else {
+          // All final sections approved — can close (open findings allowed with acknowledgment)
+          const label = openFindings > 0
+            ? 'Close Engagement (' + openFindings + ' open finding' + (openFindings !== 1 ? 's' : '') + ')'
+            : 'Close Engagement';
+          container.innerHTML = '<button class="btn btn-success btn-sm" onclick="closeEngagement()">' + label + '</button>';
         }
       } else {
         container.innerHTML = '';
@@ -929,24 +959,94 @@
 
     async function closeEngagement() {
       if (currentRole !== 'admin') { alert('Only partners can close engagements.'); return; }
+
+      const openFindings = findings.filter(f => f.status === 'open');
+
+      if (openFindings.length > 0) {
+        // Show categorization modal for open findings
+        openClosureModal(openFindings);
+        return;
+      }
+
+      // No open findings — simple close
       const ok = await showActionModal({
         title: 'Close Engagement',
-        message: 'Close this engagement?\n\nAll sections will become read-only. This marks the final file assembly date per ISA 230.\n\nYou can reopen it later if needed (logged as post-assembly change).',
+        message: 'Close this engagement?\n\nAll sections will become read-only. This marks the final file assembly date per ISA 230.\n\nYou can reopen it later if needed.',
         okLabel: 'Close Engagement',
-        okClass: 'btn-danger'
+        okClass: 'btn-success'
       });
       if (!ok) return;
 
+      await performClose();
+    }
+
+    function openClosureModal(openFindings) {
+      const list = openFindings.map(f => {
+        const secName = sections.find(s => s.id === f.section_id)?.name || '';
+        return `
+          <div style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--gray-100);">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:13px; font-weight:600;">${escHtml(f.title)}</div>
+              <div style="font-size:11px; color:var(--gray-500);">${escHtml(secName)} &middot; ${f.severity} &middot; ${(f.finding_type || 'observation').replace(/_/g, ' ')}</div>
+            </div>
+            <select class="form-control close-cat-select" data-finding-id="${f.id}" style="width:auto; padding:4px 8px; font-size:12px;">
+              <option value="">-- Categorize --</option>
+              <option value="unadjusted_immaterial">Unadjusted — immaterial</option>
+              <option value="communicated_to_management">Communicated to management</option>
+              <option value="control_deficiency_communicated">Control deficiency — communicated</option>
+              <option value="control_deficiency_significant">Significant deficiency — communicated to TCWG</option>
+              <option value="observation_no_action">Observation — no further action</option>
+            </select>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('closure-findings-list').innerHTML = list;
+      document.getElementById('modal-closure').classList.add('active');
+    }
+
+    async function confirmClosure() {
+      // Validate all findings are categorized
+      const selects = document.querySelectorAll('.close-cat-select');
+      const updates = [];
+      for (const sel of selects) {
+        if (!sel.value) {
+          alert('Please categorize all open findings before closing.');
+          return;
+        }
+        updates.push({ id: sel.dataset.findingId, close_category: sel.value });
+      }
+
+      const btn = document.getElementById('btn-confirm-closure');
+      btn.disabled = true;
+      btn.textContent = 'Closing...';
+
+      // Update each finding with its close category
+      for (const u of updates) {
+        await supabaseClient.from('findings').update({ close_category: u.close_category }).eq('id', u.id);
+      }
+
+      await performClose();
+
+      btn.disabled = false;
+      btn.textContent = 'Acknowledge & Close';
+      document.getElementById('modal-closure').classList.remove('active');
+    }
+
+    async function performClose() {
+      const now = new Date().toISOString();
       const { error } = await supabaseClient.from('engagements')
-        .update({ status: 'completed' })
+        .update({ status: 'completed', closed_by: currentUser.id, closed_at: now })
         .eq('id', engagementId);
 
       if (error) { alert('Error: ' + error.message); return; }
 
       engagement.status = 'completed';
+      const openCount = findings.filter(f => f.status === 'open').length;
       await logActivity(engagementId, 'closed_engagement', 'engagement', engagementId, {
         client_name: engagement.client_name,
-        sections_count: sections.length
+        sections_count: sections.length,
+        open_findings_acknowledged: openCount
       });
 
       renderEngagementActions();
@@ -1009,19 +1109,7 @@
     }
 
     // ---- Sections Tab ----
-    function renderSections() {
-      const list = document.getElementById('sections-list');
-      const empty = document.getElementById('sections-empty');
-
-      if (sections.length === 0) {
-        list.innerHTML = '';
-        empty.style.display = 'block';
-        return;
-      }
-
-      empty.style.display = 'none';
-
-      list.innerHTML = sections.map(sec => {
+    function renderSectionCard(sec) {
         const assignedName = sec.assigned_to ? (profileCache[sec.assigned_to] || 'Unknown') : '';
         const initials = assignedName ? assignedName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
         const STATUS_LABELS = {
@@ -1055,7 +1143,7 @@
           <a href="section.html#${sec.id}" class="sec-card">
             <div class="sec-card-top">
               <div class="sec-card-identity">
-                <div class="sec-card-name">${escHtml(sec.name)}</div>
+                <div class="sec-card-name">${escHtml(sec.name)} ${sec.phase === 'interim' ? '<span class="badge" style="background:#EEF2FF;color:#4338CA;font-size:10px;padding:1px 6px;margin-left:4px;">Interim</span>' : ''}</div>
                 ${tags ? '<div class="sec-card-tags">' + tags + '</div>' : ''}
               </div>
               <div class="sec-card-right">
@@ -1079,7 +1167,36 @@
             </div>
           </a>
         `;
-      }).join('');
+    }
+
+    function renderSections() {
+      const list = document.getElementById('sections-list');
+      const empty = document.getElementById('sections-empty');
+
+      if (sections.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      const interimSections = sections.filter(s => s.phase === 'interim');
+      const finalSections = sections.filter(s => s.phase !== 'interim');
+
+      let html = '';
+      if (interimSections.length > 0) {
+        html += '<div style="margin-bottom:8px;"><span style="font-size:12px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.5px;">Interim</span></div>';
+        html += interimSections.map(s => renderSectionCard(s)).join('');
+      }
+      if (finalSections.length > 0) {
+        if (interimSections.length > 0) {
+          html += '<div style="margin:16px 0 8px;"><span style="font-size:12px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.5px;">Final</span></div>';
+        }
+        html += finalSections.map(s => renderSectionCard(s)).join('');
+      }
+
+      list.innerHTML = html;
     }
 
     async function deleteSection(sectionId, sectionName) {
@@ -1205,6 +1322,7 @@
 
       const name = document.getElementById('section-name').value.trim();
       const assignTo = document.getElementById('section-assign').value || null;
+      const phase = document.getElementById('section-phase').value;
 
       // Determine sort_order
       const maxOrder = sections.reduce((max, s) => Math.max(max, s.sort_order || 0), 0);
@@ -1216,7 +1334,8 @@
         classification_tags: selectedTags,
         assertions: selectedAssertions,
         status: 'not_started',
-        sort_order: maxOrder + 1
+        sort_order: maxOrder + 1,
+        phase: phase
       }).select().single();
 
       if (error) {
