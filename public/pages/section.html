@@ -1452,19 +1452,19 @@
     }
 
     function isLinkInsideSharedFolder(fileUrl) {
-      if (!sharedFolderUrl) return true; // no folder set, skip validation
+      if (!sharedFolderUrl) return true;
       try {
         const shared = new URL(sharedFolderUrl);
         const file = new URL(fileUrl);
-        // Same domain check (drive.google.com, onedrive.live.com, sharepoint.com, etc.)
+        // Google Drive — subfolders don't embed parent path, so domain match is all we can do
+        if (shared.hostname.includes('google.com') || shared.hostname.includes('googleapis.com')) {
+          return file.hostname.includes('google.com') || file.hostname.includes('googleapis.com');
+        }
+        // OneDrive / SharePoint — check same domain + path prefix
         if (file.hostname !== shared.hostname) return false;
-        // For Google Drive: check if folder ID appears in the file URL
-        const gDriveFolderMatch = sharedFolderUrl.match(/folders\/([a-zA-Z0-9_-]+)/);
-        if (gDriveFolderMatch) return true; // Google Drive doesn't embed parent folder in file URLs, so domain match is best we can do
-        // For SharePoint/OneDrive: check if file path starts with shared folder path
         return file.pathname.startsWith(shared.pathname);
       } catch {
-        return true; // if URLs can't be parsed, don't block
+        return true;
       }
     }
 
