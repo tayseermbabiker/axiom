@@ -2011,21 +2011,13 @@
 
     // ---- Supervisor returns to preparer ----
     async function returnToPreparer() {
-      const reason = await showActionModal({
+      const ok = await showActionModal({
         title: 'Return to Preparer',
-        message: 'Provide a reason for returning this section. The preparer will see this note.',
-        inputLabel: 'Reason',
+        message: 'Return this section to the preparer? Make sure you have added your review comments above.',
         okLabel: 'Return Section',
         okClass: 'btn-returned'
       });
-      if (!reason) return;
-
-      await supabaseClient.from('review_notes').insert({
-        section_id: sectionId,
-        user_id: currentUser.id,
-        note: reason,
-        note_type: 'return_reason'
-      });
+      if (!ok) return;
 
       const { error } = await supabaseClient.from('audit_sections')
         .update({
@@ -2040,7 +2032,7 @@
       section.status = 'returned_to_preparer';
       section.supervisor_approved_by = null;
       section.supervisor_approved_at = null;
-      await logActivity(engagementId, 'returned_to_preparer', 'section', sectionId, { reason });
+      await logActivity(engagementId, 'returned_to_preparer', 'section', sectionId, { name: section.name });
 
       updateStatusBadge();
       renderActions();
@@ -2050,21 +2042,13 @@
 
     // ---- Partner returns to supervisor ----
     async function returnToSupervisor() {
-      const reason = await showActionModal({
+      const ok = await showActionModal({
         title: 'Return to Supervisor',
-        message: 'Provide a reason for returning this section to the supervisor.',
-        inputLabel: 'Reason',
+        message: 'Return this section to the supervisor? Make sure you have added your review comments above.',
         okLabel: 'Return to Supervisor',
         okClass: 'btn-returned'
       });
-      if (!reason) return;
-
-      await supabaseClient.from('review_notes').insert({
-        section_id: sectionId,
-        user_id: currentUser.id,
-        note: reason,
-        note_type: 'return_reason'
-      });
+      if (!ok) return;
 
       const { error } = await supabaseClient.from('audit_sections')
         .update({
@@ -2084,7 +2068,7 @@
       section.partner_approved_by = null;
       section.partner_approved_at = null;
 
-      await logActivity(engagementId, 'returned_to_supervisor', 'section', sectionId, { reason });
+      await logActivity(engagementId, 'returned_to_supervisor', 'section', sectionId, { name: section.name });
 
       updateStatusBadge();
       renderActions();
