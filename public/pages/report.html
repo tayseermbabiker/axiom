@@ -265,8 +265,8 @@
         html += '</tbody></table>';
       }
 
-      // Unadjusted misstatements
-      const unadjusted = filtFindings.filter(f => f.finding_type === 'misstatement' && f.status === 'open');
+      // Unadjusted misstatements — only misstatements with actual monetary impact
+      const unadjusted = filtFindings.filter(f => f.finding_type === 'misstatement' && f.status !== 'resolved');
       if (unadjusted.length > 0) {
         html += '<h3>Summary of Unadjusted Misstatements (ISA 450)</h3>';
         html += '<table><thead><tr><th>Finding</th><th>Section</th><th>Amount</th><th>Categorization</th></tr></thead><tbody>';
