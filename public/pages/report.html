@@ -329,16 +329,13 @@
         if (secProcs.length === 0) {
           html += '<p class="no-data">No procedures.</p>';
         } else {
-          html += '<table><thead><tr><th>Procedure</th><th>Type</th><th>Assertions</th><th>Work Performed</th><th>Status</th></tr></thead><tbody>';
+          html += '<table><thead><tr><th>Procedure</th><th>Type</th><th>Work Performed</th><th>Status</th></tr></thead><tbody>';
           for (const p of secProcs) {
             const resp = responses.find(r => r.procedure_id === p.id);
             const status = resp?.status || 'pending';
-            const assertions = (p.assertions || []).join(', ');
-            const work = resp?.response || '<span style="color:#9ca3af;font-style:italic;">No response</span>';
             html += `<tr>
               <td>${esc(p.description)}</td>
               <td>${esc(p.procedure_type.replace(/_/g, ' '))}</td>
-              <td style="font-size:10px;">${esc(assertions) || '—'}</td>
               <td>${resp?.response ? esc(resp.response) : '<span style="color:#dc2626;font-style:italic;">Not recorded</span>'}</td>
               <td><span class="badge b-${status}">${status}</span></td>
             </tr>`;
