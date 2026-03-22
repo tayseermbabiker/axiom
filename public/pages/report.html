@@ -248,18 +248,21 @@
       if (filtFindings.length === 0) {
         html += '<p class="no-data">No findings recorded.</p>';
       } else {
-        const adjFindingIds = new Set(adjustingEntries.map(a => a.finding_id));
-        html += '<table><thead><tr><th>Title</th><th>Section</th><th>Type</th><th>Severity</th><th>Status</th><th>ML</th><th>Adj. Entry</th></tr></thead><tbody>';
+        html += '<table><thead><tr><th>Finding Title</th><th>Section</th><th>Type</th><th>Severity</th><th>Status</th><th>ML</th><th>Adj.</th><th>Adj. Entry Status</th></tr></thead><tbody>';
         html += filtFindings.map(f => {
           const secName = sections.find(s => s.id === f.section_id)?.name || '—';
+          const fAdj = adjustingEntries.filter(a => a.finding_id === f.id);
+          const hasAdj = fAdj.length > 0;
+          const adjStatus = hasAdj ? (fAdj.every(a => a.is_posted) ? 'Posted' : 'Not Posted') : '';
           return `<tr>
             <td>${esc(f.title)}</td>
             <td>${esc(secName)}</td>
             <td>${(f.finding_type || 'observation').replace(/_/g, ' ')}</td>
-            <td><span class="badge b-${f.severity}">${f.severity}</span></td>
-            <td><span class="badge b-${f.status}">${f.status}</span></td>
+            <td><span style="color:${f.severity === 'high' ? '#991B1B' : f.severity === 'medium' ? '#92400E' : '#4B5563'};font-weight:600;">${f.severity.toUpperCase()}</span></td>
+            <td><span style="color:${f.status === 'open' ? '#92400E' : f.status === 'resolved' ? '#065F46' : '#1E40AF'};font-weight:600;">${f.status.toUpperCase()}</span></td>
             <td>${f.is_management_letter_point ? 'Yes' : ''}</td>
-            <td>${adjFindingIds.has(f.id) ? 'Yes' : ''}</td>
+            <td>${hasAdj ? 'Yes' : 'No'}</td>
+            <td>${adjStatus ? `<span style="color:${adjStatus === 'Posted' ? '#065F46' : '#92400E'};font-weight:600;">${adjStatus.toUpperCase()}</span>` : ''}</td>
           </tr>`;
         }).join('');
         html += '</tbody></table>';
@@ -358,6 +361,47 @@
           html += '</tbody></table>';
         }
 
+        // Section findings
+        if (secFindings.length > 0) {
+          html += '<h4>Findings Raised in This Section</h4>';
+          for (const f of secFindings) {
+            const adjEntries = adjustingEntries.filter(a => a.finding_id === f.id);
+            const sevColor = f.severity === 'high' ? '#991B1B' : f.severity === 'medium' ? '#92400E' : '#4B5563';
+            const statusColor = f.status === 'open' ? '#92400E' : f.status === 'resolved' ? '#065F46' : '#1E40AF';
+
+            html += `<div style="border:1px solid #D9D9D9; border-radius:4px; padding:14px 16px; margin-bottom:12px;">
+              <div style="font-weight:700; font-size:13px; margin-bottom:6px;">${esc(f.title)}
+                <span style="color:${sevColor}; font-size:11px; margin-left:8px;">${f.severity.toUpperCase()}</span>
+                <span style="color:${statusColor}; font-size:11px; margin-left:8px;">${f.status.toUpperCase()}</span>
+              </div>`;
+
+            if (f.condition) html += `<div style="margin-top:6px;"><span style="font-size:9px;font-weight:700;color:#1A3A5F;text-transform:uppercase;">Description</span><div style="font-size:11px;color:#374151;margin-top:2px;">${esc(f.condition)}</div></div>`;
+            if (f.effect) html += `<div style="margin-top:6px;"><span style="font-size:9px;font-weight:700;color:#1A3A5F;text-transform:uppercase;">Impact</span><div style="font-size:11px;color:#374151;margin-top:2px;">${esc(f.effect)}</div></div>`;
+            if (f.recommendation) html += `<div style="margin-top:6px;"><span style="font-size:9px;font-weight:700;color:#1A3A5F;text-transform:uppercase;">Recommendation</span><div style="font-size:11px;color:#374151;margin-top:2px;">${esc(f.recommendation)}</div></div>`;
+            if (f.management_response) html += `<div style="margin-top:6px;"><span style="font-size:9px;font-weight:700;color:#1A3A5F;text-transform:uppercase;">Management Response</span><div style="font-size:11px;color:#374151;margin-top:2px;">${esc(f.management_response)}</div></div>`;
+
+            // ML flag + Adjusting entry status inline
+            let footerParts = [];
+            if (f.is_management_letter_point) footerParts.push('<span style="color:#3730A3;font-weight:600;">ML</span> Management Letter Point');
+            else footerParts.push('No Management Letter point for this finding.');
+
+            if (adjEntries.length > 0) {
+              for (const a of adjEntries) {
+                html += `<div style="border:1px solid #FDE68A; background:#FFFBEB; border-radius:4px; padding:8px 12px; margin-top:8px; font-size:11px;">
+                  <strong>Adjusting Entry:</strong> Dr ${esc(a.debit_account)} / Cr ${esc(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  ${a.narration ? ' (' + esc(a.narration) + ')' : ''}
+                  <span style="color:${a.is_posted ? '#065F46' : '#92400E'}; font-weight:600; margin-left:8px;">${a.is_posted ? 'POSTED' : 'NOT POSTED'}</span>
+                </div>`;
+              }
+            } else {
+              footerParts.push('No adjusting entry.');
+            }
+
+            html += `<div style="font-size:10px; color:#6b7280; margin-top:10px; padding-top:8px; border-top:1px solid #EBEBEB;">${footerParts.join(' &nbsp;&nbsp;&nbsp; ')}</div>`;
+            html += '</div>';
+          }
+        }
+
         // Review notes table
         const significantNotes = secNotes.filter(n => n.note_type === 'review_comment' || n.note_type === 'return_reason');
         if (significantNotes.length > 0) {
@@ -375,38 +419,7 @@
         html += '</div>'; // wp-section
       }
 
-      // ===== 4. FINDINGS DETAIL =====
-      html += '<h2>Findings Detail</h2>';
-      if (filtFindings.length === 0) {
-        html += '<p class="no-data">No findings recorded.</p>';
-      } else {
-        for (const f of filtFindings) {
-          const secName = sections.find(s => s.id === f.section_id)?.name || '—';
-          const adjEntries = adjustingEntries.filter(a => a.finding_id === f.id);
-          html += `<div class="finding-block">
-            <div class="finding-title">${esc(f.title)} <span class="badge b-${f.severity}">${f.severity}</span> <span class="badge b-${f.status}">${f.status}</span>
-            ${f.is_management_letter_point ? ' <span class="badge b-ml">ML</span>' : ''}
-            </div>
-            <div class="finding-detail-label">Section</div><div class="finding-detail">${esc(secName)}</div>`;
-
-          if (f.condition) html += `<div class="finding-detail-label">Description</div><div class="finding-detail">${esc(f.condition)}</div>`;
-          if (f.effect) html += `<div class="finding-detail-label">Impact</div><div class="finding-detail">${esc(f.effect)}</div>`;
-          if (f.recommendation) html += `<div class="finding-detail-label">Recommendation</div><div class="finding-detail">${esc(f.recommendation)}</div>`;
-          if (f.management_response) html += `<div class="finding-detail-label">Management Response</div><div class="finding-detail">${esc(f.management_response)}</div>`;
-
-          for (const a of adjEntries) {
-            html += `<div class="adj-entry">
-              <strong>Adjusting Entry:</strong> Dr ${esc(a.debit_account)} / Cr ${esc(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              ${a.narration ? ' (' + esc(a.narration) + ')' : ''}
-              ${a.is_posted ? ' <span class="badge b-approved">Posted</span>' : ' <span class="badge b-open">Not posted</span>'}
-            </div>`;
-          }
-
-          html += '</div>';
-        }
-      }
-
-      // ===== 5. MANAGEMENT LETTER POINTS =====
+      // ===== 4. MANAGEMENT LETTER POINTS =====
       const mlFindings = filtFindings.filter(f => f.is_management_letter_point);
       html += '<h2>Management Letter Points</h2>';
       if (mlFindings.length === 0) {
