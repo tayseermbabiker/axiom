@@ -909,10 +909,8 @@
 
       section = data;
       engagementId = section.engagement_id;
-      // Interim: approved after supervisor sign-off. Final: after partner sign-off.
-      isApproved = section.phase === 'interim'
-        ? !!section.supervisor_approved_at
-        : !!section.partner_approved_at;
+      // Both interim and final require full three-level sign-off
+      isApproved = !!section.partner_approved_at;
 
       // Fetch engagement for breadcrumb + shared folder + status
       const { data: eng } = await supabaseClient
@@ -2010,10 +2008,8 @@
 
       // Fully approved — read-only
       if (isApproved) {
-        const approvedDate = section.phase === 'interim'
-          ? (section.supervisor_approved_at ? new Date(section.supervisor_approved_at).toLocaleString() : '')
-          : (section.partner_approved_at ? new Date(section.partner_approved_at).toLocaleString() : '');
-        const approvalLabel = section.phase === 'interim' ? 'Supervisor approval' : 'Final approval';
+        const approvedDate = section.partner_approved_at ? new Date(section.partner_approved_at).toLocaleString() : '';
+        const approvalLabel = 'Final approval';
         let html = `
           <div class="approved-banner">
             <span class="badge badge-approved">Approved</span>
@@ -2092,43 +2088,33 @@
       applyApprovedState();
     }
 
-    // ---- Supervisor approves ----
+    // ---- Supervisor approves → sends to partner ----
     async function supervisorApprove() {
-      const isInterim = section.phase === 'interim';
-      const msg = isInterim
-        ? 'Approve this interim section. This will mark it as complete.'
-        : 'Approve this section and send it to the engagement partner for final sign-off.';
-
       const ok = await showActionModal({
         title: 'Supervisor Approval',
-        message: msg,
+        message: 'Approve this section and send it to the engagement partner for final sign-off.',
         okLabel: 'Approve',
         okClass: 'btn-success'
       });
       if (!ok) return;
 
       const now = new Date().toISOString();
-      const updateData = isInterim
-        ? { status: 'approved', supervisor_approved_by: currentUser.id, supervisor_approved_at: now }
-        : { status: 'ready_for_partner_review', supervisor_approved_by: currentUser.id, supervisor_approved_at: now };
-
       const { error } = await supabaseClient.from('audit_sections')
-        .update(updateData).eq('id', sectionId);
+        .update({ status: 'ready_for_partner_review', supervisor_approved_by: currentUser.id, supervisor_approved_at: now })
+        .eq('id', sectionId);
 
       if (error) { alert('Error: ' + error.message); return; }
 
-      section.status = updateData.status;
+      section.status = 'ready_for_partner_review';
       section.supervisor_approved_by = currentUser.id;
       section.supervisor_approved_at = now;
-
-      if (isInterim) isApproved = true;
 
       await logActivity(engagementId, 'supervisor_approved', 'section', sectionId, {
         name: section.name, phase: section.phase
       });
 
       updateStatusBadge();
-      if (isInterim) applyApprovedState(); else renderActions();
+      renderActions();
     }
 
     // ---- Partner gives final approval ----
