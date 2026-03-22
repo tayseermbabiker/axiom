@@ -114,7 +114,7 @@ const PERMISSIONS = {
 
   // Review — three-level sign-off
   add_review_comment:       ['admin', 'supervisor'],
-  add_preparer_response:    ['admin', 'preparer'],
+  add_preparer_response:    ['admin', 'supervisor', 'preparer'],
   submit_for_review:        ['preparer'],
   supervisor_approve:       ['supervisor'],
   supervisor_return:        ['supervisor'],
