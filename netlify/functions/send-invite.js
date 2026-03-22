@@ -19,7 +19,7 @@ exports.handler = async (event) => {
     const roleName = (role || 'preparer').charAt(0).toUpperCase() + (role || 'preparer').slice(1);
 
     const { data, error } = await resend.emails.send({
-      from: 'Audexon <noreply@conferix.com>',
+      from: 'Audexon <noreply@audexon.com>',
       to: email,
       subject: `You've been invited to ${orgName} on Audexon`,
       html: `
