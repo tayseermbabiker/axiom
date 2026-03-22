@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Getting Started — Audexon</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; color: #1A1A2E; background: #F5F7FA; line-height: 1.7; }
+
+    .nav { background: #0A1A2F; padding: 0 24px; height: 56px; display: flex; align-items: center; }
+    .nav a { color: white; text-decoration: none; font-size: 20px; font-weight: 800; }
+    .nav a span { color: #3A7BFF; }
+
+    .hero { background: linear-gradient(135deg, #0A1A2F, #0F2647); padding: 60px 24px; text-align: center; }
+    .hero h1 { color: white; font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+    .hero p { color: rgba(255,255,255,0.6); font-size: 16px; max-width: 500px; margin: 0 auto; }
+
+    .content { max-width: 720px; margin: -40px auto 60px; padding: 0 24px; position: relative; }
+
+    .step { background: white; border-radius: 12px; border: 1px solid #E5E7EB; padding: 32px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .step-number { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #3A7BFF; color: white; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+    .step h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #0A1A2F; }
+    .step p { font-size: 14px; color: #6B7280; margin-bottom: 12px; }
+    .step ul { list-style: none; padding: 0; }
+    .step ul li { padding: 6px 0; font-size: 14px; color: #374151; display: flex; align-items: flex-start; gap: 8px; }
+    .step ul li::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #3A7BFF; margin-top: 8px; flex-shrink: 0; }
+    .step .tip { background: #EFF6FF; border-left: 3px solid #3A7BFF; padding: 10px 14px; border-radius: 4px; font-size: 13px; color: #1E40AF; margin-top: 12px; }
+
+    .roles-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+    .roles-table th { text-align: left; padding: 8px 12px; background: #F9FAFB; border-bottom: 2px solid #E5E7EB; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6B7280; }
+    .roles-table td { padding: 8px 12px; border-bottom: 1px solid #F3F4F6; }
+
+    .cta-box { background: #0A1A2F; border-radius: 12px; padding: 32px; text-align: center; margin-top: 20px; }
+    .cta-box h3 { color: white; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .cta-box p { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 20px; }
+    .cta-box a { display: inline-block; background: #3A7BFF; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
+
+    .footer { text-align: center; padding: 24px; font-size: 12px; color: #9CA3AF; }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 24px; }
+      .step { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="/">Audexon<span>.</span></a>
+  </nav>
+
+  <div class="hero">
+    <h1>Getting Started with Audexon</h1>
+    <p>Set up your firm, create your first engagement, and start auditing — in 10 minutes.</p>
+  </div>
+
+  <div class="content">
+
+    <div class="step">
+      <div class="step-number">1</div>
+      <h2>Create Your Firm</h2>
+      <p>Sign up at <strong>audexon.com</strong> and create your account. On the onboarding screen, choose "Create a firm", enter your firm name and the access code we sent you.</p>
+      <div class="tip">You become the <strong>Partner (Admin)</strong> automatically. You have full control over everything.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <h2>Invite Your Team</h2>
+      <p>Go to the <strong>Team</strong> page from the sidebar. Enter your colleague's email and choose their role.</p>
+      <table class="roles-table">
+        <thead>
+          <tr><th>Role</th><th>What they do</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Partner</strong></td><td>Creates engagements, final sign-off, closes files</td></tr>
+          <tr><td><strong>Supervisor</strong></td><td>Reviews work, first-level approval, returns to preparer</td></tr>
+          <tr><td><strong>Preparer</strong></td><td>Performs procedures, adds documents and findings, submits for review</td></tr>
+        </tbody>
+      </table>
+      <div class="tip">Team members just sign up with the email you invited — no access code needed for them.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <h2>Create an Engagement</h2>
+      <p>From the <strong>Dashboard</strong>, click <strong>"New Engagement"</strong>. Enter the client name, year-end date, and a shared folder link (Google Drive or OneDrive) where the team will store working papers.</p>
+      <div class="tip">Create a shared folder first (e.g. "ABC Corp 2025") and make sure all team members have access.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <h2>Upload the Trial Balance</h2>
+      <p>Inside the engagement, go to the <strong>Trial Balance</strong> tab and upload your TB from Excel or CSV. Map the columns (Account Code, Balance, Classification) and import.</p>
+      <ul>
+        <li>Choose a version label: <strong>Interim</strong> or <strong>Final</strong></li>
+        <li>Your TB classifications will be used to create sections</li>
+        <li>You can upload a new version later without losing previous data</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-number">5</div>
+      <h2>Create Sections</h2>
+      <p>Click <strong>"New Section"</strong> to create audit sections (e.g. Cash & Bank, Accounts Receivable). For each section:</p>
+      <ul>
+        <li>Pick the TB classification tags it covers</li>
+        <li>Choose assertions (Existence, Completeness, etc.)</li>
+        <li>Select <strong>Interim</strong> or <strong>Final</strong> phase</li>
+        <li>Assign it to a team member</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-number">6</div>
+      <h2>Add Audit Procedures</h2>
+      <p>Inside each section, add procedures one-by-one or <strong>upload from Excel</strong> (click "Upload from Excel" and use the template).</p>
+      <ul>
+        <li>The preparer opens each procedure, describes what they did, and links working papers</li>
+        <li>Mark procedures as done when complete</li>
+        <li>Add findings if issues are discovered</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-number">7</div>
+      <h2>Review & Sign-Off</h2>
+      <p>The workflow follows three levels:</p>
+      <ul>
+        <li><strong>Preparer</strong> completes work and clicks "Send to Supervisor for Review"</li>
+        <li><strong>Supervisor</strong> reviews, adds review comments, then approves or returns</li>
+        <li><strong>Partner</strong> gives final approval or returns to supervisor</li>
+      </ul>
+      <div class="tip">Review notes appear as a conversation thread at the bottom of each section.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">8</div>
+      <h2>Close & Export</h2>
+      <p>Once all final sections are approved:</p>
+      <ul>
+        <li>Click <strong>"Close Engagement"</strong> from the engagement page</li>
+        <li>If there are open findings, you'll be asked to categorize each one</li>
+        <li>Click <strong>"Export PDF"</strong> to generate the audit file for filing</li>
+        <li>Use the phase filter to export Interim only, Final only, or All</li>
+      </ul>
+    </div>
+
+    <div class="cta-box">
+      <h3>Ready to start?</h3>
+      <p>Create your account and set up your first engagement.</p>
+      <a href="/pages/login.html">Sign In / Sign Up</a>
+    </div>
+
+  </div>
+
+  <div class="footer">Audexon — Built for auditors who move fast.</div>
+
+</body>
+</html>
