@@ -363,7 +363,7 @@
 
         // Section findings
         if (secFindings.length > 0) {
-          html += '<h4>Findings Raised in This Section</h4>';
+          html += '<h4>Finding Details</h4>';
           for (const f of secFindings) {
             const adjEntries = adjustingEntries.filter(a => a.finding_id === f.id);
             const sevColor = f.severity === 'high' ? '#991B1B' : f.severity === 'medium' ? '#92400E' : '#4B5563';
