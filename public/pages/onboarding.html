@@ -161,10 +161,7 @@
     }
 
     // Valid access codes (change these as needed)
-    const VALID_CODES = [
-      { code: 'AUDEXON-BETA-2026', expires: '2026-06-22' },
-      { code: 'AUDEXON-PILOT-2026', expires: '2026-06-22' }
-    ];
+    const VALID_CODES = ['AUDEXON-BETA-2026', 'AUDEXON-PILOT-2026'];
 
     // Create firm
     document.getElementById('form-create-firm').addEventListener('submit', async (e) => {
@@ -178,8 +175,7 @@
       const accessCode = document.getElementById('access-code').value.trim().toUpperCase();
 
       // Validate access code
-      const codeEntry = VALID_CODES.find(c => c.code === accessCode);
-      if (!codeEntry) {
+      if (!VALID_CODES.includes(accessCode)) {
         const errEl = document.getElementById('code-error');
         errEl.textContent = 'Invalid access code. Contact us to get your code.';
         errEl.style.display = 'block';
@@ -187,22 +183,18 @@
         btn.textContent = 'Create Firm';
         return;
       }
-      if (new Date() > new Date(codeEntry.expires)) {
-        const errEl = document.getElementById('code-error');
-        errEl.textContent = 'This access code has expired. Contact us for a new one.';
-        errEl.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Create Firm';
-        return;
-      }
 
       try {
-        // Create organization
+        // Create organization with 3-month trial
+        const trialEnd = new Date();
+        trialEnd.setMonth(trialEnd.getMonth() + 3);
+
         const { data: org, error: orgErr } = await supabaseClient
           .from('organizations')
           .insert({
             name: firmName,
-            created_by: currentUser.id
+            created_by: currentUser.id,
+            trial_expires_at: trialEnd.toISOString()
           })
           .select()
           .single();

@@ -15,6 +15,12 @@ async function requireAuth() {
       window.location.href = '/pages/onboarding.html';
       return null;
     }
+
+    // Check trial expiry
+    if (org.trial_expires_at && new Date() > new Date(org.trial_expires_at)) {
+      document.body.innerHTML = '<div style="font-family:Inter,sans-serif;max-width:480px;margin:100px auto;text-align:center;padding:40px;"><h2 style="margin-bottom:12px;">Trial Expired</h2><p style="color:#6B7280;margin-bottom:24px;">Your 3-month free trial has ended. Contact us to continue using Audexon.</p><a href="mailto:support@audexon.com" style="color:#3A7BFF;">support@audexon.com</a></div>';
+      return null;
+    }
   }
 
   return session.user;
