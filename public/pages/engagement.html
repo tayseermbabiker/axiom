@@ -589,6 +589,10 @@
               <option value="Operating Expenses">Operating Expenses</option>
               <option value="Tax">Tax</option>
               <option value="Loans & Borrowings">Loans & Borrowings</option>
+              <option value="Equity & Share Capital">Equity & Share Capital</option>
+              <option value="Related Parties">Related Parties</option>
+              <option value="Subsequent Events">Subsequent Events</option>
+              <option value="Going Concern">Going Concern</option>
               <option value="custom">Custom section...</option>
             </select>
             <input type="text" id="section-name" class="form-control mt-8" placeholder="Type your section name" required style="display:none;">
@@ -1368,6 +1372,8 @@
         { description: 'Verify restricted cash balances and confirm any liens or pledges', type: 'test_of_detail' },
         { description: 'Perform analytical review of interest income against average balances', type: 'analytical' },
         { description: 'Test controls over bank payment authorization and signatories', type: 'controls' },
+        { description: 'Review bank accounts opened or closed during the year and confirm proper inclusion in reconciliations', type: 'test_of_detail' },
+        { description: 'Review for unusual bank transactions (large, round-sum, related-party payments) and obtain explanations', type: 'test_of_detail' },
       ],
       'Accounts Receivable': [
         { description: 'Send confirmations to a sample of trade receivable balances', type: 'test_of_detail' },
@@ -1402,6 +1408,7 @@
         { description: 'Physically inspect a sample of significant assets', type: 'test_of_detail' },
         { description: 'Assess indicators of impairment for significant asset classes', type: 'analytical' },
         { description: 'Test controls over capital expenditure authorization', type: 'controls' },
+        { description: 'Review repairs and maintenance accounts for items that should be capitalised', type: 'test_of_detail' },
       ],
       'Inventory': [
         { description: 'Attend the physical inventory count and perform test counts', type: 'test_of_detail' },
@@ -1409,6 +1416,8 @@
         { description: 'Review inventory aging and test the provision for slow-moving or obsolete items', type: 'test_of_detail' },
         { description: 'Test inventory cutoff — examine goods received and dispatched around year-end', type: 'test_of_detail' },
         { description: 'Perform analytical review of inventory turnover and compare to prior year', type: 'analytical' },
+        { description: 'Evaluate write-down methodology for net realisable value on slow-moving items', type: 'test_of_detail' },
+        { description: 'Where inventory is held by third parties, obtain confirmation of quantities and terms', type: 'test_of_detail' },
       ],
       'Payroll & HR': [
         { description: 'Select a sample of employees and agree pay rates to HR records and contracts', type: 'test_of_detail' },
@@ -1438,6 +1447,36 @@
         { description: 'Recalculate interest expense and agree to bank statements', type: 'test_of_detail' },
         { description: 'Review loan covenants and assess compliance', type: 'test_of_detail' },
         { description: 'Test proper classification between current and non-current', type: 'test_of_detail' },
+        { description: 'Test effective interest calculation for instruments with fees or variable rates', type: 'test_of_detail' },
+      ],
+      'Equity & Share Capital': [
+        { description: 'Agree opening balances to prior year audited financial statements', type: 'test_of_detail' },
+        { description: 'Test share capital movements — agree to board resolutions, filings, and bank receipts', type: 'test_of_detail' },
+        { description: 'Test dividend declarations and payments — agree to board minutes and bank records', type: 'test_of_detail' },
+        { description: 'Review retained earnings roll-forward and agree to profit for the year', type: 'test_of_detail' },
+        { description: 'Verify statutory reserve transfers comply with local law requirements', type: 'test_of_detail' },
+      ],
+      'Related Parties': [
+        { description: 'Obtain management representation on completeness of related party disclosures', type: 'test_of_detail' },
+        { description: 'Review board minutes, contracts, and agreements for related party transactions', type: 'test_of_detail' },
+        { description: 'Test a sample of related party transactions for arm\'s length terms and proper authorization', type: 'test_of_detail' },
+        { description: 'Confirm significant related party balances at year-end', type: 'test_of_detail' },
+        { description: 'Review disclosures for completeness per IAS 24 / applicable framework', type: 'test_of_detail' },
+      ],
+      'Subsequent Events': [
+        { description: 'Review post year-end board minutes for significant events or decisions', type: 'test_of_detail' },
+        { description: 'Review post year-end management accounts and investigate unusual items', type: 'test_of_detail' },
+        { description: 'Inquire of management about events after the reporting date', type: 'test_of_detail' },
+        { description: 'Review post year-end bank statements and legal correspondence', type: 'test_of_detail' },
+        { description: 'Assess whether adjusting or non-adjusting events require disclosure', type: 'test_of_detail' },
+      ],
+      'Going Concern': [
+        { description: 'Evaluate management\'s going concern assessment and supporting cash flow forecasts', type: 'analytical' },
+        { description: 'Review financing arrangements and available credit facilities', type: 'test_of_detail' },
+        { description: 'Assess covenant compliance and upcoming debt maturities', type: 'test_of_detail' },
+        { description: 'Inquire of management about plans to address any liquidity concerns', type: 'test_of_detail' },
+        { description: 'Review disclosures related to going concern in the financial statements', type: 'test_of_detail' },
+        { description: 'Perform analytical review of key financial ratios and trends', type: 'analytical' },
       ],
     };
     let selectedTags = [];
