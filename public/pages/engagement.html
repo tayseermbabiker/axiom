@@ -401,6 +401,7 @@
         <button class="tab-btn active" onclick="switchTab('sections')">Sections</button>
         <button class="tab-btn" onclick="switchTab('tb')">Trial Balance</button>
         <button class="tab-btn" onclick="switchTab('findings')">Findings</button>
+        <button class="tab-btn" onclick="switchTab('materiality')">Materiality</button>
         <button class="tab-btn" onclick="switchTab('activity')">Activity Log</button>
       </div>
 
@@ -457,6 +458,58 @@
         <div class="findings-card-list" id="findings-list"></div>
         <div class="empty-state" id="findings-empty" style="display:none;">
           <p>No findings reported yet.</p>
+        </div>
+      </div>
+
+      <!-- Materiality Tab -->
+      <div class="tab-panel" id="tab-materiality">
+        <div class="card">
+          <div class="card-header"><h2>Materiality Calculator</h2></div>
+          <div class="card-body">
+            <div style="max-width:500px;">
+              <div class="form-group">
+                <label>Benchmark</label>
+                <select id="mat-benchmark" class="form-control" onchange="calcMateriality()">
+                  <option value="">-- Select benchmark --</option>
+                  <option value="pbt">Profit Before Tax</option>
+                  <option value="revenue">Revenue</option>
+                  <option value="assets">Total Assets</option>
+                  <option value="equity">Equity</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Benchmark Amount</label>
+                <input type="number" id="mat-amount" class="form-control" placeholder="Enter the benchmark amount" step="0.01" oninput="calcMateriality()">
+              </div>
+              <div class="form-group">
+                <label>Percentage (%)</label>
+                <input type="number" id="mat-pct" class="form-control" value="5" step="0.1" min="0.1" max="100" oninput="calcMateriality()">
+                <small style="color:var(--gray-500); font-size:11px;">Common ranges: PBT 5-10%, Revenue 0.5-1%, Total Assets 1-2%, Equity 2-5%</small>
+              </div>
+              <div class="form-group">
+                <label>Performance Materiality (%)</label>
+                <input type="number" id="mat-perf-pct" class="form-control" value="75" step="5" min="50" max="90" oninput="calcMateriality()">
+                <small style="color:var(--gray-500); font-size:11px;">Typically 50-75% of overall materiality</small>
+              </div>
+            </div>
+            <div id="mat-results" style="display:none; margin-top:20px; max-width:500px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+                <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
+                  <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Overall Materiality</div>
+                  <div id="mat-overall" style="font-size:20px; font-weight:700; color:var(--primary); margin-top:4px;">0</div>
+                </div>
+                <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
+                  <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Performance Materiality</div>
+                  <div id="mat-performance" style="font-size:20px; font-weight:700; color:#059669; margin-top:4px;">0</div>
+                </div>
+                <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
+                  <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Trivial Threshold (5%)</div>
+                  <div id="mat-trivial" style="font-size:20px; font-weight:700; color:var(--gray-600); margin-top:4px;">0</div>
+                </div>
+              </div>
+              <p style="font-size:11px; color:var(--gray-400); margin-top:12px;">Materiality is a matter of professional judgment. These calculations are a starting point — adjust based on the engagement circumstances.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1121,7 +1174,7 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
 
-      const tabMap = { sections: 0, tb: 1, findings: 2, activity: 3 };
+      const tabMap = { sections: 0, tb: 1, findings: 2, materiality: 3, activity: 4 };
       const idx = tabMap[tab];
       if (idx !== undefined) {
         document.querySelectorAll('.tab-btn')[idx].classList.add('active');
@@ -1131,6 +1184,28 @@
       if (panel) panel.classList.add('active');
 
       if (tab === 'activity') loadActivityLog();
+    }
+
+    function calcMateriality() {
+      const amount = parseFloat(document.getElementById('mat-amount').value) || 0;
+      const pct = parseFloat(document.getElementById('mat-pct').value) || 0;
+      const perfPct = parseFloat(document.getElementById('mat-perf-pct').value) || 75;
+
+      if (amount <= 0 || pct <= 0) {
+        document.getElementById('mat-results').style.display = 'none';
+        return;
+      }
+
+      const overall = Math.round(amount * (pct / 100));
+      const performance = Math.round(overall * (perfPct / 100));
+      const trivial = Math.round(overall * 0.05);
+
+      const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 0 });
+
+      document.getElementById('mat-overall').textContent = fmt(overall);
+      document.getElementById('mat-performance').textContent = fmt(performance);
+      document.getElementById('mat-trivial').textContent = fmt(trivial);
+      document.getElementById('mat-results').style.display = 'block';
     }
 
     // ---- Sections Tab ----
@@ -1282,6 +1357,89 @@
     }
 
     const ALL_ASSERTIONS = ['Existence', 'Completeness', 'Accuracy', 'Valuation', 'Rights & Obligations', 'Presentation', 'Cut-off'];
+
+    // Standard audit procedure templates per section type
+    const PROCEDURE_TEMPLATES = {
+      'Cash & Bank': [
+        { description: 'Obtain bank confirmations for all bank accounts as at the reporting date', type: 'test_of_detail' },
+        { description: 'Test bank reconciliations — agree balances to bank statements and GL', type: 'test_of_detail' },
+        { description: 'Investigate outstanding reconciling items over 30 days', type: 'test_of_detail' },
+        { description: 'Test a sample of cash receipts and disbursements around year-end for proper cutoff', type: 'test_of_detail' },
+        { description: 'Verify restricted cash balances and confirm any liens or pledges', type: 'test_of_detail' },
+        { description: 'Perform analytical review of interest income against average balances', type: 'analytical' },
+        { description: 'Test controls over bank payment authorization and signatories', type: 'controls' },
+      ],
+      'Accounts Receivable': [
+        { description: 'Send confirmations to a sample of trade receivable balances', type: 'test_of_detail' },
+        { description: 'Perform aging analysis and test the allowance for doubtful accounts', type: 'test_of_detail' },
+        { description: 'Test subsequent cash receipts for balances outstanding at year-end', type: 'test_of_detail' },
+        { description: 'Vouch a sample of sales invoices to supporting documents (contracts, delivery notes)', type: 'test_of_detail' },
+        { description: 'Test revenue cutoff — examine invoices and credit notes around year-end', type: 'test_of_detail' },
+        { description: 'Perform analytical review of receivable days and compare to prior year', type: 'analytical' },
+        { description: 'Test credit approval controls for new customers', type: 'controls' },
+      ],
+      'Accounts Payable': [
+        { description: 'Select a sample of supplier balances and agree to supplier statements or confirmations', type: 'test_of_detail' },
+        { description: 'Search for unrecorded liabilities — examine post year-end payments and invoices', type: 'test_of_detail' },
+        { description: 'Test purchase cutoff — examine invoices and goods received notes around year-end', type: 'test_of_detail' },
+        { description: 'Perform aging analysis and investigate old outstanding balances', type: 'test_of_detail' },
+        { description: 'Perform analytical review of payable days and compare to prior year', type: 'analytical' },
+        { description: 'Test controls over invoice approval and three-way matching', type: 'controls' },
+      ],
+      'Revenue': [
+        { description: 'Vouch a sample of revenue transactions to contracts, delivery notes, and invoices', type: 'test_of_detail' },
+        { description: 'Test revenue cutoff — examine sales around year-end for proper period recognition', type: 'test_of_detail' },
+        { description: 'Test credit notes and returns issued after year-end', type: 'test_of_detail' },
+        { description: 'Perform analytical review of revenue by month, product line, or customer', type: 'analytical' },
+        { description: 'Compare gross margins to prior year and industry benchmarks', type: 'analytical' },
+        { description: 'Test controls over sales order approval and invoicing', type: 'controls' },
+      ],
+      'PPE / Fixed Assets': [
+        { description: 'Obtain the fixed asset register and agree totals to GL', type: 'test_of_detail' },
+        { description: 'Vouch a sample of additions to invoices, contracts, and board approvals', type: 'test_of_detail' },
+        { description: 'Test a sample of disposals for proper accounting and authorization', type: 'test_of_detail' },
+        { description: 'Recalculate depreciation for a sample of assets and test useful life assumptions', type: 'test_of_detail' },
+        { description: 'Physically inspect a sample of significant assets', type: 'test_of_detail' },
+        { description: 'Assess indicators of impairment for significant asset classes', type: 'analytical' },
+        { description: 'Test controls over capital expenditure authorization', type: 'controls' },
+      ],
+      'Inventory': [
+        { description: 'Attend the physical inventory count and perform test counts', type: 'test_of_detail' },
+        { description: 'Test inventory pricing — agree unit costs to recent purchase invoices or production records', type: 'test_of_detail' },
+        { description: 'Review inventory aging and test the provision for slow-moving or obsolete items', type: 'test_of_detail' },
+        { description: 'Test inventory cutoff — examine goods received and dispatched around year-end', type: 'test_of_detail' },
+        { description: 'Perform analytical review of inventory turnover and compare to prior year', type: 'analytical' },
+      ],
+      'Payroll & HR': [
+        { description: 'Select a sample of employees and agree pay rates to HR records and contracts', type: 'test_of_detail' },
+        { description: 'Recalculate gross-to-net pay for a sample of payroll runs', type: 'test_of_detail' },
+        { description: 'Test end-of-service benefit / gratuity provision calculations', type: 'test_of_detail' },
+        { description: 'Test leave provision by agreeing balances to HR records', type: 'test_of_detail' },
+        { description: 'Perform analytical review of total payroll cost by month and department', type: 'analytical' },
+        { description: 'Test controls over new hires, terminations, and payroll changes', type: 'controls' },
+      ],
+      'Operating Expenses': [
+        { description: 'Perform analytical review of operating expenses by category and compare to prior year and budget', type: 'analytical' },
+        { description: 'Investigate significant variances and unusual items', type: 'analytical' },
+        { description: 'Vouch a sample of expenses to supporting invoices and approvals', type: 'test_of_detail' },
+        { description: 'Test expense cutoff — examine invoices around year-end', type: 'test_of_detail' },
+        { description: 'Review prepaid expenses and accruals for reasonableness', type: 'test_of_detail' },
+      ],
+      'Tax': [
+        { description: 'Obtain and review the corporate tax computation', type: 'test_of_detail' },
+        { description: 'Test the tax provision calculation and agree to the tax return', type: 'test_of_detail' },
+        { description: 'Review deferred tax calculations and assess recoverability', type: 'test_of_detail' },
+        { description: 'Review VAT returns and reconcile to GL balances', type: 'test_of_detail' },
+        { description: 'Obtain confirmation of tax status and any ongoing disputes', type: 'test_of_detail' },
+      ],
+      'Loans & Borrowings': [
+        { description: 'Obtain bank confirmations for all loan balances and terms', type: 'test_of_detail' },
+        { description: 'Agree loan balances to amortization schedules and GL', type: 'test_of_detail' },
+        { description: 'Recalculate interest expense and agree to bank statements', type: 'test_of_detail' },
+        { description: 'Review loan covenants and assess compliance', type: 'test_of_detail' },
+        { description: 'Test proper classification between current and non-current', type: 'test_of_detail' },
+      ],
+    };
     let selectedTags = [];
     let selectedAssertions = [];
 
@@ -1396,6 +1554,18 @@
       }
 
       await logActivity(engagementId, 'created_section', 'audit_section', data.id, { name: name });
+
+      // Auto-populate standard procedures from template
+      const templateProcs = PROCEDURE_TEMPLATES[name];
+      if (templateProcs && templateProcs.length > 0) {
+        const procsToInsert = templateProcs.map((p, i) => ({
+          section_id: data.id,
+          description: p.description,
+          procedure_type: p.type,
+          sort_order: i + 1
+        }));
+        await supabaseClient.from('audit_procedures').insert(procsToInsert);
+      }
 
       closeModal('modal-new-section');
       btn.disabled = false;
