@@ -243,7 +243,34 @@
         </div>
       `;
 
-      // ===== 2. FINDINGS & MISSTATEMENTS SUMMARY =====
+      // ===== 2. PLANNING & MATERIALITY =====
+      if (eng.materiality_overall) {
+        const benchLabels = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
+        const benchLabel = benchLabels[eng.materiality_benchmark] || eng.materiality_benchmark || '—';
+        const fmt = (n) => Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 });
+
+        html += '<h2>Planning & Materiality</h2>';
+        html += `<table>
+          <thead><tr><th>Item</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Benchmark</td><td>${esc(benchLabel)}</td></tr>
+            <tr><td>Benchmark Amount</td><td>${fmt(eng.materiality_amount)}</td></tr>
+            <tr><td>Percentage Applied</td><td>${eng.materiality_pct}%</td></tr>
+            <tr><td><strong>Overall Materiality</strong></td><td><strong>${fmt(eng.materiality_overall)}</strong></td></tr>
+            <tr><td>Performance Materiality (${eng.materiality_perf_pct || 75}%)</td><td>${fmt(eng.materiality_performance)}</td></tr>
+            <tr><td>Clearly Trivial Threshold (${eng.materiality_trivial_pct || 5}%)</td><td>${fmt(eng.materiality_trivial)}</td></tr>
+          </tbody>
+        </table>`;
+
+        if (eng.materiality_rationale) {
+          html += `<div style="background:#F5F7FA; border-left:3px solid #1A3A5F; padding:10px 14px; margin-bottom:16px; font-size:12px;">
+            <div style="font-size:9px; font-weight:700; color:#1A3A5F; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Rationale (ISA 320)</div>
+            ${esc(eng.materiality_rationale)}
+          </div>`;
+        }
+      }
+
+      // ===== 3. FINDINGS & MISSTATEMENTS SUMMARY =====
       html += '<h2>Summary of Findings</h2>';
       if (filtFindings.length === 0) {
         html += '<p class="no-data">No findings recorded.</p>';
