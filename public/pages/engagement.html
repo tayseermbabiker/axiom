@@ -493,6 +493,13 @@
                   <input type="number" id="mat-perf-pct" class="form-control" value="75" step="5" min="50" max="90" oninput="calcMateriality()">
                   <small style="color:var(--gray-500); font-size:11px;">Typically 50-75% of overall materiality</small>
                 </div>
+                <div class="form-group">
+                  <label>Rationale <span class="text-sm text-muted">— why this benchmark and percentage? (ISA 320)</span></label>
+                  <textarea id="mat-rationale" class="form-control" rows="2" placeholder="e.g. PBT selected as the entity is profit-oriented. 5% applied as there are no significant risk factors."></textarea>
+                </div>
+                <div id="mat-warning" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:12px; color:#991B1B;">
+                  Benchmark amount is negative or zero. Consider using Revenue, Total Assets, or Equity instead (ISA 320).
+                </div>
               </div>
             </div>
             <!-- Results (visible to all) -->
@@ -1225,12 +1232,17 @@
         document.getElementById('mat-results').style.display = 'block';
         document.getElementById('mat-not-set').style.display = 'none';
 
+        if (engagement.materiality_rationale) {
+          document.getElementById('mat-benchmark-info').textContent += '\n' + engagement.materiality_rationale;
+        }
+
         // Pre-fill calculator for partner
         if (isPartner) {
           document.getElementById('mat-benchmark').value = engagement.materiality_benchmark || '';
           document.getElementById('mat-amount').value = engagement.materiality_amount || '';
           document.getElementById('mat-pct').value = engagement.materiality_pct || 5;
           document.getElementById('mat-perf-pct').value = engagement.materiality_perf_pct || 75;
+          document.getElementById('mat-rationale').value = engagement.materiality_rationale || '';
         }
       } else {
         document.getElementById('mat-results').style.display = 'none';
@@ -1242,6 +1254,14 @@
       const amount = parseFloat(document.getElementById('mat-amount').value) || 0;
       const pct = parseFloat(document.getElementById('mat-pct').value) || 0;
       const perfPct = parseFloat(document.getElementById('mat-perf-pct').value) || 75;
+
+      // Show warning for negative/zero benchmark
+      const warning = document.getElementById('mat-warning');
+      if (amount <= 0 && document.getElementById('mat-amount').value) {
+        warning.style.display = 'block';
+      } else {
+        warning.style.display = 'none';
+      }
 
       if (amount <= 0 || pct <= 0) {
         document.getElementById('mat-results').style.display = 'none';
@@ -1275,6 +1295,8 @@
       const performance = Math.round(overall * (perfPct / 100));
       const trivial = Math.round(overall * 0.05);
 
+      const rationale = document.getElementById('mat-rationale').value.trim();
+
       const { error } = await supabaseClient.from('engagements').update({
         materiality_benchmark: benchmark,
         materiality_amount: amount,
@@ -1282,7 +1304,8 @@
         materiality_perf_pct: perfPct,
         materiality_overall: overall,
         materiality_performance: performance,
-        materiality_trivial: trivial
+        materiality_trivial: trivial,
+        materiality_rationale: rationale
       }).eq('id', engagementId);
 
       if (error) { alert('Error: ' + error.message); return; }

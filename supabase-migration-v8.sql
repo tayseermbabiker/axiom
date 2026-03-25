@@ -10,3 +10,4 @@ alter table engagements add column if not exists materiality_perf_pct numeric de
 alter table engagements add column if not exists materiality_overall numeric;
 alter table engagements add column if not exists materiality_performance numeric;
 alter table engagements add column if not exists materiality_trivial numeric;
+alter table engagements add column if not exists materiality_rationale text default '';
