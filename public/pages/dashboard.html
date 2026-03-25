@@ -514,6 +514,7 @@
             </div>
             <div class="eng-card-footer">
               <span class="eng-card-created">Created by ${escHtml(createdBy)} &middot; ${createdDate}</span>
+              ${currentRole === 'admin' ? `<button class="btn btn-outline btn-sm" onclick="event.preventDefault(); event.stopPropagation(); deleteEngagement('${e.id}', '${escHtml(e.client_name)}')" style="color:#B91C1C; border-color:#B91C1C; font-size:11px; padding:3px 8px;">Delete</button>` : ''}
             </div>
           </a>
         `;
@@ -528,6 +529,15 @@
 
     function closeModal(id) {
       document.getElementById(id).classList.remove('active');
+    }
+
+    async function deleteEngagement(engId, clientName) {
+      if (!confirm('Delete engagement "' + clientName + '"?\n\nThis will permanently delete all sections, procedures, findings, review notes, and documents.\n\nThis cannot be undone.')) return;
+
+      const { error } = await supabaseClient.from('engagements').delete().eq('id', engId);
+      if (error) { alert('Error: ' + error.message); return; }
+
+      await loadEngagements();
     }
 
     document.getElementById('form-new-engagement').addEventListener('submit', async (e) => {

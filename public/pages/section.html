@@ -1265,12 +1265,16 @@
                   <textarea class="form-control proc-response" id="resp-${proc.id}" rows="3" placeholder="Describe what you did for this procedure..."${isApproved ? ' disabled' : ''}>${escHtml(resp?.response || '')}</textarea>
                 </div>
 
-                ${!isApproved ? `
+                ${!isLockedForCurrentUser() ? `
                   <div class="flex gap-8 mb-16">
                     <button class="btn btn-primary btn-sm" onclick="saveResponse('${proc.id}')">Save</button>
                     <button class="btn btn-outline btn-sm" onclick="toggleResponseStatus('${proc.id}')">
                       Mark as ${status === 'pending' ? 'Done' : 'Pending'}
                     </button>
+                    ${can('add_procedure') ? `
+                      <button class="btn btn-outline btn-sm" onclick="editProcedure('${proc.id}')" style="margin-left:auto;">Edit</button>
+                      <button class="btn btn-outline btn-sm" onclick="deleteProcedure('${proc.id}')" style="color:var(--danger); border-color:var(--danger);">Delete</button>
+                    ` : ''}
                   </div>
                 ` : ''}
 
@@ -1338,6 +1342,51 @@
       document.getElementById('doc-modal-category').value = category;
       document.getElementById('doc-modal-title').textContent =
         category === 'working_paper' ? 'Add Working Paper' : 'Add Source Document';
+    }
+
+    async function editProcedure(procId) {
+      const proc = procedures.find(p => p.id === procId);
+      if (!proc) return;
+      const newDesc = await showActionModal({
+        title: 'Edit Procedure',
+        message: 'Update the procedure description.',
+        inputLabel: 'Description',
+        inputDefault: proc.description,
+        okLabel: 'Save',
+        okClass: 'btn-primary'
+      });
+      if (!newDesc || !newDesc.trim()) return;
+
+      const { error } = await supabaseClient.from('audit_procedures')
+        .update({ description: newDesc.trim() })
+        .eq('id', procId);
+      if (error) { alert('Error: ' + error.message); return; }
+
+      proc.description = newDesc.trim();
+      renderProcedures();
+    }
+
+    async function deleteProcedure(procId) {
+      const ok = await showActionModal({
+        title: 'Delete Procedure',
+        message: 'Delete this procedure and all its responses and documents? This cannot be undone.',
+        okLabel: 'Delete',
+        okClass: 'btn-danger'
+      });
+      if (!ok) return;
+
+      // Delete responses and documents first
+      const respIds = responses.filter(r => r.procedure_id === procId).map(r => r.id);
+      if (respIds.length > 0) {
+        await supabaseClient.from('documents').delete().in('procedure_response_id', respIds);
+        await supabaseClient.from('procedure_responses').delete().in('id', respIds);
+      }
+      const { error } = await supabaseClient.from('audit_procedures').delete().eq('id', procId);
+      if (error) { alert('Error: ' + error.message); return; }
+
+      await loadProcedures();
+      updateProgressBar();
+      applyApprovedState();
     }
 
     async function updateProcType(procId, newType) {
