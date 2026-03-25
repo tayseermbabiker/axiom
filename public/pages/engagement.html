@@ -494,6 +494,11 @@
                   <small style="color:var(--gray-500); font-size:11px;">Typically 50-75% of overall materiality</small>
                 </div>
                 <div class="form-group">
+                  <label>Clearly Trivial Threshold (%)</label>
+                  <input type="number" id="mat-trivial-pct" class="form-control" value="5" step="1" min="1" max="10" oninput="calcMateriality()">
+                  <small style="color:var(--gray-500); font-size:11px;">Typically 3-5% of overall materiality. No fixed ISA percentage — professional judgment.</small>
+                </div>
+                <div class="form-group">
                   <label>Rationale <span class="text-sm text-muted">— why this benchmark and percentage? (ISA 320)</span></label>
                   <textarea id="mat-rationale" class="form-control" rows="2" placeholder="e.g. PBT selected as the entity is profit-oriented. 5% applied as there are no significant risk factors."></textarea>
                 </div>
@@ -514,7 +519,7 @@
                   <div id="mat-performance" style="font-size:20px; font-weight:700; color:#059669; margin-top:4px;">—</div>
                 </div>
                 <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
-                  <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Trivial Threshold (5%)</div>
+                  <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Trivial Threshold (<span id="mat-trivial-pct-label">5</span>%)</div>
                   <div id="mat-trivial" style="font-size:20px; font-weight:700; color:var(--gray-600); margin-top:4px;">—</div>
                 </div>
               </div>
@@ -1242,6 +1247,7 @@
           document.getElementById('mat-amount').value = engagement.materiality_amount || '';
           document.getElementById('mat-pct').value = engagement.materiality_pct || 5;
           document.getElementById('mat-perf-pct').value = engagement.materiality_perf_pct || 75;
+          document.getElementById('mat-trivial-pct').value = engagement.materiality_trivial_pct || 5;
           document.getElementById('mat-rationale').value = engagement.materiality_rationale || '';
         }
       } else {
@@ -1268,15 +1274,18 @@
         return;
       }
 
+      const trivialPct = parseFloat(document.getElementById('mat-trivial-pct')?.value) || 5;
+
       const overall = Math.round(amount * (pct / 100));
       const performance = Math.round(overall * (perfPct / 100));
-      const trivial = Math.round(overall * 0.05);
+      const trivial = Math.round(overall * (trivialPct / 100));
 
       const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 0 });
 
       document.getElementById('mat-overall').textContent = fmt(overall);
       document.getElementById('mat-performance').textContent = fmt(performance);
       document.getElementById('mat-trivial').textContent = fmt(trivial);
+      document.getElementById('mat-trivial-pct-label').textContent = trivialPct;
       document.getElementById('mat-results').style.display = 'block';
     }
 
@@ -1291,9 +1300,11 @@
         return;
       }
 
+      const trivialPct = parseFloat(document.getElementById('mat-trivial-pct').value) || 5;
+
       const overall = Math.round(amount * (pct / 100));
       const performance = Math.round(overall * (perfPct / 100));
-      const trivial = Math.round(overall * 0.05);
+      const trivial = Math.round(overall * (trivialPct / 100));
 
       const rationale = document.getElementById('mat-rationale').value.trim();
 
@@ -1305,6 +1316,7 @@
         materiality_overall: overall,
         materiality_performance: performance,
         materiality_trivial: trivial,
+        materiality_trivial_pct: trivialPct,
         materiality_rationale: rationale
       }).eq('id', engagementId);
 
