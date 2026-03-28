@@ -778,6 +778,7 @@
       }
 
       await loadEngagement();
+      initMateriality();
       await Promise.all([loadOrgMembers(), loadSections(), loadTBLines(), loadFindings()]);
       updateStats();
     }
