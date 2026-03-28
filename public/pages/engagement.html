@@ -466,8 +466,8 @@
         <div class="card">
           <div class="card-header"><h2>Materiality</h2></div>
           <div class="card-body">
-            <!-- Partner: calculator + save -->
-            <div id="mat-calculator">
+            <!-- Partner: calculator + save (hidden by default, shown by JS for admin) -->
+            <div id="mat-calculator" style="display:none;">
               <div style="max-width:500px;">
                 <div class="form-group">
                   <label>Benchmark</label>
@@ -1215,11 +1215,9 @@
     function initMateriality() {
       const isPartner = currentRole === 'admin';
 
-      // Hide calculator for non-partners
-      if (!isPartner) {
-        document.getElementById('mat-calculator').style.display = 'none';
-        document.getElementById('btn-save-mat').style.display = 'none';
-      } else {
+      // Admin: show calculator + save. Others: hidden.
+      if (isPartner) {
+        document.getElementById('mat-calculator').style.display = 'block';
         document.getElementById('btn-save-mat').style.display = 'inline-flex';
       }
 
