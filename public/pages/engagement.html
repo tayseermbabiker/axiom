@@ -842,9 +842,9 @@
       if (!can('edit_shared_folder')) { alert('Only partners and supervisors can edit the shared folder.'); return; }
       const current = engagement.shared_folder_url || '';
       const url = await showActionModal({
-        title: 'Shared Folder',
-        message: 'Paste the shared Google Drive, OneDrive, or SharePoint folder URL.\n\nAll team members must have access to this folder.',
-        inputLabel: 'Folder URL',
+        title: 'Document Folder Link',
+        message: 'Paste the link to your cloud folder (Google Drive, OneDrive, Dropbox, etc.).\n\nHow to get it: open your cloud storage, right-click the folder, click "Share", then "Copy link".\n\nAll team members must have access to this folder.',
+        inputLabel: 'Paste folder link here',
         inputDefault: current,
         okLabel: 'Save'
       });
