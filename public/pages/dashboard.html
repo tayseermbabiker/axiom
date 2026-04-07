@@ -318,6 +318,30 @@
     </main>
   </div>
 
+  <!-- Welcome Overlay (first login only) -->
+  <div class="modal-overlay" id="welcome-overlay" style="display:none; z-index:1000;">
+    <div class="modal" style="max-width:460px; text-align:center; padding:40px 32px;">
+      <div style="margin-bottom:20px;">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--primary, #2563eb)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <h2 style="margin:0 0 12px; font-size:22px; color:var(--gray-900);">You're all set!</h2>
+      <p style="color:var(--gray-600); font-size:15px; line-height:1.6; margin:0 0 8px;">
+        Audexon runs right here in your browser.<br>
+        There is <strong>nothing to download or install</strong>.
+      </p>
+      <p style="color:var(--gray-500); font-size:14px; line-height:1.6; margin:0 0 24px;">
+        Bookmark this page and come back anytime.<br>
+        Works on your computer, phone, or tablet.
+      </p>
+      <button class="btn btn-primary" onclick="dismissWelcome()" style="padding:12px 40px; font-size:15px;">
+        Get Started
+      </button>
+    </div>
+  </div>
+
   <!-- New Engagement Modal -->
   <div class="modal-overlay" id="modal-new-engagement">
     <div class="modal">
@@ -414,6 +438,20 @@
       }
 
       await loadEngagements();
+
+      // Show welcome overlay on first login
+      const welcomeKey = 'audexon_welcome_seen_' + currentUser.id;
+      if (!localStorage.getItem(welcomeKey)) {
+        document.getElementById('welcome-overlay').style.display = '';
+        document.getElementById('welcome-overlay').classList.add('active');
+      }
+    }
+
+    function dismissWelcome() {
+      const welcomeKey = 'audexon_welcome_seen_' + currentUser.id;
+      localStorage.setItem(welcomeKey, '1');
+      document.getElementById('welcome-overlay').classList.remove('active');
+      document.getElementById('welcome-overlay').style.display = 'none';
     }
 
     async function loadEngagements() {
