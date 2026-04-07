@@ -1288,7 +1288,7 @@
                         ${d.description ? `<span class="doc-desc">${escHtml(d.description)}</span>` : ''}
                         <span class="doc-source">${escHtml(d.source_type || '')}</span>
                       </div>
-                    `).join('') : '<div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:10px 12px;"><p class="text-sm" style="color:#92400E; margin:0;">No work file links added yet.</p><p class="text-sm" style="color:#A16207; margin:4px 0 0;">Save your files in the shared drive, then paste the link here.</p></div>'}
+                    `).join('') : '<div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:10px 12px;"><p class="text-sm" style="color:#92400E; margin:0;">No work files linked yet — save your file in the shared drive, then paste its link here.</p></div>'}
                   </div>
                   ${!isApproved ? `<button class="btn btn-outline btn-sm mt-8" onclick="openDocModal('${proc.id}', 'working_paper')">+ Add Work File</button>` : ''}
                 </div>
@@ -1303,7 +1303,7 @@
                         ${d.description ? `<span class="doc-desc">${escHtml(d.description)}</span>` : ''}
                         <span class="doc-source">${escHtml(d.source_type || '')}</span>
                       </div>
-                    `).join('') : '<div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:10px 12px;"><p class="text-sm" style="color:#92400E; margin:0;">No client file links added yet.</p><p class="text-sm" style="color:#A16207; margin:4px 0 0;">Save your files in the shared drive, then paste the link here.</p></div>'}
+                    `).join('') : '<div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:10px 12px;"><p class="text-sm" style="color:#92400E; margin:0;">No client files linked yet — save your file in the shared drive, then paste its link here.</p></div>'}
                   </div>
                   ${!isApproved ? `<button class="btn btn-outline btn-sm mt-8" onclick="openDocModal('${proc.id}', 'source_document')">+ Add Client File</button>` : ''}
                 </div>
