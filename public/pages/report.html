@@ -383,7 +383,7 @@
           html += '<h4>Documents Referenced</h4>';
           html += '<table><thead><tr><th>File Name</th><th>Category</th><th>Description</th></tr></thead><tbody>';
           allSecDocs.forEach(d => {
-            html += `<tr><td>${esc(d.file_name)}</td><td><span class="doc-cat">${d.doc_category === 'working_paper' ? 'Working Paper' : 'Source Document'}</span></td><td>${esc(d.description || '—')}</td></tr>`;
+            html += `<tr><td>${esc(d.file_name)}</td><td><span class="doc-cat">${d.doc_category === 'working_paper' ? 'Work File' : 'Client File'}</span></td><td>${esc(d.description || '—')}</td></tr>`;
           });
           html += '</tbody></table>';
         }

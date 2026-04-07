@@ -588,7 +588,7 @@
   <div class="modal-overlay" id="modal-document">
     <div class="modal" style="max-width:520px;">
       <div class="modal-header">
-        <h3 id="doc-modal-title">Add Working Paper</h3>
+        <h3 id="doc-modal-title">Add Work File</h3>
         <button class="modal-close" onclick="closeModal('modal-document')">&times;</button>
       </div>
       <div class="modal-body">
@@ -597,8 +597,8 @@
         <div class="form-group">
           <label>Document Category</label>
           <select class="form-control" id="doc-modal-cat-select" onchange="updateDocModalTitle(this.value)">
-            <option value="working_paper">Working Paper (auditor's work)</option>
-            <option value="source_document">Source Document (client evidence)</option>
+            <option value="working_paper">My Work File (your analysis, calculations)</option>
+            <option value="source_document">Client File (invoices, contracts, receipts)</option>
           </select>
         </div>
         <div class="form-group">
@@ -606,9 +606,9 @@
           <input type="text" class="form-control" id="doc-modal-name" placeholder="e.g. PPE_Depreciation_Test.xlsx">
         </div>
         <div class="form-group">
-          <label>URL (paste link from Drive / OneDrive / SharePoint)</label>
+          <label>Paste the link from Google Drive or OneDrive</label>
           <input type="text" class="form-control" id="doc-modal-url" placeholder="https://drive.google.com/...">
-          <small style="color:var(--gray-500); font-size:11px; margin-top:4px; display:block;">Audexon does not store your files — only this link. Use restricted sharing (specific people) instead of "anyone with the link" for sensitive documents.</small>
+          <small style="color:var(--gray-500); font-size:11px; margin-top:4px; display:block;">Save the file in your shared drive first, then paste its link here.</small>
         </div>
         <div class="form-group">
           <label>Description</label>
@@ -1278,9 +1278,9 @@
                   </div>
                 ` : ''}
 
-                <!-- Working Papers -->
+                <!-- My Work Files -->
                 <div class="mb-16">
-                  <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Working Papers</label>
+                  <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">My Work Files</label>
                   <div id="wp-docs-${proc.id}">
                     ${respDocs.filter(d => d.doc_category === 'working_paper').length > 0 ? respDocs.filter(d => d.doc_category === 'working_paper').map(d => `
                       <div class="doc-item">
@@ -1288,14 +1288,14 @@
                         ${d.description ? `<span class="doc-desc">${escHtml(d.description)}</span>` : ''}
                         <span class="doc-source">${escHtml(d.source_type || '')}</span>
                       </div>
-                    `).join('') : '<p class="text-sm text-muted">No working papers linked.</p>'}
+                    `).join('') : '<div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:10px 12px;"><p class="text-sm" style="color:#92400E; margin:0;">No work file links added yet.</p><p class="text-sm" style="color:#A16207; margin:4px 0 0;">Save your files in the shared drive, then paste the link here.</p></div>'}
                   </div>
-                  ${!isApproved ? `<button class="btn btn-outline btn-sm mt-8" onclick="openDocModal('${proc.id}', 'working_paper')">+ Add Working Paper</button>` : ''}
+                  ${!isApproved ? `<button class="btn btn-outline btn-sm mt-8" onclick="openDocModal('${proc.id}', 'working_paper')">+ Add Work File</button>` : ''}
                 </div>
 
-                <!-- Source Documents -->
+                <!-- Client Files -->
                 <div class="mb-16">
-                  <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Source Documents</label>
+                  <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Client Files</label>
                   <div id="sd-docs-${proc.id}">
                     ${respDocs.filter(d => d.doc_category === 'source_document').length > 0 ? respDocs.filter(d => d.doc_category === 'source_document').map(d => `
                       <div class="doc-item">
@@ -1303,9 +1303,9 @@
                         ${d.description ? `<span class="doc-desc">${escHtml(d.description)}</span>` : ''}
                         <span class="doc-source">${escHtml(d.source_type || '')}</span>
                       </div>
-                    `).join('') : '<p class="text-sm text-muted">No source documents linked.</p>'}
+                    `).join('') : '<div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:10px 12px;"><p class="text-sm" style="color:#92400E; margin:0;">No client file links added yet.</p><p class="text-sm" style="color:#A16207; margin:4px 0 0;">Save your files in the shared drive, then paste the link here.</p></div>'}
                   </div>
-                  ${!isApproved ? `<button class="btn btn-outline btn-sm mt-8" onclick="openDocModal('${proc.id}', 'source_document')">+ Add Source Document</button>` : ''}
+                  ${!isApproved ? `<button class="btn btn-outline btn-sm mt-8" onclick="openDocModal('${proc.id}', 'source_document')">+ Add Client File</button>` : ''}
                 </div>
               </div>
             </div>
@@ -1341,7 +1341,7 @@
     function updateDocModalTitle(category) {
       document.getElementById('doc-modal-category').value = category;
       document.getElementById('doc-modal-title').textContent =
-        category === 'working_paper' ? 'Add Working Paper' : 'Add Source Document';
+        category === 'working_paper' ? 'Add Work File' : 'Add Client File';
     }
 
     async function editProcedure(procId) {

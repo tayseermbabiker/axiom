@@ -355,7 +355,7 @@
           <h1 id="eng-title">Loading...</h1>
           <span class="text-sm text-muted" id="eng-meta"></span>
           <div id="shared-folder-bar" style="display:none; margin-top:8px;">
-            <span class="text-sm" style="color:var(--gray-600);">Shared Folder:</span>
+            <span class="text-sm" style="color:var(--gray-600);">Shared Drive:</span>
             <a id="shared-folder-link" href="#" target="_blank" class="text-sm" style="color:var(--primary); margin-left:4px;"></a>
             <button class="text-sm role-admin-supervisor" style="display:none; background:none; border:none; color:var(--gray-400); cursor:pointer; margin-left:8px;" onclick="editSharedFolder()" title="Change folder">Edit</button>
           </div>
@@ -373,7 +373,7 @@
         <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
           <div style="display:flex; align-items:center; gap:10px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span style="font-size:14px; color:#92400E;"><strong>No document folder linked.</strong> Your team needs a shared folder (Google Drive or OneDrive) to store audit evidence.</span>
+            <span style="font-size:14px; color:#92400E;"><strong>No shared drive linked.</strong> Your team needs a Google Drive or OneDrive folder to store audit files.</span>
           </div>
           <button class="btn btn-sm" onclick="editSharedFolder()" style="background:#D97706; color:white; border:none; white-space:nowrap;">Add Folder Now</button>
         </div>
@@ -853,8 +853,8 @@
       if (!can('edit_shared_folder')) { alert('Only partners and supervisors can edit the shared folder.'); return; }
       const current = engagement.shared_folder_url || '';
       const url = await showActionModal({
-        title: 'Document Folder Link',
-        message: 'Paste the link to your cloud folder (Google Drive, OneDrive, Dropbox, etc.).\n\nHow to get it: open your cloud storage, right-click the folder, click "Share", then "Copy link".\n\nAll team members must have access to this folder.',
+        title: 'Shared Drive Link',
+        message: 'Paste the link to your Google Drive or OneDrive folder.\n\nHow to get it: open your drive, right-click the folder, click "Share", then "Copy link".\n\nAll team members must have access to this folder.',
         inputLabel: 'Paste folder link here',
         inputDefault: current,
         okLabel: 'Save'
