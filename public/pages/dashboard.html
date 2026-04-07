@@ -365,7 +365,7 @@
           </div>
           <input type="hidden" id="eng-type" value="audit">
           <div class="form-group">
-            <label for="shared-folder">Link to your document folder <span style="color:#dc2626;">*</span></label>
+            <label for="shared-folder">Link to your document folder <span style="color:var(--gray-400); font-size:12px; font-weight:400;">(optional)</span></label>
             <p style="color:var(--gray-600); font-size:13px; margin:0 0 10px;">
               This is where your team will store all audit documents. Pick the service you use:
             </p>
@@ -387,10 +387,13 @@
               <p style="font-weight:600; font-size:13px; margin:0 0 8px; color:var(--gray-800);" id="folder-guide-title">How to get the link:</p>
               <ol id="folder-guide-steps" style="margin:0; padding-left:20px; font-size:13px; color:var(--gray-600); line-height:1.7;"></ol>
             </div>
-            <input type="url" id="shared-folder" class="form-control" placeholder="e.g. https://drive.google.com/drive/folders/abc123..." required style="display:none;">
+            <input type="url" id="shared-folder" class="form-control" placeholder="e.g. https://drive.google.com/drive/folders/abc123..." style="display:none;">
             <small id="folder-security-tip" style="color:var(--gray-500); font-size:12px; display:none;">
               Tip: Use restricted sharing (specific people only) — avoid "anyone with the link."
             </small>
+            <p id="folder-skip-link" style="margin:10px 0 0; font-size:13px;">
+              <a href="#" onclick="skipFolderSetup(); return false;" style="color:var(--gray-500); text-decoration:underline;">I don't have a folder yet — skip for now</a>
+            </p>
           </div>
         </div>
         <div class="modal-footer">
@@ -760,19 +763,20 @@
       await loadEngagements();
     }
 
+    function skipFolderSetup() {
+      document.getElementById('shared-folder').style.display = 'none';
+      document.getElementById('shared-folder').value = '';
+      document.getElementById('folder-guide').style.display = 'none';
+      document.getElementById('folder-security-tip').style.display = 'none';
+      document.getElementById('folder-skip-link').innerHTML = '<span style="color:var(--gray-500); font-size:13px;">Folder skipped — you can add it later inside the engagement.</span>';
+      document.querySelectorAll('.folder-provider-btn').forEach(b => {
+        b.style.borderColor = '';
+        b.style.background = '';
+      });
+    }
+
     document.getElementById('form-new-engagement').addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      const folderInput = document.getElementById('shared-folder');
-      if (folderInput.style.display === 'none') {
-        alert('Please select where you store your documents (Google Drive, OneDrive, or Other) and paste the folder link.');
-        return;
-      }
-      if (!folderInput.value.trim()) {
-        folderInput.focus();
-        alert('Please paste your folder link.');
-        return;
-      }
 
       const btn = document.getElementById('btn-create-eng');
       btn.disabled = true;

@@ -360,13 +360,22 @@
             <button class="text-sm role-admin-supervisor" style="display:none; background:none; border:none; color:var(--gray-400); cursor:pointer; margin-left:8px;" onclick="editSharedFolder()" title="Change folder">Edit</button>
           </div>
           <div id="shared-folder-missing" style="display:none; margin-top:8px;">
-            <span class="text-sm" style="color:#dc2626;">No shared folder set.</span>
-            <button class="text-sm role-admin-supervisor" style="display:none; background:none; border:none; color:var(--primary); cursor:pointer; text-decoration:underline; margin-left:4px;" onclick="editSharedFolder()">Set folder</button>
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start;">
           <button class="btn btn-outline btn-sm" onclick="exportReport()" title="Export engagement report as PDF">Export PDF</button>
           <div id="eng-actions" style="display:flex; gap:8px; align-items:flex-start;"></div>
+        </div>
+      </div>
+
+      <!-- Missing folder banner -->
+      <div id="folder-reminder-banner" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:14px 18px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span style="font-size:14px; color:#92400E;"><strong>No document folder linked.</strong> Your team needs a shared folder (Google Drive or OneDrive) to store audit evidence.</span>
+          </div>
+          <button class="btn btn-sm" onclick="editSharedFolder()" style="background:#D97706; color:white; border:none; white-space:nowrap;">Add Folder Now</button>
         </div>
       </div>
 
@@ -824,9 +833,11 @@
         link.textContent = shortenUrl(data.shared_folder_url);
         document.getElementById('shared-folder-bar').style.display = 'block';
         document.getElementById('shared-folder-missing').style.display = 'none';
+        document.getElementById('folder-reminder-banner').style.display = 'none';
       } else {
         document.getElementById('shared-folder-bar').style.display = 'none';
         document.getElementById('shared-folder-missing').style.display = 'block';
+        document.getElementById('folder-reminder-banner').style.display = 'block';
       }
     }
 
@@ -866,9 +877,11 @@
         link.textContent = shortenUrl(val);
         document.getElementById('shared-folder-bar').style.display = 'block';
         document.getElementById('shared-folder-missing').style.display = 'none';
+        document.getElementById('folder-reminder-banner').style.display = 'none';
       } else {
         document.getElementById('shared-folder-bar').style.display = 'none';
         document.getElementById('shared-folder-missing').style.display = 'block';
+        document.getElementById('folder-reminder-banner').style.display = 'block';
       }
     }
 
