@@ -407,15 +407,15 @@
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('sections')">Sections</button>
-        <button class="tab-btn" onclick="switchTab('tb')">Trial Balance</button>
-        <button class="tab-btn" onclick="switchTab('findings')">Findings</button>
+        <button class="tab-btn active" onclick="switchTab('tb')">Trial Balance</button>
         <button class="tab-btn" onclick="switchTab('materiality')">Materiality</button>
+        <button class="tab-btn" onclick="switchTab('sections')">Sections</button>
+        <button class="tab-btn" onclick="switchTab('findings')">Findings</button>
         <button class="tab-btn" onclick="switchTab('activity')">Activity Log</button>
       </div>
 
       <!-- Sections Tab -->
-      <div class="tab-panel active" id="tab-sections">
+      <div class="tab-panel" id="tab-sections">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
           <h2 style="font-size:16px; font-weight:600; color:var(--gray-700);">Audit Sections</h2>
           <button class="btn btn-primary btn-sm" id="btn-new-section" onclick="openNewSection()" style="display:none;">+ New Section</button>
@@ -428,7 +428,7 @@
       </div>
 
       <!-- Trial Balance Tab -->
-      <div class="tab-panel" id="tab-tb">
+      <div class="tab-panel active" id="tab-tb">
         <div class="card">
           <div class="card-header">
             <h2>Trial Balance</h2>
