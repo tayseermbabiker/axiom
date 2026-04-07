@@ -280,7 +280,10 @@
     <main class="main-content">
       <div class="page-header">
         <h1>Engagements</h1>
-        <button class="btn btn-primary" id="btn-new-eng-top" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-outline" onclick="startOnboarding()" style="font-size:13px;">How it works</button>
+          <button class="btn btn-primary" id="btn-new-eng-top" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
+        </div>
       </div>
 
       <!-- Engagement table -->
@@ -318,27 +321,27 @@
     </main>
   </div>
 
-  <!-- Welcome Overlay (first login only) -->
-  <div class="modal-overlay" id="welcome-overlay" style="display:none; z-index:1000;">
-    <div class="modal" style="max-width:460px; text-align:center; padding:40px 32px;">
-      <div style="margin-bottom:20px;">
-        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--primary, #2563eb)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
+  <!-- Onboarding Walkthrough (first login only) -->
+  <div id="onboarding-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2000;">
+    <div id="onboarding-card" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:white; border-radius:16px; max-width:520px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden;">
+      <!-- Progress bar -->
+      <div style="height:4px; background:var(--gray-200);">
+        <div id="onboarding-progress" style="height:100%; background:var(--primary, #2563eb); transition:width 0.3s ease; width:20%;"></div>
       </div>
-      <h2 style="margin:0 0 12px; font-size:22px; color:var(--gray-900);">You're all set!</h2>
-      <p style="color:var(--gray-600); font-size:15px; line-height:1.6; margin:0 0 8px;">
-        Audexon runs right here in your browser.<br>
-        There is <strong>nothing to download or install</strong>.
-      </p>
-      <p style="color:var(--gray-500); font-size:14px; line-height:1.6; margin:0 0 24px;">
-        Bookmark this page and come back anytime.<br>
-        Works on your computer, phone, or tablet.
-      </p>
-      <button class="btn btn-primary" onclick="dismissWelcome()" style="padding:12px 40px; font-size:15px;">
-        Get Started
-      </button>
+      <!-- Content -->
+      <div style="padding:36px 32px 28px;">
+        <div id="onboarding-icon" style="margin-bottom:16px;"></div>
+        <h2 id="onboarding-title" style="margin:0 0 10px; font-size:21px; color:var(--gray-900);"></h2>
+        <p id="onboarding-body" style="color:var(--gray-600); font-size:15px; line-height:1.7; margin:0;"></p>
+      </div>
+      <!-- Footer -->
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 32px 24px; border-top:1px solid var(--gray-100);">
+        <span id="onboarding-step-label" style="font-size:13px; color:var(--gray-400);"></span>
+        <div style="display:flex; gap:10px;">
+          <button id="onboarding-skip" class="btn btn-outline" onclick="finishOnboarding()" style="font-size:13px; padding:8px 16px;">Skip</button>
+          <button id="onboarding-next" class="btn btn-primary" onclick="nextOnboardingStep()" style="font-size:14px; padding:8px 24px;">Next</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -439,19 +442,87 @@
 
       await loadEngagements();
 
-      // Show welcome overlay on first login
-      const welcomeKey = 'audexon_welcome_seen_' + currentUser.id;
-      if (!localStorage.getItem(welcomeKey)) {
-        document.getElementById('welcome-overlay').style.display = '';
-        document.getElementById('welcome-overlay').classList.add('active');
+      // Show onboarding walkthrough on first login
+      const onboardingKey = 'audexon_onboarded_' + currentUser.id;
+      if (!localStorage.getItem(onboardingKey)) {
+        startOnboarding();
       }
     }
 
-    function dismissWelcome() {
-      const welcomeKey = 'audexon_welcome_seen_' + currentUser.id;
-      localStorage.setItem(welcomeKey, '1');
-      document.getElementById('welcome-overlay').classList.remove('active');
-      document.getElementById('welcome-overlay').style.display = 'none';
+    /* ---- Onboarding Walkthrough ---- */
+    const onboardingSteps = [
+      {
+        icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        title: 'Welcome to Audexon!',
+        body: 'Audexon runs right here in your browser. There is <strong>nothing to download or install</strong>. Bookmark this page and come back anytime — it works on your computer, phone, or tablet.'
+      },
+      {
+        icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>',
+        title: 'Step 1: Create an Engagement',
+        body: 'An engagement is your audit project for one client. Click <strong>"+ New Engagement"</strong> at the top of this page to create one. You will enter the client name, year end date, and a link to a cloud folder (like Google Drive).'
+      },
+      {
+        icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+        title: 'Step 2: Set Up Your Document Folder',
+        body: 'Before creating an engagement, prepare a folder in <strong>Google Drive</strong> or <strong>OneDrive</strong> where your team will store audit evidence. Share it with your team members. When creating the engagement, you will paste the folder link.'
+      },
+      {
+        icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
+        title: 'Step 3: Add Audit Sections',
+        body: 'Inside each engagement, you create <strong>sections</strong> (like Cash, Revenue, Payroll). Each section has its own procedures to complete, documents to review, and findings to report. Assign sections to team members.'
+      },
+      {
+        icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
+        title: 'Step 4: Invite Your Team',
+        body: 'Go to the <strong>Team</strong> page (in the sidebar) to invite colleagues. Each person gets a role: <strong>Partner</strong> (approves work), <strong>Supervisor</strong> (reviews), or <strong>Staff</strong> (does the fieldwork). Everyone logs in with their own email.'
+      },
+      {
+        icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        title: 'You are ready!',
+        body: 'That is all you need to get started. Create your first engagement and begin your audit. If you need to see this guide again, click <strong>"How it works"</strong> on this page.'
+      }
+    ];
+
+    let onboardingStep = 0;
+
+    function startOnboarding() {
+      onboardingStep = 0;
+      document.getElementById('onboarding-overlay').style.display = 'block';
+      renderOnboardingStep();
+    }
+
+    function renderOnboardingStep() {
+      const step = onboardingSteps[onboardingStep];
+      const total = onboardingSteps.length;
+      document.getElementById('onboarding-icon').innerHTML = step.icon;
+      document.getElementById('onboarding-title').textContent = step.title;
+      document.getElementById('onboarding-body').innerHTML = step.body;
+      document.getElementById('onboarding-step-label').textContent = (onboardingStep + 1) + ' of ' + total;
+      document.getElementById('onboarding-progress').style.width = ((onboardingStep + 1) / total * 100) + '%';
+
+      const nextBtn = document.getElementById('onboarding-next');
+      if (onboardingStep === total - 1) {
+        nextBtn.textContent = 'Get Started';
+        document.getElementById('onboarding-skip').style.display = 'none';
+      } else {
+        nextBtn.textContent = 'Next';
+        document.getElementById('onboarding-skip').style.display = '';
+      }
+    }
+
+    function nextOnboardingStep() {
+      if (onboardingStep < onboardingSteps.length - 1) {
+        onboardingStep++;
+        renderOnboardingStep();
+      } else {
+        finishOnboarding();
+      }
+    }
+
+    function finishOnboarding() {
+      const onboardingKey = 'audexon_onboarded_' + currentUser.id;
+      localStorage.setItem(onboardingKey, '1');
+      document.getElementById('onboarding-overlay').style.display = 'none';
     }
 
     async function loadEngagements() {
