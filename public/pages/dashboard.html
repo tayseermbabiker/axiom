@@ -364,37 +364,6 @@
             <input type="date" id="year-end" class="form-control" required>
           </div>
           <input type="hidden" id="eng-type" value="audit">
-          <div class="form-group">
-            <label for="shared-folder">Link to your document folder <span style="color:var(--gray-400); font-size:12px; font-weight:400;">(optional)</span></label>
-            <p style="color:var(--gray-600); font-size:13px; margin:0 0 10px;">
-              This is where your team will store all audit documents. Pick the service you use:
-            </p>
-            <div style="display:flex; gap:10px; margin-bottom:12px;">
-              <button type="button" class="btn btn-outline folder-provider-btn" onclick="selectFolderProvider('google')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 8px; font-size:13px; border-radius:8px;">
-                <svg width="18" height="18" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="M6.6 66.85L15.75 78l18.75-18.75H6.6z" fill="#0066DA"/><path d="M43.65 25L24.9 6.25 6.15 25l18.75 18.75z" fill="#00AC47"/><path d="M24.9 43.75L6.15 62.5l18.75 18.75L43.65 62.5z" fill="#EA4335"/><path d="M43.65 25L62.4 6.25 81.15 25 62.4 43.75z" fill="#00832D"/><path d="M62.4 43.75L43.65 62.5l18.75 18.75L81.15 62.5z" fill="#2684FC"/><path d="M62.4 43.75L81.15 25l-18.75-18.75L43.65 25z" fill="#FFBA00"/></svg>
-                Google Drive
-              </button>
-              <button type="button" class="btn btn-outline folder-provider-btn" onclick="selectFolderProvider('onedrive')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 8px; font-size:13px; border-radius:8px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 18.5l-3-1.8-5 3L8.5 8l6 2z" fill="#0364B8"/><path d="M14.5 10l-4-2L8.5 8l6 10.5 7-5z" fill="#0078D4"/><path d="M21.5 13.5l-7-3.5-6 8.5 10 1.5z" fill="#1490DF"/><path d="M2.5 19.7l5-3 7 1.8-6 1.5z" fill="#28A8EA"/></svg>
-                OneDrive
-              </button>
-              <button type="button" class="btn btn-outline folder-provider-btn" onclick="selectFolderProvider('other')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 8px; font-size:13px; border-radius:8px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                Other
-              </button>
-            </div>
-            <div id="folder-guide" style="display:none; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:14px 16px; margin-bottom:12px;">
-              <p style="font-weight:600; font-size:13px; margin:0 0 8px; color:var(--gray-800);" id="folder-guide-title">How to get the link:</p>
-              <ol id="folder-guide-steps" style="margin:0; padding-left:20px; font-size:13px; color:var(--gray-600); line-height:1.7;"></ol>
-            </div>
-            <input type="url" id="shared-folder" class="form-control" placeholder="e.g. https://drive.google.com/drive/folders/abc123..." style="display:none;">
-            <small id="folder-security-tip" style="color:var(--gray-500); font-size:12px; display:none;">
-              Tip: Use restricted sharing (specific people only) — avoid "anyone with the link."
-            </small>
-            <p id="folder-skip-link" style="margin:10px 0 0; font-size:13px;">
-              <a href="#" onclick="skipFolderSetup(); return false;" style="color:var(--gray-500); text-decoration:underline;">I don't have a folder yet — skip for now</a>
-            </p>
-          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" onclick="closeModal('modal-new-engagement')">Cancel</button>
@@ -681,71 +650,8 @@
       }).join('');
     }
 
-    const folderGuides = {
-      google: {
-        title: 'How to get your Google Drive link:',
-        placeholder: 'e.g. https://drive.google.com/drive/folders/abc123...',
-        steps: [
-          'Open <strong>Google Drive</strong> (drive.google.com)',
-          'Click <strong>"+ New"</strong> then <strong>"New folder"</strong> — name it after your client',
-          'Right-click the folder, then click <strong>"Share"</strong>',
-          'Add your team members by email, then click <strong>"Copy link"</strong>',
-          'Paste the link below'
-        ]
-      },
-      onedrive: {
-        title: 'How to get your OneDrive link:',
-        placeholder: 'e.g. https://onedrive.live.com/...',
-        steps: [
-          'Open <strong>OneDrive</strong> (onedrive.com)',
-          'Click <strong>"+ New"</strong> then <strong>"Folder"</strong> — name it after your client',
-          'Right-click the folder, then click <strong>"Share"</strong>',
-          'Choose <strong>"Specific people"</strong> and add your team',
-          'Click <strong>"Copy link"</strong> and paste it below'
-        ]
-      },
-      other: {
-        title: 'How to get a folder link:',
-        placeholder: 'e.g. https://dropbox.com/sh/... or https://sharepoint.com/...',
-        steps: [
-          'Open your cloud storage (Dropbox, SharePoint, etc.)',
-          'Create a new folder for this engagement',
-          'Share the folder with your team members',
-          'Copy the sharing link and paste it below'
-        ]
-      }
-    };
-
-    function selectFolderProvider(provider) {
-      document.querySelectorAll('.folder-provider-btn').forEach(b => {
-        b.style.borderColor = '';
-        b.style.background = '';
-      });
-      event.currentTarget.style.borderColor = 'var(--primary)';
-      event.currentTarget.style.background = 'var(--primary-light, #f0f5ff)';
-
-      const guide = folderGuides[provider];
-      document.getElementById('folder-guide-title').textContent = guide.title;
-      document.getElementById('folder-guide-steps').innerHTML = guide.steps.map(s => `<li>${s}</li>`).join('');
-      document.getElementById('folder-guide').style.display = 'block';
-
-      const input = document.getElementById('shared-folder');
-      input.style.display = '';
-      input.placeholder = guide.placeholder;
-      input.focus();
-      document.getElementById('folder-security-tip').style.display = 'block';
-    }
-
     function openNewEngagement() {
       if (!can('create_engagement')) { alert('Only admins can create engagements.'); return; }
-      // Reset folder picker state
-      document.getElementById('folder-guide').style.display = 'none';
-      document.getElementById('shared-folder').style.display = 'none';
-      document.getElementById('folder-security-tip').style.display = 'none';
-      document.querySelectorAll('.folder-provider-btn').forEach(b => {
-        b.style.borderColor = '';
-        b.style.background = '';
-      });
       document.getElementById('modal-new-engagement').classList.add('active');
       document.getElementById('client-name').focus();
     }
@@ -763,18 +669,6 @@
       await loadEngagements();
     }
 
-    function skipFolderSetup() {
-      document.getElementById('shared-folder').style.display = 'none';
-      document.getElementById('shared-folder').value = '';
-      document.getElementById('folder-guide').style.display = 'none';
-      document.getElementById('folder-security-tip').style.display = 'none';
-      document.getElementById('folder-skip-link').innerHTML = '<span style="color:var(--gray-500); font-size:13px;">Folder skipped — you can add it later inside the engagement.</span>';
-      document.querySelectorAll('.folder-provider-btn').forEach(b => {
-        b.style.borderColor = '';
-        b.style.background = '';
-      });
-    }
-
     document.getElementById('form-new-engagement').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -785,15 +679,13 @@
       const clientName = document.getElementById('client-name').value.trim();
       const yearEnd = document.getElementById('year-end').value;
       const engType = document.getElementById('eng-type').value;
-      const sharedFolder = folderInput.value.trim() || null;
 
       const { data, error } = await supabaseClient.from('engagements').insert({
         organization_id: currentOrg.id,
         created_by: currentUser.id,
         client_name: clientName,
         year_end_date: yearEnd,
-        engagement_type: engType,
-        shared_folder_url: sharedFolder
+        engagement_type: engType
       }).select().single();
 
       if (error) {
