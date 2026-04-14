@@ -454,7 +454,9 @@
               </table>
             </div>
             <div class="empty-state" id="tb-lines-empty" style="display:none;">
-              <p>No trial balance lines linked to this section.</p>
+              <p style="font-weight:600; color:var(--gray-800); margin-bottom:6px;">No trial balance lines linked to this section yet.</p>
+              <p style="color:var(--gray-600); font-size:13px; margin-bottom:14px; line-height:1.6;">To see TB balances here, tag the right TB accounts with this section's classification. Click <strong>"Edit Tags"</strong> above to pick which classifications belong to this section.</p>
+              <button class="btn btn-outline" onclick="editSectionTags()" style="font-size:13px;">Edit Tags</button>
             </div>
           </div>
         </div>

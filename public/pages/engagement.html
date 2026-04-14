@@ -706,6 +706,9 @@
       </div>
       <div class="modal-body">
         <p class="text-sm text-muted mb-16">Upload your TB with a <strong>Classification</strong> column from your ERP.</p>
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:12px 14px; margin-bottom:16px; font-size:13px; color:#78350f; line-height:1.6;">
+          <strong>Before uploading:</strong> open your TB file in Excel and delete any header rows at the top (like company name, report title, or date). The file should start directly with column names (Account Code, Account Name, Debit, Credit, etc.). Most accounting systems export TBs with 2-3 header rows — these must be removed.
+        </div>
         <div class="form-group">
           <label class="text-sm">Version Label</label>
           <select id="tb-version-label" class="form-control">
