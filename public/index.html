@@ -501,12 +501,15 @@
 
     .price-cta {
       display: block;
+      width: 100%;
       text-align: center;
       padding: 14px 24px;
       border-radius: 10px;
       font-size: 15px;
       font-weight: 600;
+      font-family: inherit;
       text-decoration: none;
+      cursor: pointer;
       transition: all 0.2s;
     }
 
@@ -736,7 +739,7 @@
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Zero-storage security</li>
           </ul>
-          <a href="/contact.html" class="price-cta price-cta-outline">Request Access</a>
+          <button type="button" onclick="audexonCheckout('starter')" class="price-cta price-cta-outline">Subscribe</button>
         </div>
         <!-- Team -->
         <div class="price-card popular">
@@ -757,7 +760,7 @@
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Zero-storage security</li>
           </ul>
-          <a href="/contact.html" class="price-cta price-cta-filled">Request Access</a>
+          <button type="button" onclick="audexonCheckout('team')" class="price-cta price-cta-filled">Subscribe</button>
         </div>
         <!-- Firm -->
         <div class="price-card">
@@ -777,12 +780,12 @@
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Zero-storage security</li>
           </ul>
-          <a href="/contact.html" class="price-cta price-cta-outline">Request Access</a>
+          <button type="button" onclick="audexonCheckout('firm')" class="price-cta price-cta-outline">Subscribe</button>
         </div>
       </div>
 
       <p style="text-align:center; margin-top:32px; font-size:14px; color:#6B7280;">
-        Currently onboarding pilot firms. <a href="/contact.html" style="color:#4338CA; font-weight:500;">Request access</a> to get a founding-member invite.
+        Need help choosing or have questions? <a href="/contact.html" style="color:#4338CA; font-weight:500;">Talk to us</a> — we'll set you up personally.
       </p>
     </div>
   </section>
@@ -806,5 +809,8 @@
     <p>&copy; 2026 Audexon. Built for auditors who move fast.</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/billing.js"></script>
 </body>
 </html>
