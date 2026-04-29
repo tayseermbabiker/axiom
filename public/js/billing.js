@@ -12,9 +12,9 @@
 //   - checkout[success_url]      → returns user to Audexon after payment
 
 const LEMON_CHECKOUT = {
-  starter: 'https://audexon.lemonsqueezy.com/buy/REPLACE-WITH-STARTER-UUID',
-  team:    'https://audexon.lemonsqueezy.com/buy/REPLACE-WITH-TEAM-UUID',
-  firm:    'https://audexon.lemonsqueezy.com/buy/REPLACE-WITH-FIRM-UUID',
+  starter: 'https://audexon.lemonsqueezy.com/checkout/buy/1f3b11f7-cb8c-4336-a36f-036902bbf652',
+  team:    'https://audexon.lemonsqueezy.com/checkout/buy/ee81faf1-55a4-4a91-bd07-791c81e50bd6',
+  firm:    'https://audexon.lemonsqueezy.com/checkout/buy/5b05c366-6fce-4928-9059-a3ae7a0d11f3',
 };
 
 async function audexonCheckout(tier) {
