@@ -16,7 +16,7 @@
 // instead of sending real customers into a test-mode checkout that won't
 // accept real cards. Flip to true once LS approves the Audexon store and
 // the buy links below point to live-mode products.
-const LEMON_LIVE = false;
+const LEMON_LIVE = true; // TEMPORARY — flip back to false after test purchase
 
 const LEMON_CHECKOUT = {
   starter: 'https://audexon.lemonsqueezy.com/checkout/buy/1f3b11f7-cb8c-4336-a36f-036902bbf652',
