@@ -70,6 +70,7 @@ exports.handler = async (event) => {
         const userId = obj.client_reference_id || null;
         const email = obj.customer_email || obj.customer_details?.email || null;
         const subscriptionId = obj.subscription;
+        const customerId = obj.customer || null;
 
         if (!subscriptionId) {
           console.warn('[stripe-webhook] no subscription on session');
@@ -90,8 +91,10 @@ exports.handler = async (event) => {
           return ok({ warning: 'no org' });
         }
 
-        await patchOrg(orgId, { plan: tier.plan, max_members: tier.max_members });
-        console.log('[stripe-webhook] activated', { orgId, plan: tier.plan });
+        const updates = { plan: tier.plan, max_members: tier.max_members };
+        if (customerId) updates.stripe_customer_id = customerId;
+        await patchOrg(orgId, updates);
+        console.log('[stripe-webhook] activated', { orgId, plan: tier.plan, customerId });
         return ok({ event: eventType, action: 'activate', orgId });
       }
 
