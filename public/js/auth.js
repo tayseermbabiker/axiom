@@ -1,3 +1,11 @@
+// Org has access if it has an active subscription plan OR an unexpired trial.
+// The two grant mechanisms are independent — either one alone is sufficient.
+function hasActiveAccess(org) {
+  if (org.plan) return true;
+  if (org.trial_expires_at && new Date() < new Date(org.trial_expires_at)) return true;
+  return false;
+}
+
 // Check if user is logged in, redirect to login if not
 // Also checks for org membership — redirects to onboarding if no org
 async function requireAuth() {
@@ -16,9 +24,11 @@ async function requireAuth() {
       return null;
     }
 
-    // Check trial expiry
-    if (org.trial_expires_at && new Date() > new Date(org.trial_expires_at)) {
-      document.body.innerHTML = '<div style="font-family:Inter,sans-serif;max-width:480px;margin:100px auto;text-align:center;padding:40px;"><h2 style="margin-bottom:12px;">Trial Expired</h2><p style="color:#6B7280;margin-bottom:24px;">Your 3-month free trial has ended. Contact us to continue using Audexon.</p><a href="mailto:support@audexon.com" style="color:#3A7BFF;">support@audexon.com</a></div>';
+    // Access check — granted if either an active subscription (org.plan) or
+    // an unexpired trial. Both signals are independent and either one alone
+    // is sufficient.
+    if (!hasActiveAccess(org)) {
+      document.body.innerHTML = '<div style="font-family:Inter,sans-serif;max-width:480px;margin:100px auto;text-align:center;padding:40px;"><h2 style="margin-bottom:12px;">Access Inactive</h2><p style="color:#6B7280;margin-bottom:24px;">Your subscription or trial has ended. Subscribe to continue using Audexon.</p><a href="/index.html#pricing" style="display:inline-block;background:#3A7BFF;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-bottom:16px;">View pricing</a><br><a href="mailto:support@audexon.com" style="color:#6B7280;font-size:14px;">support@audexon.com</a></div>';
       return null;
     }
   }

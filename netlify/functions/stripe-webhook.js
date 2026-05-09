@@ -91,7 +91,10 @@ exports.handler = async (event) => {
           return ok({ warning: 'no org' });
         }
 
-        const updates = { plan: tier.plan, max_members: tier.max_members };
+        const updates = {
+          plan: tier.plan,
+          max_members: tier.max_members,
+        };
         if (customerId) updates.stripe_customer_id = customerId;
         await patchOrg(orgId, updates);
         console.log('[stripe-webhook] activated', { orgId, plan: tier.plan, customerId });
@@ -104,12 +107,14 @@ exports.handler = async (event) => {
         const priceId = obj.items?.data?.[0]?.price?.id;
         const customerId = obj.customer;
 
-        // If subscription is no longer active, drop to starter baseline
+        // If subscription is no longer active, clear plan to revoke access.
+        // Trial timestamp is preserved — auth.js separately allows access if
+        // the original trial (if any) hasn't expired.
         if (status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired') {
           const email = await fetchCustomerEmail(customerId);
           const orgId = await findOrgId({ email });
           if (orgId) {
-            await patchOrg(orgId, { plan: 'starter', max_members: 5 });
+            await patchOrg(orgId, { plan: null });
             console.log('[stripe-webhook] expired', { orgId, status });
           }
           return ok({ event: eventType, action: 'expire' });
@@ -134,12 +139,14 @@ exports.handler = async (event) => {
       }
 
       case 'customer.subscription.deleted': {
-        // Subscription fully ended — drop to starter baseline
+        // Subscription fully ended — clear plan to revoke access. Trial
+        // timestamp is preserved (it might still be in the future, in which
+        // case auth.js will keep access via the trial branch).
         const customerId = obj.customer;
         const email = await fetchCustomerEmail(customerId);
         const orgId = await findOrgId({ email });
         if (orgId) {
-          await patchOrg(orgId, { plan: 'starter', max_members: 5 });
+          await patchOrg(orgId, { plan: null });
           console.log('[stripe-webhook] deleted', { orgId });
         }
         return ok({ event: eventType, action: 'expire' });
