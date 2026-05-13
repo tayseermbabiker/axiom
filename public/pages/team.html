@@ -248,6 +248,26 @@
         return;
       }
 
+      // Check if a pending invite for this email already exists (friendlier
+      // than letting the DB throw a duplicate-key error)
+      const { data: existing } = await supabaseClient
+        .from('organization_invites')
+        .select('id, status')
+        .eq('organization_id', currentOrg.id)
+        .eq('email', email)
+        .maybeSingle();
+
+      if (existing) {
+        const msg = existing.status === 'pending'
+          ? 'There is already a pending invite for ' + email + '. Cancel it first if you want to resend.'
+          : 'A previous invite to ' + email + ' is still on file. Contact support@audexon.com to clear it.';
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Send Invite';
+        return;
+      }
+
       const { error } = await supabaseClient.from('organization_invites').insert({
         organization_id: currentOrg.id,
         email: email,
@@ -324,13 +344,21 @@
     async function cancelInvite(inviteId) {
       if (!confirm('Cancel this invite?')) return;
 
-      const { error } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('organization_invites')
         .delete()
-        .eq('id', inviteId);
+        .eq('id', inviteId)
+        .select();
 
       if (error) {
         alert('Error: ' + error.message);
+        return;
+      }
+
+      // Detect silent RLS block: delete returns success but 0 rows removed
+      if (!data || data.length === 0) {
+        alert('Could not cancel the invite. You may not have permission, or the invite was already removed. If this keeps happening, contact support@audexon.com.');
+        await loadPendingInvites();
         return;
       }
 
