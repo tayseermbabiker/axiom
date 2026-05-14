@@ -438,6 +438,7 @@
             </div>
           </div>
           <div id="tb-version-info" style="display:none; padding:8px 20px; background:var(--gray-50); border-bottom:1px solid var(--gray-200);"></div>
+          <div id="tb-pending-banner" style="display:none; padding:12px 20px; background:#FEF3C7; border-bottom:1px solid #FBBF24; color:#92400E; font-size:14px;"></div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -445,7 +446,6 @@
                   <th>Code</th>
                   <th>Account Name</th>
                   <th style="text-align:right;">Balance</th>
-                  <th>Classification</th>
                   <th>Section</th>
                 </tr>
               </thead>
@@ -1067,17 +1067,31 @@
     // existing section's classification_tags so user customization wins.
     // Returns the number of sections created.
     async function autoCreateSectionsFromTB(importedLines, tbVersionId) {
+      console.log('[auto-create] starting with', importedLines.length, 'TB lines');
+
       const uniqueClassifications = [...new Set(
         importedLines.map(l => l.classification).filter(Boolean)
       )];
-      if (uniqueClassifications.length === 0) return 0;
+      console.log('[auto-create] unique classifications in TB:', uniqueClassifications);
+
+      if (uniqueClassifications.length === 0) {
+        console.log('[auto-create] no classifications found, skipping');
+        return 0;
+      }
 
       const covered = new Set();
       for (const sec of sections) {
         for (const tag of (sec.classification_tags || [])) covered.add(tag);
       }
+      console.log('[auto-create] already covered by existing sections:', [...covered]);
+
       const uncovered = uniqueClassifications.filter(c => !covered.has(c));
-      if (uncovered.length === 0) return 0;
+      console.log('[auto-create] uncovered (will create sections for):', uncovered);
+
+      if (uncovered.length === 0) {
+        console.log('[auto-create] all classifications already covered');
+        return 0;
+      }
 
       const maxOrder = sections.reduce((max, s) => Math.max(max, s.sort_order || 0), 0);
       const newSections = uncovered.map((classification, i) => {
@@ -1093,6 +1107,7 @@
           tb_version_id: tbVersionId,
         };
       });
+      console.log('[auto-create] sections to insert:', newSections);
 
       const { data: created, error } = await supabaseClient
         .from('audit_sections')
@@ -1100,9 +1115,12 @@
         .select();
 
       if (error) {
-        console.warn('[auto-create-sections] failed:', error.message);
+        console.error('[auto-create] INSERT FAILED:', error);
+        alert('Auto-create audit sections failed: ' + error.message + '\n\nYou can still create sections manually. Tell support@audexon.com what happened.');
         return 0;
       }
+
+      console.log('[auto-create] successfully created', (created || []).length, 'sections');
 
       // Auto-populate procedures from templates for any sections whose
       // canonical name matches PROCEDURE_TEMPLATES.
@@ -1121,7 +1139,9 @@
         }
       }
       if (proceduresToInsert.length > 0) {
-        await supabaseClient.from('audit_procedures').insert(proceduresToInsert);
+        const { error: procErr } = await supabaseClient.from('audit_procedures').insert(proceduresToInsert);
+        if (procErr) console.warn('[auto-create] procedures insert failed:', procErr);
+        else console.log('[auto-create] inserted', proceduresToInsert.length, 'procedures');
       }
 
       return (created || []).length;
@@ -2054,20 +2074,50 @@
       empty.style.display = 'none';
       if (replaceBtn && can('replace_tb')) replaceBtn.style.display = 'inline-flex';
 
+      // Compute pending lines for the banner
+      let pendingCount = 0;
+      let pendingValue = 0;
+      let totalAbsValue = 0;
+      for (const line of tbLines) {
+        const abs = Math.abs(Number(line.balance) || 0);
+        totalAbsValue += abs;
+        if (!tbToSectionMap[line.id]) {
+          pendingCount++;
+          pendingValue += abs;
+        }
+      }
+
+      const banner = document.getElementById('tb-pending-banner');
+      if (banner) {
+        if (pendingCount > 0) {
+          const pct = totalAbsValue > 0 ? ((pendingValue / totalAbsValue) * 100).toFixed(1) : '0';
+          const fmtValue = pendingValue.toLocaleString(undefined, { minimumFractionDigits: 2 });
+          banner.innerHTML = '<strong>' + pendingCount + ' account' + (pendingCount === 1 ? '' : 's') +
+            '</strong> need section assignment (' + fmtValue + ', ' + pct + '% of TB). ' +
+            'Open the <strong>Sections</strong> tab to create a section, or edit an existing section\'s tags to include these classifications.';
+          banner.style.display = 'block';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
+
       tbody.innerHTML = tbLines.map(line => {
         const sectionId = tbToSectionMap[line.id];
         const sec = sectionId ? sections.find(s => s.id === sectionId) : null;
         const balance = Number(line.balance).toLocaleString(undefined, { minimumFractionDigits: 2 });
+        // Source classification shown as tooltip on hover so users can still
+        // diagnose why a line ended up in (or out of) a section without it
+        // cluttering the grid.
+        const tooltip = line.classification ? ' title="Source classification: ' + escHtml(line.classification) + '"' : '';
 
         return `
-          <tr>
+          <tr${tooltip}>
             <td><strong>${escHtml(line.account_code)}</strong></td>
             <td>${escHtml(line.account_name)}</td>
             <td style="text-align:right;">${balance}</td>
-            <td style="text-transform:capitalize;">${escHtml(line.classification || '')}</td>
             <td>${sec
               ? '<span class="tb-section-badge">' + escHtml(sec.name) + '</span>'
-              : '<span class="tb-section-badge unassigned">Unassigned</span>'
+              : '<span class="tb-section-badge unassigned">Pending</span>'
             }</td>
           </tr>
         `;
