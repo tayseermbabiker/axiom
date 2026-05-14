@@ -1062,6 +1062,71 @@
       }
     }
 
+    // Auto-creates audit sections from unique classification values in the
+    // newly imported TB lines. Skips classifications already covered by an
+    // existing section's classification_tags so user customization wins.
+    // Returns the number of sections created.
+    async function autoCreateSectionsFromTB(importedLines, tbVersionId) {
+      const uniqueClassifications = [...new Set(
+        importedLines.map(l => l.classification).filter(Boolean)
+      )];
+      if (uniqueClassifications.length === 0) return 0;
+
+      const covered = new Set();
+      for (const sec of sections) {
+        for (const tag of (sec.classification_tags || [])) covered.add(tag);
+      }
+      const uncovered = uniqueClassifications.filter(c => !covered.has(c));
+      if (uncovered.length === 0) return 0;
+
+      const maxOrder = sections.reduce((max, s) => Math.max(max, s.sort_order || 0), 0);
+      const newSections = uncovered.map((classification, i) => {
+        const canonicalName = normalizeSectionName(classification);
+        return {
+          engagement_id: engagementId,
+          name: canonicalName || classification,
+          classification_tags: [classification],
+          assertions: [],
+          status: 'not_started',
+          sort_order: maxOrder + 1 + i,
+          phase: 'fieldwork',
+          tb_version_id: tbVersionId,
+        };
+      });
+
+      const { data: created, error } = await supabaseClient
+        .from('audit_sections')
+        .insert(newSections)
+        .select();
+
+      if (error) {
+        console.warn('[auto-create-sections] failed:', error.message);
+        return 0;
+      }
+
+      // Auto-populate procedures from templates for any sections whose
+      // canonical name matches PROCEDURE_TEMPLATES.
+      const proceduresToInsert = [];
+      for (const sec of (created || [])) {
+        const templateProcs = PROCEDURE_TEMPLATES[sec.name];
+        if (templateProcs && templateProcs.length > 0) {
+          templateProcs.forEach((p, i) => {
+            proceduresToInsert.push({
+              section_id: sec.id,
+              description: p.description,
+              procedure_type: p.type,
+              sort_order: i + 1,
+            });
+          });
+        }
+      }
+      if (proceduresToInsert.length > 0) {
+        await supabaseClient.from('audit_procedures').insert(proceduresToInsert);
+      }
+
+      return (created || []).length;
+    }
+
     async function loadTBLines() {
       // Load all TB versions for this engagement
       const { data: versions } = await supabaseClient
@@ -1609,6 +1674,106 @@
 
     const ALL_ASSERTIONS = ['Existence', 'Completeness', 'Accuracy', 'Valuation', 'Rights & Obligations', 'Presentation', 'Cut-off'];
 
+    // Maps common TB classification/section values (as they appear in
+    // uploaded files) to standard audit section names. Used by the
+    // auto-create-sections logic during TB import: if the classification
+    // matches an alias, the section is created with the canonical name AND
+    // pre-populated procedures from PROCEDURE_TEMPLATES.
+    //
+    // Keys are lowercased for case-insensitive matching. If a classification
+    // doesn't match any alias, a section is still created — just with the
+    // raw classification value as its name (no template procedures).
+    const SECTION_NAME_ALIASES = {
+      // Cash & Bank
+      'cash': 'Cash & Bank',
+      'bank': 'Cash & Bank',
+      'banks': 'Cash & Bank',
+      'cash & bank': 'Cash & Bank',
+      'cash and bank': 'Cash & Bank',
+      'cash and banks': 'Cash & Bank',
+      'c&b': 'Cash & Bank',
+
+      // Accounts Receivable
+      'ar': 'Accounts Receivable',
+      'a/r': 'Accounts Receivable',
+      'receivables': 'Accounts Receivable',
+      'trade receivables': 'Accounts Receivable',
+      'accounts receivable': 'Accounts Receivable',
+      'debtors': 'Accounts Receivable',
+
+      // Accounts Payable
+      'ap': 'Accounts Payable',
+      'a/p': 'Accounts Payable',
+      'payables': 'Accounts Payable',
+      'trade payables': 'Accounts Payable',
+      'accounts payable': 'Accounts Payable',
+      'creditors': 'Accounts Payable',
+
+      // Revenue
+      'revenue': 'Revenue',
+      'sales': 'Revenue',
+      'income': 'Revenue',
+      'turnover': 'Revenue',
+
+      // PPE / Fixed Assets
+      'ppe': 'PPE / Fixed Assets',
+      'fa': 'PPE / Fixed Assets',
+      'fixed assets': 'PPE / Fixed Assets',
+      'property plant and equipment': 'PPE / Fixed Assets',
+      'property, plant and equipment': 'PPE / Fixed Assets',
+      'tangible assets': 'PPE / Fixed Assets',
+
+      // Inventory
+      'inventory': 'Inventory',
+      'inventories': 'Inventory',
+      'stock': 'Inventory',
+      'stocks': 'Inventory',
+
+      // Payroll & HR
+      'payroll': 'Payroll & HR',
+      'salaries': 'Payroll & HR',
+      'wages': 'Payroll & HR',
+      'staff costs': 'Payroll & HR',
+      'employee costs': 'Payroll & HR',
+      'eos': 'Payroll & HR', // End of service in UAE
+      'gratuity': 'Payroll & HR',
+
+      // Operating Expenses
+      'opex': 'Operating Expenses',
+      'expenses': 'Operating Expenses',
+      'operating expenses': 'Operating Expenses',
+      'admin expenses': 'Operating Expenses',
+      'general expenses': 'Operating Expenses',
+
+      // Tax
+      'tax': 'Tax',
+      'taxes': 'Tax',
+      'vat': 'Tax',
+      'corporate tax': 'Tax',
+
+      // Loans & Borrowings
+      'loans': 'Loans & Borrowings',
+      'borrowings': 'Loans & Borrowings',
+      'li': 'Loans & Borrowings',
+      'liabilities': 'Loans & Borrowings',
+      'long-term liabilities': 'Loans & Borrowings',
+      'long term liabilities': 'Loans & Borrowings',
+
+      // Equity
+      'equity': 'Equity & Share Capital',
+      'capital': 'Equity & Share Capital',
+      'share capital': 'Equity & Share Capital',
+      'oe': 'Equity & Share Capital',
+      'owners equity': 'Equity & Share Capital',
+      "owner's equity": 'Equity & Share Capital',
+    };
+
+    function normalizeSectionName(rawClassification) {
+      if (!rawClassification) return null;
+      const key = String(rawClassification).trim().toLowerCase();
+      return SECTION_NAME_ALIASES[key] || null;
+    }
+
     // Standard audit procedure templates per section type
     const PROCEDURE_TEMPLATES = {
       'Cash & Bank': [
@@ -2002,7 +2167,11 @@
           document.getElementById('map-name').value = guessColumn(fileColumns, ['name', 'acname', 'ac_name', 'account_name', 'description', 'desc', 'acctname']);
           document.getElementById('map-bal').value = guessColumn(fileColumns, ['balance', 'bal', 'amount', 'dr_bal', 'debit', 'dr']);
           document.getElementById('map-credit').value = guessColumn(fileColumns, ['cr_bal', 'credit', 'cr']);
-          document.getElementById('map-class').value = guessColumn(fileColumns, ['class', 'classification', 'type', 'category', 'section', 'group', 'account group', 'account_group', 'detail type', 'nominal group', 'sub-category', 'subcategory', 'gl group', 'fs group', 'schedule']);
+          // Prefer "Section" column over "Class" — for audit purposes section
+          // (PPE, AR, Cash & Bank, etc.) is what drives audit grouping. Files
+          // that only have a "Class" column (FA, CA, OE, etc.) still match
+          // further down the list.
+          document.getElementById('map-class').value = guessColumn(fileColumns, ['section', 'audit section', 'audit_section', 'fs group', 'fs_group', 'schedule', 'classification', 'class', 'type', 'category', 'group', 'account group', 'account_group', 'detail type', 'nominal group', 'sub-category', 'subcategory', 'gl group']);
 
           document.getElementById('tb-mapping').style.display = 'block';
           applyMapping();
@@ -2142,7 +2311,18 @@
           version: versionLabel
         });
 
+        // Auto-create audit sections from unique classifications in the
+        // imported TB. Skips classifications already covered by an existing
+        // section's classification_tags (so user-customized sections are
+        // respected). Matched canonical names get pre-populated procedures.
+        const autoCreatedCount = await autoCreateSectionsFromTB(allLines, version.id);
+
         closeModal('modal-upload-tb');
+
+        if (autoCreatedCount > 0) {
+          // Reload sections so the new ones show up in the UI
+          await loadSections();
+        }
 
         await loadTBLines();
         buildClassificationMap();
