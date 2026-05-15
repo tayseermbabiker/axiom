@@ -115,6 +115,7 @@ const PERMISSIONS = {
   create_section:           ['admin', 'supervisor'],
   delete_section:           ['admin'],
   edit_section_tags:        ['admin', 'supervisor'],
+  reassign_section:         ['admin', 'supervisor'],
 
   // Procedures
   add_procedure:            ['admin', 'supervisor'],

@@ -802,6 +802,7 @@
     let reviewNotes = [];
     let tbLines = [];
     let profileCache = {};
+    let orgMembers = [];
     let isApproved = false;
     let sharedFolderUrl = '';
 
@@ -854,6 +855,7 @@
         document.getElementById('add-note-area').style.display = 'none';
       }
 
+      await loadOrgMembers();
       await loadSection();
       if (!section) return;
 
@@ -867,6 +869,80 @@
       applyApprovedState();
 
       await logActivity(engagementId, 'viewed_section', 'section', sectionId, { name: section.name });
+    }
+
+    // ---- Assignee control (dropdown or read-only) ----
+    async function renderAssigneeControl() {
+      const el = document.getElementById('section-assigned');
+      if (!el) return;
+      const currentAssignee = section?.assigned_to || null;
+      const assignedName = currentAssignee ? await resolveProfileName(currentAssignee) : null;
+
+      if (can('reassign_section') && !isApproved) {
+        const opts = orgMembers.map(m => {
+          const uid = m.profiles?.id || m.user_id;
+          const name = m.profiles?.full_name || m.profiles?.email || 'Unknown';
+          return `<option value="${uid}"${uid === currentAssignee ? ' selected' : ''}>${escHtml(name)}</option>`;
+        }).join('');
+        el.innerHTML = `
+          <span style="color:var(--gray-500);">Assigned to:</span>
+          <select id="section-assignee-select"
+                  title="Reassign section"
+                  onchange="reassignSection(this.value, '${currentAssignee || ''}')"
+                  style="font-size:13px; padding:3px 8px; margin-left:6px; border-radius:6px; border:1px solid var(--gray-200); background:#fff; cursor:pointer;">
+            <option value=""${!currentAssignee ? ' selected' : ''}>— Unassigned —</option>
+            ${opts}
+          </select>
+        `;
+      } else {
+        el.textContent = 'Assigned to: ' + (assignedName || '—');
+      }
+    }
+
+    async function reassignSection(newUserId, prevUserId) {
+      if (!can('reassign_section')) {
+        alert('Only partners and supervisors can reassign sections.');
+        return;
+      }
+      const newAssignee = newUserId || null;
+      const prev = prevUserId || null;
+      if (newAssignee === prev) return;
+
+      const { error } = await supabaseClient
+        .from('audit_sections')
+        .update({ assigned_to: newAssignee })
+        .eq('id', sectionId);
+
+      if (error) {
+        alert('Could not reassign: ' + error.message);
+        await renderAssigneeControl();
+        return;
+      }
+
+      section.assigned_to = newAssignee;
+
+      await logActivity(engagementId, 'reassigned_section', 'audit_section', sectionId, {
+        from: prev,
+        to: newAssignee
+      });
+
+      await renderAssigneeControl();
+    }
+
+    // ---- Org members (for assignee dropdown) ----
+    async function loadOrgMembers() {
+      if (!currentOrg) return;
+      const { data } = await supabaseClient
+        .from('organization_members')
+        .select('*, profiles:user_id(id, full_name, email)')
+        .eq('organization_id', currentOrg.id)
+        .order('created_at');
+      orgMembers = data || [];
+      orgMembers.forEach(m => {
+        if (m.profiles) {
+          profileCache[m.profiles.id] = m.profiles.full_name || m.profiles.email || 'Unknown';
+        }
+      });
     }
 
     // ---- Profile resolution ----
@@ -950,11 +1026,8 @@
       statusBadge.textContent = statusLabel;
       statusBadge.className = 'badge badge-' + (section.status || 'not-started').replace(/_/g, '-');
 
-      // Assigned to
-      if (section.assigned_to) {
-        const assignedName = await resolveProfileName(section.assigned_to);
-        document.getElementById('section-assigned').textContent = 'Assigned to: ' + assignedName;
-      }
+      // Assigned to — dropdown for admin/supervisor, read-only for everyone else
+      await renderAssigneeControl();
 
       // Show assertions
       const sectionAssertions = section.assertions || [];

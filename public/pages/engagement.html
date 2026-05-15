@@ -844,7 +844,9 @@
 
       await loadEngagement();
       initMateriality();
-      await Promise.all([loadOrgMembers(), loadSections(), loadTBLines(), loadFindings()]);
+      // Load org members first so the section cards can render the inline assignee dropdown
+      await loadOrgMembers();
+      await Promise.all([loadSections(), loadTBLines(), loadFindings()]);
       updateStats();
     }
 
@@ -1478,6 +1480,18 @@
     function renderSectionCard(sec) {
         const assignedName = sec.assigned_to ? (profileCache[sec.assigned_to] || 'Unknown') : '';
         const initials = assignedName ? assignedName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
+        const canReassign = can('reassign_section');
+        let assigneeControl;
+        if (canReassign) {
+          const opts = orgMembers.map(m => {
+            const uid = m.profiles?.id || m.user_id;
+            const name = m.profiles?.full_name || m.profiles?.email || 'Unknown';
+            return `<option value="${uid}"${uid === sec.assigned_to ? ' selected' : ''}>${escHtml(name)}</option>`;
+          }).join('');
+          assigneeControl = `<span class="sec-card-assignee-wrap" onclick="event.stopPropagation(); event.preventDefault();" style="display:inline-flex;"><select class="sec-card-assignee-select" title="Reassign section" onchange="reassignSection('${sec.id}', this.value, '${sec.assigned_to || ''}')" onclick="event.stopPropagation();" style="font-size:11px; padding:2px 6px; max-width:140px; border-radius:6px; border:1px solid var(--gray-200); background:#fff; color:var(--gray-700); cursor:pointer;"><option value=""${!sec.assigned_to ? ' selected' : ''}>— Unassigned —</option>${opts}</select></span>`;
+        } else {
+          assigneeControl = `<div class="sec-card-avatar${assignedName ? '' : ' unassigned'}" title="${assignedName || 'Unassigned'}">${initials}</div>`;
+        }
         const STATUS_LABELS = {
           'not_started': 'Not Started', 'in_progress': 'In Progress',
           'ready_for_supervisor_review': 'With Supervisor', 'in_supervisor_review': 'Supervisor Reviewing',
@@ -1514,7 +1528,7 @@
               </div>
               <div class="sec-card-right">
                 ${deleteBtn}
-                <div class="sec-card-avatar${assignedName ? '' : ' unassigned'}" title="${assignedName || 'Unassigned'}">${initials}</div>
+                ${assigneeControl}
                 <span class="badge badge-${sec.status.replace(/_/g, '-')}">${statusLabel}</span>
                 <div class="sec-card-progress">
                   <div class="sec-card-progress-bar"><div class="sec-card-progress-fill${pct === 100 ? ' full' : ''}" style="width:${pct}%"></div></div>
@@ -1563,6 +1577,38 @@
       }
 
       list.innerHTML = html;
+    }
+
+    async function reassignSection(sectionId, newUserId, prevUserId) {
+      if (!can('reassign_section')) {
+        alert('Only partners and supervisors can reassign sections.');
+        return;
+      }
+      const newAssignee = newUserId || null;
+      const prev = prevUserId || null;
+      if (newAssignee === prev) return;
+
+      const { error } = await supabaseClient
+        .from('audit_sections')
+        .update({ assigned_to: newAssignee })
+        .eq('id', sectionId);
+
+      if (error) {
+        alert('Could not reassign: ' + error.message);
+        // Re-render to restore the previous selection
+        renderSections();
+        return;
+      }
+
+      const sec = sections.find(s => s.id === sectionId);
+      if (sec) sec.assigned_to = newAssignee;
+
+      await logActivity(engagementId, 'reassigned_section', 'audit_section', sectionId, {
+        from: prev,
+        to: newAssignee
+      });
+
+      renderSections();
     }
 
     async function deleteSection(sectionId, sectionName) {
