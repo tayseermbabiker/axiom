@@ -566,15 +566,30 @@
         .select('id, engagement_id, status')
         .in('engagement_id', engIds);
 
-      // Fetch procedures
+      // Fetch procedures. Note: audit_procedures has no `status` column —
+      // procedure completion lives on procedure_response.status='done'. We
+      // count total procedures from this query and 'done' counts from the
+      // response table below.
       const sectionIds = (sections || []).map(s => s.id);
       let procedures = [];
+      let doneProcedureIds = new Set();
       if (sectionIds.length > 0) {
         const { data: procs } = await supabaseClient
           .from('audit_procedures')
-          .select('id, section_id, status')
+          .select('id, section_id')
           .in('section_id', sectionIds);
         procedures = procs || [];
+
+        // Procedures marked done = those with a procedure_response row with status='done'
+        const procIds = procedures.map(p => p.id);
+        if (procIds.length > 0) {
+          const { data: responses } = await supabaseClient
+            .from('procedure_response')
+            .select('procedure_id')
+            .eq('status', 'done')
+            .in('procedure_id', procIds);
+          (responses || []).forEach(r => doneProcedureIds.add(r.procedure_id));
+        }
       }
 
       // Fetch findings
@@ -608,7 +623,7 @@
         const engId = sectionToEng[p.section_id];
         if (engId) {
           procTotalByEng[engId]++;
-          if (p.status === 'done') procDoneByEng[engId]++;
+          if (doneProcedureIds.has(p.id)) procDoneByEng[engId]++;
         }
       });
 
