@@ -648,20 +648,33 @@
             <label for="section-template">Section Name</label>
             <select id="section-template" class="form-control" onchange="onSectionTemplateChange(this.value)">
               <option value="">-- Pick a common section or type custom --</option>
-              <option value="Cash & Bank">Cash & Bank</option>
-              <option value="Accounts Receivable">Accounts Receivable</option>
-              <option value="Accounts Payable">Accounts Payable</option>
-              <option value="Revenue">Revenue</option>
-              <option value="PPE / Fixed Assets">PPE / Fixed Assets</option>
-              <option value="Inventory">Inventory</option>
-              <option value="Payroll & HR">Payroll & HR</option>
-              <option value="Operating Expenses">Operating Expenses</option>
-              <option value="Tax">Tax</option>
-              <option value="Loans & Borrowings">Loans & Borrowings</option>
-              <option value="Equity & Share Capital">Equity & Share Capital</option>
-              <option value="Related Parties">Related Parties</option>
-              <option value="Subsequent Events">Subsequent Events</option>
-              <option value="Going Concern">Going Concern</option>
+              <optgroup label="Balance Sheet — Assets">
+                <option value="Cash & Bank">Cash & Bank</option>
+                <option value="Accounts Receivable">Accounts Receivable</option>
+                <option value="Prepayments & Other Receivables">Prepayments & Other Receivables</option>
+                <option value="Inventory">Inventory</option>
+                <option value="PPE / Fixed Assets">PPE / Fixed Assets</option>
+              </optgroup>
+              <optgroup label="Balance Sheet — Liabilities & Equity">
+                <option value="Accounts Payable">Accounts Payable</option>
+                <option value="Loans & Borrowings">Loans & Borrowings</option>
+                <option value="Provisions & End-of-Service Benefits">Provisions & End-of-Service Benefits</option>
+                <option value="Equity & Share Capital">Equity & Share Capital</option>
+              </optgroup>
+              <optgroup label="Income Statement">
+                <option value="Revenue">Revenue</option>
+                <option value="Cost of Sales">Cost of Sales</option>
+                <option value="Payroll & HR">Payroll & HR</option>
+                <option value="Operating Expenses">Operating Expenses</option>
+                <option value="Tax">Tax</option>
+              </optgroup>
+              <optgroup label="Cross-cutting & Closing">
+                <option value="Related Parties">Related Parties</option>
+                <option value="Subsequent Events">Subsequent Events</option>
+                <option value="Going Concern">Going Concern</option>
+                <option value="Journal Entry Testing">Journal Entry Testing</option>
+                <option value="Out of Scope / Below Materiality">Out of Scope / Below Materiality</option>
+              </optgroup>
               <option value="custom">Custom section...</option>
             </select>
             <input type="text" id="section-name" class="form-control mt-8" placeholder="Type your section name" required style="display:none;">
@@ -768,6 +781,7 @@
   <script src="../js/config.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
+  <script src="../js/audit-templates.js"></script>
   <script>
     let currentUser = null;
     let currentOrg = null;
@@ -1062,90 +1076,6 @@
       }
     }
 
-    // Auto-creates audit sections from unique classification values in the
-    // newly imported TB lines. Skips classifications already covered by an
-    // existing section's classification_tags so user customization wins.
-    // Returns the number of sections created.
-    async function autoCreateSectionsFromTB(importedLines, tbVersionId) {
-      console.log('[auto-create] starting with', importedLines.length, 'TB lines');
-
-      const uniqueClassifications = [...new Set(
-        importedLines.map(l => l.classification).filter(Boolean)
-      )];
-      console.log('[auto-create] unique classifications in TB:', uniqueClassifications);
-
-      if (uniqueClassifications.length === 0) {
-        console.log('[auto-create] no classifications found, skipping');
-        return 0;
-      }
-
-      const covered = new Set();
-      for (const sec of sections) {
-        for (const tag of (sec.classification_tags || [])) covered.add(tag);
-      }
-      console.log('[auto-create] already covered by existing sections:', [...covered]);
-
-      const uncovered = uniqueClassifications.filter(c => !covered.has(c));
-      console.log('[auto-create] uncovered (will create sections for):', uncovered);
-
-      if (uncovered.length === 0) {
-        console.log('[auto-create] all classifications already covered');
-        return 0;
-      }
-
-      const maxOrder = sections.reduce((max, s) => Math.max(max, s.sort_order || 0), 0);
-      const newSections = uncovered.map((classification, i) => {
-        const canonicalName = normalizeSectionName(classification);
-        return {
-          engagement_id: engagementId,
-          name: canonicalName || classification,
-          classification_tags: [classification],
-          assertions: [],
-          status: 'not_started',
-          sort_order: maxOrder + 1 + i,
-          phase: 'final',
-          tb_version_id: tbVersionId,
-        };
-      });
-      console.log('[auto-create] sections to insert:', newSections);
-
-      const { data: created, error } = await supabaseClient
-        .from('audit_sections')
-        .insert(newSections)
-        .select();
-
-      if (error) {
-        console.error('[auto-create] INSERT FAILED:', error);
-        alert('Auto-create audit sections failed: ' + error.message + '\n\nYou can still create sections manually. Tell support@audexon.com what happened.');
-        return 0;
-      }
-
-      console.log('[auto-create] successfully created', (created || []).length, 'sections');
-
-      // Auto-populate procedures from templates for any sections whose
-      // canonical name matches PROCEDURE_TEMPLATES.
-      const proceduresToInsert = [];
-      for (const sec of (created || [])) {
-        const templateProcs = PROCEDURE_TEMPLATES[sec.name];
-        if (templateProcs && templateProcs.length > 0) {
-          templateProcs.forEach((p, i) => {
-            proceduresToInsert.push({
-              section_id: sec.id,
-              description: p.description,
-              procedure_type: p.type,
-              sort_order: i + 1,
-            });
-          });
-        }
-      }
-      if (proceduresToInsert.length > 0) {
-        const { error: procErr } = await supabaseClient.from('audit_procedures').insert(proceduresToInsert);
-        if (procErr) console.warn('[auto-create] procedures insert failed:', procErr);
-        else console.log('[auto-create] inserted', proceduresToInsert.length, 'procedures');
-      }
-
-      return (created || []).length;
-    }
 
     async function loadTBLines() {
       // Load all TB versions for this engagement
@@ -1694,223 +1624,7 @@
 
     const ALL_ASSERTIONS = ['Existence', 'Completeness', 'Accuracy', 'Valuation', 'Rights & Obligations', 'Presentation', 'Cut-off'];
 
-    // Maps common TB classification/section values (as they appear in
-    // uploaded files) to standard audit section names. Used by the
-    // auto-create-sections logic during TB import: if the classification
-    // matches an alias, the section is created with the canonical name AND
-    // pre-populated procedures from PROCEDURE_TEMPLATES.
-    //
-    // Keys are lowercased for case-insensitive matching. If a classification
-    // doesn't match any alias, a section is still created — just with the
-    // raw classification value as its name (no template procedures).
-    const SECTION_NAME_ALIASES = {
-      // Cash & Bank
-      'cash': 'Cash & Bank',
-      'bank': 'Cash & Bank',
-      'banks': 'Cash & Bank',
-      'cash & bank': 'Cash & Bank',
-      'cash and bank': 'Cash & Bank',
-      'cash and banks': 'Cash & Bank',
-      'c&b': 'Cash & Bank',
-
-      // Accounts Receivable
-      'ar': 'Accounts Receivable',
-      'a/r': 'Accounts Receivable',
-      'receivables': 'Accounts Receivable',
-      'trade receivables': 'Accounts Receivable',
-      'accounts receivable': 'Accounts Receivable',
-      'debtors': 'Accounts Receivable',
-
-      // Accounts Payable
-      'ap': 'Accounts Payable',
-      'a/p': 'Accounts Payable',
-      'payables': 'Accounts Payable',
-      'trade payables': 'Accounts Payable',
-      'accounts payable': 'Accounts Payable',
-      'creditors': 'Accounts Payable',
-
-      // Revenue
-      'revenue': 'Revenue',
-      'sales': 'Revenue',
-      'income': 'Revenue',
-      'turnover': 'Revenue',
-
-      // PPE / Fixed Assets
-      'ppe': 'PPE / Fixed Assets',
-      'fa': 'PPE / Fixed Assets',
-      'fixed assets': 'PPE / Fixed Assets',
-      'property plant and equipment': 'PPE / Fixed Assets',
-      'property, plant and equipment': 'PPE / Fixed Assets',
-      'tangible assets': 'PPE / Fixed Assets',
-
-      // Inventory
-      'inventory': 'Inventory',
-      'inventories': 'Inventory',
-      'stock': 'Inventory',
-      'stocks': 'Inventory',
-
-      // Payroll & HR
-      'payroll': 'Payroll & HR',
-      'salaries': 'Payroll & HR',
-      'wages': 'Payroll & HR',
-      'staff costs': 'Payroll & HR',
-      'employee costs': 'Payroll & HR',
-      'eos': 'Payroll & HR', // End of service in UAE
-      'gratuity': 'Payroll & HR',
-
-      // Operating Expenses
-      'opex': 'Operating Expenses',
-      'expenses': 'Operating Expenses',
-      'operating expenses': 'Operating Expenses',
-      'admin expenses': 'Operating Expenses',
-      'general expenses': 'Operating Expenses',
-
-      // Tax
-      'tax': 'Tax',
-      'taxes': 'Tax',
-      'vat': 'Tax',
-      'corporate tax': 'Tax',
-
-      // Loans & Borrowings
-      'loans': 'Loans & Borrowings',
-      'borrowings': 'Loans & Borrowings',
-      'li': 'Loans & Borrowings',
-      'liabilities': 'Loans & Borrowings',
-      'long-term liabilities': 'Loans & Borrowings',
-      'long term liabilities': 'Loans & Borrowings',
-
-      // Equity
-      'equity': 'Equity & Share Capital',
-      'capital': 'Equity & Share Capital',
-      'share capital': 'Equity & Share Capital',
-      'oe': 'Equity & Share Capital',
-      'owners equity': 'Equity & Share Capital',
-      "owner's equity": 'Equity & Share Capital',
-    };
-
-    function normalizeSectionName(rawClassification) {
-      if (!rawClassification) return null;
-      const key = String(rawClassification).trim().toLowerCase();
-      return SECTION_NAME_ALIASES[key] || null;
-    }
-
-    // Standard audit procedure templates per section type
-    const PROCEDURE_TEMPLATES = {
-      'Cash & Bank': [
-        { description: 'Obtain bank confirmations for all bank accounts as at the reporting date', type: 'test_of_detail' },
-        { description: 'Test bank reconciliations — agree balances to bank statements and GL', type: 'test_of_detail' },
-        { description: 'Investigate outstanding reconciling items over 30 days', type: 'test_of_detail' },
-        { description: 'Test a sample of cash receipts and disbursements around year-end for proper cutoff', type: 'test_of_detail' },
-        { description: 'Verify restricted cash balances and confirm any liens or pledges', type: 'test_of_detail' },
-        { description: 'Perform analytical review of interest income against average balances', type: 'analytical' },
-        { description: 'Test controls over bank payment authorization and signatories', type: 'controls' },
-        { description: 'Review bank accounts opened or closed during the year and confirm proper inclusion in reconciliations', type: 'test_of_detail' },
-        { description: 'Review for unusual bank transactions (large, round-sum, related-party payments) and obtain explanations', type: 'test_of_detail' },
-      ],
-      'Accounts Receivable': [
-        { description: 'Send confirmations to a sample of trade receivable balances', type: 'test_of_detail' },
-        { description: 'Perform aging analysis and test the allowance for doubtful accounts', type: 'test_of_detail' },
-        { description: 'Test subsequent cash receipts for balances outstanding at year-end', type: 'test_of_detail' },
-        { description: 'Vouch a sample of sales invoices to supporting documents (contracts, delivery notes)', type: 'test_of_detail' },
-        { description: 'Test revenue cutoff — examine invoices and credit notes around year-end', type: 'test_of_detail' },
-        { description: 'Perform analytical review of receivable days and compare to prior year', type: 'analytical' },
-        { description: 'Test credit approval controls for new customers', type: 'controls' },
-      ],
-      'Accounts Payable': [
-        { description: 'Select a sample of supplier balances and agree to supplier statements or confirmations', type: 'test_of_detail' },
-        { description: 'Search for unrecorded liabilities — examine post year-end payments and invoices', type: 'test_of_detail' },
-        { description: 'Test purchase cutoff — examine invoices and goods received notes around year-end', type: 'test_of_detail' },
-        { description: 'Perform aging analysis and investigate old outstanding balances', type: 'test_of_detail' },
-        { description: 'Perform analytical review of payable days and compare to prior year', type: 'analytical' },
-        { description: 'Test controls over invoice approval and three-way matching', type: 'controls' },
-      ],
-      'Revenue': [
-        { description: 'Vouch a sample of revenue transactions to contracts, delivery notes, and invoices', type: 'test_of_detail' },
-        { description: 'Test revenue cutoff — examine sales around year-end for proper period recognition', type: 'test_of_detail' },
-        { description: 'Test credit notes and returns issued after year-end', type: 'test_of_detail' },
-        { description: 'Perform analytical review of revenue by month, product line, or customer', type: 'analytical' },
-        { description: 'Compare gross margins to prior year and industry benchmarks', type: 'analytical' },
-        { description: 'Test controls over sales order approval and invoicing', type: 'controls' },
-      ],
-      'PPE / Fixed Assets': [
-        { description: 'Obtain the fixed asset register and agree totals to GL', type: 'test_of_detail' },
-        { description: 'Vouch a sample of additions to invoices, contracts, and board approvals', type: 'test_of_detail' },
-        { description: 'Test a sample of disposals for proper accounting and authorization', type: 'test_of_detail' },
-        { description: 'Recalculate depreciation for a sample of assets and test useful life assumptions', type: 'test_of_detail' },
-        { description: 'Physically inspect a sample of significant assets', type: 'test_of_detail' },
-        { description: 'Assess indicators of impairment for significant asset classes', type: 'analytical' },
-        { description: 'Test controls over capital expenditure authorization', type: 'controls' },
-        { description: 'Review repairs and maintenance accounts for items that should be capitalised', type: 'test_of_detail' },
-      ],
-      'Inventory': [
-        { description: 'Attend the physical inventory count and perform test counts', type: 'test_of_detail' },
-        { description: 'Test inventory pricing — agree unit costs to recent purchase invoices or production records', type: 'test_of_detail' },
-        { description: 'Review inventory aging and test the provision for slow-moving or obsolete items', type: 'test_of_detail' },
-        { description: 'Test inventory cutoff — examine goods received and dispatched around year-end', type: 'test_of_detail' },
-        { description: 'Perform analytical review of inventory turnover and compare to prior year', type: 'analytical' },
-        { description: 'Evaluate write-down methodology for net realisable value on slow-moving items', type: 'test_of_detail' },
-        { description: 'Where inventory is held by third parties, obtain confirmation of quantities and terms', type: 'test_of_detail' },
-      ],
-      'Payroll & HR': [
-        { description: 'Select a sample of employees and agree pay rates to HR records and contracts', type: 'test_of_detail' },
-        { description: 'Recalculate gross-to-net pay for a sample of payroll runs', type: 'test_of_detail' },
-        { description: 'Test end-of-service benefit / gratuity provision calculations', type: 'test_of_detail' },
-        { description: 'Test leave provision by agreeing balances to HR records', type: 'test_of_detail' },
-        { description: 'Perform analytical review of total payroll cost by month and department', type: 'analytical' },
-        { description: 'Test controls over new hires, terminations, and payroll changes', type: 'controls' },
-      ],
-      'Operating Expenses': [
-        { description: 'Perform analytical review of operating expenses by category and compare to prior year and budget', type: 'analytical' },
-        { description: 'Investigate significant variances and unusual items', type: 'analytical' },
-        { description: 'Vouch a sample of expenses to supporting invoices and approvals', type: 'test_of_detail' },
-        { description: 'Test expense cutoff — examine invoices around year-end', type: 'test_of_detail' },
-        { description: 'Review prepaid expenses and accruals for reasonableness', type: 'test_of_detail' },
-      ],
-      'Tax': [
-        { description: 'Obtain and review the corporate tax computation', type: 'test_of_detail' },
-        { description: 'Test the tax provision calculation and agree to the tax return', type: 'test_of_detail' },
-        { description: 'Review deferred tax calculations and assess recoverability', type: 'test_of_detail' },
-        { description: 'Review VAT returns and reconcile to GL balances', type: 'test_of_detail' },
-        { description: 'Obtain confirmation of tax status and any ongoing disputes', type: 'test_of_detail' },
-      ],
-      'Loans & Borrowings': [
-        { description: 'Obtain bank confirmations for all loan balances and terms', type: 'test_of_detail' },
-        { description: 'Agree loan balances to amortization schedules and GL', type: 'test_of_detail' },
-        { description: 'Recalculate interest expense and agree to bank statements', type: 'test_of_detail' },
-        { description: 'Review loan covenants and assess compliance', type: 'test_of_detail' },
-        { description: 'Test proper classification between current and non-current', type: 'test_of_detail' },
-        { description: 'Test effective interest calculation for instruments with fees or variable rates', type: 'test_of_detail' },
-      ],
-      'Equity & Share Capital': [
-        { description: 'Agree opening balances to prior year audited financial statements', type: 'test_of_detail' },
-        { description: 'Test share capital movements — agree to board resolutions, filings, and bank receipts', type: 'test_of_detail' },
-        { description: 'Test dividend declarations and payments — agree to board minutes and bank records', type: 'test_of_detail' },
-        { description: 'Review retained earnings roll-forward and agree to profit for the year', type: 'test_of_detail' },
-        { description: 'Verify statutory reserve transfers comply with local law requirements', type: 'test_of_detail' },
-      ],
-      'Related Parties': [
-        { description: 'Obtain management representation on completeness of related party disclosures', type: 'test_of_detail' },
-        { description: 'Review board minutes, contracts, and agreements for related party transactions', type: 'test_of_detail' },
-        { description: 'Test a sample of related party transactions for arm\'s length terms and proper authorization', type: 'test_of_detail' },
-        { description: 'Confirm significant related party balances at year-end', type: 'test_of_detail' },
-        { description: 'Review disclosures for completeness per IAS 24 / applicable framework', type: 'test_of_detail' },
-      ],
-      'Subsequent Events': [
-        { description: 'Review post year-end board minutes for significant events or decisions', type: 'test_of_detail' },
-        { description: 'Review post year-end management accounts and investigate unusual items', type: 'test_of_detail' },
-        { description: 'Inquire of management about events after the reporting date', type: 'test_of_detail' },
-        { description: 'Review post year-end bank statements and legal correspondence', type: 'test_of_detail' },
-        { description: 'Assess whether adjusting or non-adjusting events require disclosure', type: 'test_of_detail' },
-      ],
-      'Going Concern': [
-        { description: 'Evaluate management\'s going concern assessment and supporting cash flow forecasts', type: 'analytical' },
-        { description: 'Review financing arrangements and available credit facilities', type: 'test_of_detail' },
-        { description: 'Assess covenant compliance and upcoming debt maturities', type: 'test_of_detail' },
-        { description: 'Inquire of management about plans to address any liquidity concerns', type: 'test_of_detail' },
-        { description: 'Review disclosures related to going concern in the financial statements', type: 'test_of_detail' },
-        { description: 'Perform analytical review of key financial ratios and trends', type: 'analytical' },
-      ],
-    };
+    // PROCEDURE_TEMPLATES moved to /js/audit-templates.js (shared with dashboard.html for engagement seeding).
     let selectedTags = [];
     let selectedAssertions = [];
 
@@ -2093,8 +1807,8 @@
           const pct = totalAbsValue > 0 ? ((pendingValue / totalAbsValue) * 100).toFixed(1) : '0';
           const fmtValue = pendingValue.toLocaleString(undefined, { minimumFractionDigits: 2 });
           banner.innerHTML = '<strong>' + pendingCount + ' account' + (pendingCount === 1 ? '' : 's') +
-            '</strong> need section assignment (' + fmtValue + ', ' + pct + '% of TB). ' +
-            'Open the <strong>Sections</strong> tab to create a section, or edit an existing section\'s tags to include these classifications.';
+            '</strong> not yet assigned (' + fmtValue + ', ' + pct + '% of TB). ' +
+            'Open a section in the <strong>Sections</strong> tab and add the relevant classifications from your file.';
           banner.style.display = 'block';
         } else {
           banner.style.display = 'none';
@@ -2361,18 +2075,13 @@
           version: versionLabel
         });
 
-        // Auto-create audit sections from unique classifications in the
-        // imported TB. Skips classifications already covered by an existing
-        // section's classification_tags (so user-customized sections are
-        // respected). Matched canonical names get pre-populated procedures.
-        const autoCreatedCount = await autoCreateSectionsFromTB(allLines, version.id);
-
+        // Sections are NOT auto-created from TB classifications anymore.
+        // The 19 standard audit sections are seeded at engagement creation
+        // (see /js/audit-templates.js seedSectionsForEngagement). After
+        // upload, the auditor explicitly tags their classifications onto
+        // those standard sections — preserves audit-area integrity and
+        // avoids cryptic auto-named sections (SS, EP, IS, etc.).
         closeModal('modal-upload-tb');
-
-        if (autoCreatedCount > 0) {
-          // Reload sections so the new ones show up in the UI
-          await loadSections();
-        }
 
         await loadTBLines();
         buildClassificationMap();

@@ -391,6 +391,7 @@
   <script src="../js/config.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
+  <script src="../js/audit-templates.js"></script>
   <script>
     let currentUser = null;
     let currentOrg = null;
@@ -714,6 +715,17 @@
       }
 
       await logActivity(data.id, 'created_engagement', 'engagement', data.id, { client_name: clientName });
+
+      // Seed the 19 standard audit sections (in BS-then-P&L order) with their
+      // ISA-aligned procedure templates so the auditor lands on a ready-to-work
+      // engagement. Don't block on this — if seeding fails the auditor can
+      // still manually create sections from the dropdown.
+      try {
+        const result = await seedSectionsForEngagement(supabaseClient, data.id);
+        console.log('[engagement-created] seeded', result.sectionsCreated, 'sections,', result.proceduresCreated, 'procedures');
+      } catch (e) {
+        console.warn('[engagement-created] seeding failed:', e);
+      }
 
       closeModal('modal-new-engagement');
       document.getElementById('form-new-engagement').reset();
