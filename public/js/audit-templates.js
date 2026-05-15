@@ -223,12 +223,15 @@ const SECTION_SEED_ORDER = [
 // the same name already exists for the engagement, that section is
 // skipped (matters when an admin re-runs seeding manually).
 async function seedSectionsForEngagement(supabaseClient, engagementId) {
+  console.log('[seed-sections] starting for engagement', engagementId);
+
   // Check what sections already exist so we don't duplicate
   const { data: existing } = await supabaseClient
     .from('audit_sections')
     .select('name')
     .eq('engagement_id', engagementId);
   const existingNames = new Set((existing || []).map(s => s.name));
+  console.log('[seed-sections] existing sections:', [...existingNames]);
 
   const sectionsToInsert = SECTION_SEED_ORDER
     .filter(name => !existingNames.has(name))
@@ -241,6 +244,7 @@ async function seedSectionsForEngagement(supabaseClient, engagementId) {
       sort_order: i + 1,
       phase: 'final',
     }));
+  console.log('[seed-sections] sections to insert:', sectionsToInsert.length);
 
   if (sectionsToInsert.length === 0) return { sectionsCreated: 0, proceduresCreated: 0 };
 
@@ -250,15 +254,19 @@ async function seedSectionsForEngagement(supabaseClient, engagementId) {
     .select();
 
   if (secErr) {
-    console.error('[seed-sections] insert failed:', secErr);
+    console.error('[seed-sections] sections insert failed:', secErr);
     return { sectionsCreated: 0, proceduresCreated: 0, error: secErr.message };
   }
+  console.log('[seed-sections] sections inserted:', (created || []).length);
 
   // Build procedure rows for each section that has a template
   const proceduresToInsert = [];
   for (const sec of (created || [])) {
     const tmpl = PROCEDURE_TEMPLATES[sec.name];
-    if (!tmpl) continue;
+    if (!tmpl) {
+      console.log('[seed-sections] no template for:', sec.name);
+      continue;
+    }
     tmpl.forEach((p, i) => {
       proceduresToInsert.push({
         section_id: sec.id,
@@ -268,14 +276,25 @@ async function seedSectionsForEngagement(supabaseClient, engagementId) {
       });
     });
   }
+  console.log('[seed-sections] procedures to insert:', proceduresToInsert.length);
+  console.log('[seed-sections] sample procedure:', proceduresToInsert[0]);
 
   if (proceduresToInsert.length > 0) {
-    const { error: procErr } = await supabaseClient
+    const { data: createdProcs, error: procErr } = await supabaseClient
       .from('audit_procedures')
-      .insert(proceduresToInsert);
+      .insert(proceduresToInsert)
+      .select();
     if (procErr) {
-      console.warn('[seed-sections] procedures insert failed:', procErr);
+      console.error('[seed-sections] procedures INSERT FAILED:', procErr);
+      console.error('[seed-sections] first procedure that failed:', proceduresToInsert[0]);
+      alert('Seeding audit procedures failed: ' + (procErr.message || JSON.stringify(procErr)) + '\n\nProcedure types available: test_of_detail, analytical, controls, documentation. The DB may have a CHECK constraint rejecting one of these — let support@audexon.com know.');
+      return {
+        sectionsCreated: (created || []).length,
+        proceduresCreated: 0,
+        error: procErr.message,
+      };
     }
+    console.log('[seed-sections] procedures inserted:', (createdProcs || []).length);
   }
 
   return {
