@@ -222,7 +222,7 @@ const SECTION_SEED_ORDER = [
 // onto a freshly created engagement. Idempotent-ish: if any section with
 // the same name already exists for the engagement, that section is
 // skipped (matters when an admin re-runs seeding manually).
-async function seedSectionsForEngagement(supabaseClient, engagementId) {
+async function seedSectionsForEngagement(supabaseClient, engagementId, createdBy) {
   console.log('[seed-sections] starting for engagement', engagementId);
 
   // Check what sections already exist so we don't duplicate
@@ -233,11 +233,14 @@ async function seedSectionsForEngagement(supabaseClient, engagementId) {
   const existingNames = new Set((existing || []).map(s => s.name));
   console.log('[seed-sections] existing sections:', [...existingNames]);
 
+  // Default assignee to the engagement creator (partner) so sections land
+  // owned rather than orphaned. Partner can reassign inline on the section card.
   const sectionsToInsert = SECTION_SEED_ORDER
     .filter(name => !existingNames.has(name))
     .map((name, i) => ({
       engagement_id: engagementId,
       name: name,
+      assigned_to: createdBy || null,
       classification_tags: [],
       assertions: [],
       status: 'not_started',

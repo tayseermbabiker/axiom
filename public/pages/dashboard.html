@@ -736,7 +736,7 @@
       // engagement. Don't block on this — if seeding fails the auditor can
       // still manually create sections from the dropdown.
       try {
-        const result = await seedSectionsForEngagement(supabaseClient, data.id);
+        const result = await seedSectionsForEngagement(supabaseClient, data.id, currentUser.id);
         console.log('[engagement-created] seeded', result.sectionsCreated, 'sections,', result.proceduresCreated, 'procedures');
       } catch (e) {
         console.warn('[engagement-created] seeding failed:', e);
