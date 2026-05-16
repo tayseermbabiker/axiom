@@ -641,6 +641,25 @@
     </div>
   </div>
 
+  <!-- Pending Sections Blockers Modal -->
+  <div class="modal-overlay" id="modal-blockers">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <h3>Sections Pending Approval</h3>
+        <button class="modal-close" onclick="closeModal('modal-blockers')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px; color:var(--gray-600); margin-bottom:16px;">
+          Before this engagement can be approved &amp; closed, <strong><span id="blockers-count"></span> section(s)</strong> still need to reach approved status. Open each section to walk it through the review chain, or delete it from the engagement page if it&rsquo;s not needed for this audit.
+        </p>
+        <div id="blockers-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-blockers')">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- New Section Modal -->
   <div class="modal-overlay" id="modal-new-section">
     <div class="modal">
@@ -1199,9 +1218,11 @@
         if (totalSections === 0) {
           container.innerHTML = '';
         } else if (unapprovedFinal > 0) {
-          container.innerHTML = `<span class="text-sm text-muted">${unapprovedFinal} final section(s) not yet approved</span>`;
+          // State-aware: pending sections — button opens the blockers modal, label is honest about state
+          const label = 'Review &amp; close · ' + unapprovedFinal + ' section' + (unapprovedFinal !== 1 ? 's' : '') + ' pending';
+          container.innerHTML = '<button class="btn btn-outline btn-sm" onclick="openBlockersModal()">' + label + '</button>';
         } else {
-          // All final sections approved — can close (open findings allowed with acknowledgment)
+          // All final sections approved — button proceeds to final close (open findings still need categorization)
           const label = openFindings > 0
             ? 'Approve & Close Engagement (' + openFindings + ' open finding' + (openFindings !== 1 ? 's' : '') + ')'
             : 'Approve & Close Engagement';
@@ -1210,6 +1231,42 @@
       } else {
         container.innerHTML = '';
       }
+    }
+
+    function openBlockersModal() {
+      const finalSections = sections.filter(s => s.phase !== 'interim');
+      const unapprovedFinal = finalSections.filter(s => s.status !== 'approved');
+
+      const STATUS_LABELS = {
+        'not_started': 'Not Started',
+        'in_progress': 'In Progress',
+        'ready_for_supervisor_review': 'With Supervisor',
+        'in_supervisor_review': 'Supervisor Reviewing',
+        'ready_for_partner_review': 'With Partner',
+        'in_partner_review': 'Partner Reviewing',
+        'returned_to_preparer': 'Returned to Preparer',
+        'returned_to_supervisor': 'Returned to Supervisor'
+      };
+
+      const list = unapprovedFinal.map(s => {
+        const statusLabel = STATUS_LABELS[s.status] || (s.status || 'not_started').replace(/_/g, ' ');
+        const statusClass = 'badge-' + (s.status || 'not-started').replace(/_/g, '-');
+        return `
+          <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--gray-100);">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:13px; font-weight:600; color:var(--gray-700);">${escHtml(s.name)}</div>
+              <div style="margin-top:4px;">
+                <span class="badge ${statusClass}" style="font-size:10px; padding:1px 6px;">${statusLabel}</span>
+              </div>
+            </div>
+            <a href="section.html#${s.id}" class="btn btn-outline btn-sm">Open section</a>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('blockers-list').innerHTML = list;
+      document.getElementById('blockers-count').textContent = unapprovedFinal.length;
+      document.getElementById('modal-blockers').classList.add('active');
     }
 
     async function closeEngagement() {
