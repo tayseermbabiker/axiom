@@ -416,9 +416,15 @@
 
       <!-- Sections Tab -->
       <div class="tab-panel" id="tab-sections">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h2 style="font-size:16px; font-weight:600; color:var(--gray-700);">Audit Sections</h2>
-          <button class="btn btn-primary btn-sm" id="btn-new-section" onclick="openNewSection()" style="display:none;">+ New Section</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap;">
+          <h2 style="font-size:16px; font-weight:600; color:var(--gray-700); margin:0;">Audit Sections</h2>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div id="sec-view-toggle" style="display:none; border:1px solid var(--gray-200); border-radius:6px; overflow:hidden; font-size:12px;">
+              <button type="button" id="view-all-btn" onclick="setSectionView('all')" style="border:none; padding:6px 12px; background:#fff; cursor:pointer; color:var(--gray-700);">All sections</button>
+              <button type="button" id="view-mine-btn" onclick="setSectionView('mine')" style="border:none; border-left:1px solid var(--gray-200); padding:6px 12px; background:#fff; cursor:pointer; color:var(--gray-700);">My sections only</button>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-new-section" onclick="openNewSection()" style="display:none;">+ New Section</button>
+          </div>
         </div>
         <div class="sec-card-list" id="sections-list"></div>
         <div class="empty-state" id="sections-empty" style="display:none;">
@@ -802,6 +808,7 @@
     let rawRows = [];
     let fileColumns = [];
     let profileCache = {};
+    let sectionView = 'all'; // 'all' or 'mine' — preparer-only toggle
 
     // ---- Init ----
     async function init() {
@@ -827,6 +834,13 @@
 
       engagementId = window.location.hash.replace('#', '');
       if (!engagementId) { window.location.href = 'dashboard.html'; return; }
+
+      // Preparer-only section view toggle ("All sections" / "My sections only")
+      if (currentRole === 'preparer') {
+        document.getElementById('sec-view-toggle').style.display = 'inline-flex';
+        const saved = localStorage.getItem('audexon-section-view-' + engagementId) || 'all';
+        setSectionView(saved, false);
+      }
 
       // Role-based button visibility
       if (can('create_section')) {
@@ -1480,6 +1494,8 @@
     function renderSectionCard(sec) {
         const assignedName = sec.assigned_to ? (profileCache[sec.assigned_to] || 'Unknown') : '';
         const initials = assignedName ? assignedName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
+        const isMine = currentRole === 'preparer' && currentUser && sec.assigned_to === currentUser.id;
+        const mineStyle = isMine ? ' style="border-left:3px solid #2563EB;"' : '';
         const canReassign = can('reassign_section');
         let assigneeControl;
         if (canReassign) {
@@ -1520,7 +1536,7 @@
           : '';
 
         return `
-          <a href="section.html#${sec.id}" class="sec-card">
+          <a href="section.html#${sec.id}" class="sec-card"${mineStyle}>
             <div class="sec-card-top">
               <div class="sec-card-identity">
                 <div class="sec-card-name">${escHtml(sec.name)} ${sec.phase === 'interim' ? '<span class="badge" style="background:#EEF2FF;color:#4338CA;font-size:10px;padding:1px 6px;margin-left:4px;">Interim</span>' : ''}</div>
@@ -1552,6 +1568,7 @@
     function renderSections() {
       const list = document.getElementById('sections-list');
       const empty = document.getElementById('sections-empty');
+      const emptyMsg = document.getElementById('sections-empty-msg');
 
       if (sections.length === 0) {
         list.innerHTML = '';
@@ -1559,10 +1576,25 @@
         return;
       }
 
+      // Preparer view filter — "My sections only" hides others
+      let visibleSections = sections;
+      if (currentRole === 'preparer' && sectionView === 'mine' && currentUser) {
+        visibleSections = sections.filter(s => s.assigned_to === currentUser.id);
+      }
+
+      if (visibleSections.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        if (emptyMsg && currentRole === 'preparer' && sectionView === 'mine') {
+          emptyMsg.textContent = 'No sections assigned to you yet. Switch to "All sections" to see the full list.';
+        }
+        return;
+      }
+
       empty.style.display = 'none';
 
-      const interimSections = sections.filter(s => s.phase === 'interim');
-      const finalSections = sections.filter(s => s.phase !== 'interim');
+      const interimSections = visibleSections.filter(s => s.phase === 'interim');
+      const finalSections = visibleSections.filter(s => s.phase !== 'interim');
 
       let html = '';
       if (interimSections.length > 0) {
@@ -1577,6 +1609,26 @@
       }
 
       list.innerHTML = html;
+    }
+
+    function setSectionView(view, rerender = true) {
+      sectionView = (view === 'mine') ? 'mine' : 'all';
+      if (engagementId) {
+        localStorage.setItem('audexon-section-view-' + engagementId, sectionView);
+      }
+      const allBtn = document.getElementById('view-all-btn');
+      const mineBtn = document.getElementById('view-mine-btn');
+      if (allBtn && mineBtn) {
+        const activeBg = '#2563EB';
+        const activeColor = '#fff';
+        const inactiveBg = '#fff';
+        const inactiveColor = 'var(--gray-700)';
+        allBtn.style.background = sectionView === 'all' ? activeBg : inactiveBg;
+        allBtn.style.color = sectionView === 'all' ? activeColor : inactiveColor;
+        mineBtn.style.background = sectionView === 'mine' ? activeBg : inactiveBg;
+        mineBtn.style.color = sectionView === 'mine' ? activeColor : inactiveColor;
+      }
+      if (rerender) renderSections();
     }
 
     async function reassignSection(sectionId, newUserId, prevUserId) {
