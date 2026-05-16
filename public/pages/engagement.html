@@ -1536,7 +1536,7 @@
           : '';
 
         return `
-          <a href="section.html#${sec.id}" class="sec-card"${mineStyle}>
+          <div class="sec-card" tabindex="0" onclick="navigateToSection(event, '${sec.id}')" onauxclick="navigateToSection(event, '${sec.id}')" onkeydown="if(event.key==='Enter'){navigateToSection(event, '${sec.id}')}"${mineStyle}>
             <div class="sec-card-top">
               <div class="sec-card-identity">
                 <div class="sec-card-name">${escHtml(sec.name)} ${sec.phase === 'interim' ? '<span class="badge" style="background:#EEF2FF;color:#4338CA;font-size:10px;padding:1px 6px;margin-left:4px;">Interim</span>' : ''}</div>
@@ -1561,8 +1561,25 @@
               </div>
               ${openF > 0 ? '<div class="sec-card-metric" style="color:var(--warning);"><span class="sec-card-metric-value" style="color:var(--warning);">' + openF + '</span> open finding' + (openF !== 1 ? 's' : '') + '</div>' : ''}
             </div>
-          </a>
+          </div>
         `;
+    }
+
+    function navigateToSection(event, sectionId) {
+      // Don't navigate if the click landed on the inline assignee dropdown,
+      // the delete button, or any interactive control inside the card.
+      if (event && event.target && event.target.closest) {
+        if (event.target.closest('.sec-card-assignee-wrap')) return;
+        if (event.target.closest('.sec-card-delete')) return;
+        if (event.target.closest('select, button, input')) return;
+      }
+      const url = 'section.html#' + sectionId;
+      // Middle-click (event.button === 1) opens in a new tab, like a real link.
+      if (event && event.button === 1) {
+        window.open(url, '_blank');
+        return;
+      }
+      window.location.href = url;
     }
 
     function renderSections() {
