@@ -625,7 +625,7 @@
   <div class="modal-overlay" id="modal-closure">
     <div class="modal" style="max-width:600px;">
       <div class="modal-header">
-        <h3>Close Engagement — Acknowledge Open Findings</h3>
+        <h3>Approve &amp; Close Engagement — Acknowledge Open Findings</h3>
         <button class="modal-close" onclick="closeModal('modal-closure')">&times;</button>
       </div>
       <div class="modal-body">
@@ -636,7 +636,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('modal-closure')">Cancel</button>
-        <button class="btn btn-success" id="btn-confirm-closure" onclick="confirmClosure()">Acknowledge &amp; Close</button>
+        <button class="btn btn-success" id="btn-confirm-closure" onclick="confirmClosure()">Approve &amp; Close</button>
       </div>
     </div>
   </div>
@@ -1203,8 +1203,8 @@
         } else {
           // All final sections approved — can close (open findings allowed with acknowledgment)
           const label = openFindings > 0
-            ? 'Close Engagement (' + openFindings + ' open finding' + (openFindings !== 1 ? 's' : '') + ')'
-            : 'Close Engagement';
+            ? 'Approve & Close Engagement (' + openFindings + ' open finding' + (openFindings !== 1 ? 's' : '') + ')'
+            : 'Approve & Close Engagement';
           container.innerHTML = '<button class="btn btn-success btn-sm" onclick="closeEngagement()">' + label + '</button>';
         }
       } else {
@@ -1225,9 +1225,9 @@
 
       // No open findings — simple close
       const ok = await showActionModal({
-        title: 'Close Engagement',
-        message: 'Close this engagement?\n\nAll sections will become read-only. This marks the final file assembly date per ISA 230.\n\nYou can reopen it later if needed.',
-        okLabel: 'Close Engagement',
+        title: 'Approve & Close Engagement',
+        message: 'Sign off and close this engagement?\n\nAs the engagement partner, this is your final approval. All sections will become read-only. This marks the final file assembly date per ISA 230.\n\nYou can reopen it later with a documented reason if needed.',
+        okLabel: 'Approve & Close',
         okClass: 'btn-success'
       });
       if (!ok) return;
@@ -1284,7 +1284,7 @@
       await performClose();
 
       btn.disabled = false;
-      btn.textContent = 'Acknowledge & Close';
+      btn.textContent = 'Approve & Close';
       document.getElementById('modal-closure').classList.remove('active');
     }
 
