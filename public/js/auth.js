@@ -152,8 +152,8 @@ function can(action) {
   return allowed.includes(currentRole);
 }
 
-// Sign out
+// Sign out — return to the public homepage so visitors see the marketing site
 async function signOut() {
   await supabaseClient.auth.signOut();
-  window.location.href = '/pages/login.html';
+  window.location.href = '/';
 }
