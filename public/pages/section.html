@@ -2163,8 +2163,13 @@
 
       // ---- Supervisor actions ----
       if (can('supervisor_approve')) {
-        if (['ready_for_supervisor_review', 'in_supervisor_review', 'returned_to_supervisor'].includes(status)) {
+        if (['ready_for_supervisor_review', 'in_supervisor_review'].includes(status)) {
+          // Supervisor is reviewing the preparer's fresh work
           actionBtns += '<button class="btn btn-success btn-sm" onclick="supervisorApprove()">Approve (Supervisor)</button>';
+          actionBtns += '<button class="btn btn-returned btn-sm" onclick="returnToPreparer()">Return to Preparer</button>';
+        } else if (status === 'returned_to_supervisor') {
+          // Partner returned the section — supervisor amends, then re-submits to partner
+          actionBtns += '<button class="btn btn-primary btn-sm" onclick="supervisorApprove()">Send to Partner</button>';
           actionBtns += '<button class="btn btn-returned btn-sm" onclick="returnToPreparer()">Return to Preparer</button>';
         } else if (['ready_for_partner_review', 'in_partner_review'].includes(status)) {
           statusMsg = 'Supervisor review complete. Awaiting partner approval.';
@@ -2335,6 +2340,7 @@
       updateStatusBadge();
       renderActions();
       await loadReviewNotes();
+      applyApprovedState();
     }
 
     // ---- Admin reopens fully approved section ----
