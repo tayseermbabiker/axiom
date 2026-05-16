@@ -345,14 +345,104 @@
       position: relative;
     }
 
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
+    .features-bento {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
+    .bento-row {
+      display: grid;
+      gap: 16px;
+    }
+
+    .bento-row-1 { grid-template-columns: 1.6fr 1fr; }
+    .bento-row-2 { grid-template-columns: 1fr 1.6fr; }
+    .bento-row-3 { grid-template-columns: 1fr 1fr; }
+
+    .bento-mini-viz {
+      margin-top: 18px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .tb-viz-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-top: 1px solid #E2E8F0;
+    }
+    .tb-viz-row:first-child { border-top: none; padding-top: 0; }
+    .tb-viz-skeleton {
+      height: 5px;
+      background: #CBD5E1;
+      border-radius: 2px;
+    }
+    .tb-viz-tag {
+      color: #16A34A;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .tb-viz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .tb-viz-header-label {
+      width: 90px;
+      height: 5px;
+      background: #CBD5E1;
+      border-radius: 2px;
+    }
+    .tb-viz-header-action {
+      width: 36px;
+      height: 16px;
+      background: #3A7BFF;
+      border-radius: 3px;
+    }
+
+    .progress-chart {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+    .progress-bar {
+      height: 28px;
+      border-radius: 3px;
+    }
+    .progress-bar.green { background: #16A34A; }
+    .progress-bar.blue { background: #3A7BFF; }
+    .progress-bar.gray { background: #CBD5E1; }
+    .progress-legend {
+      display: flex;
+      gap: 18px;
+      font-size: 12px;
+      color: #64748B;
+      flex-wrap: wrap;
+    }
+    .progress-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .progress-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+    .progress-legend-dot.green { background: #16A34A; }
+    .progress-legend-dot.blue { background: #3A7BFF; }
+    .progress-legend-dot.gray { background: #CBD5E1; }
+
     .feature-card {
-      padding: 36px 32px;
+      padding: 28px 28px;
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.6);
       background: rgba(255, 255, 255, 0.5);
@@ -640,7 +730,11 @@
         padding: 72px 24px;
       }
       .features-grid,
-      .pricing-grid {
+      .pricing-grid,
+      .bento-row,
+      .bento-row-1,
+      .bento-row-2,
+      .bento-row-3 {
         grid-template-columns: 1fr;
       }
       .price-card.popular {
@@ -709,54 +803,85 @@
         <h2 class="section-title">Purpose-built for the audit workflow</h2>
         <p class="section-subtitle">Not another project management tool. Audexon is designed around how audit teams actually work.</p>
       </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <!-- monitor/dashboard icon -->
-            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      <div class="features-bento">
+        <!-- Row 1: TB-Driven (wide, with TB visualization) + ISA 230 (narrow) -->
+        <div class="bento-row bento-row-1">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            </div>
+            <h3>TB-Driven Structure</h3>
+            <p>Upload your trial balance once. Audexon maps classifications to audit sections automatically.</p>
+            <div class="bento-mini-viz">
+              <div class="tb-viz-header">
+                <div class="tb-viz-header-label"></div>
+                <div class="tb-viz-header-action"></div>
+              </div>
+              <div class="tb-viz-row"><div class="tb-viz-skeleton" style="width:60%;"></div><span class="tb-viz-tag">&rarr; AR</span></div>
+              <div class="tb-viz-row"><div class="tb-viz-skeleton" style="width:50%;"></div><span class="tb-viz-tag">&rarr; Cash</span></div>
+              <div class="tb-viz-row"><div class="tb-viz-skeleton" style="width:38%;"></div><span class="tb-viz-tag">&rarr; Inventory</span></div>
+            </div>
           </div>
-          <h3>Review From Anywhere</h3>
-          <p>Partners see every section's status, review notes, and sign-offs from their dashboard. No site visits. No chasing updates over email or chat.</p>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <h3>ISA 230 Audit Trail</h3>
+            <p>Every action logged. Every reopen requires a reason. Immutable, append-only documentation ready for peer review.</p>
+          </div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <!-- file/TB icon -->
-            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+
+        <!-- Row 2: Cloud (narrow) + Review From Anywhere (wide, with progress chart) -->
+        <div class="bento-row bento-row-2">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+            </div>
+            <h3>Files Stay in Your Cloud</h3>
+            <p>Audexon links to Google Drive or OneDrive &mdash; zero file storage, zero vendor lock-in.</p>
           </div>
-          <h3>TB-Driven Structure</h3>
-          <p>Upload your trial balance once. Audexon maps classifications to audit sections, tracks procedures and findings, and keeps everything tied to the numbers.</p>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            </div>
+            <h3>Review From Anywhere</h3>
+            <p>Partners see every section&rsquo;s status, review notes, and sign-offs from one dashboard.</p>
+            <div class="bento-mini-viz">
+              <div class="progress-chart">
+                <div class="progress-bar green"></div>
+                <div class="progress-bar green"></div>
+                <div class="progress-bar blue"></div>
+                <div class="progress-bar green"></div>
+                <div class="progress-bar blue"></div>
+                <div class="progress-bar green"></div>
+                <div class="progress-bar gray"></div>
+                <div class="progress-bar gray"></div>
+              </div>
+              <div class="progress-legend">
+                <span class="progress-legend-item"><span class="progress-legend-dot green"></span>Signed off</span>
+                <span class="progress-legend-item"><span class="progress-legend-dot blue"></span>In review</span>
+                <span class="progress-legend-item"><span class="progress-legend-dot gray"></span>Open</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <!-- shield/lock icon -->
-            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+
+        <!-- Row 3: Three-Level Sign-Off + Team Assignments (equal width) -->
+        <div class="bento-row bento-row-3">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <h3>Three-Level Sign-Off</h3>
+            <p>Preparer &rarr; supervisor &rarr; partner. Clear permissions. Every action locked and logged.</p>
           </div>
-          <h3>ISA 230 Audit Trail</h3>
-          <p>Every action logged. Every reopen requires a reason. Immutable, append-only documentation that is always ready for peer review or regulatory inquiry.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <!-- cloud icon -->
-            <svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <h3>Team Assignments &amp; Progress</h3>
+            <p>Assign sections, track completion in real time, exchange review notes inline.</p>
           </div>
-          <h3>Your Files Never Leave Your Cloud</h3>
-          <p>Audexon links to Google Drive or OneDrive &mdash; zero file storage, zero liability, zero vendor lock-in. Your client data stays exactly where it is.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <!-- check-circle icon -->
-            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-          </div>
-          <h3>Review &amp; Sign-off Workflow</h3>
-          <p>Preparer, supervisor, partner &mdash; each with clear permissions. Three-level sign-off: submit, review, approve. Every action locked and logged.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <!-- users icon -->
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          </div>
-          <h3>Team Assignments &amp; Progress</h3>
-          <p>Assign sections to team members, track completion in real time, and exchange review notes. Everyone knows their work without constant check-ins.</p>
         </div>
       </div>
     </div>
