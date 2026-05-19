@@ -2023,7 +2023,7 @@
 
     // ---- Conclusion ----
     async function saveConclusion() {
-      if (!can('save_conclusion')) { alert('Only partners and supervisors can write conclusions.'); return; }
+      if (!can('save_conclusion')) { alert('You do not have permission to write the conclusion for this section.'); return; }
       const text = document.getElementById('conclusion-text').value.trim();
 
       const { error } = await supabaseClient.from('audit_sections').update({

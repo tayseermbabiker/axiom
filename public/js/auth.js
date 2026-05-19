@@ -140,7 +140,7 @@ const PERMISSIONS = {
   reopen_section:           ['admin'],
 
   // Conclusion
-  save_conclusion:          ['admin', 'supervisor'],
+  save_conclusion:          ['admin', 'supervisor', 'preparer'],
 
   // Team
   manage_team:              ['admin']
