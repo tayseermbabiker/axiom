@@ -101,7 +101,24 @@ Direct sync from client accounting platforms instead of manual TB upload:
 
 **Decision trigger.** Pilot firms complain about manual TB upload friction.
 
-### 2.6 AI-assisted features
+### 2.6 Analytics (marketing + product)
+
+Currently: **no analytics installed**. Confirmed 2026-05-18 — no Google Analytics, GTM, Plausible, PostHog, or any tracking in the codebase. Site is flying blind on visitor metrics by design, not by oversight.
+
+**Why we're skipping now.** At pre-pilot scale, the signal we need (what's broken, what's confusing, what converts) comes from 30-minute pilot calls, not dashboards. A Google tag on a confidentiality-focused audit SaaS marketing site also slightly contradicts the pitch (the homepage that brags about your data not leaving your cloud shouldn't ship visitor behavior to Google).
+
+**When to revisit.** Two thresholds:
+
+1. **50+ paying firms** &mdash; product analytics (PostHog) becomes useful for spotting patterns at scale that 1:1 conversations can't catch.
+2. **Cold marketing campaigns start** (cold email outreach, LinkedIn ads, content marketing) &mdash; marketing analytics (Plausible recommended for privacy fit) becomes necessary to measure which channel converts.
+
+**What to install when the trigger fires.**
+
+- **Marketing site:** Plausible or Fathom. Cookie-free, GDPR-compliant by default, ~$9/mo. No cookie banner required. Fits the confidentiality brand.
+- **In-app:** PostHog (free tier generous). Self-hosted EU region if data sensitivity demands it. Configure session-recording carefully &mdash; never record TB numbers, conclusions, or findings text.
+- **Never:** Google Analytics on the marketing site &mdash; conflicts with the confidentiality pitch and forces a cookie banner. If someone insists, push back with the Plausible alternative.
+
+### 2.7 AI-assisted features
 
 Per memory, the "Audexon Review module" idea — TB anomaly detection, leverages existing engine. Possible AI additions:
 - TB anomaly detection (unusual journal entries, suspicious ratios, outlier balances)
