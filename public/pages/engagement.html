@@ -363,6 +363,7 @@
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start;">
+          <a id="btn-completion-memo" class="btn btn-primary btn-sm" style="display:none;" title="Open the Engagement Completion Memorandum (Pro)">Completion Memo</a>
           <button class="btn btn-outline btn-sm" onclick="exportReport()" title="Export engagement report as PDF">Export PDF</button>
           <div id="eng-actions" style="display:flex; gap:8px; align-items:flex-start;"></div>
         </div>
@@ -853,6 +854,15 @@
 
       engagementId = window.location.hash.replace('#', '');
       if (!engagementId) { window.location.href = 'dashboard.html'; return; }
+
+      // Wire the Completion Memo link to this engagement.
+      // Visible to admin (engagement partner) only — Pro tier is gated on the destination page itself
+      // so Essentials orgs land on the upgrade prompt instead of failing silently.
+      const memoBtn = document.getElementById('btn-completion-memo');
+      if (memoBtn && currentRole === 'admin') {
+        memoBtn.href = 'completion-memo.html#' + engagementId;
+        memoBtn.style.display = '';
+      }
 
       // Preparer-only section view toggle ("All sections" / "My sections only")
       if (currentRole === 'preparer') {

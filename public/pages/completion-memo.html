@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Completion Memo — Audexon</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* ---- Memo-specific styles ---- */
+    .memo-status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 12px;
+    }
+    .memo-status-draft   { background: var(--warning-light); color: var(--warning); }
+    .memo-status-complete{ background: var(--primary-light); color: var(--primary); }
+    .memo-status-locked  { background: var(--success-light); color: var(--success); }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--gray-200);
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-500);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { color: var(--gray-700); }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Rollup grid */
+    .rollup-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .rollup-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .rollup-card .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .rollup-card .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+    .rollup-card .sub {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+    .materiality-status {
+      grid-column: 1 / -1;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .materiality-status.below       { background: var(--success-light); color: var(--success); }
+    .materiality-status.approaching { background: var(--warning-light); color: var(--warning); }
+    .materiality-status.exceeds     { background: var(--danger-light);  color: var(--danger);  }
+    .materiality-status.not_calculated { background: var(--gray-100);   color: var(--gray-600); }
+
+    /* Attestations */
+    .attest-list { display: flex; flex-direction: column; gap: 10px; }
+    .attest-row {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .attest-check {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 2px solid var(--gray-300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: white;
+      transition: all 0.15s;
+      font-size: 18px;
+    }
+    .attest-check.ticked {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+    .attest-check.blocked {
+      background: var(--gray-100);
+      border-color: var(--gray-300);
+      cursor: not-allowed;
+      color: var(--gray-400);
+    }
+    .attest-check.system-fail {
+      background: var(--danger-light);
+      border-color: var(--danger);
+      color: var(--danger);
+      cursor: not-allowed;
+    }
+    .attest-body { flex: 1; min-width: 0; }
+    .attest-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+    .attest-isa {
+      display: inline-block;
+      background: var(--gray-100);
+      color: var(--gray-600);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+      font-weight: 500;
+    }
+    .attest-check-desc {
+      font-size: 13px;
+      color: var(--gray-600);
+      line-height: 1.5;
+    }
+    .attest-status {
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    .attest-status.pass { color: var(--success); }
+    .attest-status.fail { color: var(--danger); }
+    .attest-status.manual { color: var(--gray-500); }
+    .attest-status.attested { color: var(--success); font-weight: 500; }
+
+    .narrative-field { margin-bottom: 20px; }
+    .narrative-field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+    .narrative-field textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: vertical;
+    }
+    .narrative-field textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(58, 123, 255, 0.1);
+    }
+    .narrative-field .hint {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    /* Signoff bar */
+    .signoff-bar {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      border-top: 1px solid var(--gray-200);
+      padding: 16px 24px;
+      margin: 24px -24px -24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.04);
+    }
+    .signoff-summary { font-size: 14px; color: var(--gray-700); }
+    .signoff-summary strong { color: var(--gray-900); }
+
+    .locked-banner {
+      background: var(--success-light);
+      border: 1px solid var(--success);
+      color: var(--success);
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+    .access-blocked {
+      background: var(--warning-light);
+      border: 1px solid #FDE68A;
+      padding: 28px;
+      border-radius: 12px;
+      max-width: 600px;
+      margin: 40px auto;
+      text-align: center;
+    }
+    .access-blocked h2 { color: var(--gray-900); margin-bottom: 8px; }
+    .access-blocked p  { color: var(--gray-700); margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">Audexon</div>
+      <div class="sidebar-org">
+        <div class="sidebar-org-name" id="org-name">&mdash;</div>
+        <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="team.html">Team</a>
+        <a href="#" class="active" id="nav-engagement">Completion Memo</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="text-sm text-muted mb-16" id="user-email"></div>
+        <button onclick="signOut()">Sign out</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <!-- Access blocked banner (shown if org is not Pro tier) -->
+      <div id="access-blocked" class="access-blocked" style="display:none;">
+        <h2>Completion Memo is a Pro feature</h2>
+        <p>The Engagement Completion Memorandum is part of Audexon Pro &mdash; the methodology layer for firms that need inspection-ready audit files (network reviews, regulator inspections).</p>
+        <p>Your firm is currently on the Essentials plan.</p>
+        <a href="../index.html#pricing" class="btn btn-primary">View Pro pricing</a>
+      </div>
+
+      <!-- Main memo content -->
+      <div id="memo-content" style="display:none;">
+        <div class="page-header">
+          <div>
+            <div style="display:flex; align-items:center;">
+              <h1 id="memo-title">Completion Memo</h1>
+              <span id="memo-status-badge" class="memo-status-badge memo-status-draft">Draft</span>
+            </div>
+            <span class="text-sm text-muted" id="eng-meta"></span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <a href="#" id="back-to-engagement" class="btn btn-outline btn-sm">&larr; Back to Engagement</a>
+            <button class="btn btn-primary btn-sm" id="btn-refresh-checks" onclick="refreshChecks()">Refresh System Checks</button>
+          </div>
+        </div>
+
+        <!-- Locked banner -->
+        <div id="locked-banner" class="locked-banner" style="display:none;">
+          <strong>Memo is locked.</strong> Signed by <span id="locked-signed-by"></span> on <span id="locked-signed-at"></span>. All fields are read-only.
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('rollup')">Rollup</button>
+          <button class="tab-btn" onclick="switchTab('attestations')">Attestations <span id="attest-counter" class="text-sm text-muted"></span></button>
+          <button class="tab-btn" onclick="switchTab('narrative')">Narrative</button>
+          <button class="tab-btn" onclick="switchTab('opinion')">Opinion</button>
+          <button class="tab-btn" onclick="switchTab('eqr')">EQR</button>
+        </div>
+
+        <!-- Rollup Tab -->
+        <div class="tab-panel active" id="tab-rollup">
+          <div class="rollup-grid">
+            <div class="rollup-card">
+              <div class="label">Sections</div>
+              <div class="value"><span id="r-sections-approved">0</span> <span class="text-muted">/ <span id="r-sections-total">0</span></span></div>
+              <div class="sub">approved</div>
+            </div>
+            <div class="rollup-card">
+              <div class="label">Findings</div>
+              <div class="value"><span id="r-findings-total">0</span></div>
+              <div class="sub">
+                <span id="r-findings-open">0</span> open ·
+                <span id="r-findings-resolved">0</span> resolved ·
+                <span id="r-findings-reported">0</span> reported
+              </div>
+            </div>
+            <div class="rollup-card">
+              <div class="label">Misstatements</div>
+              <div class="value"><span id="r-misstatements">0</span></div>
+              <div class="sub">
+                <span id="r-posted">0</span> posted ·
+                <span id="r-unposted">0</span> unposted
+              </div>
+            </div>
+            <div class="rollup-card">
+              <div class="label">Overall Materiality</div>
+              <div class="value" id="r-materiality">&mdash;</div>
+              <div class="sub" id="r-materiality-perf">Performance: &mdash;</div>
+            </div>
+            <div class="materiality-status" id="materiality-status">
+              <span id="materiality-status-text">Materiality not yet entered &mdash; set it on the Engagement page first.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attestations Tab -->
+        <div class="tab-panel" id="tab-attestations">
+          <div style="margin-bottom:16px; font-size:13px; color:var(--gray-600);">
+            13 attestations must be ticked before the memo can be signed. The system pre-checks 9 of them. Three (independence, mgmt rep, review notes) are manual. EQR auto-passes if not required.
+          </div>
+          <div class="attest-list" id="attest-list"></div>
+        </div>
+
+        <!-- Narrative Tab -->
+        <div class="tab-panel" id="tab-narrative">
+          <div class="narrative-field">
+            <label for="narr-going-concern">Going Concern Conclusion (ISA 570)</label>
+            <textarea id="narr-going-concern" placeholder="State the partner's conclusion on management's going concern assessment..."></textarea>
+            <div class="hint">Auto-populated from the Going Concern section if available. Edit as needed.</div>
+          </div>
+          <div class="narrative-field">
+            <label for="narr-subsequent">Subsequent Events Conclusion (ISA 560)</label>
+            <textarea id="narr-subsequent" placeholder="State the conclusion on subsequent events review..."></textarea>
+          </div>
+          <div class="narrative-field">
+            <label for="narr-other">Other Matters</label>
+            <textarea id="narr-other" placeholder="Any other matter the partner wishes to document for the audit file..."></textarea>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveNarrative()">Save Narrative</button>
+          <span id="narrative-save-msg" class="text-sm text-muted" style="margin-left:12px;"></span>
+        </div>
+
+        <!-- Opinion Tab -->
+        <div class="tab-panel" id="tab-opinion">
+          <div class="narrative-field">
+            <label for="opinion-type">Opinion Type (ISA 700)</label>
+            <select id="opinion-type" style="width:100%; max-width:400px; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px;">
+              <option value="">— Select opinion type —</option>
+              <option value="unmodified">Unmodified opinion</option>
+              <option value="qualified">Qualified opinion</option>
+              <option value="adverse">Adverse opinion</option>
+              <option value="disclaimer">Disclaimer of opinion</option>
+            </select>
+          </div>
+          <div class="narrative-field" id="opinion-basis-wrap" style="display:none;">
+            <label for="opinion-basis">Basis for Opinion (required for modified opinions)</label>
+            <textarea id="opinion-basis" placeholder="Describe the basis for the qualified / adverse / disclaimer opinion..."></textarea>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveOpinion()">Save Opinion</button>
+          <span id="opinion-save-msg" class="text-sm text-muted" style="margin-left:12px;"></span>
+        </div>
+
+        <!-- EQR Tab -->
+        <div class="tab-panel" id="tab-eqr">
+          <div style="background:white; border:1px solid var(--gray-200); border-radius:10px; padding:20px;">
+            <div style="margin-bottom:16px;">
+              <label style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; color:var(--gray-700);">
+                <input type="checkbox" id="eqr-required" onchange="saveEqrRequired()" style="width:18px; height:18px;">
+                EQR is required for this engagement (ISQM 2 / ISA 220 Revised)
+              </label>
+              <div class="hint" style="margin-top:6px; font-size:12px; color:var(--gray-500);">
+                Typically required for listed entities, public interest entities, high-risk engagements, or where network methodology mandates it.
+              </div>
+            </div>
+
+            <div id="eqr-fields" style="display:none; padding-top:16px; border-top:1px solid var(--gray-200);">
+              <div class="narrative-field">
+                <label for="eqr-reviewer">Engagement Quality Reviewer</label>
+                <select id="eqr-reviewer" style="width:100%; max-width:400px; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px;">
+                  <option value="">— Select reviewer —</option>
+                </select>
+                <div class="hint">Must be different from the engagement admin (partner).</div>
+              </div>
+              <div style="margin-top:16px;">
+                <button class="btn btn-primary btn-sm" onclick="saveEqrReviewer()">Save Reviewer</button>
+                <button class="btn btn-outline btn-sm" id="btn-mark-eqr-complete" onclick="markEqrComplete()" style="margin-left:8px;">Mark EQR Complete</button>
+                <span id="eqr-save-msg" class="text-sm text-muted" style="margin-left:12px;"></span>
+              </div>
+              <div id="eqr-status" style="margin-top:14px; font-size:13px; color:var(--gray-600);"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signoff bar -->
+        <div class="signoff-bar">
+          <div class="signoff-summary">
+            <span id="signoff-progress"><strong>0 / 13</strong> attestations complete</span>
+          </div>
+          <button id="btn-sign-memo" class="btn btn-primary" disabled onclick="signMemo()">Sign &amp; Lock Memo</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    // ---- State ----
+    let currentUser = null;
+    let currentOrg  = null;
+    let currentRole = null;
+    let engagementId = null;
+    let engagement = null;
+    let memo = null;
+    let attestations = [];
+    let orgMembers = [];
+
+    // ---- Init ----
+    async function init() {
+      currentUser = await requireAuth();
+      if (!currentUser) return;
+
+      const orgAndRole = await getUserOrgAndRole();
+      currentOrg = orgAndRole.org;
+      currentRole = orgAndRole.role;
+
+      document.getElementById('user-email').textContent = currentUser.email;
+      if (currentOrg) document.getElementById('org-name').textContent = currentOrg.name;
+      if (currentRole) {
+        const badge = document.getElementById('user-role-badge');
+        badge.textContent = currentRole;
+        badge.className = 'role-badge role-' + currentRole;
+        badge.style.display = 'inline-block';
+      }
+
+      // Pro tier gate
+      if (!currentOrg || currentOrg.feature_tier !== 'pro') {
+        document.getElementById('access-blocked').style.display = 'block';
+        return;
+      }
+
+      engagementId = window.location.hash.replace('#', '');
+      if (!engagementId) { window.location.href = 'dashboard.html'; return; }
+
+      document.getElementById('back-to-engagement').href = 'engagement.html#' + engagementId;
+
+      await loadEngagement();
+      await loadOrgMembers();
+      await loadOrCreateMemo();
+      await loadAttestations();
+      await refreshChecks();
+      renderAll();
+
+      document.getElementById('memo-content').style.display = 'block';
+    }
+
+    async function loadEngagement() {
+      const { data, error } = await supabaseClient
+        .from('engagements')
+        .select('*')
+        .eq('id', engagementId)
+        .single();
+      if (error || !data) {
+        alert('Engagement not found or access denied.');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      engagement = data;
+      document.getElementById('memo-title').textContent = `Completion Memo — ${data.client_name}`;
+      document.getElementById('eng-meta').textContent = `${data.client_name} · Year-end ${data.year_end_date}`;
+    }
+
+    async function loadOrgMembers() {
+      const { data } = await supabaseClient
+        .from('organization_members')
+        .select('user_id, role, profiles:user_id(id, full_name, email)')
+        .eq('organization_id', currentOrg.id);
+      orgMembers = (data || []).map(m => ({
+        id: m.user_id,
+        role: m.role,
+        name: m.profiles?.full_name || m.profiles?.email || 'Unknown',
+        email: m.profiles?.email,
+      }));
+    }
+
+    async function loadOrCreateMemo() {
+      let { data: existing } = await supabaseClient
+        .from('engagement_completion_memo')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .maybeSingle();
+
+      if (existing) {
+        memo = existing;
+        return;
+      }
+
+      // Only admin can create the memo
+      if (currentRole !== 'admin') {
+        alert('A completion memo has not been created yet. Ask the engagement partner to open this page first.');
+        window.location.href = 'engagement.html#' + engagementId;
+        return;
+      }
+
+      const { data: created, error } = await supabaseClient
+        .from('engagement_completion_memo')
+        .insert({
+          engagement_id:   engagementId,
+          organization_id: currentOrg.id,
+          status: 'draft',
+        })
+        .select('*')
+        .single();
+
+      if (error) {
+        alert('Could not create completion memo: ' + error.message);
+        return;
+      }
+      memo = created;
+
+      // Seed the 13 attestation rows via the SECURITY DEFINER function
+      const { error: seedErr } = await supabaseClient.rpc('seed_attestations_for_memo', {
+        p_memo_id:         memo.id,
+        p_organization_id: currentOrg.id,
+        p_engagement_id:   engagementId,
+      });
+      if (seedErr) {
+        alert('Memo created but attestation seeding failed: ' + seedErr.message);
+      }
+    }
+
+    async function loadAttestations() {
+      const { data } = await supabaseClient
+        .from('completion_attestations')
+        .select('*')
+        .eq('memo_id', memo.id)
+        .order('attestation_order', { ascending: true });
+      attestations = data || [];
+    }
+
+    async function refreshChecks() {
+      if (!memo) return;
+      await supabaseClient.rpc('recompute_attestation_checks', { p_memo_id: memo.id });
+      // Re-fetch memo (rollups updated by trigger) and attestations (system_check_passed updated)
+      const { data: m } = await supabaseClient
+        .from('engagement_completion_memo')
+        .select('*')
+        .eq('id', memo.id)
+        .single();
+      if (m) memo = m;
+      await loadAttestations();
+      renderAll();
+    }
+
+    function renderAll() {
+      renderHeader();
+      renderRollup();
+      renderAttestations();
+      renderNarrative();
+      renderOpinion();
+      renderEqr();
+      renderSignoffBar();
+    }
+
+    function renderHeader() {
+      const badge = document.getElementById('memo-status-badge');
+      badge.textContent = memo.status;
+      badge.className = 'memo-status-badge memo-status-' + memo.status;
+
+      if (memo.status === 'locked') {
+        document.getElementById('locked-banner').style.display = 'block';
+        document.getElementById('locked-signed-by').textContent = (orgMembers.find(m => m.id === memo.signed_by) || {}).name || 'unknown';
+        document.getElementById('locked-signed-at').textContent = new Date(memo.signed_at).toLocaleString();
+        document.getElementById('btn-refresh-checks').style.display = 'none';
+      }
+    }
+
+    function renderRollup() {
+      document.getElementById('r-sections-approved').textContent = memo.sections_approved;
+      document.getElementById('r-sections-total').textContent    = memo.total_sections;
+      document.getElementById('r-findings-total').textContent    = memo.total_findings;
+      document.getElementById('r-findings-open').textContent     = memo.findings_open;
+      document.getElementById('r-findings-resolved').textContent = memo.findings_resolved;
+      document.getElementById('r-findings-reported').textContent = memo.findings_reported;
+      document.getElementById('r-misstatements').textContent     = memo.total_misstatements;
+      document.getElementById('r-posted').textContent            = memo.posted_adjustments;
+      document.getElementById('r-unposted').textContent          = memo.unposted_adjustments;
+      document.getElementById('r-materiality').textContent       = engagement.materiality_overall != null
+        ? Number(engagement.materiality_overall).toLocaleString() : '—';
+      document.getElementById('r-materiality-perf').textContent  = 'Performance: ' + (engagement.materiality_performance != null
+        ? Number(engagement.materiality_performance).toLocaleString() : '—');
+
+      const cls = memo.uncorrected_vs_materiality || 'not_calculated';
+      const wrap = document.getElementById('materiality-status');
+      wrap.className = 'materiality-status ' + cls;
+      const text = {
+        below: 'Uncorrected misstatements are below overall materiality.',
+        approaching: 'Uncorrected misstatements are approaching overall materiality (75–100%) — review carefully.',
+        exceeds: 'Uncorrected misstatements EXCEED overall materiality. Resolve before signing.',
+        not_calculated: 'Materiality not yet entered — set it on the Engagement page first.',
+      }[cls];
+      document.getElementById('materiality-status-text').textContent = text;
+    }
+
+    function renderAttestations() {
+      const isLocked = memo.status === 'locked';
+      const list = document.getElementById('attest-list');
+      list.innerHTML = '';
+
+      attestations.forEach(a => {
+        const row = document.createElement('div');
+        row.className = 'attest-row';
+
+        const ticked = !!a.attested_at;
+        const sysOK  = a.system_check_passed === true;
+        const isManual = !a.source_table;
+
+        let checkClass = 'attest-check';
+        let checkChar  = '';
+        if (ticked) { checkClass += ' ticked'; checkChar = '✓'; }
+        else if (isLocked) { checkClass += ' blocked'; }
+        else if (!sysOK && !isManual) { checkClass += ' system-fail'; checkChar = '!'; }
+
+        const check = document.createElement('div');
+        check.className = checkClass;
+        check.textContent = checkChar;
+
+        if (!isLocked && (sysOK || isManual) && currentRole === 'admin') {
+          check.style.cursor = 'pointer';
+          check.onclick = () => toggleAttestation(a);
+        }
+
+        const body = document.createElement('div');
+        body.className = 'attest-body';
+
+        const title = document.createElement('div');
+        title.className = 'attest-title';
+        title.textContent = humaniseKey(a.attestation_key);
+        const isaTag = document.createElement('span');
+        isaTag.className = 'attest-isa';
+        isaTag.textContent = a.isa_reference;
+        title.appendChild(isaTag);
+
+        const desc = document.createElement('div');
+        desc.className = 'attest-check-desc';
+        desc.textContent = a.source_check || '';
+
+        const status = document.createElement('div');
+        if (ticked) {
+          status.className = 'attest-status attested';
+          status.textContent = `✓ Attested ${a.attested_at ? '· ' + new Date(a.attested_at).toLocaleString() : ''}`;
+        } else if (isManual) {
+          status.className = 'attest-status manual';
+          status.textContent = 'Manual attestation — admin must confirm';
+        } else if (sysOK) {
+          status.className = 'attest-status pass';
+          status.textContent = 'System check passed — ready to attest';
+        } else {
+          status.className = 'attest-status fail';
+          status.textContent = 'System check NOT passed — resolve before attesting';
+        }
+
+        body.appendChild(title);
+        body.appendChild(desc);
+        body.appendChild(status);
+
+        row.appendChild(check);
+        row.appendChild(body);
+        list.appendChild(row);
+      });
+
+      const totalTicked = attestations.filter(a => a.attested_at).length;
+      document.getElementById('attest-counter').textContent = ` (${totalTicked}/${attestations.length})`;
+    }
+
+    function renderNarrative() {
+      const isLocked = memo.status === 'locked';
+      document.getElementById('narr-going-concern').value = memo.going_concern_conclusion || '';
+      document.getElementById('narr-subsequent').value    = memo.subsequent_events_conclusion || '';
+      document.getElementById('narr-other').value         = memo.other_matters || '';
+
+      if (isLocked) {
+        ['narr-going-concern','narr-subsequent','narr-other'].forEach(id => document.getElementById(id).disabled = true);
+      }
+    }
+
+    function renderOpinion() {
+      const isLocked = memo.status === 'locked';
+      document.getElementById('opinion-type').value = memo.opinion_type || '';
+      document.getElementById('opinion-basis').value = memo.opinion_basis_notes || '';
+      toggleOpinionBasis();
+      if (isLocked) {
+        document.getElementById('opinion-type').disabled = true;
+        document.getElementById('opinion-basis').disabled = true;
+      }
+    }
+
+    function toggleOpinionBasis() {
+      const t = document.getElementById('opinion-type').value;
+      document.getElementById('opinion-basis-wrap').style.display = (t && t !== 'unmodified') ? 'block' : 'none';
+    }
+    document.addEventListener('change', e => {
+      if (e.target && e.target.id === 'opinion-type') toggleOpinionBasis();
+    });
+
+    function renderEqr() {
+      const isLocked = memo.status === 'locked';
+      document.getElementById('eqr-required').checked = !!memo.eqr_required;
+      document.getElementById('eqr-fields').style.display = memo.eqr_required ? 'block' : 'none';
+
+      const select = document.getElementById('eqr-reviewer');
+      select.innerHTML = '<option value="">— Select reviewer —</option>';
+      orgMembers.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `${m.name} (${m.role})`;
+        if (memo.eqr_reviewer_id === m.id) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      const status = document.getElementById('eqr-status');
+      if (memo.eqr_completed_at) {
+        const reviewer = orgMembers.find(m => m.id === memo.eqr_completed_by)?.name || 'unknown';
+        status.textContent = `EQR completed by ${reviewer} on ${new Date(memo.eqr_completed_at).toLocaleString()}.`;
+      } else {
+        status.textContent = '';
+      }
+
+      if (isLocked) {
+        document.getElementById('eqr-required').disabled = true;
+        document.getElementById('eqr-reviewer').disabled = true;
+        document.getElementById('btn-mark-eqr-complete').disabled = true;
+      }
+    }
+
+    function renderSignoffBar() {
+      const totalTicked = attestations.filter(a => a.attested_at).length;
+      const total = attestations.length;
+      document.getElementById('signoff-progress').innerHTML =
+        `<strong>${totalTicked} / ${total}</strong> attestations complete`;
+
+      const btn = document.getElementById('btn-sign-memo');
+      const canSign = memo.status === 'draft'
+        && memo.all_attestations_complete
+        && currentRole === 'admin';
+      if (memo.status === 'locked') {
+        btn.style.display = 'none';
+      } else {
+        btn.disabled = !canSign;
+      }
+    }
+
+    // ---- Actions ----
+    async function toggleAttestation(a) {
+      const newVal = a.attested_at ? null : new Date().toISOString();
+      const newBy  = newVal ? currentUser.id : null;
+      const { error } = await supabaseClient
+        .from('completion_attestations')
+        .update({ attested_at: newVal, attested_by: newBy })
+        .eq('id', a.id);
+      if (error) { alert('Could not update attestation: ' + error.message); return; }
+      // Refresh memo (trigger may have flipped all_attestations_complete)
+      const { data: m } = await supabaseClient
+        .from('engagement_completion_memo')
+        .select('*')
+        .eq('id', memo.id)
+        .single();
+      if (m) memo = m;
+      await loadAttestations();
+      renderAll();
+    }
+
+    async function saveNarrative() {
+      const msg = document.getElementById('narrative-save-msg');
+      msg.textContent = 'Saving...';
+      const { error } = await supabaseClient
+        .from('engagement_completion_memo')
+        .update({
+          going_concern_conclusion:     document.getElementById('narr-going-concern').value.trim() || null,
+          subsequent_events_conclusion: document.getElementById('narr-subsequent').value.trim() || null,
+          other_matters:                document.getElementById('narr-other').value.trim() || null,
+        })
+        .eq('id', memo.id);
+      msg.textContent = error ? ('Save failed: ' + error.message) : 'Saved.';
+      if (!error) {
+        const { data: m } = await supabaseClient
+          .from('engagement_completion_memo').select('*').eq('id', memo.id).single();
+        if (m) memo = m;
+      }
+    }
+
+    async function saveOpinion() {
+      const msg = document.getElementById('opinion-save-msg');
+      msg.textContent = 'Saving...';
+      const opType = document.getElementById('opinion-type').value || null;
+      const opBasis = document.getElementById('opinion-basis').value.trim() || null;
+      if (opType && opType !== 'unmodified' && !opBasis) {
+        msg.textContent = 'Basis is required for modified opinions.';
+        return;
+      }
+      const { error } = await supabaseClient
+        .from('engagement_completion_memo')
+        .update({ opinion_type: opType, opinion_basis_notes: opBasis })
+        .eq('id', memo.id);
+      msg.textContent = error ? ('Save failed: ' + error.message) : 'Saved.';
+      if (!error) {
+        const { data: m } = await supabaseClient
+          .from('engagement_completion_memo').select('*').eq('id', memo.id).single();
+        if (m) memo = m;
+        await refreshChecks();
+      }
+    }
+
+    async function saveEqrRequired() {
+      const req = document.getElementById('eqr-required').checked;
+      const { error } = await supabaseClient
+        .from('engagement_completion_memo')
+        .update({ eqr_required: req })
+        .eq('id', memo.id);
+      if (error) {
+        alert('Could not update: ' + error.message);
+        document.getElementById('eqr-required').checked = memo.eqr_required;
+        return;
+      }
+      memo.eqr_required = req;
+      document.getElementById('eqr-fields').style.display = req ? 'block' : 'none';
+      await refreshChecks();
+    }
+
+    async function saveEqrReviewer() {
+      const msg = document.getElementById('eqr-save-msg');
+      const reviewerId = document.getElementById('eqr-reviewer').value || null;
+      if (reviewerId && reviewerId === (engagement.created_by || currentUser.id) && reviewerId === currentUser.id) {
+        // Soft guidance — application layer
+        msg.textContent = 'Reviewer should not be the engagement admin.';
+        return;
+      }
+      const { error } = await supabaseClient
+        .from('engagement_completion_memo')
+        .update({ eqr_reviewer_id: reviewerId })
+        .eq('id', memo.id);
+      msg.textContent = error ? ('Save failed: ' + error.message) : 'Saved.';
+      if (!error) memo.eqr_reviewer_id = reviewerId;
+    }
+
+    async function markEqrComplete() {
+      if (!memo.eqr_reviewer_id) {
+        alert('Assign a reviewer first.');
+        return;
+      }
+      if (currentUser.id !== memo.eqr_reviewer_id) {
+        alert('Only the assigned EQR reviewer can mark this complete.');
+        return;
+      }
+      const { error } = await supabaseClient
+        .from('engagement_completion_memo')
+        .update({
+          eqr_completed_at: new Date().toISOString(),
+          eqr_completed_by: currentUser.id,
+        })
+        .eq('id', memo.id);
+      if (error) { alert('Could not mark complete: ' + error.message); return; }
+      await refreshChecks();
+    }
+
+    async function signMemo() {
+      if (!confirm('Sign and lock this completion memo? After signing, all fields become read-only and the engagement can be moved to "Completed".')) return;
+
+      const { error } = await supabaseClient
+        .from('engagement_completion_memo')
+        .update({
+          signed_by: currentUser.id,
+          signed_at: new Date().toISOString(),
+        })
+        .eq('id', memo.id);
+      if (error) { alert('Could not sign memo: ' + error.message); return; }
+
+      // Re-fetch — status should now be 'locked' (set by trigger)
+      const { data: m } = await supabaseClient
+        .from('engagement_completion_memo').select('*').eq('id', memo.id).single();
+      if (m) memo = m;
+      renderAll();
+      alert('Memo signed and locked. You can now move the engagement to Completed from the Engagement page.');
+    }
+
+    // ---- Helpers ----
+    function switchTab(name) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      const btn = Array.from(document.querySelectorAll('.tab-btn'))
+        .find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${name}'`));
+      if (btn) btn.classList.add('active');
+      const panel = document.getElementById('tab-' + name);
+      if (panel) panel.classList.add('active');
+    }
+
+    function humaniseKey(key) {
+      const map = {
+        all_sections_approved:          '1. All sections approved',
+        no_open_findings:               '2. No open findings',
+        uncorrected_below_materiality:  '3. Uncorrected misstatements below materiality',
+        misstatements_communicated:     '4. Misstatements communicated to management',
+        going_concern_assessed:         '5. Going concern assessed',
+        subsequent_events_reviewed:     '6. Subsequent events reviewed',
+        related_parties_complete:       '7. Related parties section complete',
+        all_procedures_responded:       '8. All audit procedures responded',
+        independence_reconfirmed:       '9. Independence reconfirmed at completion',
+        written_reps_obtained:          '10. Written representations obtained',
+        review_notes_resolved:          '11. Review notes resolved',
+        opinion_type_selected:          '12. Opinion type selected',
+        eqr_review_complete:            '13. EQR review complete',
+      };
+      return map[key] || key;
+    }
+
+    init();
+  </script>
+</body>
+</html>
