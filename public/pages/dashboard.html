@@ -736,10 +736,9 @@
       // engagement. Don't block on this — if seeding fails the auditor can
       // still manually create sections from the dropdown.
       try {
-        const result = await seedSectionsForEngagement(supabaseClient, data.id, currentUser.id);
-        console.log('[engagement-created] seeded', result.sectionsCreated, 'sections,', result.proceduresCreated, 'procedures');
+        await seedSectionsForEngagement(supabaseClient, data.id, currentUser.id);
       } catch (e) {
-        console.warn('[engagement-created] seeding failed:', e);
+        // Seeding failure is non-blocking; auditor can manually create sections.
       }
 
       closeModal('modal-new-engagement');

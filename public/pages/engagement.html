@@ -1572,7 +1572,8 @@
           'returned_to_preparer': 'Returned', 'returned_to_supervisor': 'Returned to Supervisor',
           'approved': 'Approved'
         };
-        const statusLabel = STATUS_LABELS[sec.status] || sec.status.replace(/_/g, ' ');
+        const safeStatus = sec.status || 'not_started';
+        const statusLabel = STATUS_LABELS[safeStatus] || safeStatus.replace(/_/g, ' ');
 
         const secProcs = procedures.filter(p => p.section_id === sec.id);
         const totalP = secProcs.length;
@@ -1602,7 +1603,7 @@
               <div class="sec-card-right">
                 ${deleteBtn}
                 ${assigneeControl}
-                <span class="badge badge-${sec.status.replace(/_/g, '-')}">${statusLabel}</span>
+                <span class="badge badge-${safeStatus.replace(/_/g, '-')}">${statusLabel}</span>
                 <div class="sec-card-progress">
                   <div class="sec-card-progress-bar"><div class="sec-card-progress-fill${pct === 100 ? ' full' : ''}" style="width:${pct}%"></div></div>
                   <span class="sec-card-progress-text">${doneP}/${totalP}</span>

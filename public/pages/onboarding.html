@@ -92,6 +92,7 @@
   <script src="../js/auth.js"></script>
   <script>
     let currentUser = null;
+    let hasInvites = false;
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -138,8 +139,6 @@
       hideMessages();
       document.getElementById('firm-name').focus();
     }
-
-    let hasInvites = false;
 
     async function showPendingInvites() {
       document.getElementById('choice-section').style.display = 'none';
