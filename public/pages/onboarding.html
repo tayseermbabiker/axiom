@@ -38,6 +38,27 @@
             <input type="text" id="firm-name" class="form-control" placeholder="e.g. Smith & Associates CPAs" required>
           </div>
           <div class="form-group">
+            <label for="firm-country">Country</label>
+            <select id="firm-country" class="form-control" required>
+              <option value="">Select your country&hellip;</option>
+              <option value="AE">United Arab Emirates</option>
+              <option value="SA">Saudi Arabia</option>
+              <option value="QA">Qatar</option>
+              <option value="KW">Kuwait</option>
+              <option value="OM">Oman</option>
+              <option value="BH">Bahrain</option>
+              <option value="EG">Egypt</option>
+              <option value="JO">Jordan</option>
+              <option value="LB">Lebanon</option>
+              <option value="MA">Morocco</option>
+              <option value="TN">Tunisia</option>
+              <option value="DZ">Algeria</option>
+              <option value="IQ">Iraq</option>
+              <option value="SD">Sudan</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label for="access-code">Access Code</label>
             <input type="text" id="access-code" class="form-control" placeholder="Enter your access code" required>
             <small style="color:var(--gray-500); font-size:11px; margin-top:4px; display:block;">Contact us to get an access code for your firm.</small>
@@ -172,7 +193,17 @@
       hideMessages();
 
       const firmName = document.getElementById('firm-name').value.trim();
+      const country = document.getElementById('firm-country').value;
       const accessCode = document.getElementById('access-code').value.trim().toUpperCase();
+
+      if (!country) {
+        const errEl = document.getElementById('code-error');
+        errEl.textContent = 'Please select your country.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Firm';
+        return;
+      }
 
       // Validate access code
       if (!VALID_CODES.includes(accessCode)) {
@@ -193,6 +224,7 @@
           .from('organizations')
           .insert({
             name: firmName,
+            country: country,
             created_by: currentUser.id,
             trial_expires_at: trialEnd.toISOString()
           })
