@@ -879,7 +879,8 @@
       initMateriality();
       // Load org members first so the section cards can render the inline assignee dropdown
       await loadOrgMembers();
-      await Promise.all([loadSections(), loadTBLines(), loadFindings()]);
+      await loadSections();
+      await Promise.all([loadTBLines(), loadFindings()]);
       updateStats();
     }
 
