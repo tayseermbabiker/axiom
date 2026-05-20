@@ -604,8 +604,12 @@
                 </div>
               </div>
               <div id="mat-benchmark-info" style="font-size:12px; color:var(--gray-500); margin-top:12px;"></div>
-              <button id="btn-save-mat" class="btn btn-primary btn-sm mt-16" onclick="saveMateriality()" style="display:none;">Save Materiality</button>
               <p style="font-size:11px; color:var(--gray-400); margin-top:8px;">Materiality is a matter of professional judgment. These calculations are a starting point.</p>
+            </div>
+            <!-- Save button moved OUT of mat-results so admin can save on first-time setup -->
+            <div id="mat-save-row" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--gray-100);">
+              <button id="btn-save-mat" class="btn btn-primary btn-sm" onclick="saveMateriality()">Save Materiality</button>
+              <span class="text-sm text-muted" style="margin-left:8px;">Enter a benchmark and amount above; results auto-calculate as you type.</span>
             </div>
             <div id="mat-not-set" style="display:none;">
               <p class="text-sm text-muted">Materiality has not been set for this engagement. The engagement partner will set it.</p>
@@ -2417,6 +2421,7 @@
 
       if (tab === 'activity') loadActivityLog();
       if (tab === 'fs') loadFsUploads();
+      if (tab === 'materiality') initMateriality();
       if (tab === 'engagement-letter') loadEngagementLetter();
       if (tab === 'engagement-independence') loadIndependenceWorkpaper();
       if (tab === 'engagement-acceptance') loadEngagementAcceptance();
@@ -2425,11 +2430,17 @@
     function initMateriality() {
       const isPartner = currentRole === 'admin';
 
-      // Admin: show calculator + save. Others: hidden.
+      // Admin: show calculator + save row. Others: keep hidden.
       if (isPartner) {
         document.getElementById('mat-calculator').style.display = 'block';
-        document.getElementById('btn-save-mat').style.display = 'inline-flex';
+        document.getElementById('mat-save-row').style.display   = 'block';
+      } else {
+        document.getElementById('mat-calculator').style.display = 'none';
+        document.getElementById('mat-save-row').style.display   = 'none';
       }
+
+      // Defensive: engagement may not be loaded yet on a re-init via tab switch.
+      if (!engagement) return;
 
       // Load saved values
       if (engagement.materiality_overall) {
