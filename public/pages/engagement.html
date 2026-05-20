@@ -697,8 +697,8 @@
                 <span style="font-size:13px; font-weight:500; margin-left:10px;">Engagement letter</span>
                 <span class="text-sm text-muted" style="margin-left:auto;">ISA 210</span>
               </div>
-              <div class="planning-module-row planning-coming-soon">
-                <span class="badge badge-not-started">Coming soon</span>
+              <div class="planning-module-row" onclick="switchModuleTab('engagement-independence')" style="cursor:pointer;">
+                <span class="badge badge-in-progress">Active</span>
                 <span style="font-size:13px; font-weight:500; margin-left:10px;">Independence &amp; ethics</span>
                 <span class="text-sm text-muted" style="margin-left:auto;">ISA 220 · IESBA</span>
               </div>
@@ -861,6 +861,148 @@
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Previous versions (superseded)</h3>
               <div id="el-history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ INDEPENDENCE & ETHICS PANEL (ISA 220 / IESBA) ═══ -->
+      <div class="tab-panel" id="tab-engagement-independence">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Independence &amp; Ethics</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">ISA 220 (Revised) + IESBA Code — engagement-level independence assessment. Pro feature.</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <span id="ei-status-badge" class="badge" style="display:none;"></span>
+              <button class="btn btn-outline btn-sm" id="ei-btn-revise" onclick="reviseIndependenceAssessment()" style="display:none;">Revise assessment</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Pro-tier blocked -->
+            <div id="ei-pro-blocked" style="display:none; background:var(--warning-light); border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">Independence &amp; Ethics is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:8px 0 12px;">Engagement-level workpaper for IESBA threats, safeguards, fee dependence, and partner rotation. Available on Pro.</p>
+              <a href="../index.html#pricing" class="btn btn-primary btn-sm">View Pro pricing</a>
+            </div>
+
+            <!-- Empty state: no assessment started yet -->
+            <div id="ei-empty" style="display:none; text-align:center; padding:32px 20px;">
+              <div style="font-size:15px; font-weight:600; color:var(--gray-900); margin-bottom:8px;">No independence assessment yet</div>
+              <p class="text-sm text-muted" style="max-width:380px; margin:0 auto 16px; line-height:1.6;">Start the assessment to document the IESBA threats, fee dependence, partner tenure, and any non-audit services for this engagement.</p>
+              <button class="btn btn-primary btn-sm" onclick="startIndependenceAssessment()">Start independence assessment</button>
+            </div>
+
+            <!-- Main form (rendered once parent exists) -->
+            <div id="ei-form-wrap" style="display:none;">
+
+              <!-- Section 1: Partner attestation -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Partner attestation</h3>
+              <p class="text-sm text-muted" style="margin-bottom:12px;">ISA 220 (Revised) makes the engagement partner responsible for the engagement team's compliance with independence and relevant ethical requirements.</p>
+              <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; padding:10px 14px; border:0.5px solid var(--glass-border); border-radius:8px; background:rgba(255,255,255,0.55);">
+                <input type="checkbox" id="ei-partner-attestation" style="margin-top:2px;" onchange="onEiAttestationChange()">
+                <span>I am satisfied, based on the firm's policies and the information obtained, that the engagement team and the firm have complied with independence and the relevant ethical requirements for this engagement.</span>
+              </label>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Assessment date</label>
+                  <input type="date" id="ei-assessment-date" class="form-control">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Attestation date</label>
+                  <input type="date" id="ei-attestation-date" class="form-control">
+                </div>
+              </div>
+
+              <!-- Section 2: Fee dependence -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Fee dependence (IESBA — self-interest threat)</h3>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Client fee % of firm total</label>
+                  <input type="number" id="ei-fee-pct" class="form-control" min="0" max="100" step="0.1" placeholder="e.g. 12.5">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Band</label>
+                  <select id="ei-fee-band" class="form-control" onchange="onEiFeeBandChange()">
+                    <option value="">— Select band —</option>
+                    <option value="lt_10">&lt; 10%</option>
+                    <option value="10_to_15">10–15%</option>
+                    <option value="15_to_20">15–20%</option>
+                    <option value="gt_20">&gt; 20%</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" id="ei-fee-safeguards-wrap" style="display:none;">
+                <label class="text-sm">Safeguards (required when fee dependence &gt; 15%)</label>
+                <textarea id="ei-fee-safeguards" class="form-control" rows="2" placeholder="e.g. EQCR review, external consultation, partner rotation policy, disclosure to TCWG"></textarea>
+              </div>
+
+              <!-- Section 3: Partner rotation / long association -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Partner long association (IESBA — familiarity threat)</h3>
+              <div style="display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Engagement partner tenure (years on this client)</label>
+                  <input type="number" id="ei-partner-tenure" class="form-control" min="0" max="50" placeholder="e.g. 4">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm" style="display:flex; align-items:center; gap:6px; padding-bottom:8px;">
+                    <input type="checkbox" id="ei-partner-rotation-required" onchange="onEiRotationChange()">
+                    Rotation required
+                  </label>
+                </div>
+              </div>
+              <div class="form-group" id="ei-rotation-action-wrap" style="display:none;">
+                <label class="text-sm">Rotation action taken</label>
+                <textarea id="ei-rotation-action" class="form-control" rows="2" placeholder="e.g. Partner rotated for FY2026; new partner X assigned. Or: safeguard applied — EQR by separate partner."></textarea>
+              </div>
+
+              <!-- Section 4: 5 IESBA threat blocks -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">IESBA threats — five categories</h3>
+              <p class="text-sm text-muted" style="margin-bottom:12px;">For each threat category, document whether it is present and how it was addressed. For routine low-risk engagements, "not present" with brief notes is acceptable — but each category must be considered.</p>
+              <div id="ei-threats-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+              <!-- Section 5: Non-Audit Services -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Non-audit services (IESBA Section 600)</h3>
+              <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:12px;">
+                <input type="checkbox" id="ei-no-nas" onchange="onEiNoNasChange()">
+                No non-audit services provided to this client.
+              </label>
+              <div id="ei-nas-section">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span class="text-sm text-muted">For each NAS, document the threats it creates and the safeguards applied.</span>
+                  <button class="btn btn-outline btn-sm" onclick="openNasModal()">+ Add NAS</button>
+                </div>
+                <div id="ei-nas-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                <div id="ei-nas-empty" class="text-sm text-muted" style="display:none; padding:14px; text-align:center;">No NAS recorded.</div>
+              </div>
+
+              <!-- Section 6: Overall conclusion -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Overall conclusion</h3>
+              <div class="form-group">
+                <textarea id="ei-overall-conclusion" class="form-control" rows="3" placeholder="State the overall conclusion: independence maintained / threats reduced to acceptable level via safeguards / engagement should be declined."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Notes (optional)</label>
+                <textarea id="ei-notes" class="form-control" rows="2"></textarea>
+              </div>
+
+              <!-- Error banner -->
+              <div id="ei-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
+
+              <!-- Save bar -->
+              <div style="display:flex; gap:8px; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--gray-100);">
+                <button class="btn btn-outline btn-sm" id="ei-btn-save-draft" onclick="saveIndependence('draft')">Save draft</button>
+                <button class="btn btn-primary btn-sm" id="ei-btn-confirm" onclick="saveIndependence('confirmed')">Confirm independence</button>
+                <span class="text-sm text-muted" id="ei-save-msg" style="margin-left:8px;"></span>
+              </div>
+            </div>
+
+            <!-- Previous superseded assessments -->
+            <div id="ei-history-wrap" style="display:none; margin-top:32px; padding-top:20px; border-top:1px solid var(--gray-100);">
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Previous assessments (superseded)</h3>
+              <div id="ei-history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -1210,6 +1352,68 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('modal-upload-fs')">Cancel</button>
         <button class="btn btn-primary" id="btn-do-fs-upload" onclick="handleFsUpload()">Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Non-Audit Service modal -->
+  <div class="modal-overlay" id="modal-nas">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 id="nas-modal-title">Add Non-Audit Service</h3>
+        <button class="modal-close" onclick="closeModal('modal-nas')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="text-sm">Service type *</label>
+          <select id="nas-service-type" class="form-control">
+            <option value="bookkeeping">Bookkeeping</option>
+            <option value="payroll">Payroll processing</option>
+            <option value="tax">Tax (compliance / advisory)</option>
+            <option value="valuation">Valuation</option>
+            <option value="it">IT services</option>
+            <option value="advisory">Advisory / consulting</option>
+            <option value="internal_audit">Internal audit support</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Description *</label>
+          <textarea id="nas-description" class="form-control" rows="2" placeholder="What specifically is being done"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Primary threat category *</label>
+          <select id="nas-threat-category" class="form-control">
+            <option value="self_interest">Self-interest</option>
+            <option value="self_review">Self-review</option>
+            <option value="advocacy">Advocacy</option>
+            <option value="familiarity">Familiarity</option>
+            <option value="intimidation">Intimidation</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Safeguards applied</label>
+          <textarea id="nas-safeguards" class="form-control" rows="2" placeholder="e.g. Separate team, partner review, client-prepared deliverable"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Conclusion *</label>
+          <textarea id="nas-conclusion" class="form-control" rows="2" placeholder="e.g. Threat reduced to acceptable level by safeguards. Or: Service declined (IESBA-prohibited)."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="text-sm" style="display:flex; align-items:center; gap:6px;">
+            <input type="checkbox" id="nas-is-prohibited">
+            This service is IESBA-prohibited (flag as declined)
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Service provider (if not the audit firm)</label>
+          <input type="text" id="nas-service-provider" class="form-control" placeholder="e.g. Affiliated tax practice">
+        </div>
+        <div id="nas-modal-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-nas')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-nas" onclick="saveNas()">Save</button>
       </div>
     </div>
   </div>
@@ -1857,9 +2061,10 @@
 
     const PHASE_MODULES = {
       planning: [
-        { label: 'Overview',           tab: 'planning-home'     },
-        { label: 'Engagement letter',  tab: 'engagement-letter' },
-        { label: 'Materiality',        tab: 'materiality'       },
+        { label: 'Overview',           tab: 'planning-home'           },
+        { label: 'Engagement letter',  tab: 'engagement-letter'       },
+        { label: 'Independence',       tab: 'engagement-independence' },
+        { label: 'Materiality',        tab: 'materiality'             },
       ],
       execution: [
         { label: 'Trial balance',      tab: 'tb'       },
@@ -2007,6 +2212,7 @@
       if (tab === 'activity') loadActivityLog();
       if (tab === 'fs') loadFsUploads();
       if (tab === 'engagement-letter') loadEngagementLetter();
+      if (tab === 'engagement-independence') loadIndependenceWorkpaper();
     }
 
     function initMateriality() {
@@ -3617,6 +3823,468 @@
         return;
       }
       window.open(data.signedUrl, '_blank');
+    }
+
+    // ---- Independence & Ethics Tab (ISA 220 / IESBA) ----
+    let eiActive = null;       // currently-active independence assessment
+    let eiThreats = [];        // 5 threat rows for the active assessment
+    let eiNas = [];            // engagement-level NAS rows
+    let eiHistory = [];        // superseded assessments
+    let eiEditingNasId = null; // null = adding; uuid = editing
+
+    const EI_THREAT_LABELS = {
+      self_interest: 'Self-interest',
+      self_review:   'Self-review',
+      advocacy:      'Advocacy',
+      familiarity:   'Familiarity',
+      intimidation:  'Intimidation',
+    };
+
+    async function loadIndependenceWorkpaper() {
+      // Pro + admin gate
+      if (!currentOrg || currentOrg.feature_tier !== 'pro' || currentRole !== 'admin') {
+        document.getElementById('ei-pro-blocked').style.display = 'block';
+        document.getElementById('ei-empty').style.display = 'none';
+        document.getElementById('ei-form-wrap').style.display = 'none';
+        document.getElementById('ei-history-wrap').style.display = 'none';
+        return;
+      }
+      document.getElementById('ei-pro-blocked').style.display = 'none';
+
+      // Load parent rows
+      const { data: parents, error } = await supabaseClient
+        .from('engagement_independence')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: false });
+      if (error) { showEiError('Could not load: ' + error.message); return; }
+
+      eiActive = (parents || []).find(p => !p.is_superseded) || null;
+      eiHistory = (parents || []).filter(p => p.is_superseded);
+
+      if (!eiActive) {
+        document.getElementById('ei-empty').style.display = 'block';
+        document.getElementById('ei-form-wrap').style.display = 'none';
+        renderIndependenceHistory();
+        return;
+      }
+      document.getElementById('ei-empty').style.display = 'none';
+      document.getElementById('ei-form-wrap').style.display = 'block';
+
+      // Load threats for active
+      const { data: threats } = await supabaseClient
+        .from('engagement_independence_threats')
+        .select('*')
+        .eq('engagement_independence_id', eiActive.id)
+        .order('sort_order', { ascending: true });
+      eiThreats = threats || [];
+
+      // Load NAS (engagement-level)
+      const { data: nasRows } = await supabaseClient
+        .from('engagement_nas')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: true });
+      eiNas = nasRows || [];
+
+      renderIndependenceForm();
+      renderIndependenceThreats();
+      renderIndependenceNas();
+      renderIndependenceHistory();
+    }
+
+    function renderIndependenceForm() {
+      const e = eiActive || {};
+
+      document.getElementById('ei-partner-attestation').checked = !!e.partner_attestation_made;
+      document.getElementById('ei-assessment-date').value       = e.assessment_date || '';
+      document.getElementById('ei-attestation-date').value      = e.partner_attestation_date || '';
+      document.getElementById('ei-fee-pct').value               = e.fee_pct_of_firm_total ?? '';
+      document.getElementById('ei-fee-band').value              = e.fee_dependence_band || '';
+      document.getElementById('ei-fee-safeguards').value        = e.fee_dependence_safeguards || '';
+      document.getElementById('ei-partner-tenure').value        = e.partner_tenure_years ?? '';
+      document.getElementById('ei-partner-rotation-required').checked = !!e.partner_rotation_required;
+      document.getElementById('ei-rotation-action').value       = e.partner_rotation_action || '';
+      document.getElementById('ei-no-nas').checked              = !!e.no_nas_provided;
+      document.getElementById('ei-overall-conclusion').value    = e.overall_conclusion || '';
+      document.getElementById('ei-notes').value                 = e.notes || '';
+
+      onEiFeeBandChange();
+      onEiRotationChange();
+      onEiNoNasChange();
+
+      // Status badge
+      const badge = document.getElementById('ei-status-badge');
+      if (e.status === 'confirmed') {
+        badge.textContent = 'Confirmed';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#16a34a';
+        badge.style.display = '';
+      } else {
+        badge.textContent = 'Draft';
+        badge.style.background = 'var(--gray-100)';
+        badge.style.color = 'var(--gray-600)';
+        badge.style.display = '';
+      }
+
+      // Revise button
+      document.getElementById('ei-btn-revise').style.display = (e.status === 'confirmed') ? '' : 'none';
+    }
+
+    function renderIndependenceThreats() {
+      const list = document.getElementById('ei-threats-list');
+      list.innerHTML = eiThreats.map(t => {
+        const label = EI_THREAT_LABELS[t.threat_type] || t.threat_type;
+        return `
+          <div class="threat-block" data-threat-id="${t.id}" style="border:0.5px solid var(--glass-border); border-radius:10px; padding:14px 16px; background:rgba(255,255,255,0.55);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div style="font-size:13px; font-weight:600; color:#0a2540;">${escHtml(label)}</div>
+              <label class="text-sm" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" class="ei-threat-present" ${t.present ? 'checked' : ''}>
+                Threat present
+              </label>
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label class="text-sm">Description</label>
+              <textarea class="form-control ei-threat-description" rows="2" placeholder="If present, describe the threat">${escHtml(t.description || '')}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label class="text-sm">Safeguards applied</label>
+              <textarea class="form-control ei-threat-safeguards" rows="2" placeholder="How was the threat addressed (if present)">${escHtml(t.safeguards || '')}</textarea>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="text-sm">Conclusion</label>
+              <textarea class="form-control ei-threat-conclusion" rows="2" placeholder="Threat absent / reduced to acceptable level / engagement should be declined">${escHtml(t.conclusion || '')}</textarea>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderIndependenceNas() {
+      const list = document.getElementById('ei-nas-list');
+      const empty = document.getElementById('ei-nas-empty');
+      const noNasChecked = document.getElementById('ei-no-nas').checked;
+
+      if (noNasChecked) {
+        list.innerHTML = '';
+        empty.style.display = 'none';
+        return;
+      }
+      if (eiNas.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      const TYPE_LABELS = {
+        bookkeeping: 'Bookkeeping', payroll: 'Payroll', tax: 'Tax', valuation: 'Valuation',
+        it: 'IT services', advisory: 'Advisory', internal_audit: 'Internal audit support', other: 'Other'
+      };
+
+      list.innerHTML = eiNas.map(n => {
+        const typeLabel = TYPE_LABELS[n.service_type] || n.service_type;
+        const threatLabel = EI_THREAT_LABELS[n.threat_category] || n.threat_category;
+        const inactiveStyle = !n.is_active ? 'opacity:0.55;' : '';
+        const prohibitedBadge = n.is_prohibited
+          ? '<span class="badge" style="background:#FEF0F0; color:#C02A2A;">Prohibited</span>'
+          : '';
+        const inactiveBadge = !n.is_active
+          ? '<span class="badge" style="background:var(--gray-100); color:var(--gray-500);">Declined / terminated</span>'
+          : '';
+        return `
+          <div style="border:0.5px solid var(--glass-border); border-radius:8px; padding:12px 14px; background:rgba(255,255,255,0.55); ${inactiveStyle}">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+                  <strong style="font-size:13px;">${escHtml(typeLabel)}</strong>
+                  <span class="badge" style="background:#EDE9FE; color:#6b21a8;">${escHtml(threatLabel)}</span>
+                  ${prohibitedBadge}
+                  ${inactiveBadge}
+                </div>
+                <div class="text-sm text-muted">${escHtml(n.description || '')}</div>
+              </div>
+              <div style="display:flex; gap:6px; flex-shrink:0;">
+                <button class="btn btn-outline btn-sm" onclick="openNasModal('${n.id}')">Edit</button>
+                <button class="btn btn-outline btn-sm" onclick="toggleNasActive('${n.id}')">${n.is_active ? 'Terminate' : 'Reactivate'}</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderIndependenceHistory() {
+      const wrap = document.getElementById('ei-history-wrap');
+      const list = document.getElementById('ei-history-list');
+      if (eiHistory.length === 0) { wrap.style.display = 'none'; return; }
+      wrap.style.display = 'block';
+      list.innerHTML = eiHistory.map(h => {
+        const when = h.superseded_at ? new Date(h.superseded_at).toLocaleDateString() : '';
+        const date = h.assessment_date ? formatDate(h.assessment_date) : '';
+        return `
+          <div style="border:0.5px solid var(--glass-border); border-radius:8px; padding:10px 14px; background:rgba(255,255,255,0.55);">
+            <div style="font-size:13px; font-weight:600;">${escHtml(h.status || 'draft')} · assessment ${escHtml(date)}</div>
+            <div style="font-size:11px; color:var(--gray-500);">Superseded ${escHtml(when)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function onEiAttestationChange() {
+      if (document.getElementById('ei-partner-attestation').checked) {
+        // Auto-fill attestation date with today
+        if (!document.getElementById('ei-attestation-date').value) {
+          document.getElementById('ei-attestation-date').value = new Date().toISOString().slice(0, 10);
+        }
+      }
+    }
+    function onEiFeeBandChange() {
+      const band = document.getElementById('ei-fee-band').value;
+      const requiresSafeguards = (band === '15_to_20' || band === 'gt_20');
+      document.getElementById('ei-fee-safeguards-wrap').style.display = requiresSafeguards ? 'block' : 'none';
+    }
+    function onEiRotationChange() {
+      const required = document.getElementById('ei-partner-rotation-required').checked;
+      document.getElementById('ei-rotation-action-wrap').style.display = required ? 'block' : 'none';
+    }
+    function onEiNoNasChange() {
+      renderIndependenceNas();
+    }
+
+    function showEiError(msg) {
+      const el = document.getElementById('ei-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    async function startIndependenceAssessment() {
+      // INSERT parent draft then seed 5 threats
+      const newId = crypto.randomUUID();
+      const { error } = await supabaseClient.from('engagement_independence').insert({
+        id: newId,
+        engagement_id:   engagementId,
+        organization_id: currentOrg.id,
+        status:          'draft',
+        created_by:      currentUser.id,
+      });
+      if (error) { alert('Could not start assessment: ' + error.message); return; }
+
+      const { error: seedErr } = await supabaseClient.rpc('seed_independence_threats', {
+        p_independence_id: newId,
+        p_organization_id: currentOrg.id,
+      });
+      if (seedErr) {
+        alert('Assessment created but threat seeding failed: ' + seedErr.message);
+      }
+      await loadIndependenceWorkpaper();
+    }
+
+    function collectIndependenceParent() {
+      const feePctVal = document.getElementById('ei-fee-pct').value;
+      const tenureVal = document.getElementById('ei-partner-tenure').value;
+      return {
+        assessment_date:              document.getElementById('ei-assessment-date').value || null,
+        partner_attestation_made:     document.getElementById('ei-partner-attestation').checked,
+        partner_attestation_date:     document.getElementById('ei-attestation-date').value || null,
+        fee_pct_of_firm_total:        feePctVal === '' ? null : parseFloat(feePctVal),
+        fee_dependence_band:          document.getElementById('ei-fee-band').value || null,
+        fee_dependence_safeguards:    document.getElementById('ei-fee-safeguards').value.trim() || null,
+        partner_tenure_years:         tenureVal === '' ? null : parseInt(tenureVal, 10),
+        partner_rotation_required:    document.getElementById('ei-partner-rotation-required').checked,
+        partner_rotation_action:      document.getElementById('ei-rotation-action').value.trim() || null,
+        no_nas_provided:              document.getElementById('ei-no-nas').checked,
+        overall_conclusion:           document.getElementById('ei-overall-conclusion').value.trim() || null,
+        notes:                        document.getElementById('ei-notes').value.trim() || null,
+      };
+    }
+
+    function collectIndependenceThreats() {
+      // Reads the 5 threat blocks from the DOM into [{ id, present, description, safeguards, conclusion }]
+      const blocks = document.querySelectorAll('#ei-threats-list .threat-block');
+      const updates = [];
+      blocks.forEach(block => {
+        updates.push({
+          id: block.dataset.threatId,
+          present:     block.querySelector('.ei-threat-present').checked,
+          description: block.querySelector('.ei-threat-description').value.trim() || null,
+          safeguards:  block.querySelector('.ei-threat-safeguards').value.trim() || null,
+          conclusion:  block.querySelector('.ei-threat-conclusion').value.trim() || null,
+        });
+      });
+      return updates;
+    }
+
+    async function saveIndependence(targetStatus) {
+      document.getElementById('ei-error').style.display = 'none';
+      const msg = document.getElementById('ei-save-msg');
+      if (!eiActive) { showEiError('Start an assessment first.'); return; }
+
+      const parent = collectIndependenceParent();
+      parent.status = targetStatus;
+
+      if (targetStatus === 'confirmed') {
+        if (!parent.partner_attestation_made) { showEiError('Tick the partner attestation before confirming.'); return; }
+        if (!parent.partner_attestation_date) { showEiError('Attestation date is required to confirm.'); return; }
+      }
+
+      const btnDraft = document.getElementById('ei-btn-save-draft');
+      const btnConf  = document.getElementById('ei-btn-confirm');
+      btnDraft.disabled = true; btnConf.disabled = true;
+      msg.textContent = 'Saving...';
+
+      try {
+        // Update parent
+        const { error: pErr } = await supabaseClient
+          .from('engagement_independence')
+          .update(parent)
+          .eq('id', eiActive.id);
+        if (pErr) throw new Error('Parent save failed: ' + pErr.message);
+
+        // Update each of the 5 threats
+        const threatUpdates = collectIndependenceThreats();
+        for (const t of threatUpdates) {
+          const { error: tErr } = await supabaseClient
+            .from('engagement_independence_threats')
+            .update({
+              present: t.present,
+              description: t.description,
+              safeguards: t.safeguards,
+              conclusion: t.conclusion,
+            })
+            .eq('id', t.id);
+          if (tErr) throw new Error('Threat save failed: ' + tErr.message);
+        }
+
+        await logActivity(engagementId,
+          targetStatus === 'confirmed' ? 'confirmed_independence' : 'saved_independence',
+          'engagement_independence',
+          eiActive.id,
+          { status: targetStatus }
+        );
+
+        msg.textContent = 'Saved.';
+        setTimeout(() => { msg.textContent = ''; }, 2500);
+        await loadIndependenceWorkpaper();
+      } catch (err) {
+        showEiError(err.message);
+        msg.textContent = '';
+      } finally {
+        btnDraft.disabled = false;
+        btnConf.disabled = false;
+      }
+    }
+
+    async function reviseIndependenceAssessment() {
+      if (!eiActive || eiActive.status !== 'confirmed') return;
+      const ok = await showActionModal({
+        title: 'Revise independence assessment?',
+        message: 'The current confirmed assessment will be marked as superseded and kept on file. A new draft will be created so you can reassess (per ISA 220 ongoing-evaluation principle).',
+        okLabel: 'Create reassessment',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+      const { data, error } = await supabaseClient.rpc('revise_independence_assessment', {
+        p_engagement_id:   engagementId,
+        p_organization_id: currentOrg.id,
+      });
+      if (error) { showEiError('Could not revise: ' + error.message); return; }
+      await logActivity(engagementId, 'revised_independence', 'engagement_independence', data, { prior_id: eiActive.id });
+      await loadIndependenceWorkpaper();
+    }
+
+    // ---- NAS modal ----
+    function openNasModal(nasId) {
+      eiEditingNasId = nasId || null;
+      document.getElementById('nas-modal-title').textContent = nasId ? 'Edit Non-Audit Service' : 'Add Non-Audit Service';
+      document.getElementById('nas-modal-error').style.display = 'none';
+      if (nasId) {
+        const n = eiNas.find(x => x.id === nasId);
+        if (!n) return;
+        document.getElementById('nas-service-type').value     = n.service_type || 'other';
+        document.getElementById('nas-description').value      = n.description || '';
+        document.getElementById('nas-threat-category').value  = n.threat_category || 'self_interest';
+        document.getElementById('nas-safeguards').value       = n.safeguards || '';
+        document.getElementById('nas-conclusion').value       = n.conclusion || '';
+        document.getElementById('nas-is-prohibited').checked  = !!n.is_prohibited;
+        document.getElementById('nas-service-provider').value = n.service_provider || '';
+      } else {
+        document.getElementById('nas-service-type').value     = 'bookkeeping';
+        document.getElementById('nas-description').value      = '';
+        document.getElementById('nas-threat-category').value  = 'self_review';
+        document.getElementById('nas-safeguards').value       = '';
+        document.getElementById('nas-conclusion').value       = '';
+        document.getElementById('nas-is-prohibited').checked  = false;
+        document.getElementById('nas-service-provider').value = '';
+      }
+      document.getElementById('modal-nas').classList.add('active');
+    }
+
+    async function saveNas() {
+      const description = document.getElementById('nas-description').value.trim();
+      const conclusion  = document.getElementById('nas-conclusion').value.trim();
+      const errEl = document.getElementById('nas-modal-error');
+      if (!description) { errEl.textContent = 'Description is required.'; errEl.style.display = 'block'; return; }
+      if (!conclusion)  { errEl.textContent = 'Conclusion is required.';  errEl.style.display = 'block'; return; }
+
+      const payload = {
+        service_type:     document.getElementById('nas-service-type').value,
+        description:      description,
+        threat_category:  document.getElementById('nas-threat-category').value,
+        safeguards:       document.getElementById('nas-safeguards').value.trim() || null,
+        conclusion:       conclusion,
+        is_prohibited:    document.getElementById('nas-is-prohibited').checked,
+        service_provider: document.getElementById('nas-service-provider').value.trim() || null,
+      };
+
+      const btn = document.getElementById('btn-save-nas');
+      btn.disabled = true; btn.textContent = 'Saving...';
+
+      try {
+        if (eiEditingNasId) {
+          const { error } = await supabaseClient
+            .from('engagement_nas')
+            .update(payload)
+            .eq('id', eiEditingNasId);
+          if (error) throw new Error(error.message);
+        } else {
+          const { error } = await supabaseClient
+            .from('engagement_nas')
+            .insert({
+              ...payload,
+              engagement_id:   engagementId,
+              organization_id: currentOrg.id,
+              created_by:      currentUser.id,
+              is_active:       true,
+            });
+          if (error) throw new Error(error.message);
+        }
+        await logActivity(engagementId,
+          eiEditingNasId ? 'edited_nas' : 'added_nas',
+          'engagement_nas',
+          eiEditingNasId || engagementId,
+          { service_type: payload.service_type }
+        );
+        closeModal('modal-nas');
+        await loadIndependenceWorkpaper();
+      } catch (err) {
+        errEl.textContent = 'Save failed: ' + err.message;
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save';
+      }
+    }
+
+    async function toggleNasActive(nasId) {
+      const n = eiNas.find(x => x.id === nasId);
+      if (!n) return;
+      const { error } = await supabaseClient
+        .from('engagement_nas')
+        .update({ is_active: !n.is_active })
+        .eq('id', nasId);
+      if (error) { alert('Could not update: ' + error.message); return; }
+      await loadIndependenceWorkpaper();
     }
 
     // ---- Activity Log Tab ----
