@@ -110,6 +110,7 @@ const PERMISSIONS = {
   edit_shared_folder:       ['admin', 'supervisor'],
   upload_tb:                ['admin', 'supervisor'],
   replace_tb:               ['admin', 'supervisor'],
+  upload_fs:                ['admin', 'supervisor'],
 
   // Sections
   create_section:           ['admin', 'supervisor'],

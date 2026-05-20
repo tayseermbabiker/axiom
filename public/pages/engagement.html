@@ -412,6 +412,7 @@
         <button class="tab-btn" onclick="switchTab('materiality')">Materiality</button>
         <button class="tab-btn" onclick="switchTab('sections')">Sections</button>
         <button class="tab-btn" onclick="switchTab('findings')">Findings</button>
+        <button class="tab-btn" onclick="switchTab('fs')">Financial Statements</button>
         <button class="tab-btn" onclick="switchTab('activity')">Activity Log</button>
       </div>
 
@@ -545,6 +546,58 @@
             </div>
             <div id="mat-not-set" style="display:none;">
               <p class="text-sm text-muted">Materiality has not been set for this engagement. The engagement partner will set it.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Statements Tab -->
+      <div class="tab-panel" id="tab-fs">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Financial Statements</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">Client-prepared financial statements supporting the audit opinion. Keep the signed version on file as audit evidence.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-upload-fs" onclick="openFsUploadModal()" style="display:none;">Upload Financial Statements</button>
+          </div>
+          <div class="card-body">
+            <!-- Active signed banner -->
+            <div id="fs-signed-card" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:16px 20px; margin-bottom:20px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+                <div style="flex:1; min-width:0;">
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                    <span class="badge" style="background:#16a34a; color:white;">Signed</span>
+                    <strong style="font-size:14px; color:#14532D;">Active signed version on file</strong>
+                  </div>
+                  <div id="fs-signed-name" style="font-size:14px; font-weight:600; color:var(--gray-900); margin-bottom:2px; word-break:break-all;"></div>
+                  <div id="fs-signed-meta" style="font-size:12px; color:var(--gray-600);"></div>
+                </div>
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                  <button class="btn btn-outline btn-sm" id="fs-signed-download">Download</button>
+                  <button class="btn btn-outline btn-sm" id="fs-signed-supersede" style="display:none; color:#dc2626; border-color:#fecaca;">Supersede</button>
+                </div>
+              </div>
+            </div>
+
+            <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Version History</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:120px;">Version</th>
+                    <th>File</th>
+                    <th>Uploaded</th>
+                    <th>Size</th>
+                    <th style="width:140px; text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="fs-history-table"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="fs-empty" style="display:none;">
+              <p>No financial statements uploaded yet.</p>
+              <button class="btn btn-primary" id="btn-upload-fs-empty" onclick="openFsUploadModal()" style="display:none;">Upload Financial Statements</button>
             </div>
           </div>
         </div>
@@ -791,6 +844,45 @@
     </div>
   </div>
 
+  <!-- Upload Financial Statements Modal -->
+  <div class="modal-overlay" id="modal-upload-fs">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3>Upload Financial Statements</h3>
+        <button class="modal-close" onclick="closeModal('modal-upload-fs')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted mb-16">Upload the client-prepared FS for review. Accepts PDF and Word (max 50 MB).</p>
+        <div class="form-group">
+          <label class="text-sm">Version Type *</label>
+          <select id="fs-version-type" class="form-control">
+            <option value="draft">Draft (client working copy)</option>
+            <option value="final_for_review">Final for Review (client signed off, ready for partner)</option>
+            <option value="signed">Signed (final signed by client &mdash; audit evidence)</option>
+          </select>
+          <small style="color:var(--gray-500); font-size:11px;">Uploading a new <strong>Signed</strong> version will mark the previous signed version as superseded.</small>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Version Label <span class="text-muted">(optional)</span></label>
+          <input type="text" id="fs-version-label" class="form-control" placeholder="e.g. v1, Final Adjusted, Post-AJE">
+        </div>
+        <div class="form-group">
+          <label class="text-sm">File *</label>
+          <input type="file" id="fs-file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Notes <span class="text-muted">(optional)</span></label>
+          <textarea id="fs-notes" class="form-control" rows="2" placeholder="What changed in this version?"></textarea>
+        </div>
+        <div id="fs-upload-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-upload-fs')">Cancel</button>
+        <button class="btn btn-primary" id="btn-do-fs-upload" onclick="handleFsUpload()">Upload</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Finding Detail Modal -->
   <div class="modal-overlay" id="modal-finding">
     <div class="modal modal-wide">
@@ -880,6 +972,10 @@
       if (can('upload_tb')) {
         document.getElementById('btn-upload-tb').style.display = '';
         document.getElementById('btn-upload-tb-empty').style.display = '';
+      }
+      if (can('upload_fs')) {
+        document.getElementById('btn-upload-fs').style.display = '';
+        document.getElementById('btn-upload-fs-empty').style.display = '';
       }
       if (can('edit_shared_folder')) {
         document.querySelectorAll('.role-admin-supervisor').forEach(el => el.style.display = '');
@@ -1420,7 +1516,8 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
 
-      const tabMap = { sections: 0, tb: 1, findings: 2, materiality: 3, activity: 4 };
+      // Button order in DOM: tb, materiality, sections, findings, fs, activity
+      const tabMap = { tb: 0, materiality: 1, sections: 2, findings: 3, fs: 4, activity: 5 };
       const idx = tabMap[tab];
       if (idx !== undefined) {
         document.querySelectorAll('.tab-btn')[idx].classList.add('active');
@@ -1430,6 +1527,7 @@
       if (panel) panel.classList.add('active');
 
       if (tab === 'activity') loadActivityLog();
+      if (tab === 'fs') loadFsUploads();
     }
 
     function initMateriality() {
@@ -2385,6 +2483,280 @@
       `;
 
       document.getElementById('modal-finding').classList.add('active');
+    }
+
+    // ---- Financial Statements Tab ----
+    let fsUploads = [];
+    const FS_BUCKET = 'fs-documents';
+    const FS_MAX_BYTES = 50 * 1024 * 1024;
+    const FS_VERSION_LABELS = {
+      draft: 'Draft',
+      final_for_review: 'Final for Review',
+      signed: 'Signed'
+    };
+
+    function fileExt(name) {
+      const i = name.lastIndexOf('.');
+      return i >= 0 ? name.slice(i + 1).toLowerCase() : '';
+    }
+
+    function formatBytes(n) {
+      if (!n && n !== 0) return '—';
+      if (n < 1024) return n + ' B';
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+      return (n / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    async function loadFsUploads() {
+      const { data, error } = await supabaseClient
+        .from('engagement_fs_uploads')
+        .select('*, profiles:uploaded_by(full_name, email)')
+        .eq('engagement_id', engagementId)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) {
+        document.getElementById('fs-history-table').innerHTML =
+          '<tr><td colspan="5" class="text-muted">Error loading: ' + escHtml(error.message) + '</td></tr>';
+        return;
+      }
+
+      fsUploads = data || [];
+      renderFsUploads();
+    }
+
+    function renderFsUploads() {
+      const tbody = document.getElementById('fs-history-table');
+      const empty = document.getElementById('fs-empty');
+      const signedCard = document.getElementById('fs-signed-card');
+
+      // Active signed (one at most by partial unique index)
+      const activeSigned = fsUploads.find(u => u.version_type === 'signed' && !u.is_superseded);
+      if (activeSigned) {
+        signedCard.style.display = 'block';
+        document.getElementById('fs-signed-name').textContent = activeSigned.file_name;
+        const who = activeSigned.profiles?.full_name || activeSigned.profiles?.email || 'Unknown';
+        const when = new Date(activeSigned.uploaded_at).toLocaleString();
+        const label = activeSigned.version_label ? ' · ' + activeSigned.version_label : '';
+        document.getElementById('fs-signed-meta').textContent =
+          'Uploaded by ' + who + ' on ' + when + ' · ' + formatBytes(activeSigned.file_size_bytes) + label;
+
+        const dl = document.getElementById('fs-signed-download');
+        dl.onclick = () => downloadFsFile(activeSigned);
+
+        const sup = document.getElementById('fs-signed-supersede');
+        if (can('upload_fs')) {
+          sup.style.display = '';
+          sup.onclick = () => supersedeFsUpload(activeSigned.id);
+        } else {
+          sup.style.display = 'none';
+        }
+      } else {
+        signedCard.style.display = 'none';
+      }
+
+      // History table — everything (including the active signed, marked clearly)
+      if (fsUploads.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      tbody.innerHTML = fsUploads.map(u => {
+        const who = u.profiles?.full_name || u.profiles?.email || 'Unknown';
+        const when = new Date(u.uploaded_at).toLocaleDateString('en-US', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        }) + ' ' + new Date(u.uploaded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const typeLabel = FS_VERSION_LABELS[u.version_type] || u.version_type;
+        const isActive = !u.is_superseded;
+        const isActiveSigned = u.version_type === 'signed' && isActive;
+        const supersededBadge = u.is_superseded
+          ? '<span class="badge" style="background:var(--gray-100); color:var(--gray-500);">Superseded</span>'
+          : (isActiveSigned ? '<span class="badge" style="background:#16a34a; color:white;">Active</span>' : '');
+        const versionPill = u.version_type === 'signed'
+          ? '<span class="badge" style="background:#dcfce7; color:#16a34a;">' + typeLabel + '</span>'
+          : (u.version_type === 'final_for_review'
+              ? '<span class="badge" style="background:#dbeafe; color:#1d4ed8;">' + typeLabel + '</span>'
+              : '<span class="badge" style="background:var(--gray-100); color:var(--gray-600);">' + typeLabel + '</span>');
+
+        const label = u.version_label ? '<div class="text-sm text-muted">' + escHtml(u.version_label) + '</div>' : '';
+        const supersedeBtn = (!u.is_superseded && can('upload_fs'))
+          ? '<button class="btn btn-outline btn-sm" onclick="supersedeFsUpload(\'' + u.id + '\')" style="color:#dc2626; border-color:#fecaca;">Supersede</button>'
+          : '';
+
+        return '<tr>' +
+          '<td>' + versionPill + ' ' + supersededBadge + '</td>' +
+          '<td><div style="font-weight:500; word-break:break-all;">' + escHtml(u.file_name) + '</div>' + label + '</td>' +
+          '<td><div>' + escHtml(who) + '</div><div class="text-sm text-muted">' + when + '</div></td>' +
+          '<td>' + formatBytes(u.file_size_bytes) + '</td>' +
+          '<td style="text-align:right; white-space:nowrap;">' +
+            '<button class="btn btn-outline btn-sm" onclick="downloadFsUploadById(\'' + u.id + '\')">Download</button> ' +
+            supersedeBtn +
+          '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function openFsUploadModal() {
+      if (!can('upload_fs')) { alert('Only partners and supervisors can upload Financial Statements.'); return; }
+      document.getElementById('fs-version-type').value = 'draft';
+      document.getElementById('fs-version-label').value = '';
+      document.getElementById('fs-file').value = '';
+      document.getElementById('fs-notes').value = '';
+      document.getElementById('fs-upload-error').style.display = 'none';
+      document.getElementById('btn-do-fs-upload').disabled = false;
+      document.getElementById('btn-do-fs-upload').textContent = 'Upload';
+      document.getElementById('modal-upload-fs').classList.add('active');
+    }
+
+    function showFsUploadError(msg) {
+      const el = document.getElementById('fs-upload-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    async function handleFsUpload() {
+      const versionType = document.getElementById('fs-version-type').value;
+      const versionLabel = document.getElementById('fs-version-label').value.trim();
+      const notes = document.getElementById('fs-notes').value.trim();
+      const fileInput = document.getElementById('fs-file');
+      const file = fileInput.files && fileInput.files[0];
+
+      document.getElementById('fs-upload-error').style.display = 'none';
+
+      if (!file) { showFsUploadError('Choose a file to upload.'); return; }
+      if (file.size > FS_MAX_BYTES) {
+        showFsUploadError('File is ' + formatBytes(file.size) + ' — limit is 50 MB.');
+        return;
+      }
+      const ext = fileExt(file.name);
+      if (!['pdf', 'doc', 'docx'].includes(ext)) {
+        showFsUploadError('Only PDF and Word (.doc, .docx) files are accepted.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-do-fs-upload');
+      btn.disabled = true;
+      btn.textContent = 'Uploading...';
+
+      try {
+        // If uploading a new 'signed' version, mark any active signed as superseded first.
+        // The partial unique index would otherwise reject the insert.
+        if (versionType === 'signed') {
+          const existingSigned = fsUploads.find(u => u.version_type === 'signed' && !u.is_superseded);
+          if (existingSigned) {
+            const { error: supErr } = await supabaseClient
+              .from('engagement_fs_uploads')
+              .update({
+                is_superseded: true,
+                superseded_at: new Date().toISOString(),
+                superseded_by: currentUser.id
+              })
+              .eq('id', existingSigned.id);
+            if (supErr) throw new Error('Could not supersede existing signed version: ' + supErr.message);
+          }
+        }
+
+        // Generate the upload id locally so it can be reused as the storage path
+        const uploadId = crypto.randomUUID();
+        const storagePath = currentOrg.id + '/' + engagementId + '/' + uploadId + '.' + ext;
+
+        const { error: upErr } = await supabaseClient.storage
+          .from(FS_BUCKET)
+          .upload(storagePath, file, {
+            contentType: file.type || undefined,
+            upsert: false
+          });
+        if (upErr) {
+          // Common: bucket missing → friendlier message
+          const msg = (upErr.message || '').toLowerCase();
+          if (msg.includes('bucket') || msg.includes('not found')) {
+            throw new Error('Storage bucket "fs-documents" is not set up yet. Ask an administrator to create it in Supabase (private, 50 MB cap, PDF/DOCX/DOC).');
+          }
+          throw new Error('Upload failed: ' + upErr.message);
+        }
+
+        const { error: insErr } = await supabaseClient.from('engagement_fs_uploads').insert({
+          id: uploadId,
+          engagement_id: engagementId,
+          organization_id: currentOrg.id,
+          version_type: versionType,
+          file_name: file.name,
+          file_path: storagePath,
+          file_size_bytes: file.size,
+          mime_type: file.type || null,
+          version_label: versionLabel || null,
+          uploaded_by: currentUser.id,
+          notes: notes || null
+        });
+        if (insErr) {
+          // Try to clean up the orphaned storage object
+          await supabaseClient.storage.from(FS_BUCKET).remove([storagePath]);
+          throw new Error('Could not save metadata: ' + insErr.message);
+        }
+
+        await logActivity(engagementId, 'uploaded_fs', 'engagement_fs_upload', uploadId, {
+          version_type: versionType,
+          file_name: file.name,
+          size_bytes: file.size
+        });
+
+        closeModal('modal-upload-fs');
+        await loadFsUploads();
+      } catch (err) {
+        showFsUploadError(err.message);
+        btn.disabled = false;
+        btn.textContent = 'Upload';
+        return;
+      }
+    }
+
+    function downloadFsUploadById(id) {
+      const u = fsUploads.find(x => x.id === id);
+      if (u) downloadFsFile(u);
+    }
+
+    async function downloadFsFile(upload) {
+      const { data, error } = await supabaseClient.storage
+        .from(FS_BUCKET)
+        .createSignedUrl(upload.file_path, 60);
+      if (error || !data?.signedUrl) {
+        alert('Could not generate download link: ' + (error?.message || 'unknown error'));
+        return;
+      }
+      // Open in a new tab — browser handles PDF inline / DOCX download
+      window.open(data.signedUrl, '_blank');
+    }
+
+    async function supersedeFsUpload(id) {
+      if (!can('upload_fs')) return;
+      const upload = fsUploads.find(u => u.id === id);
+      if (!upload) return;
+      const ok = await showActionModal({
+        title: 'Mark as Superseded?',
+        message: 'This will mark "' + upload.file_name + '" as superseded. The file stays on record but is no longer the active version.',
+        okLabel: 'Mark Superseded',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+
+      const { error } = await supabaseClient
+        .from('engagement_fs_uploads')
+        .update({
+          is_superseded: true,
+          superseded_at: new Date().toISOString(),
+          superseded_by: currentUser.id
+        })
+        .eq('id', id);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      await logActivity(engagementId, 'superseded_fs', 'engagement_fs_upload', id, {
+        file_name: upload.file_name,
+        version_type: upload.version_type
+      });
+      await loadFsUploads();
     }
 
     // ---- Activity Log Tab ----
