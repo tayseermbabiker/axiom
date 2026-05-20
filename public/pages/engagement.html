@@ -7,6 +7,23 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <style>
+    /* ---- Planning / Conclusion module rows ---- */
+    .planning-module-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      border: 0.5px solid rgba(180,210,240,0.45);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.55);
+      transition: all 0.15s;
+    }
+    .planning-module-row:hover {
+      background: rgba(255,255,255,0.85);
+      border-color: rgba(100,170,230,0.50);
+    }
+    .planning-coming-soon { opacity: 0.65; cursor: default; }
+    .planning-coming-soon:hover { opacity: 0.75; }
+
     .class-tag {
       display: inline-block;
       padding: 4px 10px;
@@ -364,7 +381,6 @@
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start;">
-          <a id="btn-completion-memo" class="btn btn-primary btn-sm" style="display:none;" title="Open the Engagement Completion Memorandum (Pro)">Completion Memo</a>
           <button class="btn btn-outline btn-sm" onclick="exportReport()" title="Export engagement report as PDF">Export PDF</button>
           <div id="eng-actions" style="display:flex; gap:8px; align-items:flex-start;"></div>
         </div>
@@ -407,14 +423,60 @@
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('tb')">Trial Balance</button>
-        <button class="tab-btn" onclick="switchTab('materiality')">Materiality</button>
-        <button class="tab-btn" onclick="switchTab('sections')">Sections</button>
-        <button class="tab-btn" onclick="switchTab('findings')">Findings</button>
-        <button class="tab-btn" onclick="switchTab('fs')">Financial Statements</button>
-        <button class="tab-btn" onclick="switchTab('activity')">Activity Log</button>
+      <!-- ═══════════════════════════════════════════════
+           PHASE STEPPER — Level 1 (Planning / Execution / Conclusion)
+           ════════════════════════════════════════════════ -->
+      <div class="phase-stepper" id="phase-stepper">
+
+        <button class="phase-step" id="phase-btn-planning"
+          onclick="switchPhase('planning')" title="Planning phase">
+          <div class="step-num" id="step-num-planning">1</div>
+          <div class="step-text">
+            <div class="step-label">Planning</div>
+            <div class="step-sub" id="step-sub-planning">Not started</div>
+          </div>
+        </button>
+
+        <span class="step-arrow">›</span>
+
+        <button class="phase-step active" id="phase-btn-execution"
+          onclick="switchPhase('execution')" title="Execution phase">
+          <div class="step-num" id="step-num-execution">2</div>
+          <div class="step-text">
+            <div class="step-label">Execution</div>
+            <div class="step-sub" id="step-sub-execution">0 of 0 sections done</div>
+          </div>
+        </button>
+
+        <span class="step-arrow">›</span>
+
+        <button class="phase-step locked" id="phase-btn-conclusion"
+          onclick="switchPhase('conclusion')" title="Complete execution first">
+          <div class="step-num" id="step-num-conclusion">3</div>
+          <div class="step-text">
+            <div class="step-label">Conclusion</div>
+            <div class="step-sub" id="step-sub-conclusion">Locked</div>
+          </div>
+        </button>
+
+        <!-- Overall progress — pushed to right -->
+        <div class="stepper-right">
+          <div>
+            <div class="stepper-right-label">Overall progress</div>
+            <div class="stepper-right-pct" id="stepper-pct">0%</div>
+          </div>
+          <div class="stepper-progress-wrap">
+            <div class="stepper-progress-fill" id="stepper-fill" style="width:0%;"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════════════════════════════════
+           MODULE TABS — Level 2 (changes per phase)
+           ════════════════════════════════════════════════ -->
+      <div class="module-nav" id="module-nav">
+        <!-- Rendered by renderModuleTabs() in JS below -->
       </div>
 
       <!-- Sections Tab -->
@@ -610,6 +672,132 @@
           <div class="card-header"><h2>Activity Log</h2></div>
           <div class="card-body" id="activity-list">
             <div class="empty-state"><p>Loading...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PLANNING PHASE PANEL ═══ -->
+      <div class="tab-panel" id="tab-planning-home">
+        <div class="card">
+          <div class="card-header">
+            <h2>Planning</h2>
+            <span class="text-sm text-muted">Complete all planning modules before beginning fieldwork</span>
+          </div>
+          <div class="card-body">
+            <p class="text-sm text-muted" style="margin-bottom:20px;">
+              These modules will be available in the next release. Use this phase to document your planning decisions.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:8px; max-width:480px;">
+              <div class="planning-module-row" onclick="switchModuleTab('materiality')" style="cursor:pointer;">
+                <span class="badge badge-in-progress">Active</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Materiality</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 320</span>
+              </div>
+              <div class="planning-module-row planning-coming-soon">
+                <span class="badge badge-not-started">Coming soon</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Engagement acceptance &amp; letter</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 210 · 220</span>
+              </div>
+              <div class="planning-module-row planning-coming-soon">
+                <span class="badge badge-not-started">Coming soon</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Independence &amp; ethics</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 220 · IESBA</span>
+              </div>
+              <div class="planning-module-row planning-coming-soon">
+                <span class="badge badge-not-started">Coming soon</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Understanding the entity</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 315</span>
+              </div>
+              <div class="planning-module-row planning-coming-soon">
+                <span class="badge badge-not-started">Coming soon</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Risk assessment &amp; RoMM</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 315 · 240</span>
+              </div>
+              <div class="planning-module-row planning-coming-soon">
+                <span class="badge badge-not-started">Coming soon</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Overall audit strategy</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 300</span>
+              </div>
+              <div class="planning-module-row planning-coming-soon">
+                <span class="badge badge-not-started">Coming soon</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Audit plan — risk linkage</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 330</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CONCLUSION PHASE PANEL ═══ -->
+      <div class="tab-panel" id="tab-conclusion-home">
+        <div class="card">
+          <div class="card-header">
+            <h2>Conclusion &amp; Reporting</h2>
+            <div style="display:flex; gap:8px;">
+              <!-- Completion memo button moved here from page header -->
+              <a id="btn-completion-memo" class="btn btn-primary btn-sm" style="display:none;"
+                title="Open the Engagement Completion Memorandum (Pro)">Completion Memo</a>
+              <button class="btn btn-outline btn-sm" id="btn-review-close-conclusion" style="display:none;">
+                Review &amp; close
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="conclusion-locked-msg" style="display:none; text-align:center; padding:32px 20px;">
+              <div style="font-size:32px; margin-bottom:12px;">🔒</div>
+              <div style="font-size:15px; font-weight:600; color:#0a2540; margin-bottom:8px;">
+                Conclusion is locked
+              </div>
+              <div style="font-size:13px; color:#7a9bb8; max-width:320px; margin:0 auto; line-height:1.7;">
+                All execution sections must be partner-approved before conclusion unlocks.
+                This protects the integrity of your audit file per ISA 220.
+              </div>
+              <div style="margin-top:16px; font-size:12px; color:#aac4d8;" id="conclusion-progress-msg">
+                0 / 0 sections approved
+              </div>
+            </div>
+            <div id="conclusion-modules" style="display:none;">
+              <p class="text-sm text-muted" style="margin-bottom:20px;">
+                Execution complete. Work through the conclusion modules below.
+              </p>
+              <div style="display:flex; flex-direction:column; gap:8px; max-width:480px;">
+                <div class="planning-module-row planning-coming-soon">
+                  <span class="badge badge-not-started">Coming soon</span>
+                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Engagement conclusion</span>
+                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 220 · 450</span>
+                </div>
+                <div class="planning-module-row planning-coming-soon">
+                  <span class="badge badge-not-started">Coming soon</span>
+                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Subsequent events</span>
+                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 560</span>
+                </div>
+                <div class="planning-module-row planning-coming-soon">
+                  <span class="badge badge-not-started">Coming soon</span>
+                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Going concern conclusion</span>
+                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 570</span>
+                </div>
+                <div class="planning-module-row planning-coming-soon">
+                  <span class="badge badge-not-started">Coming soon</span>
+                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Management representation letter</span>
+                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 580</span>
+                </div>
+                <div class="planning-module-row planning-coming-soon">
+                  <span class="badge badge-not-started">Coming soon</span>
+                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Communication with TCWG</span>
+                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 260 · 265</span>
+                </div>
+                <div class="planning-module-row planning-coming-soon">
+                  <span class="badge badge-not-started">Coming soon</span>
+                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Audit opinion drafting</span>
+                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 700 · 705 · 706</span>
+                </div>
+                <div class="planning-module-row planning-coming-soon">
+                  <span class="badge badge-not-started">Coming soon</span>
+                  <span style="font-size:13px; font-weight:500; margin-left:10px;">EQCR review</span>
+                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 220 revised</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -999,6 +1187,10 @@
       await loadSections();
       await Promise.all([loadTBLines(), loadFindings()]);
       updateStats();
+
+      // Initialize phase navigator — default to Execution phase, Trial Balance tab
+      renderModuleTabs('execution');
+      switchModuleTab('tb');
     }
 
     async function resolveProfileName(userId) {
@@ -1297,6 +1489,7 @@
       document.getElementById('stat-procedures').textContent = doneProcs + ' / ' + totalProcs;
       document.getElementById('stat-findings').textContent = openFindings;
       document.getElementById('stat-approved').textContent = approvedSections + ' / ' + totalSections;
+      updateStepperProgress(approvedSections, totalSections);
 
       renderEngagementActions();
     }
@@ -1520,6 +1713,142 @@
       renderEngagementActions();
       initMateriality();
     }
+
+    /* ══════════════════════════════════════════════════════════════
+       PHASE NAVIGATOR — 2-level nav (phase stepper + module tabs)
+       ══════════════════════════════════════════════════════════════ */
+
+    const PHASE_MODULES = {
+      planning: [
+        { label: 'Overview',     tab: 'planning-home' },
+        { label: 'Materiality',  tab: 'materiality'   },
+      ],
+      execution: [
+        { label: 'Trial balance',      tab: 'tb'       },
+        { label: 'Workpapers',         tab: 'sections' },
+        { label: 'Findings',           tab: 'findings' },
+        { label: 'Financial statements', tab: 'fs'     },
+        { label: 'Activity log',       tab: 'activity' },
+      ],
+      conclusion: [
+        { label: 'Overview', tab: 'conclusion-home' },
+      ],
+    };
+
+    let currentPhase = 'execution';
+    let currentModuleTab = 'tb';
+
+    function switchPhase(phase) {
+      // Prevent navigating to locked conclusion unless execution is complete
+      if (phase === 'conclusion') {
+        const approvedEl = document.getElementById('stat-approved');
+        if (approvedEl) {
+          const parts = approvedEl.textContent.split('/');
+          const approved = parseInt(parts[0]) || 0;
+          const total    = parseInt(parts[1]) || 1;
+          if (approved < total) {
+            // Still switch — but show locked message inside the panel
+          }
+        }
+      }
+
+      currentPhase = phase;
+
+      // Update stepper button states
+      ['planning', 'execution', 'conclusion'].forEach(p => {
+        const btn = document.getElementById('phase-btn-' + p);
+        if (!btn) return;
+        btn.classList.remove('active', 'done', 'locked');
+        if (p === phase) {
+          btn.classList.add('active');
+        } else if (p === 'planning' && phase !== 'planning') {
+          btn.classList.add('done');
+          const numEl = btn.querySelector('.step-num');
+          if (numEl) numEl.textContent = '✓';
+        } else if (p === 'conclusion' && phase === 'planning') {
+          btn.classList.add('locked');
+        } else if (p === 'conclusion' && phase === 'execution') {
+          btn.classList.add('locked');
+        }
+      });
+
+      // Restore execution step number (it gets set to ✓ when on conclusion)
+      if (phase !== 'conclusion') {
+        const execNum = document.getElementById('step-num-execution');
+        if (execNum && phase === 'conclusion') execNum.textContent = '✓';
+        if (execNum && phase !== 'conclusion') execNum.textContent = '2';
+      }
+      const planNum = document.getElementById('step-num-planning');
+      if (planNum) planNum.textContent = phase === 'planning' ? '1' : '✓';
+
+      // Render module tabs for this phase
+      renderModuleTabs(phase);
+
+      // Switch to the first module tab of this phase
+      const firstTab = PHASE_MODULES[phase][0].tab;
+      switchModuleTab(firstTab);
+    }
+
+    function renderModuleTabs(phase) {
+      const nav = document.getElementById('module-nav');
+      if (!nav) return;
+      const modules = PHASE_MODULES[phase] || [];
+      nav.innerHTML = modules.map(m => `
+        <button
+          class="module-tab ${currentModuleTab === m.tab ? 'active' : ''}"
+          onclick="switchModuleTab('${m.tab}')"
+        >
+          <span class="module-tab-dot"></span>
+          ${m.label}
+        </button>
+      `).join('');
+    }
+
+    function switchModuleTab(tab) {
+      currentModuleTab = tab;
+
+      // Re-render module tabs to update active state
+      renderModuleTabs(currentPhase);
+
+      // Delegate to existing switchTab for panels that already exist
+      switchTab(tab);
+    }
+
+    function updateStepperProgress(approvedCount, totalCount) {
+      const pct = totalCount > 0 ? Math.round((approvedCount / totalCount) * 100) : 0;
+      const pctEl  = document.getElementById('stepper-pct');
+      const fillEl = document.getElementById('stepper-fill');
+      if (pctEl)  pctEl.textContent  = pct + '%';
+      if (fillEl) fillEl.style.width = pct + '%';
+
+      // Update execution sub-label
+      const execSub = document.getElementById('step-sub-execution');
+      if (execSub) execSub.textContent = approvedCount + ' of ' + totalCount + ' sections done';
+
+      // Unlock conclusion if all done
+      const conclusionBtn = document.getElementById('phase-btn-conclusion');
+      if (conclusionBtn && approvedCount >= totalCount && totalCount > 0) {
+        conclusionBtn.classList.remove('locked');
+      }
+
+      // Update conclusion locked/unlocked message
+      const lockedMsg  = document.getElementById('conclusion-locked-msg');
+      const modules    = document.getElementById('conclusion-modules');
+      const progressMsg = document.getElementById('conclusion-progress-msg');
+      if (progressMsg) progressMsg.textContent = approvedCount + ' / ' + totalCount + ' sections approved';
+      if (lockedMsg && modules) {
+        if (approvedCount >= totalCount && totalCount > 0) {
+          lockedMsg.style.display  = 'none';
+          modules.style.display    = 'block';
+        } else {
+          lockedMsg.style.display  = 'block';
+          modules.style.display    = 'none';
+        }
+      }
+    }
+    /* ══════════════════════════════════════════════════════════════
+       END PHASE NAVIGATOR
+       ══════════════════════════════════════════════════════════════ */
 
     // ---- Tab Switching ----
     function switchTab(tab) {
