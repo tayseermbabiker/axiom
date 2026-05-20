@@ -1,6 +1,6 @@
 # Sprint 1 — Completion Memo (Verification Spec)
 
-**Status:** Shipped to staging (commit `b9e4a9f` engagement link, completion-memo.html page). Awaiting Perplexity + Copilot cross-check before sprint closes.
+**Status:** CLOSED — verification pass complete 2026-05-20. See "Verification pass" section below for what changed.
 **Branch:** `staging` on `tayseermbabiker/axiom`
 **Staging URL:** https://staging--auditsaas.netlify.app/
 
@@ -390,3 +390,48 @@ Sprint 1 — Completion Memo closes when:
 - [ ] User reviews and signs off on this spec
 
 When all four boxes are ticked, this feature is **CLOSED** and we move on without revisiting.
+
+---
+
+## 10. Verification pass — 2026-05-20
+
+Cross-checked against Perplexity (ISA research) + GitHub Copilot (code review) + claude.ai (product tiebreaks). Three commits applied:
+
+- `9e8d19f` — mechanical fixes (EQR guard bug, EQR hint wording, materiality threshold labels)
+- `88bbf04` — ISA 220 Revised gap (resources/consultations field) + Pro-tier gate on sign-off
+- Migration `20260520120000_verification_fixes.sql` applied to staging Supabase
+
+### Issues fixed
+
+| # | Source | Issue | Fix |
+|---|---|---|---|
+| C1 | Copilot Q1 | `saveEqrReviewer` guard had a copy-paste triple-check that only fired when admin picked themselves | Replaced with `reviewerId === engagement.created_by` |
+| C2 | Copilot Q2 | `signMemo` stale state concern | Verified already present (re-fetch + renderAll at signMemo end) — Copilot snippet was truncated |
+| C3 | Copilot Q3 + claude.ai | RLS UPDATE allowed downgraded orgs to sign for free | `fn_snapshot_and_lock_memo` now checks `org_has_pro_tier()` at moment of signing. Edits stay open; signing requires Pro. Loophole closed without punishing mid-engagement cash flow pauses |
+| P3 | Perplexity Q3 + claude.ai | ISA 220 (Revised) gap on resources/specialists/consultations evidencing | Added `resources_consultations` narrative field with NOT NULL default ("No specialists engaged. No formal consultations required."). Field is never blank at inspection; partner overwrites when applicable. Chose narrative over 2 new attestations to avoid friction on simple audits |
+| P5 | Perplexity Q5 | EQR trigger hint wording was loose paraphrase | Rephrased: "Required by ISQM 2 for listed entities, other PIEs, engagements with significant risks or complex/contentious judgements, or engagements designated by your firm's ISQM 1 risk assessment or network policy." |
+| P8 | Perplexity Q8 | 75% materiality bands could imply false ISA standard | Banner text now explicit: "firm policy threshold — ISA 320 does not prescribe a fixed band" / "not an ISA-mandated threshold" |
+
+### Confirmed-correct-as-built (no change needed)
+
+| # | Source | Finding |
+|---|---|---|
+| P1 | Perplexity Q1 | 13-attestation list is a valid design choice for non-PIE small firms; not a mandated count |
+| P2 | Perplexity Q2 | Treating written-rep attestation as blocking is aligned with ISA 580.10-11 |
+| P6 | Perplexity Q6 | EQR before report date — our system check #13 blocks signing without EQR completion, which is the effective enforcement at v1 scale. Partner sign-date IS the report date |
+| C4 | Copilot Q4 | DELETE trigger paths correct as-built for current schema (finding_id always present) |
+| C5 | Copilot Q5 | INNER JOIN through findings is correct under current design assumption (every adjusting entry tied to a finding). Constraint hardening deferred |
+| C6 | Copilot Q6 | Trigger performance fine at small-firm scale (<500 findings, <1000 adjustments, <30 writes/sec). Rule of thumb documented |
+
+### Deferred to Sprint 2/3 (logged here, will not be revisited in Sprint 1)
+
+| # | Source | Why deferred |
+|---|---|---|
+| P4 | Perplexity Q4 | 5-year retention tracking — needs new fields + UI surface area; Sprint 3 |
+| P7 | Perplexity Q7 | TCWG-vs-management communication distinction on misstatements — needs findings schema change; Sprint 2 |
+| P9 | Perplexity Q9 | Append-only addendum support post sign-off — new design pattern; Sprint 3 |
+| P11 | Perplexity Q11 | "Significant Matters with workpaper cross-refs" section — requires workpaper reference model; Sprint 2 |
+| C5b | Copilot Q5 | `adjusting_entries.finding_id NOT NULL` constraint — needs data audit first; Sprint 2 |
+| C6b | Copilot Q6 | Trigger statement-batching optimization — escape hatch only; revisit when an engagement crosses the documented thresholds |
+
+**Sprint 1 — Completion Memo: CLOSED.**
