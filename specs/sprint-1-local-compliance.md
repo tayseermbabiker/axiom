@@ -1,6 +1,6 @@
 # Sprint 1 — Local Compliance Section (Verification Spec)
 
-**Status:** Shipped to staging. Awaiting Perplexity + Copilot cross-check.
+**Status:** CLOSED — verification pass complete 2026-05-20.
 **Branch:** `staging` on `tayseermbabiker/axiom`
 
 ---
@@ -154,3 +154,38 @@ If the RPC fails, the engagement is still created with 19 sections. Partner can 
 - [ ] User signs off
 
 When all six are ticked, **CLOSED**.
+
+---
+
+## 8. Verification pass — 2026-05-20
+
+Cross-checked against Perplexity (ISA research) + GitHub Copilot (code review). Migration `20260520120003_local_compliance_hardening.sql` + one commit covering UI changes + dashboard wiring.
+
+### Issues fixed
+
+| # | Source | Issue | Fix |
+|---|---|---|---|
+| C1 | Copilot Q1 | Client clock used for `updated_at` (brittle on time skew / tampering) | Generic `set_updated_at_now()` BEFORE UPDATE trigger on both `org_local_compliance_templates` and `org_compliance_procedures`. Client drops `updated_at` from payloads |
+| C2 | Copilot Q2 | UPDATE policy required only admin, not Pro tier (inconsistent with INSERT which required both) | Tightened `olct_update` + `ocp_update` to require Pro tier. Local Compliance IS the Pro layer; downgraded firms shouldn't keep editing it |
+| C3 | Copilot Q3 | RPC trusted only client-side Pro check + RLS gates; no defense-in-depth | Added `org_has_pro_tier()` check inside `seed_compliance_section`. RPC now raises if called against a non-Pro org regardless of how it got invoked |
+| C4 | Copilot Q4 | Silent `try { ... } catch { }` in dashboard wiring; partner had no signal when seeding failed | Dashboard now `console.error`s and surfaces a non-blocking alert: *"Note: the Local Compliance section could not be auto-created for this engagement. You can add it manually..."*. Engagement creation itself still succeeds |
+| P4 | Perplexity Q4 | No risk dimension on procedures; ISA 315/330 expect risk-linked procedures | New `risk_category` column on `org_compliance_procedures` (NOT NULL DEFAULT 'standard') + on `audit_procedures` (nullable; only seeded compliance procedures carry it for now). Enum: `standard / compliance / significant / fraud`. UI: dropdown in procedure modal, color-coded badge in the list. `seed_compliance_section` copies it through |
+| P6 | Perplexity Q6 | Inactive template → silent skip; inspector reads absence as "firm forgot," not "firm assessed N/A" | `seed_compliance_section` v2: when a template exists but is_active=false, instead of silently skipping, creates an "Applicability Assessment" section with a single placeholder procedure prompting the partner to document jurisdiction-specific applicability (ISA 230 evidence trail). Symmetric with Completion Memo's N/A-default pattern |
+
+### Confirmed correct as-built (no change needed)
+
+| # | Source | Finding |
+|---|---|---|
+| P1 | Perplexity Q1 | Separate 20th section is "aligned with standards as an organizational choice" — ISA 250 doesn't mandate either separate or embedded |
+| P2 | Perplexity Q2 | Named jurisdiction-specific procedures (vs narrative conclusion) is what network methodology (RSM/BDO etc.) expects — confirms current design |
+| P5 | Perplexity Q5 | Copy-at-engagement-creation model aligned with ISA 230. Live-referencing would create traceability problems |
+| C5 | Copilot Q5 | Last-write-wins on template editing acceptable at small-firm scale. Optimistic concurrency on backlog only |
+
+### Deferred (logged, Sprint 2/3 only if customer demand)
+
+| # | Source | Why deferred |
+|---|---|---|
+| P3 | Perplexity Q3 | Multi-jurisdiction template support — clean migration path exists (composite unique on `organization_id, jurisdiction`). Wait until a customer audits across multiple regulatory regimes |
+| C6 | Copilot Q6 | Same as P3 — current `organization_id UNIQUE` constraint doesn't paint us into a corner |
+
+**Sprint 1 — Local Compliance: CLOSED.**

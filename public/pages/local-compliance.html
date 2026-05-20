@@ -53,6 +53,10 @@
     .proc-type-analytical     { background: #ecfdf5; color: #047857; }
     .proc-type-controls       { background: #fef3c7; color: #92400e; }
     .proc-type-other          { background: var(--gray-100); color: var(--gray-600); }
+    .proc-risk-standard       { background: var(--gray-100); color: var(--gray-600); }
+    .proc-risk-compliance     { background: #ede9fe; color: #6b21a8; }
+    .proc-risk-significant    { background: #fed7aa; color: #9a3412; }
+    .proc-risk-fraud          { background: #fecaca; color: #991b1b; }
     .proc-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .toggle-text {
       cursor: pointer;
@@ -192,7 +196,7 @@
           <label class="text-sm">Description *</label>
           <textarea id="proc-description" class="form-control" rows="3" placeholder="e.g. Verify ESR notification was submitted to the Federal Tax Authority within the deadline (UAE Cabinet Resolution 57 of 2020)"></textarea>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
           <div class="form-group" style="margin:0;">
             <label class="text-sm">Type</label>
             <select id="proc-type" class="form-control">
@@ -200,6 +204,15 @@
               <option value="analytical">Analytical</option>
               <option value="controls">Controls</option>
               <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="text-sm">Risk Category</label>
+            <select id="proc-risk-category" class="form-control">
+              <option value="standard">Standard</option>
+              <option value="compliance">Compliance (ISA 250)</option>
+              <option value="significant">Significant (ISA 315.27)</option>
+              <option value="fraud">Fraud (ISA 240)</option>
             </select>
           </div>
           <div class="form-group" style="margin:0;">
@@ -334,6 +347,7 @@
       if (!name) { msg.textContent = 'Name is required.'; return; }
 
       msg.textContent = 'Saving...';
+      // updated_at is owned by the DB trigger trg_olct_set_updated_at — don't send from client.
       const updates = {
         is_active: document.getElementById('tmpl-active').checked,
         name: name,
@@ -341,16 +355,18 @@
         jurisdiction: document.getElementById('tmpl-jurisdiction').value.trim() || null,
         phase: document.getElementById('tmpl-phase').value,
         sort_order: parseInt(document.getElementById('tmpl-sort-order').value, 10) || 20,
-        updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('org_local_compliance_templates')
         .update(updates)
-        .eq('id', template.id);
+        .eq('id', template.id)
+        .select()
+        .single();
       if (error) { msg.textContent = 'Save failed: ' + error.message; return; }
 
-      Object.assign(template, updates);
+      // Refresh local cache from server (picks up the trigger-set updated_at).
+      if (data) template = data;
       msg.textContent = 'Saved.';
       setTimeout(() => { msg.textContent = ''; }, 2000);
     }
@@ -372,11 +388,21 @@
         controls: 'Controls',
         other: 'Other',
       };
+      const RISK_LABELS = {
+        standard: 'Standard',
+        compliance: 'Compliance (ISA 250)',
+        significant: 'Significant (ISA 315.27)',
+        fraud: 'Fraud (ISA 240)',
+      };
 
       list.innerHTML = procedures.map(p => {
         const inactiveClass = p.is_active ? '' : ' inactive';
         const ref = p.regulatory_ref ? `<span>${escHtml(p.regulatory_ref)}</span>` : '';
         const toggleLabel = p.is_active ? 'Deactivate' : 'Reactivate';
+        const risk = p.risk_category || 'standard';
+        const riskBadge = risk !== 'standard'
+          ? `<span class="proc-type-badge proc-risk-${risk}">${RISK_LABELS[risk] || risk}</span>`
+          : '';
         return `
           <div class="proc-row${inactiveClass}">
             <div class="proc-row-top">
@@ -384,6 +410,7 @@
                 <div style="font-size:14px; line-height:1.5; color:var(--gray-900);">${escHtml(p.description)}</div>
                 <div class="proc-row-meta" style="margin-top:6px;">
                   <span class="proc-type-badge proc-type-${p.procedure_type}">${TYPE_LABELS[p.procedure_type] || p.procedure_type}</span>
+                  ${riskBadge}
                   <span>#${p.sort_order}</span>
                   ${ref}
                 </div>
@@ -408,11 +435,13 @@
         if (!p) return;
         document.getElementById('proc-description').value = p.description || '';
         document.getElementById('proc-type').value = p.procedure_type || 'other';
+        document.getElementById('proc-risk-category').value = p.risk_category || 'standard';
         document.getElementById('proc-sort-order').value = p.sort_order || 1;
         document.getElementById('proc-regulatory-ref').value = p.regulatory_ref || '';
       } else {
         document.getElementById('proc-description').value = '';
         document.getElementById('proc-type').value = 'test_of_detail';
+        document.getElementById('proc-risk-category').value = 'compliance';
         // Default new sort to (max + 1)
         const maxSort = procedures.reduce((m, p) => Math.max(m, p.sort_order || 0), 0);
         document.getElementById('proc-sort-order').value = maxSort + 1;
@@ -435,12 +464,13 @@
         return;
       }
 
+      // updated_at owned by DB trigger trg_ocp_set_updated_at — don't send from client.
       const payload = {
         description: description,
         procedure_type: document.getElementById('proc-type').value,
+        risk_category: document.getElementById('proc-risk-category').value,
         sort_order: parseInt(document.getElementById('proc-sort-order').value, 10) || 1,
         regulatory_ref: document.getElementById('proc-regulatory-ref').value.trim() || null,
-        updated_at: new Date().toISOString(),
       };
 
       const btn = document.getElementById('btn-save-proc');
@@ -492,9 +522,10 @@
       const p = procedures.find(x => x.id === procId);
       if (!p) return;
       const newActive = !p.is_active;
+      // updated_at owned by DB trigger.
       const { error } = await supabaseClient
         .from('org_compliance_procedures')
-        .update({ is_active: newActive, updated_at: new Date().toISOString() })
+        .update({ is_active: newActive })
         .eq('id', procId);
       if (error) { alert('Could not update: ' + error.message); return; }
       p.is_active = newActive;

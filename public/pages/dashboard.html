@@ -747,9 +747,12 @@
         // Seeding failure is non-blocking; auditor can manually create sections.
       }
 
-      // Pro tier only: seed the firm's 20th Local Compliance section if a
-      // template is active. RPC silently returns NULL when no template exists,
-      // so this is safe to call unconditionally for Pro orgs.
+      // Pro tier only: seed the firm's 20th Local Compliance section.
+      // - Active template → procedures copied into the engagement.
+      // - Inactive template → Applicability Assessment placeholder section.
+      // - No template ever authored → silently skipped (return NULL).
+      // Failure here is non-blocking but we WARN the partner so they can
+      // add it manually rather than silently shipping a 19-section file.
       if (currentOrg && currentOrg.feature_tier === 'pro') {
         try {
           await supabaseClient.rpc('seed_compliance_section', {
@@ -757,7 +760,8 @@
             p_organization_id: currentOrg.id,
           });
         } catch (e) {
-          // Non-blocking; partner can manually add the section.
+          console.error('seed_compliance_section failed', e);
+          alert('Note: the Local Compliance section could not be auto-created for this engagement. You can add it manually from the engagement page once it loads. (Engagement creation itself succeeded.)');
         }
       }
 
