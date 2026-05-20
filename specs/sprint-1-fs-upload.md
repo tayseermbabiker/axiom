@@ -1,6 +1,6 @@
 # Sprint 1 — Financial Statements Upload Slot (Verification Spec)
 
-**Status:** Shipped to staging (commit `222e7d3`). Awaiting Perplexity + Copilot cross-check before sprint closes.
+**Status:** CLOSED — verification pass complete 2026-05-20. See "Verification pass" section below for what changed.
 **Branch:** `staging` on `tayseermbabiker/axiom`
 **Staging URL:** https://staging--auditsaas.netlify.app/
 **Manual step still required before it works on staging:** create the `fs-documents` Supabase Storage bucket + run `supabase/staging-fs-storage.sql` (see Section 3).
@@ -344,3 +344,48 @@ Sprint 1 — FS Upload closes when:
 - [ ] User reviews and signs off on this spec
 
 When all seven boxes are ticked, this feature is **CLOSED**.
+
+---
+
+## 10. Verification pass — 2026-05-20
+
+Cross-checked against Perplexity (ISA research) + GitHub Copilot (code review) + claude.ai (product tiebreaks). Two commits + two migrations applied:
+
+- `0eea3bd` — C1+C4+C6 hardening (transactional RPC, RLS role gate, unique-violation message)
+- (next commit) — P2+P5+P8 evidence fields (report_date, SHA-256, restatement labeling)
+- Migration `20260520120001_fs_upload_hardening.sql` applied to staging
+- Migration `20260520120002_fs_upload_evidence.sql` applied to staging
+
+### Issues fixed
+
+| # | Source | Issue | Fix |
+|---|---|---|---|
+| C1 | Copilot Q1 | Supersede UPDATE → upload → INSERT was non-transactional; storage upload failure between steps could orphan engagement with no active signed | New `commit_fs_upload` RPC supersedes + inserts in one transaction. Client now uploads to storage first, then calls RPC. Worst failure = harmless orphan file |
+| C4 | Copilot Q4 | Concurrent signed uploads surfaced raw 23505 constraint error | Client detects `23505` / `idx_efu_one_active_signed` / "duplicate key" and shows: *"Another signed version was just uploaded by someone else. Please reload to see the latest file."* |
+| C6 | Copilot Q6 | RLS allowed any org member to INSERT/UPDATE `engagement_fs_uploads`; preparer could bypass UI gate via direct API | New `user_can_upload_fs()` helper checks admin/supervisor role; both INSERT and UPDATE policies now require it. SELECT stays open |
+| P2 + claude.ai | Perplexity Q2 | ISA 560 — auditor's report date is a substantive datum but we only had upload timestamp | Added `report_date` (date) column, REQUIRED for signed uploads via CHECK constraint + app-layer guard. UI shows date input only when version_type='signed'. Display in active-signed banner and history table |
+| P5 + claude.ai | Perplexity Q5 | UI labeled all superseded rows the same, losing the "this was the signed-original-before-restatement" semantic that inspectors look for | Superseded signed rows now display amber badge **"Signed (superseded by restatement)"** with tooltip referencing ISA 560. Drafts and FFRs keep the neutral "Superseded" badge |
+| P8 + claude.ai | Perplexity Q8 | No cryptographic proof that stored file hadn't been modified since upload | Added `file_sha256` column (lowercase hex). Computed client-side via Web Crypto `crypto.subtle.digest('SHA-256', ...)` before upload, passed to the RPC, stored on row. Truncated hash displayed in UI (`a3b4c5d6…1234`) with full hash on hover. Inspector can verify integrity by re-hashing the downloaded file |
+
+### Confirmed correct as-built (no change needed)
+
+| # | Source | Finding |
+|---|---|---|
+| C3 | Copilot Q3 | `crypto.randomUUID()` is widely supported in target browsers (Chrome/Edge/Safari/Firefox 2023+). No polyfill needed |
+| C5 | Copilot Q5 | `(storage.foldername(name))[1]` correctly returns first path segment; `../foo/file.pdf` resolves to `..` which fails the org-membership check. Path traversal handled by Supabase |
+| C7 | Copilot Q7 | 50 MB cap + Supabase JS client buffering is fine for our scale. TUS resumable uploads only needed if cap raised to hundreds of MB |
+| P1 | Perplexity Q1 | Retaining the actual FS file (not just a reference) is correct under ISA 230. We already do this via Supabase Storage |
+| P4 | Perplexity Q4 | PDF (or any non-editable locked format) is sufficient for ISA. We accept PDF + DOCX + DOC |
+| P6 | Perplexity Q6 | Current supersede semantics for pre-report drafts acceptable — clerical changes can be superseded; substantively different drafts should be retained-for-evidence. Latter handled by per-row notes field |
+
+### Deferred to Sprint 2/3 (logged here, will not be revisited in Sprint 1)
+
+| # | Source | Why deferred |
+|---|---|---|
+| C2 | Copilot Q2 | Orphan-file reconciliation job — needs server-side cron/queue; Sprint 3 |
+| P3 | Perplexity Q3 | Configurable retention policy per firm (default 5-7y) — needs settings UI + enforcement job; Sprint 3 |
+| P7 | Perplexity Q7 | Mgmt rep letter ↔ FS upload linkage — `mgmt_rep_letters` table doesn't exist yet; Sprint 2 |
+| P9 | Perplexity Q9 | Documentation lock date / 60-day post-report assembly per ISA 230 — new fields on engagements + enforcement; Sprint 2/3 |
+| P10 | Perplexity Q10 | Other expected workpapers (engagement letter, planning memo, TCWG comms) — Sprint 2 backlog already covers these |
+
+**Sprint 1 — FS Upload: CLOSED.**

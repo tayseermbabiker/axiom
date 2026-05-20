@@ -856,12 +856,17 @@
         <p class="text-sm text-muted mb-16">Upload the client-prepared FS for review. Accepts PDF and Word (max 50 MB).</p>
         <div class="form-group">
           <label class="text-sm">Version Type *</label>
-          <select id="fs-version-type" class="form-control">
+          <select id="fs-version-type" class="form-control" onchange="onFsVersionTypeChange()">
             <option value="draft">Draft (client working copy)</option>
             <option value="final_for_review">Final for Review (client signed off, ready for partner)</option>
             <option value="signed">Signed (final signed by client &mdash; audit evidence)</option>
           </select>
-          <small style="color:var(--gray-500); font-size:11px;">Uploading a new <strong>Signed</strong> version will mark the previous signed version as superseded.</small>
+          <small style="color:var(--gray-500); font-size:11px;">Uploading a new <strong>Signed</strong> version will mark the previous signed version as superseded by restatement.</small>
+        </div>
+        <div class="form-group" id="fs-report-date-row" style="display:none;">
+          <label class="text-sm">Auditor's Report Date *</label>
+          <input type="date" id="fs-report-date" class="form-control">
+          <small style="color:var(--gray-500); font-size:11px;">Required for Signed uploads (ISA 560). The report date this signed FS attaches to. Restatements use a new report date.</small>
         </div>
         <div class="form-group">
           <label class="text-sm">Version Label <span class="text-muted">(optional)</span></label>
@@ -2513,6 +2518,30 @@
       return (n / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
+    function formatDate(d) {
+      if (!d) return '';
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return d;
+      return dt.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function shortHash(h) {
+      if (!h) return '';
+      return h.slice(0, 8) + '…' + h.slice(-4);
+    }
+
+    async function computeSha256(file) {
+      const buffer = await file.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+      const bytes = new Uint8Array(hashBuffer);
+      return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function onFsVersionTypeChange() {
+      const v = document.getElementById('fs-version-type').value;
+      document.getElementById('fs-report-date-row').style.display = (v === 'signed') ? 'block' : 'none';
+    }
+
     async function loadFsUploads() {
       const { data, error } = await supabaseClient
         .from('engagement_fs_uploads')
@@ -2543,8 +2572,18 @@
         const who = activeSigned.profiles?.full_name || activeSigned.profiles?.email || 'Unknown';
         const when = new Date(activeSigned.uploaded_at).toLocaleString();
         const label = activeSigned.version_label ? ' · ' + activeSigned.version_label : '';
+        const reportLine = activeSigned.report_date
+          ? ' · Report date: ' + formatDate(activeSigned.report_date)
+          : '';
+        const hashLine = activeSigned.file_sha256
+          ? ' · SHA-256: ' + shortHash(activeSigned.file_sha256)
+          : '';
         document.getElementById('fs-signed-meta').textContent =
-          'Uploaded by ' + who + ' on ' + when + ' · ' + formatBytes(activeSigned.file_size_bytes) + label;
+          'Uploaded by ' + who + ' on ' + when + ' · ' + formatBytes(activeSigned.file_size_bytes) + label + reportLine + hashLine;
+        // Full hash as tooltip for inspector copy-paste
+        if (activeSigned.file_sha256) {
+          document.getElementById('fs-signed-meta').title = 'Full SHA-256: ' + activeSigned.file_sha256;
+        }
 
         const dl = document.getElementById('fs-signed-download');
         dl.onclick = () => downloadFsFile(activeSigned);
@@ -2577,9 +2616,20 @@
         const typeLabel = FS_VERSION_LABELS[u.version_type] || u.version_type;
         const isActive = !u.is_superseded;
         const isActiveSigned = u.version_type === 'signed' && isActive;
-        const supersededBadge = u.is_superseded
-          ? '<span class="badge" style="background:var(--gray-100); color:var(--gray-500);">Superseded</span>'
-          : (isActiveSigned ? '<span class="badge" style="background:#16a34a; color:white;">Active</span>' : '');
+
+        // Restatement labeling: a superseded SIGNED row is materially different
+        // from a superseded draft. Network inspectors look for this distinction.
+        let supersededBadge = '';
+        if (u.is_superseded) {
+          if (u.version_type === 'signed') {
+            supersededBadge = '<span class="badge" style="background:#FEF3C7; color:#92400E;" title="This signed FS was superseded by a later signed version — typically a restatement event under ISA 560.">Signed (superseded by restatement)</span>';
+          } else {
+            supersededBadge = '<span class="badge" style="background:var(--gray-100); color:var(--gray-500);">Superseded</span>';
+          }
+        } else if (isActiveSigned) {
+          supersededBadge = '<span class="badge" style="background:#16a34a; color:white;">Active</span>';
+        }
+
         const versionPill = u.version_type === 'signed'
           ? '<span class="badge" style="background:#dcfce7; color:#16a34a;">' + typeLabel + '</span>'
           : (u.version_type === 'final_for_review'
@@ -2587,13 +2637,19 @@
               : '<span class="badge" style="background:var(--gray-100); color:var(--gray-600);">' + typeLabel + '</span>');
 
         const label = u.version_label ? '<div class="text-sm text-muted">' + escHtml(u.version_label) + '</div>' : '';
+        const reportLine = u.report_date
+          ? '<div class="text-sm text-muted">Report: ' + escHtml(formatDate(u.report_date)) + '</div>'
+          : '';
+        const hashLine = u.file_sha256
+          ? '<div class="text-sm text-muted" title="Full SHA-256: ' + escHtml(u.file_sha256) + '">SHA-256: ' + escHtml(shortHash(u.file_sha256)) + '</div>'
+          : '';
         const supersedeBtn = (!u.is_superseded && can('upload_fs'))
           ? '<button class="btn btn-outline btn-sm" onclick="supersedeFsUpload(\'' + u.id + '\')" style="color:#dc2626; border-color:#fecaca;">Supersede</button>'
           : '';
 
         return '<tr>' +
           '<td>' + versionPill + ' ' + supersededBadge + '</td>' +
-          '<td><div style="font-weight:500; word-break:break-all;">' + escHtml(u.file_name) + '</div>' + label + '</td>' +
+          '<td><div style="font-weight:500; word-break:break-all;">' + escHtml(u.file_name) + '</div>' + label + reportLine + hashLine + '</td>' +
           '<td><div>' + escHtml(who) + '</div><div class="text-sm text-muted">' + when + '</div></td>' +
           '<td>' + formatBytes(u.file_size_bytes) + '</td>' +
           '<td style="text-align:right; white-space:nowrap;">' +
@@ -2610,6 +2666,8 @@
       document.getElementById('fs-version-label').value = '';
       document.getElementById('fs-file').value = '';
       document.getElementById('fs-notes').value = '';
+      document.getElementById('fs-report-date').value = new Date().toISOString().slice(0, 10);
+      onFsVersionTypeChange();
       document.getElementById('fs-upload-error').style.display = 'none';
       document.getElementById('btn-do-fs-upload').disabled = false;
       document.getElementById('btn-do-fs-upload').textContent = 'Upload';
@@ -2626,6 +2684,7 @@
       const versionType = document.getElementById('fs-version-type').value;
       const versionLabel = document.getElementById('fs-version-label').value.trim();
       const notes = document.getElementById('fs-notes').value.trim();
+      const reportDateRaw = document.getElementById('fs-report-date').value;
       const fileInput = document.getElementById('fs-file');
       const file = fileInput.files && fileInput.files[0];
 
@@ -2641,9 +2700,25 @@
         showFsUploadError('Only PDF and Word (.doc, .docx) files are accepted.');
         return;
       }
+      if (versionType === 'signed' && !reportDateRaw) {
+        showFsUploadError('Auditor\'s Report Date is required for Signed uploads (ISA 560).');
+        return;
+      }
+      const reportDate = (versionType === 'signed' && reportDateRaw) ? reportDateRaw : null;
 
       const btn = document.getElementById('btn-do-fs-upload');
       btn.disabled = true;
+      btn.textContent = 'Hashing...';
+
+      let fileSha256;
+      try {
+        fileSha256 = await computeSha256(file);
+      } catch (e) {
+        showFsUploadError('Could not hash file: ' + (e.message || e));
+        btn.disabled = false;
+        btn.textContent = 'Upload';
+        return;
+      }
       btn.textContent = 'Uploading...';
 
       try {
@@ -2678,7 +2753,9 @@
           p_file_size_bytes:  file.size,
           p_mime_type:        file.type || null,
           p_version_label:    versionLabel || null,
-          p_notes:            notes || null
+          p_notes:            notes || null,
+          p_report_date:      reportDate,
+          p_file_sha256:      fileSha256
         });
 
         if (rpcErr) {
