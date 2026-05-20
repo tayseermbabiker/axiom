@@ -390,7 +390,7 @@
                 EQR is required for this engagement (ISQM 2 / ISA 220 Revised)
               </label>
               <div class="hint" style="margin-top:6px; font-size:12px; color:var(--gray-500);">
-                Typically required for listed entities, public interest entities, high-risk engagements, or where network methodology mandates it.
+                Required by ISQM 2 for listed entities, other public interest entities, engagements with significant risks or complex/contentious judgements, or engagements designated by your firm's ISQM 1 risk assessment or network policy.
               </div>
             </div>
 
@@ -621,9 +621,9 @@
       const wrap = document.getElementById('materiality-status');
       wrap.className = 'materiality-status ' + cls;
       const text = {
-        below: 'Uncorrected misstatements are below overall materiality.',
-        approaching: 'Uncorrected misstatements are approaching overall materiality (75–100%) — review carefully.',
-        exceeds: 'Uncorrected misstatements EXCEED overall materiality. Resolve before signing.',
+        below: 'Uncorrected misstatements are below overall materiality (firm policy threshold — ISA 320 does not prescribe a fixed band).',
+        approaching: 'Uncorrected misstatements are approaching overall materiality (75–100% of overall — heightened review required by firm policy; not an ISA-mandated threshold).',
+        exceeds: 'Uncorrected misstatements EXCEED overall materiality. Resolve before signing per ISA 450.',
         not_calculated: 'Materiality not yet entered — set it on the Engagement page first.',
       }[cls];
       document.getElementById('materiality-status-text').textContent = text;
@@ -857,8 +857,7 @@
     async function saveEqrReviewer() {
       const msg = document.getElementById('eqr-save-msg');
       const reviewerId = document.getElementById('eqr-reviewer').value || null;
-      if (reviewerId && reviewerId === (engagement.created_by || currentUser.id) && reviewerId === currentUser.id) {
-        // Soft guidance — application layer
+      if (reviewerId && engagement.created_by && reviewerId === engagement.created_by) {
         msg.textContent = 'Reviewer should not be the engagement admin.';
         return;
       }
