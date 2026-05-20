@@ -1216,6 +1216,168 @@
         </div>
       </div>
 
+      <!-- ═══ AUDIT STRATEGY PANEL (ISA 300 / ISA 220 R) ═══ -->
+      <div class="tab-panel" id="tab-audit-strategy">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Audit Strategy</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">ISA 300 — Overall audit strategy. ISA 220 (Revised) — Partner direction. Pro feature.</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <span id="eas-status-badge" class="badge" style="display:none;"></span>
+              <button class="btn btn-outline btn-sm" id="eas-btn-revise" onclick="reviseAuditStrategy()" style="display:none;">Revise strategy</button>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <!-- Pro-tier blocked -->
+            <div id="eas-pro-blocked" style="display:none; background:var(--warning-light); border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">Audit Strategy is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:8px 0 12px;">ISA 300 overall strategy workpaper with partner direction (ISA 220 R) and EQR flagging. Available on Pro.</p>
+              <a href="../index.html#pricing" class="btn btn-primary btn-sm">View Pro pricing</a>
+            </div>
+
+            <!-- Empty state -->
+            <div id="eas-empty" style="display:none; text-align:center; padding:32px 20px;">
+              <div style="font-size:15px; font-weight:600; color:var(--gray-900); margin-bottom:8px;">No audit strategy documented yet</div>
+              <p class="text-sm text-muted" style="margin-bottom:16px;">ISA 300.7 requires the auditor to develop an overall strategy that sets the scope, timing, and direction of the audit.</p>
+              <button class="btn btn-primary btn-sm" onclick="startAuditStrategy()">Start strategy</button>
+            </div>
+
+            <!-- Approved (locked) read-only view -->
+            <div id="eas-approved-view" style="display:none;">
+              <div style="background:#F0FDF4; border:1px solid #BBF7D0; padding:14px 16px; border-radius:8px; margin-bottom:16px;">
+                <div style="font-size:13px; font-weight:600; color:#166534;">Approved &amp; locked</div>
+                <div style="font-size:12px; color:#15803D; margin-top:2px;" id="eas-approved-meta"></div>
+                <div style="font-size:12px; color:#166534; margin-top:6px;">To change this strategy, click <strong>Revise strategy</strong> in the header. The current version will be preserved as evidence of the strategy in place at the time of approval.</div>
+              </div>
+              <div id="eas-readonly-body"></div>
+            </div>
+
+            <!-- Draft form -->
+            <div id="eas-form-wrap" style="display:none;">
+
+              <!-- Preliminary materiality cross-reference -->
+              <div style="background:rgba(180,210,240,0.18); border:1px solid rgba(100,170,230,0.30); padding:12px 14px; border-radius:8px; margin-bottom:20px;">
+                <div style="font-size:12px; font-weight:600; color:var(--gray-700); text-transform:uppercase; letter-spacing:0.5px;">Preliminary materiality (from Materiality tab)</div>
+                <div style="font-size:14px; color:var(--gray-900); margin-top:4px;" id="eas-prelim-materiality">Not yet set — open the Materiality tab to record it.</div>
+              </div>
+
+              <!-- Section A: ISA 300.9 five elements -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">ISA 300.9 — overall strategy</h3>
+
+              <div class="form-group">
+                <label class="text-sm"><strong>1.</strong> Characteristics defining scope</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Reporting framework, industry-specific requirements, locations / components, group audit relationships.</small>
+                <textarea id="eas-scope" class="form-control" rows="3"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="text-sm"><strong>2.</strong> Reporting objectives, timing, and communications</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Audit report deadline, key communications with management / TCWG, interim vs final fieldwork dates.</small>
+                <textarea id="eas-reporting" class="form-control" rows="3"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="text-sm"><strong>3.</strong> Significant factors directing the team's efforts</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Preliminary risk areas, prior misstatements, prior-period audit results, areas of management judgement.</small>
+                <textarea id="eas-significant" class="form-control" rows="3"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="text-sm"><strong>4.</strong> Results of preliminary engagement activities</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Cross-reference: <a href="#" onclick="event.preventDefault(); switchModuleTab('engagement-acceptance');" style="color:var(--primary);">Acceptance</a> · <a href="#" onclick="event.preventDefault(); switchModuleTab('engagement-letter');" style="color:var(--primary);">Engagement Letter</a> · <a href="#" onclick="event.preventDefault(); switchModuleTab('engagement-independence');" style="color:var(--primary);">Independence</a>.</small>
+                <textarea id="eas-preliminary" class="form-control" rows="3"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="text-sm"><strong>5.</strong> Nature, timing, and extent of resources</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Resource summary — team composition and specialist roles are captured separately below.</small>
+                <textarea id="eas-resources" class="form-control" rows="3"></textarea>
+              </div>
+
+              <!-- Section B: Partner direction (ISA 220 R) -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">ISA 220 (Revised) — partner direction, supervision &amp; review</h3>
+              <div class="form-group">
+                <label class="text-sm">Direction, supervision &amp; review plan</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Describe nature, timing, and extent of partner direction of the engagement team; supervision touchpoints; and review of work performed.</small>
+                <textarea id="eas-partner-direction" class="form-control" rows="3" placeholder="e.g. Weekly status calls with senior; partner review of all areas with significant judgement; final partner review prior to opinion sign-off."></textarea>
+              </div>
+
+              <!-- Section C: Team / specialists / EQR -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Team, specialists, EQR</h3>
+              <div class="form-group">
+                <label class="text-sm">Team composition</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Roles and assignments (e.g. Engagement Partner, Manager, Senior, Junior).</small>
+                <textarea id="eas-team" class="form-control" rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Specialists involved</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">IT, valuation, tax, actuarial, legal, etc. State scope of involvement.</small>
+                <textarea id="eas-specialists" class="form-control" rows="2"></textarea>
+              </div>
+
+              <div style="display:grid; grid-template-columns:auto 1fr 200px; gap:12px; align-items:end;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:6px;">
+                    <input type="checkbox" id="eas-eqr-required">
+                    EQR required
+                  </label>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">EQR reviewer name</label>
+                  <input type="text" id="eas-eqr-reviewer" class="form-control" placeholder="(if EQR required)">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Budgeted hours</label>
+                  <input type="number" id="eas-budget-hours" class="form-control" min="0" step="1">
+                </div>
+              </div>
+
+              <!-- Section D: Attestations -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Partner attestations</h3>
+              <p class="text-sm text-muted" style="margin-bottom:12px;">All four required before this strategy can be approved.</p>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="eas-att-strategy" style="margin-top:3px;">
+                  <span>The overall audit strategy is documented and addresses the five elements required by ISA 300.9.</span>
+                </label>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="eas-att-resources" style="margin-top:3px;">
+                  <span>The nature, timing, and extent of resources have been considered, including specialist needs and EQR requirement (ISA 300.9(e)).</span>
+                </label>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="eas-att-team" style="margin-top:3px;">
+                  <span>The engagement team has been briefed on the strategy, risks, and assignments.</span>
+                </label>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="eas-att-direction" style="margin-top:3px;">
+                  <span>Direction, supervision, and review of the engagement team's work have been planned appropriately (ISA 220 Revised).</span>
+                </label>
+              </div>
+
+              <!-- Error banner -->
+              <div id="eas-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:16px;"></div>
+
+              <!-- Save bar -->
+              <div style="display:flex; gap:8px; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--gray-100);">
+                <button class="btn btn-outline btn-sm" id="eas-btn-save-draft" onclick="saveAuditStrategy('draft')">Save draft</button>
+                <button class="btn btn-primary btn-sm" id="eas-btn-approve" onclick="saveAuditStrategy('approved')">Approve strategy</button>
+                <span class="text-sm text-muted" id="eas-save-msg" style="margin-left:8px;"></span>
+              </div>
+            </div>
+
+            <!-- Previous versions -->
+            <div id="eas-history-wrap" style="display:none; margin-top:32px; padding-top:20px; border-top:1px solid var(--gray-100);">
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Previous versions (superseded)</h3>
+              <div id="eas-history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ CONCLUSION PHASE PANEL ═══ -->
       <div class="tab-panel" id="tab-conclusion-home">
         <div class="card">
@@ -2274,6 +2436,7 @@
         { label: 'Acceptance',         tab: 'engagement-acceptance'   },
         { label: 'Engagement letter',  tab: 'engagement-letter'       },
         { label: 'Independence',       tab: 'engagement-independence' },
+        { label: 'Audit strategy',     tab: 'audit-strategy'          },
         { label: 'Materiality',        tab: 'materiality'             },
       ],
       execution: [
@@ -2425,6 +2588,7 @@
       if (tab === 'engagement-letter') loadEngagementLetter();
       if (tab === 'engagement-independence') loadIndependenceWorkpaper();
       if (tab === 'engagement-acceptance') loadEngagementAcceptance();
+      if (tab === 'audit-strategy') loadAuditStrategy();
     }
 
     function initMateriality() {
@@ -4780,6 +4944,282 @@
       if (error) { showEaccError('Could not create reassessment: ' + error.message); return; }
       await logActivity(engagementId, 'revised_engagement_acceptance', 'engagement_acceptance', data, { prior_id: eaccActive.id });
       await loadEngagementAcceptance();
+    }
+
+    // ---- Audit Strategy Tab (ISA 300 / ISA 220 Revised) ----
+    let easActive  = null;
+    let easHistory = [];
+
+    async function loadAuditStrategy() {
+      // Pro-tier + admin gate (UI mirror; RLS enforces server-side)
+      if (!currentOrg || currentOrg.feature_tier !== 'pro' || currentRole !== 'admin') {
+        document.getElementById('eas-pro-blocked').style.display = 'block';
+        document.getElementById('eas-empty').style.display = 'none';
+        document.getElementById('eas-form-wrap').style.display = 'none';
+        document.getElementById('eas-approved-view').style.display = 'none';
+        document.getElementById('eas-history-wrap').style.display = 'none';
+        return;
+      }
+      document.getElementById('eas-pro-blocked').style.display = 'none';
+      document.getElementById('eas-error').style.display = 'none';
+
+      const { data, error } = await supabaseClient
+        .from('engagement_audit_strategies')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        showEasError('Could not load strategy: ' + error.message);
+        return;
+      }
+
+      easActive  = (data || []).find(r => !r.is_superseded) || null;
+      easHistory = (data || []).filter(r =>  r.is_superseded);
+
+      renderAuditStrategy();
+      renderAuditStrategyHistory();
+    }
+
+    function renderAuditStrategy() {
+      const empty       = document.getElementById('eas-empty');
+      const formWrap    = document.getElementById('eas-form-wrap');
+      const approvedView= document.getElementById('eas-approved-view');
+      const reviseBtn   = document.getElementById('eas-btn-revise');
+      const badge       = document.getElementById('eas-status-badge');
+
+      // Preliminary materiality cross-reference (display-only, live-read)
+      const matEl = document.getElementById('eas-prelim-materiality');
+      if (matEl) {
+        if (engagement && engagement.materiality_overall) {
+          const fmt = (n) => Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 });
+          const benchLabels = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
+          const bench = benchLabels[engagement.materiality_benchmark] || engagement.materiality_benchmark || '';
+          matEl.textContent = 'Overall: ' + fmt(engagement.materiality_overall)
+            + (engagement.materiality_performance ? ' · Performance: ' + fmt(engagement.materiality_performance) : '')
+            + (bench ? ' · Benchmark: ' + bench : '');
+        } else {
+          matEl.innerHTML = 'Not yet set — open the <a href="#" onclick="event.preventDefault(); switchModuleTab(\'materiality\');" style="color:var(--primary);">Materiality tab</a> to record it.';
+        }
+      }
+
+      if (!easActive) {
+        empty.style.display        = 'block';
+        formWrap.style.display     = 'none';
+        approvedView.style.display = 'none';
+        reviseBtn.style.display    = 'none';
+        badge.style.display        = 'none';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      // Status badge
+      if (easActive.status === 'approved') {
+        badge.textContent = 'Approved';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#16a34a';
+        badge.style.display = '';
+      } else {
+        badge.textContent = 'Draft';
+        badge.style.background = 'var(--gray-100)';
+        badge.style.color = 'var(--gray-600)';
+        badge.style.display = '';
+      }
+
+      if (easActive.status === 'approved') {
+        // Read-only view; offer Revise
+        formWrap.style.display     = 'none';
+        approvedView.style.display = 'block';
+        reviseBtn.style.display    = '';
+        renderAuditStrategyApproved();
+      } else {
+        // Editable draft
+        formWrap.style.display     = 'block';
+        approvedView.style.display = 'none';
+        reviseBtn.style.display    = 'none';
+        populateAuditStrategyForm(easActive);
+      }
+    }
+
+    function populateAuditStrategyForm(r) {
+      document.getElementById('eas-scope').value            = r.scope_characteristics            || '';
+      document.getElementById('eas-reporting').value        = r.reporting_objectives             || '';
+      document.getElementById('eas-significant').value      = r.significant_factors              || '';
+      document.getElementById('eas-preliminary').value      = r.preliminary_activities_summary   || '';
+      document.getElementById('eas-resources').value        = r.resources_plan                   || '';
+      document.getElementById('eas-partner-direction').value= r.partner_direction_plan           || '';
+      document.getElementById('eas-team').value             = r.team_composition                 || '';
+      document.getElementById('eas-specialists').value      = r.specialists_involved             || '';
+      document.getElementById('eas-eqr-required').checked   = !!r.eqr_required;
+      document.getElementById('eas-eqr-reviewer').value     = r.eqr_reviewer_name                || '';
+      document.getElementById('eas-budget-hours').value     = r.budgeted_hours                   || '';
+      document.getElementById('eas-att-strategy').checked   = !!r.isa_300_strategy_documented;
+      document.getElementById('eas-att-resources').checked  = !!r.isa_300_resources_assessed;
+      document.getElementById('eas-att-team').checked       = !!r.isa_300_team_briefed;
+      document.getElementById('eas-att-direction').checked  = !!r.isa_220_direction_supervision_planned;
+    }
+
+    function renderAuditStrategyApproved() {
+      const r = easActive;
+      const meta = document.getElementById('eas-approved-meta');
+      const when = r.approved_at ? new Date(r.approved_at).toLocaleDateString() : '';
+      meta.textContent = 'Approved on ' + when;
+
+      const body = document.getElementById('eas-readonly-body');
+      const section = (label, val) => val
+        ? `<div style="margin-bottom:16px;"><div style="font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${escHtml(label)}</div><div style="font-size:13px; color:var(--gray-800); white-space:pre-wrap;">${escHtml(val)}</div></div>`
+        : '';
+      const eqrLine = r.eqr_required
+        ? 'EQR required — reviewer: ' + (r.eqr_reviewer_name || '(name not recorded)')
+        : 'EQR not required';
+      body.innerHTML =
+        section('1. Scope characteristics',                  r.scope_characteristics) +
+        section('2. Reporting objectives & timing',          r.reporting_objectives) +
+        section('3. Significant factors',                    r.significant_factors) +
+        section('4. Preliminary engagement activities',      r.preliminary_activities_summary) +
+        section('5. Resources',                              r.resources_plan) +
+        section('Partner direction (ISA 220 R)',             r.partner_direction_plan) +
+        section('Team composition',                          r.team_composition) +
+        section('Specialists',                               r.specialists_involved) +
+        `<div style="margin-bottom:16px;"><div style="font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">EQR &amp; budget</div><div style="font-size:13px; color:var(--gray-800);">${escHtml(eqrLine)}${r.budgeted_hours ? ' · Budget: ' + r.budgeted_hours + ' hrs' : ''}</div></div>`;
+    }
+
+    function renderAuditStrategyHistory() {
+      const wrap = document.getElementById('eas-history-wrap');
+      const list = document.getElementById('eas-history-list');
+      if (!easHistory.length) {
+        wrap.style.display = 'none';
+        return;
+      }
+      wrap.style.display = 'block';
+      list.innerHTML = easHistory.map(r => {
+        const when      = r.superseded_at ? new Date(r.superseded_at).toLocaleDateString() : '';
+        const approved  = r.approved_at   ? 'approved ' + new Date(r.approved_at).toLocaleDateString() : 'unapproved';
+        return `
+          <div style="border:0.5px solid var(--glass-border); border-radius:8px; padding:10px 14px; background:rgba(255,255,255,0.55);">
+            <div style="font-size:13px; font-weight:600;">${escHtml(approved)}</div>
+            <div style="font-size:11px; color:var(--gray-500);">Superseded ${escHtml(when)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showEasError(msg) {
+      const el = document.getElementById('eas-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    async function startAuditStrategy() {
+      const { data, error } = await supabaseClient
+        .from('engagement_audit_strategies')
+        .insert({
+          engagement_id:   engagementId,
+          organization_id: currentOrg.id,
+          status:          'draft',
+          created_by:      currentUser.id,
+        })
+        .select()
+        .single();
+      if (error) { showEasError('Could not create draft: ' + error.message); return; }
+      await logActivity(engagementId, 'started_audit_strategy', 'engagement_audit_strategy', data.id, {});
+      await loadAuditStrategy();
+    }
+
+    function collectAuditStrategyForm() {
+      const hours = document.getElementById('eas-budget-hours').value;
+      return {
+        scope_characteristics:                  document.getElementById('eas-scope').value.trim()             || null,
+        reporting_objectives:                   document.getElementById('eas-reporting').value.trim()         || null,
+        significant_factors:                    document.getElementById('eas-significant').value.trim()       || null,
+        preliminary_activities_summary:         document.getElementById('eas-preliminary').value.trim()       || null,
+        resources_plan:                         document.getElementById('eas-resources').value.trim()         || null,
+        partner_direction_plan:                 document.getElementById('eas-partner-direction').value.trim() || null,
+        team_composition:                       document.getElementById('eas-team').value.trim()              || null,
+        specialists_involved:                   document.getElementById('eas-specialists').value.trim()       || null,
+        eqr_required:                           document.getElementById('eas-eqr-required').checked,
+        eqr_reviewer_name:                      document.getElementById('eas-eqr-reviewer').value.trim()      || null,
+        budgeted_hours:                         hours ? Number(hours) : null,
+        isa_300_strategy_documented:            document.getElementById('eas-att-strategy').checked,
+        isa_300_resources_assessed:             document.getElementById('eas-att-resources').checked,
+        isa_300_team_briefed:                   document.getElementById('eas-att-team').checked,
+        isa_220_direction_supervision_planned:  document.getElementById('eas-att-direction').checked,
+      };
+    }
+
+    async function saveAuditStrategy(targetStatus) {
+      if (!easActive) { showEasError('No active strategy row.'); return; }
+      document.getElementById('eas-error').style.display = 'none';
+      const msg = document.getElementById('eas-save-msg');
+      const form = collectAuditStrategyForm();
+
+      if (targetStatus === 'approved') {
+        if (!form.isa_300_strategy_documented)           { showEasError('Tick attestation #1 (ISA 300.9) before approval.'); return; }
+        if (!form.isa_300_resources_assessed)            { showEasError('Tick attestation #2 (resources) before approval.'); return; }
+        if (!form.isa_300_team_briefed)                  { showEasError('Tick attestation #3 (team brief) before approval.'); return; }
+        if (!form.isa_220_direction_supervision_planned) { showEasError('Tick attestation #4 (ISA 220 R direction) before approval.'); return; }
+        if (form.eqr_required && !form.eqr_reviewer_name) { showEasError('EQR reviewer name is required when EQR is flagged.'); return; }
+      }
+
+      const btnDraft = document.getElementById('eas-btn-save-draft');
+      const btnApp   = document.getElementById('eas-btn-approve');
+      btnDraft.disabled = true;
+      btnApp.disabled   = true;
+      msg.textContent = 'Saving...';
+
+      try {
+        // Step 1: persist all draft fields (always — keeps in-flight edits even when approving)
+        const { error: updErr } = await supabaseClient
+          .from('engagement_audit_strategies')
+          .update(form)
+          .eq('id', easActive.id);
+        if (updErr) throw new Error('Save failed: ' + updErr.message);
+
+        // Step 2: if approving, call the RPC (stamps approved_by/at + status, with DB-level CHECK)
+        if (targetStatus === 'approved') {
+          const { error: rpcErr } = await supabaseClient.rpc('approve_audit_strategy', {
+            p_strategy_id: easActive.id,
+          });
+          if (rpcErr) throw new Error('Approval failed: ' + rpcErr.message);
+        }
+
+        await logActivity(engagementId,
+          targetStatus === 'approved' ? 'approved_audit_strategy' : 'saved_audit_strategy',
+          'engagement_audit_strategy',
+          easActive.id,
+          { status: targetStatus }
+        );
+
+        msg.textContent = targetStatus === 'approved' ? 'Approved.' : 'Saved.';
+        setTimeout(() => { msg.textContent = ''; }, 2500);
+
+        await loadAuditStrategy();
+      } catch (err) {
+        showEasError(err.message);
+        msg.textContent = '';
+      } finally {
+        btnDraft.disabled = false;
+        btnApp.disabled   = false;
+      }
+    }
+
+    async function reviseAuditStrategy() {
+      if (!easActive || easActive.status !== 'approved') return;
+      const ok = await showActionModal({
+        title: 'Revise audit strategy?',
+        message: 'The current approved strategy will be marked as superseded and kept on file (ISA 300.12). A new draft will be created carrying all narrative + team fields forward; attestations and approval reset.',
+        okLabel: 'Create revision',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+      const { data, error } = await supabaseClient.rpc('revise_audit_strategy', {
+        p_engagement_id:   engagementId,
+        p_organization_id: currentOrg.id,
+      });
+      if (error) { showEasError('Could not create revision: ' + error.message); return; }
+      await logActivity(engagementId, 'revised_audit_strategy', 'engagement_audit_strategy', data, { prior_id: easActive.id });
+      await loadAuditStrategy();
     }
 
     // ---- Activity Log Tab ----
