@@ -1271,41 +1271,43 @@ tbody tr:hover { background: rgba(230,241,255,0.45) !important; }
 }
 .module-nav::-webkit-scrollbar { display: none; }
 
+.module-nav {
+  padding: 8px 28px !important;
+  gap: 4px;
+}
+
 .module-tab {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  font-size: 12px;
+  padding: 8px 16px;
+  font-size: 12.5px;
   font-weight: 500;
   color: var(--mod-tab-inactive);
   cursor: pointer;
   user-select: none;
-  border: none;
-  border-bottom: 1.5px solid transparent;
-  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
   transition: all 0.15s;
   white-space: nowrap;
   font-family: inherit;
   letter-spacing: 0;
   text-transform: none;
 }
-.module-tab:hover { color: #2a5f8a; }
+.module-tab:hover {
+  color: #2a5f8a;
+  background: rgba(255,255,255,0.50);
+}
 .module-tab.active {
-  color: var(--mod-tab-active);
-  border-bottom-color: #4a8fd4;
-  font-weight: 600;
+  color: #0a2540;
+  background: #ffffff;
+  border-color: rgba(180,205,235,0.65);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(80,140,220,0.10);
 }
-.module-tab-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #4a8fd4;
-  opacity: 0;
-  transition: opacity 0.15s;
-  flex-shrink: 0;
-}
-.module-tab.active .module-tab-dot { opacity: 1; }
+
+/* Legacy dot — hidden; the pill does the job now */
+.module-tab-dot { display: none; }
 
 /* Hide OLD flat .tabs bar — replaced by module-nav */
 .tabs { display: none !important; }
