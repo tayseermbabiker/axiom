@@ -1,6 +1,6 @@
 # Sprint 1 — Going Concern Procedure Rewrite (Verification Spec)
 
-**Status:** Shipped to staging. Awaiting Perplexity + Copilot cross-check.
+**Status:** CLOSED — verification pass complete 2026-05-20.
 **Branch:** `staging` on `tayseermbabiker/axiom`
 
 ---
@@ -104,3 +104,35 @@ Procedure #12 compares to prior 2 periods. Did not add a forward-projected ratio
 - [ ] User signs off
 
 When all eight ticked, **CLOSED**.
+
+---
+
+## 8. Verification pass — 2026-05-20
+
+Cross-checked against Perplexity (ISA research) + GitHub Copilot (code review). Three content edits + one comment in `audit-templates.js`. No schema changes.
+
+### Issues fixed
+
+| # | Source | Issue | Fix |
+|---|---|---|---|
+| P2 | Perplexity Q2 | Procedure #8 paraphrased "material uncertainty" too loosely as "indicator + unsupported mitigation" | Reframed around ISA 570.17 "significant doubt" as the conceptual threshold; material uncertainty becomes the *conclusion* when significant doubt persists after considering management's plans. Documentation now distinguishes (a) no significant doubt / (b) significant doubt resolved by plans / (c) material uncertainty exists |
+| P3 | Perplexity Q3 | Implicit assumption that all 12 procedures applied in every engagement (overkill for clearly profitable, debt-free entities per ISA 570) | Procedure #1 now explicitly requires risk-tiering at the scope step. Low-risk engagements may justify reduced procedure set with documented rationale; standard/elevated risk requires the full set. Keeps the firm methodology defensible without forcing mechanical full-checklist compliance |
+| P4 | Perplexity Q4 | Procedure #5 used fixed "20% revenue / 60-day AR" stress-test parameters that aren't in ISA 570 | Reworded to require stress-test scenarios tailored to entity-specific vulnerabilities (loss of major customer, margin compression, covenant pressure, etc.). ISA 570 explicitly noted as not prescribing fixed parameters |
+| C2 | Copilot Q2 | Forward-only seeding semantics weren't documented in code | Added a comment block above `PROCEDURE_TEMPLATES` explaining that edits affect only new engagements; existing engagements keep their persisted procedures unless migrated explicitly |
+
+### Confirmed correct as-built
+
+| # | Source | Finding |
+|---|---|---|
+| P1 | Perplexity Q1 | 12-month minimum horizon (ISA 570.13) still authoritative in 2024-2025 ISA edition |
+| P5 | Perplexity Q5 | 4-outcome conclusion tree complete; disclaimer is NOT a standard ISA 570 outcome (only arises from broader scope conditions) |
+| C1 | Copilot Q1 | Single-quoted string syntax with escaped apostrophes is safe. Double-quoted alternative is more robust but not necessary |
+| C3 | Copilot Q3 | `text` column handles any procedure length. UI considerations (collapsible bodies, mobile readability) are polish — deferred |
+
+### Deferred
+
+| # | Source | Why deferred |
+|---|---|---|
+| C3 | Copilot Q3 | UI polish (collapsible procedure bodies, mobile typography tuning) — Sprint 2 if partner feedback flags it |
+
+**Sprint 1 — Going Concern: CLOSED. Sprint 1 FULLY CLOSED.**
