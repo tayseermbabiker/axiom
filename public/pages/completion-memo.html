@@ -249,6 +249,7 @@
       <nav class="sidebar-nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="team.html">Team</a>
+        <a href="local-compliance.html" id="nav-local-compliance" style="display:none;">Local Compliance</a>
         <a href="#" class="active" id="nav-engagement">Completion Memo</a>
       </nav>
       <div class="sidebar-footer">
@@ -452,6 +453,11 @@
         badge.textContent = currentRole;
         badge.className = 'role-badge role-' + currentRole;
         badge.style.display = 'inline-block';
+      }
+
+      // Local Compliance nav: admin + Pro only
+      if (currentRole === 'admin' && currentOrg && currentOrg.feature_tier === 'pro') {
+        document.getElementById('nav-local-compliance').style.display = '';
       }
 
       // Pro tier gate

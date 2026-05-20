@@ -19,6 +19,7 @@
       <nav class="sidebar-nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="team.html" class="active">Team</a>
+        <a href="local-compliance.html" id="nav-local-compliance" style="display:none;">Local Compliance</a>
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
@@ -111,6 +112,11 @@
       // Show admin controls
       if (currentRole === 'admin') {
         document.getElementById('invite-section').style.display = 'block';
+      }
+
+      // Local Compliance nav: admin + Pro only
+      if (currentRole === 'admin' && currentOrg && currentOrg.feature_tier === 'pro') {
+        document.getElementById('nav-local-compliance').style.display = '';
       }
 
       await loadMembers();

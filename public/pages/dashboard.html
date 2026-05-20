@@ -269,6 +269,7 @@
       <nav class="sidebar-nav">
         <a href="dashboard.html" class="active">Dashboard</a>
         <a href="team.html">Team</a>
+        <a href="local-compliance.html" id="nav-local-compliance" style="display:none;">Local Compliance</a>
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
@@ -430,6 +431,11 @@
 
       if (currentRole === 'admin') {
         document.getElementById('btn-manage-billing').style.display = '';
+      }
+
+      // Local Compliance nav: admin + Pro only
+      if (currentRole === 'admin' && currentOrg && currentOrg.feature_tier === 'pro') {
+        document.getElementById('nav-local-compliance').style.display = '';
       }
 
       await loadEngagements();
@@ -739,6 +745,20 @@
         await seedSectionsForEngagement(supabaseClient, data.id, currentUser.id);
       } catch (e) {
         // Seeding failure is non-blocking; auditor can manually create sections.
+      }
+
+      // Pro tier only: seed the firm's 20th Local Compliance section if a
+      // template is active. RPC silently returns NULL when no template exists,
+      // so this is safe to call unconditionally for Pro orgs.
+      if (currentOrg && currentOrg.feature_tier === 'pro') {
+        try {
+          await supabaseClient.rpc('seed_compliance_section', {
+            p_engagement_id:   data.id,
+            p_organization_id: currentOrg.id,
+          });
+        } catch (e) {
+          // Non-blocking; partner can manually add the section.
+        }
       }
 
       closeModal('modal-new-engagement');

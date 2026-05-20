@@ -338,6 +338,7 @@
       <nav class="sidebar-nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="team.html">Team</a>
+        <a href="local-compliance.html" id="nav-local-compliance" style="display:none;">Local Compliance</a>
         <a href="#" class="active" id="nav-engagement">Engagement</a>
         <a href="#" id="nav-activity" onclick="switchTab('activity')">Activity Log</a>
       </nav>
@@ -954,6 +955,11 @@
       if (memoBtn && currentRole === 'admin') {
         memoBtn.href = 'completion-memo.html#' + engagementId;
         memoBtn.style.display = '';
+      }
+
+      // Local Compliance nav: admin + Pro only
+      if (currentRole === 'admin' && currentOrg && currentOrg.feature_tier === 'pro') {
+        document.getElementById('nav-local-compliance').style.display = '';
       }
 
       // Preparer-only section view toggle ("All sections" / "My sections only")
