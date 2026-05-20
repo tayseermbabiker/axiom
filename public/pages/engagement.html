@@ -688,6 +688,11 @@
               Active modules are linked. Greyed-out modules will be available in the next release.
             </p>
             <div style="display:flex; flex-direction:column; gap:8px; max-width:480px;">
+              <div class="planning-module-row" onclick="switchModuleTab('engagement-acceptance')" style="cursor:pointer;">
+                <span class="badge badge-in-progress">Active</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Client acceptance / continuance</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 220</span>
+              </div>
               <div class="planning-module-row" onclick="switchModuleTab('materiality')" style="cursor:pointer;">
                 <span class="badge badge-in-progress">Active</span>
                 <span style="font-size:13px; font-weight:500; margin-left:10px;">Materiality</span>
@@ -1001,6 +1006,206 @@
             <div id="ei-history-wrap" style="display:none; margin-top:32px; padding-top:20px; border-top:1px solid var(--gray-100);">
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Previous assessments (superseded)</h3>
               <div id="ei-history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CLIENT ACCEPTANCE / CONTINUANCE PANEL (ISA 220) ═══ -->
+      <div class="tab-panel" id="tab-engagement-acceptance">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Client Acceptance / Continuance</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">ISA 220 (Revised) — whether to accept (new) or continue (recurring) this engagement. Pro feature.</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <span id="eacc-status-badge" class="badge" style="display:none;"></span>
+              <button class="btn btn-outline btn-sm" id="eacc-btn-revise" onclick="reviseEngagementAcceptance()" style="display:none;">Annual reassessment</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Pro-tier blocked -->
+            <div id="eacc-pro-blocked" style="display:none; background:var(--warning-light); border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">Client Acceptance is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:8px 0 12px;">ISA 220 workpaper for initial acceptance and annual continuance decisions. Available on Pro.</p>
+              <a href="../index.html#pricing" class="btn btn-primary btn-sm">View Pro pricing</a>
+            </div>
+
+            <!-- Empty state -->
+            <div id="eacc-empty" style="display:none; text-align:center; padding:32px 20px;">
+              <div style="font-size:15px; font-weight:600; color:var(--gray-900); margin-bottom:8px;">No acceptance decision yet</div>
+              <p class="text-sm text-muted" style="max-width:380px; margin:0 auto 16px; line-height:1.6;">Start the workpaper to document the acceptance decision for this engagement (initial or annual continuance).</p>
+              <div style="display:flex; gap:8px; justify-content:center;">
+                <button class="btn btn-outline btn-sm" onclick="startEngagementAcceptance('initial')">Start initial acceptance</button>
+                <button class="btn btn-primary btn-sm" onclick="startEngagementAcceptance('continuance')">Start annual continuance</button>
+              </div>
+            </div>
+
+            <!-- Main form -->
+            <div id="eacc-form-wrap" style="display:none;">
+
+              <!-- Independence warning banner (soft) -->
+              <div id="eacc-indep-warning" style="display:none; background:#FFFBEB; border:0.5px solid #FDE68A; border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:13px; color:#92400E;">
+                <strong>Independence not yet confirmed.</strong> ISA 220 requires independence to be assessed before acceptance can be finalized. <a href="#" onclick="event.preventDefault(); switchModuleTab('engagement-independence');" style="color:#92400E; text-decoration:underline;">Go to Independence workpaper →</a>
+              </div>
+
+              <!-- Section: type + decision -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Acceptance type &amp; decision</h3>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Acceptance type *</label>
+                  <select id="eacc-type" class="form-control" onchange="onEaccTypeChange()">
+                    <option value="">— Select —</option>
+                    <option value="initial">Initial (new client)</option>
+                    <option value="continuance">Continuance (recurring)</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Decision date</label>
+                  <input type="date" id="eacc-decision-date" class="form-control">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Decision *</label>
+                  <select id="eacc-decision" class="form-control" onchange="onEaccDecisionChange()">
+                    <option value="">— Select —</option>
+                    <option value="accept">Accept / continue</option>
+                    <option value="accept_with_conditions">Accept / continue with conditions</option>
+                    <option value="decline">Decline / discontinue</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Engagement risk tier *</label>
+                  <select id="eacc-risk-tier" class="form-control">
+                    <option value="">— Select —</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" id="eacc-conditions-wrap" style="display:none;">
+                <label class="text-sm">Conditions summary *</label>
+                <textarea id="eacc-conditions" class="form-control" rows="2" placeholder="e.g. fee increase, partner rotation, EQR review, restricted scope"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Decision rationale</label>
+                <textarea id="eacc-rationale" class="form-control" rows="2" placeholder="Why this decision was made"></textarea>
+              </div>
+
+              <!-- Section: integrity assessment -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Integrity of principal owners, key management &amp; TCWG (ISA 220.A20-A22)</h3>
+              <p class="text-sm text-muted" style="margin-bottom:10px;">Tick the methods used to assess integrity:</p>
+              <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="eacc-int-prior-experience">
+                  Prior experience with the client
+                </label>
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="eacc-int-internet-search">
+                  Internet / regulator / sanctions-list search
+                </label>
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="eacc-int-predecessor-inquiry">
+                  Inquiry of predecessor auditor (where applicable)
+                </label>
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="eacc-int-other" onchange="onEaccOtherChange()">
+                  Other (describe below)
+                </label>
+                <div class="form-group" id="eacc-int-other-wrap" style="display:none; margin:6px 0 0;">
+                  <input type="text" id="eacc-int-other-description" class="form-control" placeholder="Describe the other method">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Integrity conclusion</label>
+                <textarea id="eacc-integrity-conclusion" class="form-control" rows="2" placeholder="e.g. No issues noted. Or: Concerns identified — see notes."></textarea>
+              </div>
+
+              <!-- Section: competence + resources -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Competence &amp; resources</h3>
+              <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:10px;">
+                <input type="checkbox" id="eacc-competence-considered">
+                The firm has the competence, capabilities, time, and resources to perform this engagement.
+              </label>
+              <div class="form-group">
+                <label class="text-sm">Notes</label>
+                <textarea id="eacc-competence-notes" class="form-control" rows="2" placeholder="e.g. specialist engaged for valuation; partner workload reviewed"></textarea>
+              </div>
+
+              <!-- Section: predecessor auditor (initial only) -->
+              <div id="eacc-predecessor-section" style="display:none;">
+                <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Predecessor auditor (ISA 510 / 300)</h3>
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:10px;">
+                  <input type="checkbox" id="eacc-had-predecessor" onchange="onEaccHadPredecessorChange()">
+                  This engagement had a predecessor auditor.
+                </label>
+                <div id="eacc-predecessor-details" style="display:none;">
+                  <div class="form-group">
+                    <label class="text-sm">Predecessor auditor name / firm</label>
+                    <input type="text" id="eacc-predecessor-name" class="form-control">
+                  </div>
+                  <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:8px;">
+                    <input type="checkbox" id="eacc-predecessor-communication-done">
+                    Communication with predecessor performed.
+                  </label>
+                  <div class="form-group">
+                    <label class="text-sm">Communication summary</label>
+                    <textarea id="eacc-predecessor-summary" class="form-control" rows="2" placeholder="Reasons for change, disagreements, integrity concerns, opening-balance issues"></textarea>
+                  </div>
+                  <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="eacc-predecessor-workpapers">
+                    Access to predecessor's workpapers obtained.
+                  </label>
+                </div>
+              </div>
+
+              <!-- Section: prior-year issues (continuance only) -->
+              <div id="eacc-prior-issues-section" style="display:none;">
+                <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Prior-year issues (continuance)</h3>
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:10px;">
+                  <input type="checkbox" id="eacc-prior-issues-considered">
+                  Significant matters from prior audits have been considered.
+                </label>
+                <div class="form-group">
+                  <label class="text-sm">Summary of prior-year issues + impact on continuance</label>
+                  <textarea id="eacc-prior-issues-summary" class="form-control" rows="3" placeholder="e.g. Prior-year management override findings — additional fraud-risk procedures planned this year"></textarea>
+                </div>
+              </div>
+
+              <!-- Section: partner attestation -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Partner attestation</h3>
+              <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; padding:10px 14px; border:0.5px solid var(--glass-border); border-radius:8px; background:rgba(255,255,255,0.55);">
+                <input type="checkbox" id="eacc-partner-attestation" style="margin-top:2px;" onchange="onEaccAttestationChange()">
+                <span>I am satisfied that the firm's policies and procedures for client acceptance and continuance have been followed, that the firm has the competence, capabilities, and resources to perform this engagement, and that relevant ethical requirements (including independence) can be complied with.</span>
+              </label>
+              <div class="form-group" style="margin-top:12px;">
+                <label class="text-sm">Attestation date</label>
+                <input type="date" id="eacc-attestation-date" class="form-control" style="max-width:240px;">
+              </div>
+
+              <!-- Notes -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Notes (optional)</h3>
+              <div class="form-group">
+                <textarea id="eacc-notes" class="form-control" rows="2"></textarea>
+              </div>
+
+              <!-- Error banner -->
+              <div id="eacc-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
+
+              <!-- Save bar -->
+              <div style="display:flex; gap:8px; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--gray-100);">
+                <button class="btn btn-outline btn-sm" id="eacc-btn-save-draft" onclick="saveEngagementAcceptance('draft')">Save draft</button>
+                <button class="btn btn-primary btn-sm" id="eacc-btn-confirm" onclick="saveEngagementAcceptance('confirmed')">Confirm decision</button>
+                <span class="text-sm text-muted" id="eacc-save-msg" style="margin-left:8px;"></span>
+              </div>
+            </div>
+
+            <!-- Previous superseded versions -->
+            <div id="eacc-history-wrap" style="display:none; margin-top:32px; padding-top:20px; border-top:1px solid var(--glass-border);">
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Previous decisions (superseded)</h3>
+              <div id="eacc-history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
 
           </div>
@@ -2062,6 +2267,7 @@
     const PHASE_MODULES = {
       planning: [
         { label: 'Overview',           tab: 'planning-home'           },
+        { label: 'Acceptance',         tab: 'engagement-acceptance'   },
         { label: 'Engagement letter',  tab: 'engagement-letter'       },
         { label: 'Independence',       tab: 'engagement-independence' },
         { label: 'Materiality',        tab: 'materiality'             },
@@ -2213,6 +2419,7 @@
       if (tab === 'fs') loadFsUploads();
       if (tab === 'engagement-letter') loadEngagementLetter();
       if (tab === 'engagement-independence') loadIndependenceWorkpaper();
+      if (tab === 'engagement-acceptance') loadEngagementAcceptance();
     }
 
     function initMateriality() {
@@ -4285,6 +4492,283 @@
         .eq('id', nasId);
       if (error) { alert('Could not update: ' + error.message); return; }
       await loadIndependenceWorkpaper();
+    }
+
+    // ---- Client Acceptance / Continuance Tab (ISA 220) ----
+    let eaccActive = null;
+    let eaccHistory = [];
+
+    async function loadEngagementAcceptance() {
+      if (!currentOrg || currentOrg.feature_tier !== 'pro' || currentRole !== 'admin') {
+        document.getElementById('eacc-pro-blocked').style.display = 'block';
+        document.getElementById('eacc-empty').style.display = 'none';
+        document.getElementById('eacc-form-wrap').style.display = 'none';
+        document.getElementById('eacc-history-wrap').style.display = 'none';
+        return;
+      }
+      document.getElementById('eacc-pro-blocked').style.display = 'none';
+
+      const { data, error } = await supabaseClient
+        .from('engagement_acceptance')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: false });
+      if (error) { showEaccError('Could not load: ' + error.message); return; }
+
+      eaccActive = (data || []).find(d => !d.is_superseded) || null;
+      eaccHistory = (data || []).filter(d => d.is_superseded);
+
+      if (!eaccActive) {
+        document.getElementById('eacc-empty').style.display = 'block';
+        document.getElementById('eacc-form-wrap').style.display = 'none';
+        renderEaccHistory();
+        return;
+      }
+      document.getElementById('eacc-empty').style.display = 'none';
+      document.getElementById('eacc-form-wrap').style.display = 'block';
+
+      // Check Independence status for the soft-link warning
+      const { data: indepRows } = await supabaseClient
+        .from('engagement_independence')
+        .select('id, status')
+        .eq('engagement_id', engagementId)
+        .eq('is_superseded', false)
+        .limit(1);
+      const indepConfirmed = (indepRows || [])[0]?.status === 'confirmed';
+      document.getElementById('eacc-indep-warning').style.display = indepConfirmed ? 'none' : 'block';
+
+      renderEaccForm();
+      renderEaccHistory();
+    }
+
+    function renderEaccForm() {
+      const e = eaccActive || {};
+
+      document.getElementById('eacc-type').value          = e.acceptance_type || '';
+      document.getElementById('eacc-decision').value      = e.decision || '';
+      document.getElementById('eacc-decision-date').value = e.decision_date || '';
+      document.getElementById('eacc-risk-tier').value     = e.risk_tier || '';
+      document.getElementById('eacc-conditions').value    = e.conditions_summary || '';
+      document.getElementById('eacc-rationale').value     = e.decision_rationale || '';
+
+      document.getElementById('eacc-int-prior-experience').checked   = !!e.integrity_method_prior_experience;
+      document.getElementById('eacc-int-internet-search').checked    = !!e.integrity_method_internet_search;
+      document.getElementById('eacc-int-predecessor-inquiry').checked = !!e.integrity_method_predecessor_inquiry;
+      document.getElementById('eacc-int-other').checked              = !!e.integrity_method_other;
+      document.getElementById('eacc-int-other-description').value    = e.integrity_method_other_description || '';
+      document.getElementById('eacc-integrity-conclusion').value     = e.integrity_conclusion || '';
+
+      document.getElementById('eacc-competence-considered').checked  = !!e.competence_resources_considered;
+      document.getElementById('eacc-competence-notes').value         = e.competence_resources_notes || '';
+
+      document.getElementById('eacc-had-predecessor').checked        = !!e.had_predecessor_auditor;
+      document.getElementById('eacc-predecessor-name').value         = e.predecessor_auditor_name || '';
+      document.getElementById('eacc-predecessor-communication-done').checked = !!e.predecessor_communication_done;
+      document.getElementById('eacc-predecessor-summary').value      = e.predecessor_communication_summary || '';
+      document.getElementById('eacc-predecessor-workpapers').checked = !!e.predecessor_workpapers_accessed;
+
+      document.getElementById('eacc-prior-issues-considered').checked = !!e.prior_year_issues_considered;
+      document.getElementById('eacc-prior-issues-summary').value     = e.prior_year_issues_summary || '';
+
+      document.getElementById('eacc-partner-attestation').checked    = !!e.partner_attestation_made;
+      document.getElementById('eacc-attestation-date').value         = e.partner_attestation_date || '';
+
+      document.getElementById('eacc-notes').value                    = e.notes || '';
+
+      onEaccTypeChange();
+      onEaccDecisionChange();
+      onEaccOtherChange();
+      onEaccHadPredecessorChange();
+
+      const badge = document.getElementById('eacc-status-badge');
+      if (e.status === 'confirmed') {
+        badge.textContent = 'Confirmed';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#16a34a';
+        badge.style.display = '';
+      } else {
+        badge.textContent = 'Draft';
+        badge.style.background = 'var(--gray-100)';
+        badge.style.color = 'var(--gray-600)';
+        badge.style.display = '';
+      }
+
+      document.getElementById('eacc-btn-revise').style.display = (e.status === 'confirmed') ? '' : 'none';
+    }
+
+    function renderEaccHistory() {
+      const wrap = document.getElementById('eacc-history-wrap');
+      const list = document.getElementById('eacc-history-list');
+      if (eaccHistory.length === 0) { wrap.style.display = 'none'; return; }
+      wrap.style.display = 'block';
+      const DEC_LABELS = {
+        accept: 'Accepted', accept_with_conditions: 'Accepted with conditions', decline: 'Declined'
+      };
+      const TYPE_LABELS = { initial: 'Initial', continuance: 'Continuance' };
+      list.innerHTML = eaccHistory.map(h => {
+        const when = h.superseded_at ? new Date(h.superseded_at).toLocaleDateString() : '';
+        const date = h.decision_date ? formatDate(h.decision_date) : '';
+        const dec  = DEC_LABELS[h.decision] || h.decision || '—';
+        const type = TYPE_LABELS[h.acceptance_type] || '—';
+        return `
+          <div style="border:0.5px solid var(--glass-border); border-radius:8px; padding:10px 14px; background:rgba(255,255,255,0.55);">
+            <div style="font-size:13px; font-weight:600;">${escHtml(type)} · ${escHtml(dec)} · ${escHtml(date)}</div>
+            <div style="font-size:11px; color:var(--gray-500);">Superseded ${escHtml(when)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function onEaccTypeChange() {
+      const t = document.getElementById('eacc-type').value;
+      document.getElementById('eacc-predecessor-section').style.display    = (t === 'initial')     ? 'block' : 'none';
+      document.getElementById('eacc-prior-issues-section').style.display   = (t === 'continuance') ? 'block' : 'none';
+    }
+    function onEaccDecisionChange() {
+      const d = document.getElementById('eacc-decision').value;
+      document.getElementById('eacc-conditions-wrap').style.display = (d === 'accept_with_conditions') ? 'block' : 'none';
+    }
+    function onEaccOtherChange() {
+      const o = document.getElementById('eacc-int-other').checked;
+      document.getElementById('eacc-int-other-wrap').style.display = o ? 'block' : 'none';
+    }
+    function onEaccHadPredecessorChange() {
+      const h = document.getElementById('eacc-had-predecessor').checked;
+      document.getElementById('eacc-predecessor-details').style.display = h ? 'block' : 'none';
+    }
+    function onEaccAttestationChange() {
+      if (document.getElementById('eacc-partner-attestation').checked) {
+        if (!document.getElementById('eacc-attestation-date').value) {
+          document.getElementById('eacc-attestation-date').value = new Date().toISOString().slice(0, 10);
+        }
+      }
+    }
+
+    function showEaccError(msg) {
+      const el = document.getElementById('eacc-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    async function startEngagementAcceptance(type) {
+      const newId = crypto.randomUUID();
+      const { error } = await supabaseClient.from('engagement_acceptance').insert({
+        id: newId,
+        engagement_id:   engagementId,
+        organization_id: currentOrg.id,
+        status:          'draft',
+        acceptance_type: type,
+        created_by:      currentUser.id,
+      });
+      if (error) { alert('Could not start: ' + error.message); return; }
+      await loadEngagementAcceptance();
+    }
+
+    function collectEngagementAcceptance() {
+      return {
+        acceptance_type:                     document.getElementById('eacc-type').value || null,
+        decision:                            document.getElementById('eacc-decision').value || null,
+        decision_date:                       document.getElementById('eacc-decision-date').value || null,
+        risk_tier:                           document.getElementById('eacc-risk-tier').value || null,
+        conditions_summary:                  document.getElementById('eacc-conditions').value.trim() || null,
+        decision_rationale:                  document.getElementById('eacc-rationale').value.trim() || null,
+        integrity_method_prior_experience:   document.getElementById('eacc-int-prior-experience').checked,
+        integrity_method_internet_search:    document.getElementById('eacc-int-internet-search').checked,
+        integrity_method_predecessor_inquiry: document.getElementById('eacc-int-predecessor-inquiry').checked,
+        integrity_method_other:              document.getElementById('eacc-int-other').checked,
+        integrity_method_other_description:  document.getElementById('eacc-int-other-description').value.trim() || null,
+        integrity_conclusion:                document.getElementById('eacc-integrity-conclusion').value.trim() || null,
+        competence_resources_considered:     document.getElementById('eacc-competence-considered').checked,
+        competence_resources_notes:          document.getElementById('eacc-competence-notes').value.trim() || null,
+        had_predecessor_auditor:             document.getElementById('eacc-had-predecessor').checked,
+        predecessor_auditor_name:            document.getElementById('eacc-predecessor-name').value.trim() || null,
+        predecessor_communication_done:      document.getElementById('eacc-predecessor-communication-done').checked,
+        predecessor_communication_summary:   document.getElementById('eacc-predecessor-summary').value.trim() || null,
+        predecessor_workpapers_accessed:     document.getElementById('eacc-predecessor-workpapers').checked,
+        prior_year_issues_considered:        document.getElementById('eacc-prior-issues-considered').checked,
+        prior_year_issues_summary:           document.getElementById('eacc-prior-issues-summary').value.trim() || null,
+        partner_attestation_made:            document.getElementById('eacc-partner-attestation').checked,
+        partner_attestation_date:            document.getElementById('eacc-attestation-date').value || null,
+        notes:                               document.getElementById('eacc-notes').value.trim() || null,
+      };
+    }
+
+    async function saveEngagementAcceptance(targetStatus) {
+      document.getElementById('eacc-error').style.display = 'none';
+      const msg = document.getElementById('eacc-save-msg');
+      if (!eaccActive) { showEaccError('Start the workpaper first.'); return; }
+
+      const payload = collectEngagementAcceptance();
+      payload.status = targetStatus;
+
+      if (targetStatus === 'confirmed') {
+        if (!payload.acceptance_type)          { showEaccError('Acceptance type is required to confirm.');  return; }
+        if (!payload.decision)                 { showEaccError('Decision is required to confirm.');         return; }
+        if (!payload.decision_date)            { showEaccError('Decision date is required to confirm.');    return; }
+        if (!payload.risk_tier)                { showEaccError('Risk tier is required to confirm.');        return; }
+        if (!payload.partner_attestation_made) { showEaccError('Tick the partner attestation to confirm.'); return; }
+        if (!payload.partner_attestation_date) { showEaccError('Attestation date is required to confirm.'); return; }
+        if (payload.decision === 'accept_with_conditions' && !payload.conditions_summary) {
+          showEaccError('Conditions summary is required when accepting with conditions.');
+          return;
+        }
+        if (payload.partner_attestation_made && !payload.partner_attestation_date) {
+          // belt-and-suspenders
+        }
+      }
+
+      // Also stamp partner_attestation_user_id when attestation made for first time
+      if (payload.partner_attestation_made && !eaccActive.partner_attestation_user_id) {
+        payload.partner_attestation_user_id = currentUser.id;
+      }
+
+      const btnDraft = document.getElementById('eacc-btn-save-draft');
+      const btnConf  = document.getElementById('eacc-btn-confirm');
+      btnDraft.disabled = true; btnConf.disabled = true;
+      msg.textContent = 'Saving...';
+
+      try {
+        const { error } = await supabaseClient
+          .from('engagement_acceptance')
+          .update(payload)
+          .eq('id', eaccActive.id);
+        if (error) throw new Error(error.message);
+
+        await logActivity(engagementId,
+          targetStatus === 'confirmed' ? 'confirmed_engagement_acceptance' : 'saved_engagement_acceptance',
+          'engagement_acceptance',
+          eaccActive.id,
+          { status: targetStatus, decision: payload.decision }
+        );
+
+        msg.textContent = 'Saved.';
+        setTimeout(() => { msg.textContent = ''; }, 2500);
+        await loadEngagementAcceptance();
+      } catch (err) {
+        showEaccError('Save failed: ' + err.message);
+        msg.textContent = '';
+      } finally {
+        btnDraft.disabled = false;
+        btnConf.disabled = false;
+      }
+    }
+
+    async function reviseEngagementAcceptance() {
+      if (!eaccActive || eaccActive.status !== 'confirmed') return;
+      const ok = await showActionModal({
+        title: 'Annual reassessment?',
+        message: 'The current confirmed decision will be superseded and kept on file. A new continuance draft will be created (carrying predecessor + integrity history forward).',
+        okLabel: 'Create reassessment',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+      const { data, error } = await supabaseClient.rpc('revise_engagement_acceptance', {
+        p_engagement_id:   engagementId,
+        p_organization_id: currentOrg.id,
+      });
+      if (error) { showEaccError('Could not create reassessment: ' + error.message); return; }
+      await logActivity(engagementId, 'revised_engagement_acceptance', 'engagement_acceptance', data, { prior_id: eaccActive.id });
+      await loadEngagementAcceptance();
     }
 
     // ---- Activity Log Tab ----
