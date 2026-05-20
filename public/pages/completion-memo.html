@@ -354,6 +354,11 @@
             <textarea id="narr-subsequent" placeholder="State the conclusion on subsequent events review..."></textarea>
           </div>
           <div class="narrative-field">
+            <label for="narr-resources">Resources, Specialists &amp; Consultations (ISA 220 Revised)</label>
+            <textarea id="narr-resources" placeholder="Document any specialist engaged, external resources used, or formal consultations on complex/contentious matters..."></textarea>
+            <div class="hint">Pre-populated with the N/A default so the field is never blank at inspection. Overwrite when a specialist was engaged (e.g., valuation, actuarial) or when a formal consultation took place.</div>
+          </div>
+          <div class="narrative-field">
             <label for="narr-other">Other Matters</label>
             <textarea id="narr-other" placeholder="Any other matter the partner wishes to document for the audit file..."></textarea>
           </div>
@@ -704,10 +709,12 @@
       const isLocked = memo.status === 'locked';
       document.getElementById('narr-going-concern').value = memo.going_concern_conclusion || '';
       document.getElementById('narr-subsequent').value    = memo.subsequent_events_conclusion || '';
+      document.getElementById('narr-resources').value     = memo.resources_consultations || '';
       document.getElementById('narr-other').value         = memo.other_matters || '';
 
       if (isLocked) {
-        ['narr-going-concern','narr-subsequent','narr-other'].forEach(id => document.getElementById(id).disabled = true);
+        ['narr-going-concern','narr-subsequent','narr-resources','narr-other']
+          .forEach(id => document.getElementById(id).disabled = true);
       }
     }
 
@@ -800,11 +807,17 @@
     async function saveNarrative() {
       const msg = document.getElementById('narrative-save-msg');
       msg.textContent = 'Saving...';
+      // resources_consultations is NOT NULL with a default — coerce empty
+      // string back to the N/A default rather than letting partner blank it.
+      const resourcesVal = document.getElementById('narr-resources').value.trim()
+        || 'No specialists engaged. No formal consultations required.';
+
       const { error } = await supabaseClient
         .from('engagement_completion_memo')
         .update({
           going_concern_conclusion:     document.getElementById('narr-going-concern').value.trim() || null,
           subsequent_events_conclusion: document.getElementById('narr-subsequent').value.trim() || null,
+          resources_consultations:      resourcesVal,
           other_matters:                document.getElementById('narr-other').value.trim() || null,
         })
         .eq('id', memo.id);
