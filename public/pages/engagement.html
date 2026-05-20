@@ -685,17 +685,17 @@
           </div>
           <div class="card-body">
             <p class="text-sm text-muted" style="margin-bottom:20px;">
-              These modules will be available in the next release. Use this phase to document your planning decisions.
+              Active modules are linked. Greyed-out modules will be available in the next release.
             </p>
             <div style="display:flex; flex-direction:column; gap:8px; max-width:480px;">
               <div class="planning-module-row" onclick="switchModuleTab('materiality')" style="cursor:pointer;">
                 <span class="badge badge-in-progress">Active</span>
                 <span style="font-size:13px; font-weight:500; margin-left:10px;">Materiality</span>
               </div>
-              <div class="planning-module-row planning-coming-soon">
-                <span class="badge badge-not-started">Coming soon</span>
-                <span style="font-size:13px; font-weight:500; margin-left:10px;">Engagement acceptance &amp; letter</span>
-                <span class="text-sm text-muted" style="margin-left:auto;">ISA 210 · 220</span>
+              <div class="planning-module-row" onclick="switchModuleTab('engagement-letter')" style="cursor:pointer;">
+                <span class="badge badge-in-progress">Active</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Engagement letter</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 210</span>
               </div>
               <div class="planning-module-row planning-coming-soon">
                 <span class="badge badge-not-started">Coming soon</span>
@@ -722,6 +722,144 @@
                 <span style="font-size:13px; font-weight:500; margin-left:10px;">Audit plan — risk linkage</span>
                 <span class="text-sm text-muted" style="margin-left:auto;">ISA 330</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ENGAGEMENT LETTER PANEL (ISA 210) ═══ -->
+      <div class="tab-panel" id="tab-engagement-letter">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Engagement Letter</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">ISA 210 — Agreed terms of the audit engagement. Pro feature.</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <span id="el-status-badge" class="badge" style="display:none;"></span>
+              <button class="btn btn-outline btn-sm" id="el-btn-revise" onclick="reviseEngagementLetter()" style="display:none;">Revise letter</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Pro-tier blocked -->
+            <div id="el-pro-blocked" style="display:none; background:var(--warning-light); border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">Engagement Letter is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:8px 0 12px;">ISA 210 workpaper for documenting the agreed terms of the audit engagement. Available on Pro.</p>
+              <a href="../index.html#pricing" class="btn btn-primary btn-sm">View Pro pricing</a>
+            </div>
+
+            <!-- Form -->
+            <div id="el-form-wrap" style="display:none;">
+              <!-- Section: letter metadata -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Letter facts</h3>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Letter date</label>
+                  <input type="date" id="el-letter-date" class="form-control" onchange="markElDirty()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Signed date</label>
+                  <input type="date" id="el-signed-date" class="form-control" onchange="markElDirty()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Client signatory name</label>
+                  <input type="text" id="el-signatory-name" class="form-control" placeholder="e.g. John Smith" onchange="markElDirty()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Client signatory role</label>
+                  <input type="text" id="el-signatory-role" class="form-control" placeholder="e.g. Managing Director" onchange="markElDirty()">
+                </div>
+              </div>
+
+              <!-- Section: audit scope -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Audit scope</h3>
+              <div class="form-group">
+                <label class="text-sm">Reporting framework</label>
+                <input type="text" id="el-framework" class="form-control" placeholder="e.g. IFRS Standards, IFRS for SMEs, UAE GAAP" onchange="markElDirty()">
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Audit period — start</label>
+                  <input type="date" id="el-period-start" class="form-control" onchange="markElDirty()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Audit period — end</label>
+                  <input type="date" id="el-period-end" class="form-control" onchange="markElDirty()">
+                </div>
+              </div>
+
+              <!-- Section: ISA 210.10 attestations -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">ISA 210.10 required elements</h3>
+              <p class="text-sm text-muted" style="margin-bottom:12px;">Confirm each ISA 210.10 minimum element is documented in the signed letter:</p>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="el-isa-objective-scope" onchange="markElDirty()">
+                  Objective and scope of the audit (ISA 210.10(a))
+                </label>
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="el-isa-auditor-resp" onchange="markElDirty()">
+                  Responsibilities of the auditor (ISA 210.10(b))
+                </label>
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="el-isa-mgmt-resp" onchange="markElDirty()">
+                  Responsibilities of management (ISA 210.10(c))
+                </label>
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="el-isa-framework" onchange="markElDirty()">
+                  Identification of the applicable financial reporting framework (ISA 210.10(d))
+                </label>
+                <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="el-isa-report-form" onchange="markElDirty()">
+                  Expected form and content of any reports (ISA 210.10(e))
+                </label>
+              </div>
+
+              <!-- Section: other terms -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Other terms (optional)</h3>
+              <div class="form-group">
+                <label class="text-sm">Fees basis</label>
+                <textarea id="el-fees-basis" class="form-control" rows="2" placeholder="e.g. Fixed fee of USD X for the audit; out-of-pocket expenses billed separately" onchange="markElDirty()"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Other reporting obligations</label>
+                <textarea id="el-other-reporting" class="form-control" rows="2" placeholder="e.g. Regulator filings, group reporting package, special-purpose reports" onchange="markElDirty()"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Other terms</label>
+                <textarea id="el-other-terms" class="form-control" rows="2" placeholder="Component auditors, experts, internal audit reliance, group reporting, etc." onchange="markElDirty()"></textarea>
+              </div>
+
+              <!-- Section: signed PDF -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Signed letter (PDF)</h3>
+              <div id="el-file-status" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:12px 16px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-size:13px; font-weight:600; word-break:break-all;" id="el-file-name"></div>
+                    <div style="font-size:11px; color:var(--gray-500); margin-top:2px;" id="el-file-meta"></div>
+                  </div>
+                  <button class="btn btn-outline btn-sm" id="el-btn-download" type="button">Download</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <input type="file" id="el-file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="form-control">
+                <small style="color:var(--gray-500); font-size:11px;">PDF, DOC, or DOCX. Max 50 MB. Required to mark the letter as Signed.</small>
+              </div>
+
+              <!-- Error banner -->
+              <div id="el-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
+
+              <!-- Save bar -->
+              <div style="display:flex; gap:8px; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--gray-100);">
+                <button class="btn btn-outline btn-sm" id="el-btn-save-draft" onclick="saveEngagementLetter('draft')">Save draft</button>
+                <button class="btn btn-primary btn-sm" id="el-btn-mark-signed" onclick="saveEngagementLetter('signed')">Mark as signed</button>
+                <span class="text-sm text-muted" id="el-save-msg" style="margin-left:8px;"></span>
+              </div>
+            </div>
+
+            <!-- Previous versions -->
+            <div id="el-history-wrap" style="display:none; margin-top:32px; padding-top:20px; border-top:1px solid var(--gray-100);">
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Previous versions (superseded)</h3>
+              <div id="el-history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
           </div>
         </div>
@@ -1719,8 +1857,9 @@
 
     const PHASE_MODULES = {
       planning: [
-        { label: 'Overview',     tab: 'planning-home' },
-        { label: 'Materiality',  tab: 'materiality'   },
+        { label: 'Overview',           tab: 'planning-home'     },
+        { label: 'Engagement letter',  tab: 'engagement-letter' },
+        { label: 'Materiality',        tab: 'materiality'       },
       ],
       execution: [
         { label: 'Trial balance',      tab: 'tb'       },
@@ -1867,6 +2006,7 @@
 
       if (tab === 'activity') loadActivityLog();
       if (tab === 'fs') loadFsUploads();
+      if (tab === 'engagement-letter') loadEngagementLetter();
     }
 
     function initMateriality() {
@@ -3167,6 +3307,316 @@
         version_type: upload.version_type
       });
       await loadFsUploads();
+    }
+
+    // ---- Engagement Letter Tab (ISA 210) ----
+    let elActive = null;       // currently-active letter row (or null)
+    let elHistory = [];        // superseded letters for this engagement
+
+    async function loadEngagementLetter() {
+      // Pro tier gate (UI mirror; RLS enforces server-side)
+      if (!currentOrg || currentOrg.feature_tier !== 'pro' || currentRole !== 'admin') {
+        document.getElementById('el-pro-blocked').style.display = 'block';
+        document.getElementById('el-form-wrap').style.display = 'none';
+        document.getElementById('el-history-wrap').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('el-pro-blocked').style.display = 'none';
+      document.getElementById('el-form-wrap').style.display = 'block';
+      document.getElementById('el-error').style.display = 'none';
+
+      const { data, error } = await supabaseClient
+        .from('engagement_letters')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        showElError('Could not load letter: ' + error.message);
+        return;
+      }
+
+      elActive = (data || []).find(l => !l.is_superseded) || null;
+      elHistory = (data || []).filter(l => l.is_superseded);
+
+      renderEngagementLetter();
+      renderEngagementLetterHistory();
+    }
+
+    function renderEngagementLetter() {
+      const l = elActive || {};
+
+      document.getElementById('el-letter-date').value      = l.letter_date || '';
+      document.getElementById('el-signed-date').value      = l.signed_date || '';
+      document.getElementById('el-signatory-name').value   = l.client_signatory_name || '';
+      document.getElementById('el-signatory-role').value   = l.client_signatory_role || '';
+      document.getElementById('el-framework').value        = l.reporting_framework || '';
+      document.getElementById('el-period-start').value     = l.audit_period_start || '';
+      document.getElementById('el-period-end').value       = l.audit_period_end || '';
+      document.getElementById('el-fees-basis').value       = l.fees_basis || '';
+      document.getElementById('el-other-reporting').value  = l.other_reporting_obligations || '';
+      document.getElementById('el-other-terms').value      = l.other_terms || '';
+
+      document.getElementById('el-isa-objective-scope').checked = !!l.isa_210_objective_scope;
+      document.getElementById('el-isa-auditor-resp').checked    = !!l.isa_210_auditor_responsibilities;
+      document.getElementById('el-isa-mgmt-resp').checked       = !!l.isa_210_mgmt_responsibilities;
+      document.getElementById('el-isa-framework').checked       = !!l.isa_210_framework_identified;
+      document.getElementById('el-isa-report-form').checked     = !!l.isa_210_report_form_referenced;
+
+      // Status badge
+      const badge = document.getElementById('el-status-badge');
+      if (l.status === 'signed') {
+        badge.textContent = 'Signed';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#16a34a';
+        badge.style.display = '';
+      } else if (l.id) {
+        badge.textContent = 'Draft';
+        badge.style.background = 'var(--gray-100)';
+        badge.style.color = 'var(--gray-600)';
+        badge.style.display = '';
+      } else {
+        badge.style.display = 'none';
+      }
+
+      // Revise button — only show on a signed active letter
+      const reviseBtn = document.getElementById('el-btn-revise');
+      reviseBtn.style.display = (l.status === 'signed') ? '' : 'none';
+
+      // File status
+      const fileStatus = document.getElementById('el-file-status');
+      if (l.file_path) {
+        fileStatus.style.display = 'block';
+        document.getElementById('el-file-name').textContent = l.file_name || '(unnamed)';
+        const sizeStr = l.file_size_bytes ? formatBytes(l.file_size_bytes) : '';
+        const hashStr = l.file_sha256 ? ' · SHA-256 ' + shortHash(l.file_sha256) : '';
+        document.getElementById('el-file-meta').textContent = sizeStr + hashStr;
+        document.getElementById('el-btn-download').onclick = () => downloadEngagementLetterFile(l);
+      } else {
+        fileStatus.style.display = 'none';
+      }
+
+      // Reset file input so picking the same filename again still fires change
+      document.getElementById('el-file').value = '';
+    }
+
+    function renderEngagementLetterHistory() {
+      const wrap = document.getElementById('el-history-wrap');
+      const list = document.getElementById('el-history-list');
+      if (elHistory.length === 0) {
+        wrap.style.display = 'none';
+        return;
+      }
+      wrap.style.display = 'block';
+      list.innerHTML = elHistory.map(l => {
+        const when = l.superseded_at ? new Date(l.superseded_at).toLocaleDateString() : '';
+        const signedStr = l.signed_date ? 'signed ' + formatDate(l.signed_date) : 'unsigned';
+        return `
+          <div style="border:0.5px solid var(--glass-border); border-radius:8px; padding:10px 14px; background:rgba(255,255,255,0.55);">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:13px; font-weight:600;">${escHtml(l.client_signatory_name || '(no signatory)')} · ${escHtml(signedStr)}</div>
+                <div style="font-size:11px; color:var(--gray-500);">Superseded ${escHtml(when)} · ${escHtml(l.reporting_framework || '')}</div>
+              </div>
+              ${l.file_path ? `<button class="btn btn-outline btn-sm" onclick='downloadEngagementLetterFile(${JSON.stringify({file_path: l.file_path}).replace(/'/g, "\\'")})'>Download</button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function markElDirty() {
+      // Visual feedback hook for future. For now, a no-op (form saves on click).
+    }
+
+    function showElError(msg) {
+      const el = document.getElementById('el-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function collectEngagementLetterForm() {
+      return {
+        letter_date:                  document.getElementById('el-letter-date').value || null,
+        signed_date:                  document.getElementById('el-signed-date').value || null,
+        client_signatory_name:        document.getElementById('el-signatory-name').value.trim() || null,
+        client_signatory_role:        document.getElementById('el-signatory-role').value.trim() || null,
+        reporting_framework:          document.getElementById('el-framework').value.trim() || null,
+        audit_period_start:           document.getElementById('el-period-start').value || null,
+        audit_period_end:             document.getElementById('el-period-end').value || null,
+        fees_basis:                   document.getElementById('el-fees-basis').value.trim() || null,
+        other_reporting_obligations:  document.getElementById('el-other-reporting').value.trim() || null,
+        other_terms:                  document.getElementById('el-other-terms').value.trim() || null,
+        isa_210_objective_scope:           document.getElementById('el-isa-objective-scope').checked,
+        isa_210_auditor_responsibilities:  document.getElementById('el-isa-auditor-resp').checked,
+        isa_210_mgmt_responsibilities:     document.getElementById('el-isa-mgmt-resp').checked,
+        isa_210_framework_identified:      document.getElementById('el-isa-framework').checked,
+        isa_210_report_form_referenced:    document.getElementById('el-isa-report-form').checked,
+      };
+    }
+
+    async function saveEngagementLetter(targetStatus) {
+      document.getElementById('el-error').style.display = 'none';
+      const msg = document.getElementById('el-save-msg');
+      const form = collectEngagementLetterForm();
+      const fileInput = document.getElementById('el-file');
+      const newFile = fileInput.files && fileInput.files[0];
+
+      // Validation for signed
+      if (targetStatus === 'signed') {
+        if (!form.letter_date)           { showElError('Letter date is required to mark as signed.'); return; }
+        if (!form.signed_date)           { showElError('Signed date is required to mark as signed.'); return; }
+        if (!form.client_signatory_name) { showElError('Client signatory name is required to mark as signed.'); return; }
+        if (!newFile && !(elActive && elActive.file_path)) {
+          showElError('A signed PDF or DOCX must be attached before marking as signed.');
+          return;
+        }
+      }
+
+      // File size + type check if new file picked
+      if (newFile) {
+        if (newFile.size > FS_MAX_BYTES) {
+          showElError('File is ' + formatBytes(newFile.size) + ' — limit is 50 MB.');
+          return;
+        }
+        const ext = fileExt(newFile.name);
+        if (!['pdf','doc','docx'].includes(ext)) {
+          showElError('Only PDF and Word (.doc, .docx) files are accepted.');
+          return;
+        }
+      }
+
+      const btnDraft  = document.getElementById('el-btn-save-draft');
+      const btnSigned = document.getElementById('el-btn-mark-signed');
+      btnDraft.disabled  = true;
+      btnSigned.disabled = true;
+      msg.textContent = newFile ? 'Hashing file...' : 'Saving...';
+
+      try {
+        // Upload new file (if any) before metadata write
+        let newFileMeta = null;
+        if (newFile) {
+          const hash = await computeSha256(newFile);
+          const ext = fileExt(newFile.name);
+          // letter_id may not exist yet (first save) — use a fresh uuid that we'll also use as PK
+          const candidateLetterId = (elActive && elActive.id) ? elActive.id : crypto.randomUUID();
+          const storagePath = currentOrg.id + '/' + engagementId + '/engagement-letter/' + candidateLetterId + '.' + ext;
+
+          msg.textContent = 'Uploading...';
+          const { error: upErr } = await supabaseClient.storage
+            .from(FS_BUCKET)
+            .upload(storagePath, newFile, {
+              contentType: newFile.type || undefined,
+              upsert: true  // replace if user re-uploads on the same letter
+            });
+          if (upErr) {
+            const lower = (upErr.message || '').toLowerCase();
+            if (lower.includes('bucket') || lower.includes('not found')) {
+              throw new Error('Storage bucket "fs-documents" is not set up yet. Ask an administrator to create it in Supabase.');
+            }
+            throw new Error('Upload failed: ' + upErr.message);
+          }
+
+          newFileMeta = {
+            id:              candidateLetterId,
+            file_name:       newFile.name,
+            file_path:       storagePath,
+            file_size_bytes: newFile.size,
+            mime_type:       newFile.type || null,
+            file_sha256:     hash,
+          };
+        }
+
+        // Build payload
+        const payload = {
+          ...form,
+          status: targetStatus,
+        };
+        if (newFileMeta) {
+          payload.file_name       = newFileMeta.file_name;
+          payload.file_path       = newFileMeta.file_path;
+          payload.file_size_bytes = newFileMeta.file_size_bytes;
+          payload.mime_type       = newFileMeta.mime_type;
+          payload.file_sha256     = newFileMeta.file_sha256;
+        }
+
+        msg.textContent = 'Saving...';
+        if (elActive && elActive.id) {
+          // UPDATE existing active letter
+          const { error: updErr } = await supabaseClient
+            .from('engagement_letters')
+            .update(payload)
+            .eq('id', elActive.id);
+          if (updErr) throw new Error('Save failed: ' + updErr.message);
+        } else {
+          // INSERT new draft (or signed)
+          const insertPayload = {
+            ...payload,
+            engagement_id:   engagementId,
+            organization_id: currentOrg.id,
+            created_by:      currentUser.id,
+          };
+          if (newFileMeta) insertPayload.id = newFileMeta.id;
+          const { error: insErr } = await supabaseClient
+            .from('engagement_letters')
+            .insert(insertPayload);
+          if (insErr) throw new Error('Save failed: ' + insErr.message);
+        }
+
+        await logActivity(engagementId,
+          targetStatus === 'signed' ? 'signed_engagement_letter' : 'saved_engagement_letter',
+          'engagement_letter',
+          (elActive && elActive.id) || (newFileMeta && newFileMeta.id) || engagementId,
+          { status: targetStatus }
+        );
+
+        msg.textContent = 'Saved.';
+        setTimeout(() => { msg.textContent = ''; }, 2500);
+
+        await loadEngagementLetter();
+      } catch (err) {
+        showElError(err.message);
+        msg.textContent = '';
+      } finally {
+        btnDraft.disabled  = false;
+        btnSigned.disabled = false;
+      }
+    }
+
+    async function reviseEngagementLetter() {
+      if (!elActive || elActive.status !== 'signed') return;
+      const ok = await showActionModal({
+        title: 'Revise engagement letter?',
+        message: 'The current signed letter will be marked as superseded and kept on file. A new draft will be created so you can issue revised terms (ISA 210.13).',
+        okLabel: 'Create revision',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+
+      const { data, error } = await supabaseClient.rpc('revise_engagement_letter', {
+        p_engagement_id:   engagementId,
+        p_organization_id: currentOrg.id,
+      });
+      if (error) {
+        showElError('Could not create revision: ' + error.message);
+        return;
+      }
+
+      await logActivity(engagementId, 'revised_engagement_letter', 'engagement_letter', data, { prior_id: elActive.id });
+      await loadEngagementLetter();
+    }
+
+    async function downloadEngagementLetterFile(letter) {
+      if (!letter || !letter.file_path) return;
+      const { data, error } = await supabaseClient.storage
+        .from(FS_BUCKET)
+        .createSignedUrl(letter.file_path, 60);
+      if (error || !data?.signedUrl) {
+        alert('Could not generate download link: ' + (error?.message || 'unknown error'));
+        return;
+      }
+      window.open(data.signedUrl, '_blank');
     }
 
     // ---- Activity Log Tab ----
