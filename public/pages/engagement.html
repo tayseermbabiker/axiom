@@ -2647,24 +2647,10 @@
       btn.textContent = 'Uploading...';
 
       try {
-        // If uploading a new 'signed' version, mark any active signed as superseded first.
-        // The partial unique index would otherwise reject the insert.
-        if (versionType === 'signed') {
-          const existingSigned = fsUploads.find(u => u.version_type === 'signed' && !u.is_superseded);
-          if (existingSigned) {
-            const { error: supErr } = await supabaseClient
-              .from('engagement_fs_uploads')
-              .update({
-                is_superseded: true,
-                superseded_at: new Date().toISOString(),
-                superseded_by: currentUser.id
-              })
-              .eq('id', existingSigned.id);
-            if (supErr) throw new Error('Could not supersede existing signed version: ' + supErr.message);
-          }
-        }
-
-        // Generate the upload id locally so it can be reused as the storage path
+        // Generate the upload id locally so it can be reused as the storage path.
+        // Storage upload happens FIRST — if it fails, no DB state to clean up.
+        // Then commit_fs_upload RPC supersedes + inserts atomically in one tx,
+        // so the previous active signed is never lost on a partial failure.
         const uploadId = crypto.randomUUID();
         const storagePath = currentOrg.id + '/' + engagementId + '/' + uploadId + '.' + ext;
 
@@ -2675,7 +2661,6 @@
             upsert: false
           });
         if (upErr) {
-          // Common: bucket missing → friendlier message
           const msg = (upErr.message || '').toLowerCase();
           if (msg.includes('bucket') || msg.includes('not found')) {
             throw new Error('Storage bucket "fs-documents" is not set up yet. Ask an administrator to create it in Supabase (private, 50 MB cap, PDF/DOCX/DOC).');
@@ -2683,23 +2668,37 @@
           throw new Error('Upload failed: ' + upErr.message);
         }
 
-        const { error: insErr } = await supabaseClient.from('engagement_fs_uploads').insert({
-          id: uploadId,
-          engagement_id: engagementId,
-          organization_id: currentOrg.id,
-          version_type: versionType,
-          file_name: file.name,
-          file_path: storagePath,
-          file_size_bytes: file.size,
-          mime_type: file.type || null,
-          version_label: versionLabel || null,
-          uploaded_by: currentUser.id,
-          notes: notes || null
+        const { error: rpcErr } = await supabaseClient.rpc('commit_fs_upload', {
+          p_upload_id:        uploadId,
+          p_engagement_id:    engagementId,
+          p_organization_id:  currentOrg.id,
+          p_version_type:     versionType,
+          p_file_name:        file.name,
+          p_file_path:        storagePath,
+          p_file_size_bytes:  file.size,
+          p_mime_type:        file.type || null,
+          p_version_label:    versionLabel || null,
+          p_notes:            notes || null
         });
-        if (insErr) {
-          // Try to clean up the orphaned storage object
+
+        if (rpcErr) {
+          // Best-effort cleanup of the orphaned storage object. If this
+          // also fails, an out-of-band reconciliation job is the fallback
+          // (Sprint 2/3 — logged for now).
           await supabaseClient.storage.from(FS_BUCKET).remove([storagePath]);
-          throw new Error('Could not save metadata: ' + insErr.message);
+
+          // Unique-violation = a concurrent upload won the active signed
+          // slot before we did. Surface a friendly reload prompt rather
+          // than the raw constraint name.
+          const code = rpcErr.code || '';
+          const lower = (rpcErr.message || '').toLowerCase();
+          if (code === '23505' || lower.includes('idx_efu_one_active_signed') || lower.includes('duplicate key')) {
+            throw new Error('Another signed version was just uploaded by someone else. Please reload to see the latest file.');
+          }
+          if (lower.includes('upload_fs permission')) {
+            throw new Error('You do not have permission to upload Financial Statements. Ask a partner or supervisor.');
+          }
+          throw new Error('Could not save metadata: ' + rpcErr.message);
         }
 
         await logActivity(engagementId, 'uploaded_fs', 'engagement_fs_upload', uploadId, {
