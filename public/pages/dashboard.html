@@ -763,6 +763,27 @@
           console.error('seed_compliance_section failed', e);
           alert('Note: the Local Compliance section could not be auto-created for this engagement. You can add it manually from the engagement page once it loads. (Engagement creation itself succeeded.)');
         }
+
+        // Pre-seed the Risk Assessment row (Sprint 3 #3) — every Pro
+        // engagement gets a draft assessment from day 1. Then seed the
+        // ISA 240 presumed fraud risks (revenue recognition + management
+        // override). Both are idempotent; failures are non-blocking.
+        try {
+          await supabaseClient.rpc('seed_engagement_risk_assessment', {
+            p_engagement_id:   data.id,
+            p_organization_id: currentOrg.id,
+          });
+        } catch (e) {
+          console.error('seed_engagement_risk_assessment failed', e);
+        }
+        try {
+          await supabaseClient.rpc('seed_presumed_fraud_risks', {
+            p_engagement_id:   data.id,
+            p_organization_id: currentOrg.id,
+          });
+        } catch (e) {
+          console.error('seed_presumed_fraud_risks failed', e);
+        }
       }
 
       closeModal('modal-new-engagement');

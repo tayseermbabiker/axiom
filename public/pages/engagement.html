@@ -1395,6 +1395,92 @@
         </div>
       </div>
 
+      <!-- ═══ RISK ASSESSMENT PANEL (ISA 315.27 + ISA 330 + ISA 240) ═══ -->
+      <div class="tab-panel" id="tab-risk-assessment">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Risk Assessment</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">ISA 315 (Revised 2019) — Risk identification &amp; assessment. ISA 330 — responses. ISA 240 — fraud risks. Pro feature.</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <span id="era-status-badge" class="badge" style="display:none;"></span>
+              <button class="btn btn-outline btn-sm" id="era-btn-unconfirm" onclick="unconfirmRiskAssessment()" style="display:none;">Revise</button>
+              <button class="btn btn-primary btn-sm" id="era-btn-confirm" onclick="confirmRiskAssessment()" style="display:none;">Confirm risk assessment</button>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <!-- Pro-tier blocked -->
+            <div id="era-pro-blocked" style="display:none; background:var(--warning-light); border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">Risk Assessment is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:8px 0 12px;">ISA 315 / ISA 330 structured risk register with auto-seeded ISA 240 presumed fraud risks, significant-risk attestation, and ISA 330 procedure linkage. Available on Pro.</p>
+              <a href="../index.html#pricing" class="btn btn-primary btn-sm">View Pro pricing</a>
+            </div>
+
+            <!-- Locked banner (when status='confirmed') -->
+            <div id="era-locked-banner" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; padding:14px 16px; border-radius:8px; margin-bottom:16px;">
+              <div style="font-size:13px; font-weight:600; color:#166534;">Confirmed &amp; locked</div>
+              <div style="font-size:12px; color:#15803D; margin-top:2px;" id="era-confirmed-meta">This risk assessment is confirmed. To edit risks or procedure linkages, click <strong>Revise</strong> in the header.</div>
+            </div>
+
+            <!-- Main body -->
+            <div id="era-body" style="display:none;">
+
+              <!-- Summary counters -->
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;">
+                <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:14px; text-align:center;">
+                  <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Total risks</div>
+                  <div id="era-count-total" style="font-size:22px; font-weight:700; color:var(--gray-900); margin-top:4px;">0</div>
+                </div>
+                <div style="background:#FEF9C3; border:1px solid #FDE68A; border-radius:8px; padding:14px; text-align:center;">
+                  <div style="font-size:11px; color:#854D0E; text-transform:uppercase; letter-spacing:0.5px;">Significant</div>
+                  <div id="era-count-significant" style="font-size:22px; font-weight:700; color:#A16207; margin-top:4px;">0</div>
+                </div>
+                <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:14px; text-align:center;">
+                  <div style="font-size:11px; color:#166534; text-transform:uppercase; letter-spacing:0.5px;">With procedures</div>
+                  <div id="era-count-linked" style="font-size:22px; font-weight:700; color:#16A34A; margin-top:4px;">0</div>
+                </div>
+                <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; padding:14px; text-align:center;">
+                  <div style="font-size:11px; color:#991B1B; text-transform:uppercase; letter-spacing:0.5px;">Unlinked</div>
+                  <div id="era-count-unlinked" style="font-size:22px; font-weight:700; color:#DC2626; margin-top:4px;">0</div>
+                </div>
+              </div>
+
+              <!-- Top action bar -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0;">Risk register</h3>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn btn-outline btn-sm" id="era-btn-toggle-pivot" onclick="toggleRiskPivot()" type="button">Show matrix view</button>
+                  <button class="btn btn-primary btn-sm" id="era-btn-add" onclick="openRiskModal()" type="button">+ Add risk</button>
+                </div>
+              </div>
+
+              <!-- Pivot view (read-only matrix, hidden by default) -->
+              <div id="era-pivot-wrap" style="display:none; margin-bottom:20px; overflow-x:auto;">
+                <table id="era-pivot-table" style="border-collapse:collapse; width:100%; font-size:12px;">
+                  <thead id="era-pivot-thead"></thead>
+                  <tbody id="era-pivot-tbody"></tbody>
+                </table>
+                <p style="font-size:11px; color:var(--gray-500); margin-top:8px;">Number in cell = risks identified for that section × assertion. Gold = significant. Read-only.</p>
+              </div>
+
+              <!-- Risk register table -->
+              <div id="era-register"></div>
+
+              <!-- Empty state -->
+              <div id="era-empty" style="display:none; text-align:center; padding:32px 20px;">
+                <p class="text-sm text-muted" style="margin-bottom:12px;">No risks identified yet. The ISA 240 presumed fraud risks (revenue recognition + management override) should have been auto-seeded when this engagement was created. If they're missing, click "+ Add risk" to start.</p>
+              </div>
+
+              <!-- Error banner -->
+              <div id="era-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:16px;"></div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ CONCLUSION PHASE PANEL ═══ -->
       <div class="tab-panel" id="tab-conclusion-home">
         <div class="card">
@@ -1814,6 +1900,198 @@
         <button class="modal-close" onclick="closeModal('modal-finding')">&times;</button>
       </div>
       <div class="modal-body" id="finding-detail"></div>
+    </div>
+  </div>
+
+  <!-- Risk Assessment: Add / Edit Risk modal -->
+  <div class="modal-overlay" id="modal-risk-edit">
+    <div class="modal" style="max-width:680px;">
+      <div class="modal-header">
+        <h3 id="modal-risk-title">Add risk</h3>
+        <button class="modal-close" onclick="closeModal('modal-risk-edit')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="risk-modal-locked-banner" style="display:none; background:#FEF9C3; border:1px solid #FDE68A; padding:10px 14px; border-radius:6px; margin-bottom:14px; font-size:12px; color:#854D0E;">
+          <strong>Presumed risk locked.</strong> This is an ISA 240 mandatory significant risk. Description, source, and significance are fixed. <span id="risk-modal-rebut-hint"></span>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin:0;">
+            <label class="text-sm">Section *</label>
+            <select id="risk-section" class="form-control"></select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="text-sm">Assertion *</label>
+            <select id="risk-assertion" class="form-control">
+              <option value="existence">Existence</option>
+              <option value="completeness">Completeness</option>
+              <option value="accuracy">Accuracy</option>
+              <option value="valuation">Valuation</option>
+              <option value="cutoff">Cut-off</option>
+              <option value="classification">Classification</option>
+              <option value="rights_obligations">Rights &amp; obligations</option>
+              <option value="presentation">Presentation</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Risk description *</label>
+          <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">What could cause material misstatement? Describe the specific risk, not the audit response.</small>
+          <textarea id="risk-description" class="form-control" rows="3"></textarea>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin:0;">
+            <label class="text-sm">Source *</label>
+            <select id="risk-source" class="form-control">
+              <option value="entity">Entity factors</option>
+              <option value="industry">Industry</option>
+              <option value="it">IT environment</option>
+              <option value="fraud">Fraud (ISA 240)</option>
+              <option value="management_override">Mgmt override (ISA 240.31)</option>
+              <option value="rap">Risk-assessment procedures</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="text-sm">Inherent *</label>
+            <select id="risk-inherent" class="form-control" onchange="recomputeCombined()">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="text-sm">Control *</label>
+            <select id="risk-control" class="form-control" onchange="recomputeCombined()">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Combined rating *</label>
+          <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Auto-calculated as max(inherent, control). Override only if professional judgement differs.</small>
+          <select id="risk-combined" class="form-control">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="risk-significant" onchange="onSignificantChange()">
+            Mark as significant risk (ISA 315.A115)
+          </label>
+        </div>
+        <div class="form-group" id="risk-significant-rationale-wrap" style="display:none;">
+          <label class="text-sm">Why significant? *</label>
+          <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Required when significant. Reference ISA 315.A115 factors: complexity, unusual transactions, fraud, significant change, etc.</small>
+          <textarea id="risk-significant-rationale" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Overall response * (ISA 330.5)</label>
+          <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Engagement-level response: more experienced staff, increased supervision, professional skepticism, unpredictable procedures, etc.</small>
+          <textarea id="risk-response" class="form-control" rows="2"></textarea>
+        </div>
+        <div id="risk-modal-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-risk-edit')">Cancel</button>
+        <button class="btn btn-outline" id="risk-btn-delete" onclick="deleteRiskFromModal()" style="display:none; margin-right:auto; color:#DC2626; border-color:#FECACA;">Delete</button>
+        <button class="btn btn-primary" id="risk-btn-save" onclick="saveRiskFromModal()">Save risk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Assessment: Link procedures modal -->
+  <div class="modal-overlay" id="modal-risk-procedures">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <h3>Linked procedures</h3>
+        <button class="modal-close" onclick="closeModal('modal-risk-procedures')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted" style="margin:0 0 12px;" id="risk-procs-context"></p>
+        <div id="risk-procs-list" style="display:flex; flex-direction:column; gap:6px; max-height:340px; overflow-y:auto;"></div>
+        <div id="risk-procs-empty" class="text-sm text-muted" style="display:none; padding:14px; text-align:center;">No procedures exist for this section yet. Add procedures in the section workpaper first.</div>
+        <div id="risk-procs-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('modal-risk-procedures')">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Assessment: Confirm assessment modal -->
+  <div class="modal-overlay" id="modal-risk-confirm">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h3>Confirm risk assessment</h3>
+        <button class="modal-close" onclick="closeModal('modal-risk-confirm')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted" style="margin:0 0 12px;">Tick all four attestations to confirm. The DB enforces this — confirmation will be rejected if any significant risk lacks a linked procedure.</p>
+
+        <div id="risk-confirm-orphan-warn" style="display:none; background:#FEF2F2; border:1px solid #FECACA; padding:10px 14px; border-radius:6px; margin-bottom:14px; font-size:13px; color:#991B1B;"></div>
+
+        <div id="risk-confirm-standback-warn" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; padding:10px 14px; border-radius:6px; margin-bottom:14px; font-size:12px; color:#854D0E;">
+          <strong>Stand-back check (ISA 315.A114):</strong>
+          <div id="risk-confirm-standback-list" style="margin-top:6px;"></div>
+        </div>
+
+        <div id="risk-confirm-nonsig-warn" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; padding:10px 14px; border-radius:6px; margin-bottom:14px; font-size:12px; color:#854D0E;">
+          <strong>Non-significant risks without procedures:</strong>
+          <div id="risk-confirm-nonsig-list" style="margin-top:6px;"></div>
+          <div style="margin-top:6px; font-style:italic;">Not a hard block — ISA 330 allows analytical-only responses for low risks. Reviewing for completeness.</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+          <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="risk-att-assertions" onchange="updateRiskConfirmBtn()" style="margin-top:3px;">
+            <span>I have assessed risks of material misstatement at the assertion level for each significant class of transactions, account balance, and disclosure (ISA 315.27).</span>
+          </label>
+          <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="risk-att-significant" onchange="updateRiskConfirmBtn()" style="margin-top:3px;">
+            <span>I have identified significant risks based on professional judgement of inherent risk factors (ISA 315.28).</span>
+          </label>
+          <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="risk-att-standback" onchange="updateRiskConfirmBtn()" style="margin-top:3px;">
+            <span>I have considered whether material classes / balances / disclosures NOT initially flagged warrant significant-risk treatment (ISA 315.A114 stand-back).</span>
+          </label>
+          <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="risk-att-responses" onchange="updateRiskConfirmBtn()" style="margin-top:3px;">
+            <span>Every significant risk has at least one linked responsive procedure (ISA 330.21).</span>
+          </label>
+        </div>
+
+        <div id="risk-confirm-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-risk-confirm')">Cancel</button>
+        <button class="btn btn-primary" id="risk-confirm-btn" onclick="submitRiskConfirm()" disabled>Confirm assessment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Assessment: Rebut Revenue Presumption modal (ISA 240.26) -->
+  <div class="modal-overlay" id="modal-risk-rebut">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3>Rebut revenue fraud presumption (ISA 240.26)</h3>
+        <button class="modal-close" onclick="closeModal('modal-risk-rebut')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted" style="margin:0 0 12px;">ISA 240.26 establishes a rebuttable presumption that revenue recognition is a fraud risk. To rebut for this engagement, provide explicit rationale describing why the presumption is inapplicable to this client's specific circumstances. Clicking <strong>Rebut</strong> records you as the approver, unmarks the risk as significant, and preserves the rebuttal in the activity log.</p>
+        <div class="form-group">
+          <label class="text-sm">Rebuttal rationale * (min 20 chars)</label>
+          <textarea id="risk-rebut-rationale" class="form-control" rows="4" placeholder="e.g. Cash-basis service business with simple invoicing. No revenue targets, no estimates, no related-party revenue. Revenue recognition is at point of cash receipt; no manipulation incentive identified."></textarea>
+        </div>
+        <div id="risk-rebut-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-risk-rebut')">Cancel</button>
+        <button class="btn btn-primary" id="risk-rebut-btn" onclick="confirmRebutRevenue()">Rebut &amp; approve</button>
+      </div>
     </div>
   </div>
 
@@ -2455,6 +2733,7 @@
         { label: 'Independence',       tab: 'engagement-independence' },
         { label: 'Audit strategy',     tab: 'audit-strategy'          },
         { label: 'Materiality',        tab: 'materiality'             },
+        { label: 'Risk assessment',    tab: 'risk-assessment'         },
       ],
       execution: [
         { label: 'Trial balance',      tab: 'tb'       },
@@ -2599,6 +2878,7 @@
       if (tab === 'engagement-independence') loadIndependenceWorkpaper();
       if (tab === 'engagement-acceptance') loadEngagementAcceptance();
       if (tab === 'audit-strategy') loadAuditStrategy();
+      if (tab === 'risk-assessment') loadRiskAssessment();
     }
 
     function initMateriality() {
@@ -5265,6 +5545,623 @@
       if (error) { showEasError('Could not create revision: ' + error.message); return; }
       await logActivity(engagementId, 'revised_audit_strategy', 'engagement_audit_strategy', data, { prior_id: easActive.id });
       await loadAuditStrategy();
+    }
+
+    // ---- Risk Assessment Tab (ISA 315 + ISA 330 + ISA 240) ----
+    const ASSERTION_LABELS = {
+      existence: 'Existence', completeness: 'Completeness', accuracy: 'Accuracy',
+      valuation: 'Valuation', cutoff: 'Cut-off', classification: 'Classification',
+      rights_obligations: 'Rights & obligations', presentation: 'Presentation'
+    };
+    const SOURCE_LABELS = {
+      entity: 'Entity', industry: 'Industry', it: 'IT', fraud: 'Fraud',
+      management_override: 'Mgmt override', rap: 'RAP', other: 'Other'
+    };
+    const RATING_COLORS = {
+      low:    { bg: '#F0FDF4', fg: '#15803D', border: '#BBF7D0' },
+      medium: { bg: '#FFFBEB', fg: '#92400E', border: '#FDE68A' },
+      high:   { bg: '#FEF2F2', fg: '#991B1B', border: '#FECACA' }
+    };
+
+    let eraRisks            = [];
+    let eraLinks            = [];      // [{risk_id, procedure_id}]
+    let eraAssessment       = null;
+    let eraSectionsCache    = [];      // engagement sections [{id, name}]
+    let eraProceduresCache  = [];      // engagement procedures [{id, section_id, description}]
+    let eraEditingRiskId    = null;
+    let eraProcsModalRiskId = null;
+    let eraRebutRiskId      = null;
+
+    async function loadRiskAssessment() {
+      if (!currentOrg || currentOrg.feature_tier !== 'pro' || currentRole !== 'admin') {
+        document.getElementById('era-pro-blocked').style.display = 'block';
+        document.getElementById('era-body').style.display = 'none';
+        document.getElementById('era-locked-banner').style.display = 'none';
+        document.getElementById('era-btn-confirm').style.display = 'none';
+        document.getElementById('era-btn-unconfirm').style.display = 'none';
+        document.getElementById('era-status-badge').style.display = 'none';
+        return;
+      }
+      document.getElementById('era-pro-blocked').style.display = 'none';
+      document.getElementById('era-body').style.display = 'block';
+      document.getElementById('era-error').style.display = 'none';
+
+      const [risksRes, linksRes, assessRes, secsRes, procsRes] = await Promise.all([
+        supabaseClient.from('engagement_risks').select('*').eq('engagement_id', engagementId).order('section_id').order('created_at'),
+        supabaseClient.from('engagement_risk_procedure_links').select('id, risk_id, procedure_id'),
+        supabaseClient.from('engagement_risk_assessment').select('*').eq('engagement_id', engagementId).maybeSingle(),
+        supabaseClient.from('audit_sections').select('id, name, sort_order').eq('engagement_id', engagementId).order('sort_order', { nullsFirst: false }).order('name'),
+        supabaseClient.from('audit_procedures').select('id, section_id, description').order('sort_order', { nullsFirst: false }),
+      ]);
+
+      if (risksRes.error)  { showEraError('Could not load risks: ' + risksRes.error.message); return; }
+      if (linksRes.error)  { showEraError('Could not load links: ' + linksRes.error.message); return; }
+      if (assessRes.error) { showEraError('Could not load assessment: ' + assessRes.error.message); return; }
+
+      eraRisks           = risksRes.data || [];
+      eraLinks           = linksRes.data || [];
+      eraAssessment      = assessRes.data || null;
+      eraSectionsCache   = secsRes.data || [];
+      const allProcs     = procsRes.data || [];
+      const engSectionIds = new Set(eraSectionsCache.map(s => s.id));
+      eraProceduresCache = allProcs.filter(p => engSectionIds.has(p.section_id));
+
+      renderRiskAssessment();
+    }
+
+    function renderRiskAssessment() {
+      const confirmed = eraAssessment && eraAssessment.status === 'confirmed';
+
+      // Status badge
+      const badge = document.getElementById('era-status-badge');
+      if (confirmed) {
+        badge.textContent = 'Confirmed';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#16a34a';
+        badge.style.display = '';
+      } else {
+        badge.textContent = 'Draft';
+        badge.style.background = 'var(--gray-100)';
+        badge.style.color = 'var(--gray-600)';
+        badge.style.display = '';
+      }
+
+      // Locked banner
+      const lockedBanner = document.getElementById('era-locked-banner');
+      if (confirmed) {
+        lockedBanner.style.display = 'block';
+        const when = eraAssessment.confirmed_at ? new Date(eraAssessment.confirmed_at).toLocaleDateString() : '';
+        document.getElementById('era-confirmed-meta').innerHTML =
+          'Confirmed on ' + escHtml(when) + '. To edit risks or procedure linkages, click <strong>Revise</strong> in the header.';
+      } else {
+        lockedBanner.style.display = 'none';
+      }
+
+      // Action buttons
+      document.getElementById('era-btn-confirm').style.display   = confirmed ? 'none' : '';
+      document.getElementById('era-btn-unconfirm').style.display = confirmed ? '' : 'none';
+
+      // Editing controls: disable Add when confirmed
+      document.getElementById('era-btn-add').disabled = confirmed;
+
+      renderRiskCounters();
+      renderRiskRegister();
+      renderRiskPivot();
+    }
+
+    function renderRiskCounters() {
+      const total = eraRisks.length;
+      const sig   = eraRisks.filter(r => r.is_significant).length;
+      const linkedIds = new Set(eraLinks.map(l => l.risk_id));
+      const linked   = eraRisks.filter(r => linkedIds.has(r.id)).length;
+      const unlinked = total - linked;
+      document.getElementById('era-count-total').textContent       = total;
+      document.getElementById('era-count-significant').textContent = sig;
+      document.getElementById('era-count-linked').textContent      = linked;
+      document.getElementById('era-count-unlinked').textContent    = unlinked;
+    }
+
+    function renderRiskRegister() {
+      const wrap = document.getElementById('era-register');
+      const empty = document.getElementById('era-empty');
+      if (!eraRisks.length) {
+        wrap.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      const confirmed = eraAssessment && eraAssessment.status === 'confirmed';
+      // Group by section
+      const bySection = {};
+      eraRisks.forEach(r => {
+        if (!bySection[r.section_id]) bySection[r.section_id] = [];
+        bySection[r.section_id].push(r);
+      });
+
+      const linksByRisk = {};
+      eraLinks.forEach(l => {
+        if (!linksByRisk[l.risk_id]) linksByRisk[l.risk_id] = 0;
+        linksByRisk[l.risk_id]++;
+      });
+
+      const html = eraSectionsCache.filter(s => bySection[s.id]).map(s => {
+        const sectionRisks = bySection[s.id];
+        const sigCount = sectionRisks.filter(r => r.is_significant).length;
+        return `
+          <div style="border:0.5px solid var(--glass-border); border-radius:8px; margin-bottom:12px; overflow:hidden;">
+            <div style="background:rgba(180,210,240,0.18); padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:13px; font-weight:600; color:var(--gray-900);">${escHtml(s.name)}</div>
+              <div style="font-size:11px; color:var(--gray-600);">${sectionRisks.length} risk${sectionRisks.length===1?'':'s'}${sigCount ? ' &middot; <span style="color:#A16207; font-weight:600;">'+sigCount+' significant</span>' : ''}</div>
+            </div>
+            <div style="padding:6px 0;">
+              ${sectionRisks.map(r => renderRiskRow(r, linksByRisk[r.id] || 0, confirmed)).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+      wrap.innerHTML = html;
+    }
+
+    function renderRiskRow(r, linkCount, confirmed) {
+      const inhC = RATING_COLORS[r.inherent_rating];
+      const ctlC = RATING_COLORS[r.control_rating];
+      const cmbC = RATING_COLORS[r.combined_rating];
+      const chip = (label, c) => `<span style="display:inline-block; padding:2px 7px; font-size:11px; font-weight:600; border-radius:4px; background:${c.bg}; color:${c.fg}; border:1px solid ${c.border}; text-transform:uppercase;">${label}</span>`;
+      const sigChip = r.is_significant
+        ? `<span title="Significant risk" style="color:#A16207; font-weight:700;">&#9733;</span>`
+        : '';
+      const locked = r.is_locked_presumed
+        ? `<span title="ISA 240 presumed" style="margin-left:4px; font-size:10px; padding:1px 5px; border-radius:3px; background:#F3F4F6; color:#6B7280;">PRESUMED</span>`
+        : '';
+      const rebutBtn = (r.is_locked_presumed && r.source === 'fraud' && !r.presumption_rebutted && !confirmed)
+        ? `<button class="btn btn-outline btn-sm" onclick="openRebutModal('${r.id}')" style="padding:2px 8px; font-size:11px;">Rebut</button>`
+        : '';
+      const procBadge = linkCount > 0
+        ? `<span style="display:inline-block; padding:2px 6px; font-size:11px; border-radius:3px; background:#DCFCE7; color:#15803D; font-weight:600;">${linkCount}</span>`
+        : `<span style="display:inline-block; padding:2px 6px; font-size:11px; border-radius:3px; background:#FEF2F2; color:#991B1B; font-weight:600;">0</span>`;
+      const editBtn = confirmed
+        ? ''
+        : `<button class="btn btn-outline btn-sm" onclick="openRiskModal('${r.id}')" style="padding:2px 8px; font-size:11px;">Edit</button>`;
+      const procBtn = `<button class="btn btn-outline btn-sm" onclick="openProceduresModal('${r.id}')" style="padding:2px 8px; font-size:11px;">Procedures</button>`;
+      const rebuttedNote = r.presumption_rebutted
+        ? `<div style="font-size:11px; color:#15803D; margin-top:4px;"><strong>Rebutted (ISA 240.26):</strong> ${escHtml(r.rebuttal_rationale || '')}</div>`
+        : '';
+      return `
+        <div style="padding:10px 14px; border-top:0.5px solid var(--glass-border); display:flex; gap:10px; align-items:flex-start;">
+          <div style="flex:0 0 16px; padding-top:2px; font-size:13px;">${sigChip}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:4px;">
+              ${chip(escHtml(ASSERTION_LABELS[r.assertion] || r.assertion), { bg:'#EEF2FF', fg:'#3730A3', border:'#C7D2FE'})}
+              ${chip(escHtml(SOURCE_LABELS[r.source] || r.source), { bg:'#F5F3FF', fg:'#5B21B6', border:'#DDD6FE'})}
+              ${locked}
+            </div>
+            <div style="font-size:13px; color:var(--gray-900); line-height:1.5;">${escHtml(r.risk_description)}</div>
+            ${rebuttedNote}
+          </div>
+          <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
+            <span style="font-size:10px; color:var(--gray-500);">I</span>${chip(r.inherent_rating[0].toUpperCase(), inhC)}
+            <span style="font-size:10px; color:var(--gray-500);">C</span>${chip(r.control_rating[0].toUpperCase(), ctlC)}
+            <span style="font-size:10px; color:var(--gray-500);">=</span>${chip(r.combined_rating[0].toUpperCase(), cmbC)}
+            <span style="margin-left:8px;">${procBadge}</span>
+            <span style="margin-left:6px; display:flex; gap:4px;">${procBtn}${editBtn}${rebutBtn}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRiskPivot() {
+      const assertions = Object.keys(ASSERTION_LABELS);
+      const thead = document.getElementById('era-pivot-thead');
+      const tbody = document.getElementById('era-pivot-tbody');
+      thead.innerHTML = `<tr>
+        <th style="text-align:left; padding:6px 8px; border:1px solid var(--gray-200); background:var(--gray-50);">Section</th>
+        ${assertions.map(a => `<th style="padding:6px 8px; border:1px solid var(--gray-200); background:var(--gray-50); text-align:center; font-size:11px;">${escHtml(ASSERTION_LABELS[a])}</th>`).join('')}
+      </tr>`;
+
+      const sectionsWithRisks = eraSectionsCache.filter(s => eraRisks.some(r => r.section_id === s.id));
+      tbody.innerHTML = sectionsWithRisks.map(s => {
+        return `<tr>
+          <td style="padding:6px 8px; border:1px solid var(--gray-200); font-size:12px;">${escHtml(s.name)}</td>
+          ${assertions.map(a => {
+            const cell = eraRisks.filter(r => r.section_id === s.id && r.assertion === a);
+            const sig = cell.filter(r => r.is_significant).length;
+            if (!cell.length) return `<td style="padding:6px 8px; border:1px solid var(--gray-200); text-align:center; color:var(--gray-300);">·</td>`;
+            return `<td style="padding:6px 8px; border:1px solid var(--gray-200); text-align:center; font-weight:600; ${sig ? 'background:#FEF9C3; color:#A16207;' : ''}">${cell.length}${sig ? ' (' + sig + ')' : ''}</td>`;
+          }).join('')}
+        </tr>`;
+      }).join('');
+    }
+
+    function toggleRiskPivot() {
+      const wrap = document.getElementById('era-pivot-wrap');
+      const btn  = document.getElementById('era-btn-toggle-pivot');
+      const showing = wrap.style.display !== 'none';
+      wrap.style.display = showing ? 'none' : 'block';
+      btn.textContent = showing ? 'Show matrix view' : 'Hide matrix view';
+    }
+
+    function showEraError(msg) {
+      const el = document.getElementById('era-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function showRiskModalError(msg) {
+      const el = document.getElementById('risk-modal-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function openRiskModal(riskId) {
+      eraEditingRiskId = riskId || null;
+      const existing = riskId ? eraRisks.find(r => r.id === riskId) : null;
+
+      // Reset error
+      document.getElementById('risk-modal-error').style.display = 'none';
+
+      // Section dropdown
+      const secSel = document.getElementById('risk-section');
+      secSel.innerHTML = eraSectionsCache.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+
+      if (existing) {
+        document.getElementById('modal-risk-title').textContent = existing.is_locked_presumed ? 'Presumed risk (read-only fields)' : 'Edit risk';
+        secSel.value = existing.section_id;
+        document.getElementById('risk-assertion').value             = existing.assertion;
+        document.getElementById('risk-description').value           = existing.risk_description;
+        document.getElementById('risk-source').value                = existing.source;
+        document.getElementById('risk-inherent').value              = existing.inherent_rating;
+        document.getElementById('risk-control').value               = existing.control_rating;
+        document.getElementById('risk-combined').value              = existing.combined_rating;
+        document.getElementById('risk-significant').checked         = !!existing.is_significant;
+        document.getElementById('risk-significant-rationale').value = existing.significant_rationale || '';
+        document.getElementById('risk-response').value              = existing.overall_response || '';
+        document.getElementById('risk-btn-delete').style.display    = existing.is_locked_presumed ? 'none' : '';
+
+        // Lock presumed fields
+        const locked = existing.is_locked_presumed;
+        document.getElementById('risk-section').disabled    = locked;
+        document.getElementById('risk-assertion').disabled  = locked;
+        document.getElementById('risk-description').disabled = locked;
+        document.getElementById('risk-source').disabled     = locked;
+        document.getElementById('risk-significant').disabled = locked;
+        document.getElementById('risk-significant-rationale').disabled = locked;
+        document.getElementById('risk-modal-locked-banner').style.display = locked ? 'block' : 'none';
+        document.getElementById('risk-modal-rebut-hint').textContent = (locked && existing.source === 'fraud' && !existing.presumption_rebutted)
+          ? 'Use the "Rebut" button on the register row to rebut the ISA 240.26 presumption with rationale.'
+          : (locked && existing.source === 'management_override' ? 'ISA 240.31 — non-rebuttable.' : '');
+      } else {
+        document.getElementById('modal-risk-title').textContent = 'Add risk';
+        // Defaults
+        document.getElementById('risk-assertion').value = 'existence';
+        document.getElementById('risk-description').value = '';
+        document.getElementById('risk-source').value = 'entity';
+        document.getElementById('risk-inherent').value = 'medium';
+        document.getElementById('risk-control').value = 'medium';
+        document.getElementById('risk-combined').value = 'medium';
+        document.getElementById('risk-significant').checked = false;
+        document.getElementById('risk-significant-rationale').value = '';
+        document.getElementById('risk-response').value = '';
+        document.getElementById('risk-btn-delete').style.display = 'none';
+        ['risk-section','risk-assertion','risk-description','risk-source','risk-significant','risk-significant-rationale'].forEach(id => {
+          document.getElementById(id).disabled = false;
+        });
+        document.getElementById('risk-modal-locked-banner').style.display = 'none';
+      }
+      onSignificantChange();
+      document.getElementById('modal-risk-edit').classList.add('active');
+    }
+
+    function recomputeCombined() {
+      const order = { low: 1, medium: 2, high: 3 };
+      const inh = document.getElementById('risk-inherent').value;
+      const ctl = document.getElementById('risk-control').value;
+      const max = order[inh] >= order[ctl] ? inh : ctl;
+      document.getElementById('risk-combined').value = max;
+    }
+
+    function onSignificantChange() {
+      const sig = document.getElementById('risk-significant').checked;
+      document.getElementById('risk-significant-rationale-wrap').style.display = sig ? 'block' : 'none';
+    }
+
+    async function saveRiskFromModal() {
+      const errEl = document.getElementById('risk-modal-error');
+      errEl.style.display = 'none';
+
+      const payload = {
+        section_id:            document.getElementById('risk-section').value,
+        assertion:             document.getElementById('risk-assertion').value,
+        risk_description:      document.getElementById('risk-description').value.trim(),
+        source:                document.getElementById('risk-source').value,
+        inherent_rating:       document.getElementById('risk-inherent').value,
+        control_rating:        document.getElementById('risk-control').value,
+        combined_rating:       document.getElementById('risk-combined').value,
+        is_significant:        document.getElementById('risk-significant').checked,
+        significant_rationale: document.getElementById('risk-significant-rationale').value.trim() || null,
+        overall_response:      document.getElementById('risk-response').value.trim(),
+      };
+
+      if (!payload.section_id)                                      { showRiskModalError('Section is required.'); return; }
+      if (!payload.risk_description)                                { showRiskModalError('Risk description is required.'); return; }
+      if (!payload.overall_response)                                { showRiskModalError('Overall response is required (ISA 330.5).'); return; }
+      if (payload.is_significant && !payload.significant_rationale) { showRiskModalError('Significant-risk rationale is required.'); return; }
+
+      const btn = document.getElementById('risk-btn-save');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        if (eraEditingRiskId) {
+          const existing = eraRisks.find(r => r.id === eraEditingRiskId);
+          if (existing && existing.is_locked_presumed) {
+            // Only response + ratings + significance editable for presumed risks; freeze locked fields.
+            const limited = {
+              inherent_rating: payload.inherent_rating,
+              control_rating: payload.control_rating,
+              combined_rating: payload.combined_rating,
+              overall_response: payload.overall_response,
+            };
+            // is_significant is also locked unless rebuttal already happened — covered by RLS / table CHECK.
+            const { error } = await supabaseClient.from('engagement_risks').update(limited).eq('id', eraEditingRiskId);
+            if (error) throw error;
+          } else {
+            const { error } = await supabaseClient.from('engagement_risks').update(payload).eq('id', eraEditingRiskId);
+            if (error) throw error;
+          }
+          await logActivity(engagementId, 'updated_risk', 'engagement_risk', eraEditingRiskId, {});
+        } else {
+          const insertPayload = {
+            ...payload,
+            engagement_id:   engagementId,
+            organization_id: currentOrg.id,
+            created_by:      currentUser.id,
+          };
+          const { data, error } = await supabaseClient.from('engagement_risks').insert(insertPayload).select().single();
+          if (error) throw error;
+          await logActivity(engagementId, 'added_risk', 'engagement_risk', data.id, {});
+        }
+        closeModal('modal-risk-edit');
+        await loadRiskAssessment();
+      } catch (err) {
+        showRiskModalError('Save failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save risk';
+      }
+    }
+
+    async function deleteRiskFromModal() {
+      if (!eraEditingRiskId) return;
+      const existing = eraRisks.find(r => r.id === eraEditingRiskId);
+      if (existing && existing.is_locked_presumed) {
+        showRiskModalError('Presumed ISA 240 risks cannot be deleted. Use Rebut instead (revenue only).');
+        return;
+      }
+      const ok = await showActionModal({
+        title: 'Delete risk?',
+        message: 'This will delete the risk and all linked procedure references. This cannot be undone.',
+        okLabel: 'Delete',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+      const { error } = await supabaseClient.from('engagement_risks').delete().eq('id', eraEditingRiskId);
+      if (error) { showRiskModalError('Delete failed: ' + error.message); return; }
+      await logActivity(engagementId, 'deleted_risk', 'engagement_risk', eraEditingRiskId, {});
+      closeModal('modal-risk-edit');
+      await loadRiskAssessment();
+    }
+
+    function openProceduresModal(riskId) {
+      eraProcsModalRiskId = riskId;
+      const risk = eraRisks.find(r => r.id === riskId);
+      if (!risk) return;
+      const section = eraSectionsCache.find(s => s.id === risk.section_id);
+      document.getElementById('risk-procs-context').textContent =
+        `Section: ${section ? section.name : '(unknown)'} · Risk: ${risk.risk_description.slice(0,80)}${risk.risk_description.length>80?'...':''}`;
+      const sectionProcs = eraProceduresCache.filter(p => p.section_id === risk.section_id);
+      const linkedProcIds = new Set(eraLinks.filter(l => l.risk_id === riskId).map(l => l.procedure_id));
+      const listEl = document.getElementById('risk-procs-list');
+      const emptyEl = document.getElementById('risk-procs-empty');
+      document.getElementById('risk-procs-error').style.display = 'none';
+
+      if (!sectionProcs.length) {
+        listEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+      } else {
+        emptyEl.style.display = 'none';
+        const confirmed = eraAssessment && eraAssessment.status === 'confirmed';
+        listEl.innerHTML = sectionProcs.map(p => {
+          const checked = linkedProcIds.has(p.id) ? 'checked' : '';
+          return `<label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border:0.5px solid var(--gray-200); border-radius:6px; cursor:pointer;">
+            <input type="checkbox" ${checked} ${confirmed ? 'disabled' : ''} onchange="toggleProcedureLink('${riskId}', '${p.id}', this.checked)" style="margin-top:3px;">
+            <span style="flex:1;">${escHtml(p.description)}</span>
+          </label>`;
+        }).join('');
+      }
+      document.getElementById('modal-risk-procedures').classList.add('active');
+    }
+
+    async function toggleProcedureLink(riskId, procedureId, link) {
+      const errEl = document.getElementById('risk-procs-error');
+      errEl.style.display = 'none';
+      try {
+        if (link) {
+          const { error } = await supabaseClient
+            .from('engagement_risk_procedure_links')
+            .insert({ risk_id: riskId, procedure_id: procedureId });
+          if (error) throw error;
+          eraLinks.push({ risk_id: riskId, procedure_id: procedureId });
+          await logActivity(engagementId, 'linked_risk_procedure', 'engagement_risk', riskId, { procedure_id: procedureId });
+        } else {
+          // Find the link row id and delete by id (cleaner than composite delete)
+          const { data: existing, error: selErr } = await supabaseClient
+            .from('engagement_risk_procedure_links')
+            .select('id')
+            .eq('risk_id', riskId)
+            .eq('procedure_id', procedureId)
+            .maybeSingle();
+          if (selErr) throw selErr;
+          if (existing) {
+            const { error } = await supabaseClient
+              .from('engagement_risk_procedure_links')
+              .delete()
+              .eq('id', existing.id);
+            if (error) throw error;
+          }
+          eraLinks = eraLinks.filter(l => !(l.risk_id === riskId && l.procedure_id === procedureId));
+          await logActivity(engagementId, 'unlinked_risk_procedure', 'engagement_risk', riskId, { procedure_id: procedureId });
+        }
+        renderRiskCounters();
+        renderRiskRegister();
+      } catch (err) {
+        errEl.textContent = 'Failed: ' + err.message;
+        errEl.style.display = 'block';
+        // Reload to reset checkbox state on error
+        await loadRiskAssessment();
+      }
+    }
+
+    function openRebutModal(riskId) {
+      eraRebutRiskId = riskId;
+      document.getElementById('risk-rebut-rationale').value = '';
+      document.getElementById('risk-rebut-error').style.display = 'none';
+      document.getElementById('modal-risk-rebut').classList.add('active');
+    }
+
+    async function confirmRebutRevenue() {
+      const rationale = document.getElementById('risk-rebut-rationale').value.trim();
+      const errEl = document.getElementById('risk-rebut-error');
+      errEl.style.display = 'none';
+      if (rationale.length < 20) {
+        errEl.textContent = 'Rationale must be at least 20 characters explaining why the presumption is inapplicable.';
+        errEl.style.display = 'block';
+        return;
+      }
+      const btn = document.getElementById('risk-rebut-btn');
+      btn.disabled = true;
+      btn.textContent = 'Rebutting...';
+      try {
+        const { error } = await supabaseClient.rpc('rebut_revenue_presumption', {
+          p_risk_id:   eraRebutRiskId,
+          p_rationale: rationale,
+        });
+        if (error) throw error;
+        await logActivity(engagementId, 'rebutted_revenue_presumption', 'engagement_risk', eraRebutRiskId, {});
+        closeModal('modal-risk-rebut');
+        await loadRiskAssessment();
+      } catch (err) {
+        errEl.textContent = 'Failed: ' + err.message;
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Rebut & approve';
+      }
+    }
+
+    function confirmRiskAssessment() {
+      // Reset attestations
+      ['risk-att-assertions','risk-att-significant','risk-att-standback','risk-att-responses'].forEach(id => {
+        document.getElementById(id).checked = false;
+      });
+      document.getElementById('risk-confirm-error').style.display = 'none';
+      document.getElementById('risk-confirm-btn').disabled = true;
+
+      // Orphan check
+      const linkedSet = new Set(eraLinks.map(l => l.risk_id));
+      const sigOrphans = eraRisks.filter(r => r.is_significant && !linkedSet.has(r.id));
+      const orphanEl = document.getElementById('risk-confirm-orphan-warn');
+      if (sigOrphans.length) {
+        orphanEl.innerHTML = `<strong>Blocked:</strong> ${sigOrphans.length} significant risk(s) have no linked procedures. Link procedures from the register before confirming (ISA 330.21).`;
+        orphanEl.style.display = 'block';
+      } else {
+        orphanEl.style.display = 'none';
+      }
+
+      // Stand-back check: sections without significant risks
+      const sigSectionIds = new Set(eraRisks.filter(r => r.is_significant).map(r => r.section_id));
+      const sectionsWithoutSig = eraSectionsCache.filter(s => !sigSectionIds.has(s.id));
+      const sbEl = document.getElementById('risk-confirm-standback-warn');
+      const sbList = document.getElementById('risk-confirm-standback-list');
+      if (sectionsWithoutSig.length) {
+        sbList.innerHTML = sectionsWithoutSig.map(s => '• ' + escHtml(s.name)).join('<br>');
+        sbEl.style.display = 'block';
+      } else {
+        sbEl.style.display = 'none';
+      }
+
+      // Non-significant unlinked (soft warn)
+      const nonsigOrphans = eraRisks.filter(r => !r.is_significant && !linkedSet.has(r.id));
+      const nonsigEl = document.getElementById('risk-confirm-nonsig-warn');
+      const nonsigList = document.getElementById('risk-confirm-nonsig-list');
+      if (nonsigOrphans.length) {
+        nonsigList.innerHTML = nonsigOrphans.slice(0, 10).map(r => {
+          const sec = eraSectionsCache.find(s => s.id === r.section_id);
+          return '• ' + escHtml(sec ? sec.name : '?') + ' — ' + escHtml(r.risk_description.slice(0,80));
+        }).join('<br>') + (nonsigOrphans.length > 10 ? '<br>+ ' + (nonsigOrphans.length - 10) + ' more' : '');
+        nonsigEl.style.display = 'block';
+      } else {
+        nonsigEl.style.display = 'none';
+      }
+
+      document.getElementById('modal-risk-confirm').classList.add('active');
+    }
+
+    function updateRiskConfirmBtn() {
+      const all = ['risk-att-assertions','risk-att-significant','risk-att-standback','risk-att-responses']
+        .every(id => document.getElementById(id).checked);
+      document.getElementById('risk-confirm-btn').disabled = !all;
+    }
+
+    async function submitRiskConfirm() {
+      const errEl = document.getElementById('risk-confirm-error');
+      errEl.style.display = 'none';
+      const btn = document.getElementById('risk-confirm-btn');
+      btn.disabled = true;
+      btn.textContent = 'Confirming...';
+      try {
+        // 1) Set the attestations on the assessment row
+        const { error: updErr } = await supabaseClient
+          .from('engagement_risk_assessment')
+          .update({
+            isa_315_27_assertions_assessed:           true,
+            isa_315_28_significant_risks_identified:  true,
+            isa_315_stand_back_completed:             true,
+            isa_330_responses_linked:                 true,
+          })
+          .eq('engagement_id', engagementId);
+        if (updErr) throw updErr;
+
+        // 2) Call the confirmation RPC (validates + stamps)
+        const { error: rpcErr } = await supabaseClient.rpc('confirm_risk_assessment', {
+          p_engagement_id: engagementId,
+        });
+        if (rpcErr) throw rpcErr;
+
+        await logActivity(engagementId, 'confirmed_risk_assessment', 'engagement_risk_assessment', engagementId, {});
+        closeModal('modal-risk-confirm');
+        await loadRiskAssessment();
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Confirm assessment';
+      }
+    }
+
+    async function unconfirmRiskAssessment() {
+      const ok = await showActionModal({
+        title: 'Revise risk assessment?',
+        message: 'This will reopen the assessment for editing. Risks themselves are preserved; only the confirmation status is reversed. You will need to re-attest before re-confirming.',
+        okLabel: 'Revise',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+      const { error } = await supabaseClient.rpc('unconfirm_risk_assessment', { p_engagement_id: engagementId });
+      if (error) { showEraError('Could not revise: ' + error.message); return; }
+      await logActivity(engagementId, 'unconfirmed_risk_assessment', 'engagement_risk_assessment', engagementId, {});
+      await loadRiskAssessment();
     }
 
     // ---- Activity Log Tab ----

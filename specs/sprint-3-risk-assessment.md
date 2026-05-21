@@ -1,6 +1,6 @@
 # Sprint 3 #3 — Risk Assessment Matrix (Verification Spec)
 
-**Status:** SPEC — awaiting Perplexity + Copilot answers, then build.
+**Status:** SPEC — verification complete 2026-05-21 (Perplexity + Copilot). Building per spec + 3 verification fixes (see § 9).
 **Branch:** `staging` on `tayseermbabiker/axiom`
 **Effort estimate:** ~2-3d (largest piece of Sprint 3)
 
@@ -267,3 +267,69 @@ ISA 330.21: special procedures must be performed for significant risks. Hard-blo
 - [ ] User signs off
 
 When all ten ticked, **CLOSED**.
+
+---
+
+## 9. Verification fixes (2026-05-21)
+
+Three changes from the post-verification synthesis (see `Desktop\perplexity.txt` + `copilot.txt`):
+
+### Fix 1 — ISA 240.26 rebuttal workflow (Perplexity Q2)
+
+A bare "low inherent" on the locked Revenue Recognition risk = documentation gap. ISA 240.26 presumption must be EXPLICITLY rebutted with rationale + admin approval. Management override stays non-rebuttable per ISA 240.31.
+
+**Schema additions on `engagement_risks`:**
+
+| Column | Type | Notes |
+|---|---|---|
+| `presumption_rebutted` | boolean | default false |
+| `rebuttal_rationale` | text | required if presumption_rebutted=true |
+| `rebuttal_approved_by` | uuid FK profiles | required if presumption_rebutted=true |
+| `rebuttal_approved_at` | timestamptz | required if presumption_rebutted=true |
+
+**CHECK constraints:**
+- If `presumption_rebutted=true` then rebuttal_rationale + rebuttal_approved_by + rebuttal_approved_at NOT NULL
+- If `source='management_override'` then `presumption_rebutted=false` (non-rebuttable)
+
+**UI:** "Rebut presumption" button on the locked Revenue risk (source='fraud' + is_locked_presumed=true). Opens modal: rationale (required) → admin approval click → unticks `is_significant` + stamps approver/timestamp. Management override risk does NOT show a Rebut button.
+
+### Fix 2 — Stand-back attestation (Perplexity Q1)
+
+Add a 4th attestation to `engagement_risk_assessment`: `isa_315_stand_back_completed`. Confirmation modal lists sections without significant risks: *"Confirm you considered whether any of these warrant significant-risk treatment per ISA 315 'stand back'."*
+
+Updated CHECK on `engagement_risk_assessment`: `status='confirmed'` now requires all 4 attestations (3 original + stand_back) + confirmed_by + confirmed_at.
+
+### Fix 3 — Architecture: pre-seed assessment row + race fix (Copilot Q6 + Q7)
+
+**Drop the AFTER INSERT trigger on `engagement_risks`** (was: auto-create assessment row on first risk insert). Instead, pre-seed `engagement_risk_assessment` row when the engagement itself is created — added to `public/pages/dashboard.html` engagement creation flow, alongside `seedSectionsForEngagement`. Reasoning: simpler invariant ("every engagement has an assessment row from day 1"), avoids RLS/trigger interaction edge cases.
+
+**Add BEFORE DELETE trigger on `engagement_risk_procedure_links`** that blocks deletion when the assessment is confirmed AND the risk is significant. Prevents the orphan race where a partner deletes a procedure post-confirmation, CASCADE wipes the junction row, and a significant risk silently loses its required ISA 330.21 linkage.
+
+```sql
+CREATE OR REPLACE FUNCTION public.prevent_orphaned_significant_risks()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  v_eng_id uuid;
+  v_significant boolean;
+  v_confirmed boolean;
+BEGIN
+  SELECT r.engagement_id, r.is_significant
+    INTO v_eng_id, v_significant
+    FROM public.engagement_risks r
+   WHERE r.id = OLD.risk_id;
+  IF NOT v_significant THEN RETURN OLD; END IF;
+  SELECT (status='confirmed') INTO v_confirmed
+    FROM public.engagement_risk_assessment
+   WHERE engagement_id = v_eng_id;
+  IF v_confirmed THEN
+    RAISE EXCEPTION 'Cannot delete procedure link: risk assessment is confirmed and this is a significant risk. Unconfirm first.';
+  END IF;
+  RETURN OLD;
+END;
+$$;
+```
+
+### Soft warning for non-significant unlinked risks (Perplexity Q3)
+
+Don't hard-block, but the UI confirmation modal lists *all* risks with zero linked procedures (significant + non-significant). Hard error only when a significant risk has none; warning + "Confirm anyway" for non-significant unlinked risks.
+
