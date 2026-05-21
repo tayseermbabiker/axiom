@@ -759,6 +759,11 @@
 
             <!-- Form -->
             <div id="el-form-wrap" style="display:none;">
+              <!-- Locked banner (shown when status='signed') -->
+              <div id="el-locked-banner" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; padding:14px 16px; border-radius:8px; margin-bottom:16px;">
+                <div style="font-size:13px; font-weight:600; color:#166534;">Signed &amp; locked</div>
+                <div style="font-size:12px; color:#15803D; margin-top:2px;">This signed letter is read-only. To issue revised terms, click <strong>Revise letter</strong> in the header (the current letter is preserved as evidence per ISA 210.13).</div>
+              </div>
               <!-- Section: letter metadata -->
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Letter facts</h3>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -905,6 +910,12 @@
             <!-- Main form (rendered once parent exists) -->
             <div id="ei-form-wrap" style="display:none;">
 
+              <!-- Locked banner (shown when status='confirmed') -->
+              <div id="ei-locked-banner" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; padding:14px 16px; border-radius:8px; margin-bottom:16px;">
+                <div style="font-size:13px; font-weight:600; color:#166534;">Confirmed &amp; locked</div>
+                <div style="font-size:12px; color:#15803D; margin-top:2px;">This independence assessment is read-only. To revise (new threats, fee data, or rotation event), click <strong>Revise assessment</strong> in the header (the current version is preserved per ISA 230).</div>
+              </div>
+
               <!-- Section 1: Partner attestation -->
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Partner attestation</h3>
               <p class="text-sm text-muted" style="margin-bottom:12px;">ISA 220 (Revised) makes the engagement partner responsible for the engagement team's compliance with independence and relevant ethical requirements.</p>
@@ -1026,7 +1037,7 @@
             </div>
             <div style="display:flex; gap:8px;">
               <span id="eacc-status-badge" class="badge" style="display:none;"></span>
-              <button class="btn btn-outline btn-sm" id="eacc-btn-revise" onclick="reviseEngagementAcceptance()" style="display:none;">Annual reassessment</button>
+              <button class="btn btn-outline btn-sm" id="eacc-btn-revise" onclick="reviseEngagementAcceptance()" style="display:none;">Revise decision</button>
             </div>
           </div>
           <div class="card-body">
@@ -1049,6 +1060,12 @@
 
             <!-- Main form -->
             <div id="eacc-form-wrap" style="display:none;">
+
+              <!-- Locked banner (shown when status='confirmed') -->
+              <div id="eacc-locked-banner" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; padding:14px 16px; border-radius:8px; margin-bottom:16px;">
+                <div style="font-size:13px; font-weight:600; color:#166534;">Confirmed &amp; locked</div>
+                <div style="font-size:12px; color:#15803D; margin-top:2px;">This acceptance decision is read-only. To change it (new information surfaces, conditions change), click <strong>Revise decision</strong> in the header (the current version is preserved per ISA 230).</div>
+              </div>
 
               <!-- Independence warning banner (soft) -->
               <div id="eacc-indep-warning" style="display:none; background:#FFFBEB; border:0.5px solid #FDE68A; border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:13px; color:#92400E;">
@@ -2568,16 +2585,9 @@
 
     // ---- Tab Switching ----
     function switchTab(tab) {
-      // Update tab buttons
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      // Active state for the module-tab nav is handled by renderModuleTabs().
+      // Here we only swap which tab-panel is visible.
       document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
-
-      // Button order in DOM: tb, materiality, sections, findings, fs, activity
-      const tabMap = { tb: 0, materiality: 1, sections: 2, findings: 3, fs: 4, activity: 5 };
-      const idx = tabMap[tab];
-      if (idx !== undefined) {
-        document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-      }
 
       const panel = document.getElementById('tab-' + tab);
       if (panel) panel.classList.add('active');
@@ -3897,6 +3907,28 @@
       await loadFsUploads();
     }
 
+    // ---- Workpaper lock helper ----
+    // Applied to planning workpapers (EL / Independence / Acceptance) so a
+    // confirmed/signed version becomes read-only in place. Editing requires
+    // an explicit Revise (which supersedes the prior version per ISA 230).
+    // Disables every input/textarea/select inside wrapId, hides the named
+    // save buttons, and toggles a "locked" banner inside the form.
+    function setWorkpaperLocked(wrapId, bannerId, isLocked, saveButtonIds) {
+      const wrap = document.getElementById(wrapId);
+      if (wrap) {
+        wrap.querySelectorAll('input, textarea, select').forEach(el => {
+          if (bannerId && el.closest('#' + bannerId)) return;
+          el.disabled = isLocked;
+        });
+      }
+      const banner = document.getElementById(bannerId);
+      if (banner) banner.style.display = isLocked ? 'block' : 'none';
+      (saveButtonIds || []).forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = isLocked ? 'none' : '';
+      });
+    }
+
     // ---- Engagement Letter Tab (ISA 210) ----
     let elActive = null;       // currently-active letter row (or null)
     let elHistory = [];        // superseded letters for this engagement
@@ -3971,6 +4003,10 @@
       // Revise button — only show on a signed active letter
       const reviseBtn = document.getElementById('el-btn-revise');
       reviseBtn.style.display = (l.status === 'signed') ? '' : 'none';
+
+      // Lock/unlock form
+      setWorkpaperLocked('el-form-wrap', 'el-locked-banner', l.status === 'signed',
+        ['el-btn-save-draft', 'el-btn-mark-signed']);
 
       // File status
       const fileStatus = document.getElementById('el-file-status');
@@ -4273,6 +4309,10 @@
       renderIndependenceThreats();
       renderIndependenceNas();
       renderIndependenceHistory();
+
+      // Lock/unlock all form inputs (incl. dynamic threats + NAS sub-tables) after they render.
+      setWorkpaperLocked('ei-form-wrap', 'ei-locked-banner', (eiActive && eiActive.status === 'confirmed'),
+        ['ei-btn-confirm', 'ei-btn-save-draft']);
     }
 
     function renderIndependenceForm() {
@@ -4311,6 +4351,7 @@
 
       // Revise button
       document.getElementById('ei-btn-revise').style.display = (e.status === 'confirmed') ? '' : 'none';
+      // Form lock applied in loadIndependenceWorkpaper after dynamic sub-tables render.
     }
 
     function renderIndependenceThreats() {
@@ -4769,6 +4810,10 @@
       }
 
       document.getElementById('eacc-btn-revise').style.display = (e.status === 'confirmed') ? '' : 'none';
+
+      // Lock/unlock form
+      setWorkpaperLocked('eacc-form-wrap', 'eacc-locked-banner', e.status === 'confirmed',
+        ['eacc-btn-confirm', 'eacc-btn-save-draft']);
     }
 
     function renderEaccHistory() {
@@ -4931,9 +4976,9 @@
     async function reviseEngagementAcceptance() {
       if (!eaccActive || eaccActive.status !== 'confirmed') return;
       const ok = await showActionModal({
-        title: 'Annual reassessment?',
-        message: 'The current confirmed decision will be superseded and kept on file. A new continuance draft will be created (carrying predecessor + integrity history forward).',
-        okLabel: 'Create reassessment',
+        title: 'Revise acceptance decision?',
+        message: 'The current confirmed decision will be marked as superseded and kept on file. A new draft will be created (carrying predecessor + integrity history forward) so you can update the decision based on new information.',
+        okLabel: 'Create revision',
         okClass: 'btn-primary'
       });
       if (!ok) return;
