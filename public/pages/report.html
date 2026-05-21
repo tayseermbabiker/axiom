@@ -295,7 +295,8 @@
         eaccRes, elRes, eiRes, eiThreatsRes, eiNasRes,
         easRes,
         risksRes, riskLinksRes, riskAssessRes,
-        cmRes, cmAttestRes
+        cmRes, cmAttestRes,
+        matVersRes, matItemsRes
       ] = await Promise.all([
         supabaseClient.from('audit_sections').select('*').eq('engagement_id', engagementId).order('sort_order'),
         supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code'),
@@ -311,6 +312,8 @@
         supabaseClient.from('engagement_risk_assessment').select('*').eq('engagement_id', engagementId).maybeSingle(),
         supabaseClient.from('engagement_completion_memo').select('*').eq('engagement_id', engagementId).maybeSingle(),
         supabaseClient.from('completion_attestations').select('*'),
+        supabaseClient.from('engagement_materiality_versions').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: true }),
+        supabaseClient.from('engagement_specific_materiality_items').select('*'),
       ]);
 
       // Active (non-superseded) versions of versioned workpapers
@@ -325,6 +328,17 @@
       const riskAssess = riskAssessRes.data || null;
       const cm         = cmRes.data || null;
       const cmAttests  = cm ? (cmAttestRes.data || []).filter(a => a.engagement_completion_memo_id === cm.id) : [];
+
+      // Materiality: versioned workpaper (ISA 320). Sort ascending — first is "planning".
+      const matAllVersions = matVersRes.data || [];
+      const matActive   = matAllVersions.find(v => !v.is_superseded) || null;
+      // "Planning materiality" = the earliest version (v1, originally approved at planning).
+      // "Revised materiality" = the active version if v2+. Same row if not revised.
+      const matPlanning = matAllVersions[0] || null;
+      const matIsRevised = !!(matActive && matPlanning && matActive.id !== matPlanning.id);
+      const matSpecificItems = matActive
+        ? (matItemsRes.data || []).filter(it => it.materiality_version_id === matActive.id)
+        : [];
 
       const sections = sectionsRes.data || [];
       const tbLines = tbRes.data || [];
@@ -588,30 +602,121 @@
         }
       }
 
-      // ===== 2. PLANNING & MATERIALITY =====
-      if (eng.materiality_overall) {
-        const benchLabels = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
-        const benchLabel = benchLabels[eng.materiality_benchmark] || eng.materiality_benchmark || '—';
-        const fmt = (n) => Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 });
+      // ===== 2. MATERIALITY (ISA 320) — versioned workpaper =====
+      // Renders from the versioned table (matActive) when available, falling
+      // back to engagements.materiality_* (legacy snapshot). Both reports
+      // show materiality. Completion report adds the planning-vs-revised
+      // comparison if matIsRevised.
+      const BENCH_LABELS = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity', other: 'Other' };
+      const BENCH_REASON_LABELS = {
+        profit_based: 'Profit-based entity', asset_based: 'Asset-based entity',
+        revenue_driven: 'Revenue-driven entity', volatile_profits: 'Volatile profits', other: 'Other'
+      };
+      const PERIOD_LABELS = { current: 'Current period', normalized: 'Normalized / averaged', prior: 'Prior period', other: 'Other' };
+      const PERF_REASON_LABELS = {
+        no_history: 'No history of misstatements', prior_misstatements: 'Prior year had significant misstatements',
+        first_year: 'First-year audit', other: 'Other'
+      };
+      const fmtMat = (n) => n != null ? Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 }) : '—';
 
-        html += '<h2>Planning & Materiality</h2>';
-        html += `<table>
-          <thead><tr><th>Item</th><th>Value</th></tr></thead>
-          <tbody>
-            <tr><td>Benchmark</td><td>${esc(benchLabel)}</td></tr>
-            <tr><td>Benchmark Amount</td><td>${fmt(eng.materiality_amount)}</td></tr>
-            <tr><td>Percentage Applied</td><td>${eng.materiality_pct}%</td></tr>
-            <tr><td><strong>Overall Materiality</strong></td><td><strong>${fmt(eng.materiality_overall)}</strong></td></tr>
-            <tr><td>Performance Materiality (${eng.materiality_perf_pct || 75}%)</td><td>${fmt(eng.materiality_performance)}</td></tr>
-            <tr><td>Clearly Trivial Threshold (${eng.materiality_trivial_pct || 5}%)</td><td>${fmt(eng.materiality_trivial)}</td></tr>
-          </tbody>
-        </table>`;
+      if (matActive || eng.materiality_overall) {
+        const v = matActive || {
+          benchmark: eng.materiality_benchmark,
+          benchmark_amount: eng.materiality_amount,
+          percentage_applied: eng.materiality_pct,
+          overall_materiality: eng.materiality_overall,
+          performance_materiality_pct: eng.materiality_perf_pct,
+          performance_materiality_amount: eng.materiality_performance,
+          trivial_pct: eng.materiality_trivial_pct,
+          trivial_amount: eng.materiality_trivial,
+          rationale: eng.materiality_rationale,
+          status: 'approved',
+        };
+        const benchLabel = BENCH_LABELS[v.benchmark] || v.benchmark_other_label || v.benchmark || '—';
+        const statusBadge = v.status === 'approved'
+          ? `<span class="chip chip-green">Approved${v.approved_at ? ' &middot; ' + formatDateLong(v.approved_at) : ''}</span>`
+          : `<span class="chip chip-grey">Draft</span>`;
+        const revisedBadge = matIsRevised
+          ? `<span class="chip chip-blue" style="margin-left:6px;">Revised v${matAllVersions.length}</span>`
+          : '';
 
-        if (eng.materiality_rationale) {
+        html += '<h2>Materiality (ISA 320)</h2>';
+        html += `<table><tbody>
+          <tr><th style="width:32%;">Status</th><td>${statusBadge}${revisedBadge}</td></tr>
+          <tr><th>Benchmark</th><td>${esc(benchLabel)}${v.benchmark_period && v.benchmark_period !== 'current' ? ' <span class="chip chip-amber" style="margin-left:6px;">' + esc(PERIOD_LABELS[v.benchmark_period] || v.benchmark_period) + '</span>' : ''}</td></tr>
+          ${v.benchmark_selection_reason ? `<tr><th>Reason for benchmark</th><td>${esc(BENCH_REASON_LABELS[v.benchmark_selection_reason] || v.benchmark_selection_reason)}${v.benchmark_selection_other_text ? ' &mdash; ' + esc(v.benchmark_selection_other_text) : ''}</td></tr>` : ''}
+          <tr><th>Benchmark amount</th><td>${fmtMat(v.benchmark_amount)}</td></tr>
+          <tr><th>Percentage applied</th><td>${v.percentage_applied}%</td></tr>
+          <tr><th><strong>Overall materiality</strong></th><td><strong>${fmtMat(v.overall_materiality)}</strong></td></tr>
+          <tr><th>Performance materiality (${v.performance_materiality_pct || 75}%)</th><td>${fmtMat(v.performance_materiality_amount)}${v.performance_materiality_reason ? ' &mdash; ' + esc(PERF_REASON_LABELS[v.performance_materiality_reason] || v.performance_materiality_reason) : ''}</td></tr>
+          <tr><th>Clearly trivial threshold (${v.trivial_pct || 5}%)</th><td>${fmtMat(v.trivial_amount)}</td></tr>
+          ${v.benchmark_period_reason ? `<tr><th>Reason for non-current period</th><td>${esc(v.benchmark_period_reason)}</td></tr>` : ''}
+        </tbody></table>`;
+
+        // Qualitative considerations checklist (ISA 320.A1)
+        if (matActive) {
+          const qualItems = [
+            [v.qual_regulatory_sensitivity,    'Regulatory sensitivity'],
+            [v.qual_covenant_compliance,       'Covenant compliance'],
+            [v.qual_fraud_risk_indicators,     'Fraud risk indicators'],
+            [v.qual_sensitive_disclosures,     'Sensitive disclosures (related parties etc.)'],
+            [v.qual_mgmt_compensation_impact,  'Management compensation impact'],
+            [v.qual_key_ratios_trends,         'Key ratios / trends'],
+          ];
+          const anyQual = qualItems.some(([on]) => on) || v.qual_other_text;
+          if (anyQual) {
+            html += '<h4>Qualitative considerations (ISA 320.A1)</h4>';
+            html += '<table><tbody>';
+            qualItems.forEach(([on, label]) => {
+              if (on) html += `<tr><td style="width:90%;">${esc(label)}</td><td style="text-align:center;">&#10003;</td></tr>`;
+            });
+            if (v.qual_other_text) {
+              html += `<tr><td>Other: ${esc(v.qual_other_text)}</td><td style="text-align:center;">&#10003;</td></tr>`;
+            }
+            html += '</tbody></table>';
+          }
+        }
+
+        // Specific materiality (ISA 320.10)
+        if (matActive && v.has_specific_materiality && matSpecificItems.length > 0) {
+          html += '<h4>Specific materiality (ISA 320.10)</h4>';
+          html += '<table><thead><tr><th>Class / account / disclosure</th><th style="text-align:right;">Amount</th><th>Rationale</th></tr></thead><tbody>';
+          matSpecificItems.forEach(it => {
+            html += `<tr><td>${esc(it.class_or_account)}</td><td style="text-align:right;">${fmtMat(it.specific_amount)}</td><td>${esc(it.rationale || '—')}</td></tr>`;
+          });
+          html += '</tbody></table>';
+        }
+
+        if (v.rationale) {
           html += `<div style="background:#F5F7FA; border-left:3px solid #1A3A5F; padding:10px 14px; margin-bottom:16px; font-size:12px;">
             <div style="font-size:9px; font-weight:700; color:#1A3A5F; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Rationale (ISA 320)</div>
-            ${esc(eng.materiality_rationale)}
+            ${esc(v.rationale)}
           </div>`;
+        }
+
+        // Completion report: show planning vs revised comparison if revised
+        if (reportType === 'completion' && matIsRevised && matPlanning) {
+          html += '<h4>Planning vs revised materiality (ISA 320.12)</h4>';
+          html += `<table><thead><tr><th>Item</th><th style="text-align:right;">Planning (v1)</th><th style="text-align:right;">Revised (v${matAllVersions.length})</th><th style="text-align:right;">Change</th></tr></thead><tbody>`;
+          const compareRow = (label, planVal, currVal) => {
+            const delta = (planVal != null && currVal != null) ? currVal - planVal : null;
+            const deltaStr = delta == null ? '—' : (delta > 0 ? '+' : '') + fmtMat(delta);
+            const deltaColor = delta == null ? '#9ca3af' : (delta > 0 ? '#15803D' : (delta < 0 ? '#991B1B' : '#374151'));
+            return `<tr><td>${label}</td><td style="text-align:right;">${fmtMat(planVal)}</td><td style="text-align:right; font-weight:600;">${fmtMat(currVal)}</td><td style="text-align:right; color:${deltaColor};">${deltaStr}</td></tr>`;
+          };
+          html += compareRow('Overall materiality',     matPlanning.overall_materiality,            matActive.overall_materiality);
+          html += compareRow('Performance materiality', matPlanning.performance_materiality_amount, matActive.performance_materiality_amount);
+          html += compareRow('Trivial threshold',       matPlanning.trivial_amount,                 matActive.trivial_amount);
+          html += '</tbody></table>';
+          if (matActive.reason_for_revision) {
+            html += `<div style="background:#FFFBEB; border-left:3px solid #92400E; padding:10px 14px; margin-bottom:16px; font-size:12px;">
+              <div style="font-size:9px; font-weight:700; color:#92400E; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Reason for revision (ISA 320.12)</div>
+              ${esc(matActive.reason_for_revision)}
+            </div>`;
+          }
+          if (matActive.strategy_reviewed_on_revision) {
+            html += `<p style="font-size:11px; color:#15803D; margin-bottom:12px;">&#10003; Audit strategy reviewed following materiality revision (ISA 320.13)${matActive.strategy_reviewed_date ? ' on ' + formatDateLong(matActive.strategy_reviewed_date) : ''}.</p>`;
+          }
         }
       }
 

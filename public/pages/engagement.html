@@ -542,79 +542,261 @@
         </div>
       </div>
 
-      <!-- Materiality Tab -->
+      <!-- Materiality Tab (versioned workpaper — ISA 320) -->
       <div class="tab-panel" id="tab-materiality">
         <div class="card">
-          <div class="card-header"><h2>Materiality</h2></div>
+          <div class="card-header">
+            <div>
+              <h2>Materiality</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">ISA 320 — Materiality in planning and performing the audit. Versioned workpaper. Pro feature.</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <span id="mat-status-badge" class="badge" style="display:none;"></span>
+              <button class="btn btn-outline btn-sm" id="mat-btn-revise" onclick="reviseMateriality()" style="display:none;">Revise</button>
+            </div>
+          </div>
           <div class="card-body">
-            <!-- Partner: calculator + save (hidden by default, shown by JS for admin) -->
-            <div id="mat-calculator" style="display:none;">
-              <div style="max-width:500px;">
-                <div class="form-group">
-                  <label>Benchmark</label>
-                  <select id="mat-benchmark" class="form-control" onchange="calcMateriality()">
-                    <option value="">-- Select benchmark --</option>
+
+            <!-- Pro-tier blocked -->
+            <div id="mat-pro-blocked" style="display:none; background:var(--warning-light); border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">Materiality is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:8px 0 12px;">ISA 320 materiality with versioning, specific materiality (320.10), qualitative considerations (320.A1), and revision audit trail (320.12).</p>
+              <a href="../index.html#pricing" class="btn btn-primary btn-sm">View Pro pricing</a>
+            </div>
+
+            <!-- Non-admin view (read-only) -->
+            <div id="mat-readonly-msg" style="display:none;">
+              <p class="text-sm text-muted">Materiality has not been set for this engagement. The engagement partner will set it.</p>
+            </div>
+
+            <!-- Empty state — admin only -->
+            <div id="mat-empty" style="display:none; text-align:center; padding:32px 20px;">
+              <div style="font-size:15px; font-weight:600; color:var(--gray-900); margin-bottom:8px;">No materiality recorded yet</div>
+              <p class="text-sm text-muted" style="margin-bottom:16px;">ISA 320 requires materiality to be determined at the planning phase. Set a benchmark and percentage to begin.</p>
+              <button class="btn btn-primary btn-sm" onclick="startMateriality()">Start materiality</button>
+            </div>
+
+            <!-- Form (admin, draft or approved-then-locked) -->
+            <div id="mat-form-wrap" style="display:none;">
+
+              <!-- Locked banner shown when approved -->
+              <div id="mat-locked-banner" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; padding:14px 16px; border-radius:8px; margin-bottom:16px;">
+                <div style="font-size:13px; font-weight:600; color:#166534;">Approved &amp; locked</div>
+                <div style="font-size:12px; color:#15803D; margin-top:2px;" id="mat-approved-meta">To revise this materiality (e.g. final figures differ from draft, new risks emerged), click <strong>Revise</strong> in the header — the current version is preserved per ISA 320.12.</div>
+              </div>
+
+              <!-- A. Benchmark selection -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">A. Benchmark selection</h3>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Benchmark *</label>
+                  <select id="mat-benchmark" class="form-control" onchange="onMatBenchmarkChange()">
+                    <option value="">-- Select --</option>
                     <option value="pbt">Profit Before Tax</option>
                     <option value="revenue">Revenue</option>
                     <option value="assets">Total Assets</option>
                     <option value="equity">Equity</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <label>Benchmark Amount</label>
-                  <input type="number" id="mat-amount" class="form-control" placeholder="Enter the benchmark amount" step="0.01" oninput="calcMateriality()">
-                </div>
-                <div class="form-group">
-                  <label>Percentage (%)</label>
-                  <input type="number" id="mat-pct" class="form-control" value="5" step="0.1" min="0.1" max="100" oninput="calcMateriality()">
-                  <small style="color:var(--gray-500); font-size:11px;">Common ranges: PBT 5-10%, Revenue 0.5-1%, Total Assets 1-2%, Equity 2-5%</small>
-                </div>
-                <div class="form-group">
-                  <label>Performance Materiality (%)</label>
-                  <input type="number" id="mat-perf-pct" class="form-control" value="75" step="5" min="50" max="90" oninput="calcMateriality()">
-                  <small style="color:var(--gray-500); font-size:11px;">Typically 50-75% of overall materiality</small>
-                </div>
-                <div class="form-group">
-                  <label>Clearly Trivial Threshold (%)</label>
-                  <input type="number" id="mat-trivial-pct" class="form-control" value="5" step="1" min="1" max="10" oninput="calcMateriality()">
-                  <small style="color:var(--gray-500); font-size:11px;">Typically 3-5% of overall materiality. No fixed ISA percentage — professional judgment.</small>
-                </div>
-                <div class="form-group">
-                  <label>Rationale <span class="text-sm text-muted">— why this benchmark and percentage? (ISA 320)</span></label>
-                  <textarea id="mat-rationale" class="form-control" rows="2" placeholder="e.g. PBT selected as the entity is profit-oriented. 5% applied as there are no significant risk factors."></textarea>
-                </div>
-                <div id="mat-warning" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:12px; color:#991B1B;">
-                  Benchmark amount is negative or zero. Consider using Revenue, Total Assets, or Equity instead (ISA 320).
+                <div class="form-group" style="margin:0;" id="mat-benchmark-other-wrap">
+                  <label class="text-sm">If other, specify</label>
+                  <input type="text" id="mat-benchmark-other" class="form-control" placeholder="e.g. Gross margin">
                 </div>
               </div>
-            </div>
-            <!-- Results (visible to all) -->
-            <div id="mat-results" style="display:none; margin-top:20px; max-width:500px;">
+              <div class="form-group">
+                <label class="text-sm">Reason for benchmark selection</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Why this benchmark fits this entity (ISA 320.A2-A6).</small>
+                <select id="mat-bench-reason" class="form-control" onchange="onMatBenchReasonChange()">
+                  <option value="">-- Select --</option>
+                  <option value="profit_based">Profit-based entity (PBT meaningful, stable margins)</option>
+                  <option value="asset_based">Asset-based entity (asset-heavy or investment vehicle)</option>
+                  <option value="revenue_driven">Revenue-driven entity (growth-stage / loss-making)</option>
+                  <option value="volatile_profits">Volatile profits (PBT unreliable; use stable alternative)</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group" id="mat-bench-reason-other-wrap" style="display:none;">
+                <label class="text-sm">Specify benchmark-selection reason</label>
+                <input type="text" id="mat-bench-reason-other" class="form-control">
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Benchmark amount *</label>
+                  <input type="number" id="mat-amount" class="form-control" placeholder="Enter the benchmark figure" step="0.01" oninput="calcMateriality()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Benchmark period</label>
+                  <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">ISA 320.A4 — what year's figure was used.</small>
+                  <select id="mat-period" class="form-control" onchange="onMatPeriodChange()">
+                    <option value="current">Current period</option>
+                    <option value="normalized">Normalized / averaged</option>
+                    <option value="prior">Prior period</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" id="mat-period-reason-wrap" style="display:none;">
+                <label class="text-sm">Reason for non-current period</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">e.g. Current-year loss makes PBT unreliable; 3-year average used.</small>
+                <textarea id="mat-period-reason" class="form-control" rows="2"></textarea>
+              </div>
+
+              <div id="mat-amount-warning" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:12px; color:#991B1B; margin-bottom:12px;">
+                Benchmark amount is negative or zero. Consider Revenue, Total Assets, or Equity instead (ISA 320.A6) — and document the rationale.
+              </div>
+
+              <!-- B. Calculations -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">B. Calculations</h3>
               <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
-                <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
-                  <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Overall Materiality</div>
-                  <div id="mat-overall" style="font-size:20px; font-weight:700; color:var(--primary); margin-top:4px;">—</div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Percentage applied (%) *</label>
+                  <input type="number" id="mat-pct" class="form-control" value="5" step="0.1" min="0.1" max="100" oninput="calcMateriality()">
+                  <small style="color:var(--gray-500); font-size:11px;">PBT 5-10% · Rev 0.5-1% · Assets 1-2% · Equity 2-5%</small>
                 </div>
-                <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
-                  <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Performance Materiality</div>
-                  <div id="mat-performance" style="font-size:20px; font-weight:700; color:#059669; margin-top:4px;">—</div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Performance materiality (%)</label>
+                  <input type="number" id="mat-perf-pct" class="form-control" value="75" step="5" min="50" max="90" oninput="calcMateriality()">
+                  <small style="color:var(--gray-500); font-size:11px;">Typically 50-75% of overall</small>
                 </div>
-                <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
-                  <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Trivial Threshold (<span id="mat-trivial-pct-label">5</span>%)</div>
-                  <div id="mat-trivial" style="font-size:20px; font-weight:700; color:var(--gray-600); margin-top:4px;">—</div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Trivial threshold (%)</label>
+                  <input type="number" id="mat-trivial-pct" class="form-control" value="5" step="1" min="1" max="10" oninput="calcMateriality()">
+                  <small style="color:var(--gray-500); font-size:11px;">Typically 3-5%</small>
                 </div>
               </div>
-              <div id="mat-benchmark-info" style="font-size:12px; color:var(--gray-500); margin-top:12px;"></div>
-              <p style="font-size:11px; color:var(--gray-400); margin-top:8px;">Materiality is a matter of professional judgment. These calculations are a starting point.</p>
+
+              <div class="form-group">
+                <label class="text-sm">Reason for performance materiality level</label>
+                <select id="mat-perf-reason" class="form-control" onchange="onMatPerfReasonChange()">
+                  <option value="">-- Select --</option>
+                  <option value="no_history">No history of misstatements (higher % defensible)</option>
+                  <option value="prior_misstatements">Prior year had significant misstatements (lower %)</option>
+                  <option value="first_year">First-year audit (lower % for added margin)</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group" id="mat-perf-reason-other-wrap" style="display:none;">
+                <label class="text-sm">Specify performance materiality reason</label>
+                <input type="text" id="mat-perf-reason-other" class="form-control">
+              </div>
+
+              <!-- Computed display -->
+              <div id="mat-results" style="display:none; margin-top:16px; margin-bottom:24px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+                  <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
+                    <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Overall</div>
+                    <div id="mat-overall" style="font-size:20px; font-weight:700; color:var(--primary); margin-top:4px;">—</div>
+                  </div>
+                  <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
+                    <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Performance</div>
+                    <div id="mat-performance" style="font-size:20px; font-weight:700; color:#059669; margin-top:4px;">—</div>
+                  </div>
+                  <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px; text-align:center;">
+                    <div style="font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px;">Trivial (<span id="mat-trivial-pct-label">5</span>%)</div>
+                    <div id="mat-trivial" style="font-size:20px; font-weight:700; color:var(--gray-600); margin-top:4px;">—</div>
+                  </div>
+                </div>
+                <div id="mat-benchmark-info" style="font-size:12px; color:var(--gray-500); margin-top:12px;"></div>
+              </div>
+
+              <!-- C. Qualitative considerations -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">C. Qualitative considerations (ISA 320.A1)</h3>
+              <p class="text-sm text-muted" style="margin-bottom:8px;">Tick any factor where smaller misstatements could be material due to nature, not size.</p>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="mat-q-regulatory" style="margin-top:3px;">
+                  <span>Regulatory sensitivity (DFSA/CBUAE, listing rules)</span>
+                </label>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="mat-q-covenant" style="margin-top:3px;">
+                  <span>Covenant compliance (debt ratios, lender thresholds)</span>
+                </label>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="mat-q-fraud" style="margin-top:3px;">
+                  <span>Fraud risk indicators present</span>
+                </label>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="mat-q-disclosures" style="margin-top:3px;">
+                  <span>Sensitive disclosures (related parties, directors' remuneration)</span>
+                </label>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="mat-q-compensation" style="margin-top:3px;">
+                  <span>Management compensation impact (bonuses, share-based)</span>
+                </label>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="mat-q-ratios" style="margin-top:3px;">
+                  <span>Key ratios / trends (gross margin, EBITDA, EPS)</span>
+                </label>
+              </div>
+              <div class="form-group" style="margin-top:8px;">
+                <label class="text-sm">Other qualitative considerations</label>
+                <textarea id="mat-q-other" class="form-control" rows="2" placeholder="(optional)"></textarea>
+              </div>
+
+              <!-- D. Specific materiality (ISA 320.10) -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">D. Specific materiality (ISA 320.10)</h3>
+              <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; margin-bottom:8px;">
+                <input type="checkbox" id="mat-has-specific" onchange="onMatSpecificToggle()" style="margin-top:3px;">
+                <span>Set lower materiality for particular classes / balances / disclosures (e.g. related parties, covenant items, regulatory ratios)</span>
+              </label>
+              <div id="mat-specific-wrap" style="display:none;">
+                <table style="width:100%; font-size:12px; border-collapse:collapse;">
+                  <thead>
+                    <tr>
+                      <th style="text-align:left; padding:6px 8px; border-bottom:1px solid var(--gray-200);">Class / account / disclosure</th>
+                      <th style="text-align:right; padding:6px 8px; border-bottom:1px solid var(--gray-200); width:140px;">Amount</th>
+                      <th style="text-align:left; padding:6px 8px; border-bottom:1px solid var(--gray-200);">Rationale</th>
+                      <th style="width:40px; border-bottom:1px solid var(--gray-200);"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="mat-specific-rows"></tbody>
+                </table>
+                <button class="btn btn-outline btn-sm" type="button" onclick="addSpecificMaterialityRow()" style="margin-top:8px;">+ Add row</button>
+              </div>
+
+              <!-- E. Rationale -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">E. Rationale (free text)</h3>
+              <div class="form-group">
+                <textarea id="mat-rationale" class="form-control" rows="3" placeholder="ISA 320 reasoning. The checklist above is a starting point — add anything specific to this engagement that wasn't covered by the tick boxes."></textarea>
+              </div>
+
+              <!-- F. Revision-only: strategy reassessment trigger (ISA 320.13) -->
+              <div id="mat-revision-wrap" style="display:none;">
+                <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">F. Revision (ISA 320.12-13)</h3>
+                <div class="form-group">
+                  <label class="text-sm">Reason for revision *</label>
+                  <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Why is materiality being changed from the prior version? (Required for v2+.)</small>
+                  <textarea id="mat-reason-revision" class="form-control" rows="2" placeholder="e.g. Final PBT differs materially from draft; revising overall materiality from 25,000 to 32,000."></textarea>
+                </div>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; margin-top:8px;">
+                  <input type="checkbox" id="mat-strategy-reviewed" onchange="onMatStrategyReviewedChange()" style="margin-top:3px;">
+                  <span>Audit strategy reviewed following materiality revision (ISA 320.13)</span>
+                </label>
+                <div class="form-group" id="mat-strategy-reviewed-date-wrap" style="display:none; margin-top:8px;">
+                  <label class="text-sm">Date reviewed</label>
+                  <input type="date" id="mat-strategy-reviewed-date" class="form-control" max="9999-12-31" style="max-width:200px;">
+                </div>
+              </div>
+
+              <!-- Error banner -->
+              <div id="mat-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:16px;"></div>
+
+              <!-- Save bar -->
+              <div style="display:flex; gap:8px; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--gray-100);">
+                <button class="btn btn-outline btn-sm" id="mat-btn-save-draft" onclick="saveMaterialityVersion('draft')">Save draft</button>
+                <button class="btn btn-primary btn-sm" id="mat-btn-approve" onclick="saveMaterialityVersion('approved')">Approve materiality</button>
+                <span class="text-sm text-muted" id="mat-save-msg" style="margin-left:8px;"></span>
+              </div>
             </div>
-            <!-- Save button moved OUT of mat-results so admin can save on first-time setup -->
-            <div id="mat-save-row" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--gray-100);">
-              <button id="btn-save-mat" class="btn btn-primary btn-sm" onclick="saveMateriality()">Save Materiality</button>
-              <span class="text-sm text-muted" style="margin-left:8px;">Enter a benchmark and amount above; results auto-calculate as you type.</span>
+
+            <!-- Previous versions -->
+            <div id="mat-history-wrap" style="display:none; margin-top:32px; padding-top:20px; border-top:1px solid var(--gray-100);">
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 12px;">Previous versions (superseded)</h3>
+              <div id="mat-history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
-            <div id="mat-not-set" style="display:none;">
-              <p class="text-sm text-muted">Materiality has not been set for this engagement. The engagement partner will set it.</p>
-            </div>
+
           </div>
         </div>
       </div>
@@ -2886,136 +3068,427 @@
       if (tab === 'risk-assessment') loadRiskAssessment();
     }
 
-    function initMateriality() {
+    // ---- Materiality Tab (versioned workpaper, ISA 320) ----
+    let matActive  = null;       // currently-active (non-superseded) version
+    let matHistory = [];         // superseded versions
+    let matSpecificItems = [];   // child rows for matActive
+    let _matRowCounter = 0;      // local id counter for new rows before save
+
+    async function initMateriality() {
       const isPartner = currentRole === 'admin';
+      const isPro     = currentOrg && currentOrg.feature_tier === 'pro';
 
-      // Admin: show calculator + save row. Others: keep hidden.
-      if (isPartner) {
-        document.getElementById('mat-calculator').style.display = 'block';
-        document.getElementById('mat-save-row').style.display   = 'block';
-      } else {
-        document.getElementById('mat-calculator').style.display = 'none';
-        document.getElementById('mat-save-row').style.display   = 'none';
+      // Hide all states first
+      ['mat-pro-blocked','mat-readonly-msg','mat-empty','mat-form-wrap','mat-history-wrap','mat-error']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+
+      if (!isPro) {
+        document.getElementById('mat-pro-blocked').style.display = 'block';
+        return;
       }
-
-      // Defensive: engagement may not be loaded yet on a re-init via tab switch.
+      if (!isPartner) {
+        document.getElementById('mat-readonly-msg').style.display = 'block';
+        return;
+      }
       if (!engagement) return;
 
-      // Load saved values
-      if (engagement.materiality_overall) {
-        const fmt = (n) => Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 });
-        document.getElementById('mat-overall').textContent = fmt(engagement.materiality_overall);
-        document.getElementById('mat-performance').textContent = fmt(engagement.materiality_performance);
-        document.getElementById('mat-trivial').textContent = fmt(engagement.materiality_trivial);
+      // Load versions + child items
+      const { data: vers, error } = await supabaseClient
+        .from('engagement_materiality_versions')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: false });
+      if (error) { showMatError('Could not load materiality: ' + error.message); return; }
 
-        const benchLabels = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
-        const label = benchLabels[engagement.materiality_benchmark] || engagement.materiality_benchmark || '';
-        const amt = engagement.materiality_amount ? Number(engagement.materiality_amount).toLocaleString() : '';
-        const pct = engagement.materiality_pct || '';
-        document.getElementById('mat-benchmark-info').textContent = label ? `Based on ${label}: ${amt} at ${pct}%` : '';
+      matActive  = (vers || []).find(v => !v.is_superseded) || null;
+      matHistory = (vers || []).filter(v =>  v.is_superseded);
 
-        document.getElementById('mat-results').style.display = 'block';
-        document.getElementById('mat-not-set').style.display = 'none';
-
-        if (engagement.materiality_rationale) {
-          document.getElementById('mat-benchmark-info').textContent += '\n' + engagement.materiality_rationale;
-        }
-
-        // Pre-fill calculator for partner
-        if (isPartner) {
-          document.getElementById('mat-benchmark').value = engagement.materiality_benchmark || '';
-          document.getElementById('mat-amount').value = engagement.materiality_amount || '';
-          document.getElementById('mat-pct').value = engagement.materiality_pct || 5;
-          document.getElementById('mat-perf-pct').value = engagement.materiality_perf_pct || 75;
-          document.getElementById('mat-trivial-pct').value = engagement.materiality_trivial_pct || 5;
-          document.getElementById('mat-rationale').value = engagement.materiality_rationale || '';
-        }
+      if (matActive) {
+        const { data: items } = await supabaseClient
+          .from('engagement_specific_materiality_items')
+          .select('*')
+          .eq('materiality_version_id', matActive.id)
+          .order('sort_order', { nullsFirst: false });
+        matSpecificItems = items || [];
       } else {
-        document.getElementById('mat-results').style.display = 'none';
-        document.getElementById('mat-not-set').style.display = isPartner ? 'none' : 'block';
+        matSpecificItems = [];
       }
+
+      renderMateriality();
+      renderMaterialityHistory();
+    }
+
+    function renderMateriality() {
+      // No active row: show empty state
+      if (!matActive) {
+        document.getElementById('mat-empty').style.display = 'block';
+        return;
+      }
+      document.getElementById('mat-form-wrap').style.display = 'block';
+      populateMaterialityForm(matActive);
+      calcMateriality();
+      renderSpecificMaterialityRows();
+
+      // Status badge + locked state
+      const badge = document.getElementById('mat-status-badge');
+      const revBtn = document.getElementById('mat-btn-revise');
+      const lockBanner = document.getElementById('mat-locked-banner');
+      const revisionWrap = document.getElementById('mat-revision-wrap');
+
+      if (matActive.status === 'approved') {
+        badge.textContent = 'Approved';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#16a34a';
+        badge.style.display = '';
+        revBtn.style.display = '';
+        lockBanner.style.display = 'block';
+        const when = matActive.approved_at ? new Date(matActive.approved_at).toLocaleDateString() : '';
+        document.getElementById('mat-approved-meta').innerHTML =
+          'Approved ' + escHtml(when) + '. To revise this materiality (e.g. final figures differ from draft, new risks emerged), click <strong>Revise</strong> in the header — the current version is preserved per ISA 320.12.';
+      } else {
+        badge.textContent = 'Draft';
+        badge.style.background = 'var(--gray-100)';
+        badge.style.color = 'var(--gray-600)';
+        badge.style.display = '';
+        revBtn.style.display = 'none';
+        lockBanner.style.display = 'none';
+      }
+
+      // Revision-only fields (only show if this is v2+, detected by matHistory length > 0)
+      revisionWrap.style.display = matHistory.length > 0 ? 'block' : 'none';
+
+      // Lock-on-approval — disables all inputs + hides save buttons when approved
+      setWorkpaperLocked('mat-form-wrap', 'mat-locked-banner', matActive.status === 'approved',
+        ['mat-btn-save-draft', 'mat-btn-approve']);
+    }
+
+    function populateMaterialityForm(v) {
+      document.getElementById('mat-benchmark').value          = v.benchmark || '';
+      document.getElementById('mat-benchmark-other').value    = v.benchmark_other_label || '';
+      document.getElementById('mat-amount').value             = v.benchmark_amount ?? '';
+      document.getElementById('mat-bench-reason').value       = v.benchmark_selection_reason || '';
+      document.getElementById('mat-bench-reason-other').value = v.benchmark_selection_other_text || '';
+      document.getElementById('mat-period').value             = v.benchmark_period || 'current';
+      document.getElementById('mat-period-reason').value      = v.benchmark_period_reason || '';
+      document.getElementById('mat-pct').value                = v.percentage_applied ?? 5;
+      document.getElementById('mat-perf-pct').value           = v.performance_materiality_pct ?? 75;
+      document.getElementById('mat-trivial-pct').value        = v.trivial_pct ?? 5;
+      document.getElementById('mat-perf-reason').value        = v.performance_materiality_reason || '';
+      document.getElementById('mat-perf-reason-other').value  = v.performance_materiality_other_text || '';
+      document.getElementById('mat-q-regulatory').checked     = !!v.qual_regulatory_sensitivity;
+      document.getElementById('mat-q-covenant').checked       = !!v.qual_covenant_compliance;
+      document.getElementById('mat-q-fraud').checked          = !!v.qual_fraud_risk_indicators;
+      document.getElementById('mat-q-disclosures').checked    = !!v.qual_sensitive_disclosures;
+      document.getElementById('mat-q-compensation').checked   = !!v.qual_mgmt_compensation_impact;
+      document.getElementById('mat-q-ratios').checked         = !!v.qual_key_ratios_trends;
+      document.getElementById('mat-q-other').value            = v.qual_other_text || '';
+      document.getElementById('mat-has-specific').checked     = !!v.has_specific_materiality;
+      document.getElementById('mat-rationale').value          = v.rationale || '';
+      document.getElementById('mat-reason-revision').value    = v.reason_for_revision || '';
+      document.getElementById('mat-strategy-reviewed').checked = !!v.strategy_reviewed_on_revision;
+      document.getElementById('mat-strategy-reviewed-date').value = v.strategy_reviewed_date || '';
+
+      onMatBenchmarkChange();
+      onMatBenchReasonChange();
+      onMatPeriodChange();
+      onMatPerfReasonChange();
+      onMatSpecificToggle();
+      onMatStrategyReviewedChange();
+    }
+
+    function onMatBenchmarkChange() {
+      const v = document.getElementById('mat-benchmark').value;
+      document.getElementById('mat-benchmark-other-wrap').style.display = v === 'other' ? 'block' : 'none';
+    }
+    function onMatBenchReasonChange() {
+      const v = document.getElementById('mat-bench-reason').value;
+      document.getElementById('mat-bench-reason-other-wrap').style.display = v === 'other' ? 'block' : 'none';
+    }
+    function onMatPeriodChange() {
+      const v = document.getElementById('mat-period').value;
+      document.getElementById('mat-period-reason-wrap').style.display = (v && v !== 'current') ? 'block' : 'none';
+    }
+    function onMatPerfReasonChange() {
+      const v = document.getElementById('mat-perf-reason').value;
+      document.getElementById('mat-perf-reason-other-wrap').style.display = v === 'other' ? 'block' : 'none';
+    }
+    function onMatSpecificToggle() {
+      const on = document.getElementById('mat-has-specific').checked;
+      document.getElementById('mat-specific-wrap').style.display = on ? 'block' : 'none';
+    }
+    function onMatStrategyReviewedChange() {
+      const on = document.getElementById('mat-strategy-reviewed').checked;
+      document.getElementById('mat-strategy-reviewed-date-wrap').style.display = on ? 'block' : 'none';
     }
 
     function calcMateriality() {
-      const amount = parseFloat(document.getElementById('mat-amount').value) || 0;
-      const pct = parseFloat(document.getElementById('mat-pct').value) || 0;
+      const amount  = parseFloat(document.getElementById('mat-amount').value) || 0;
+      const pct     = parseFloat(document.getElementById('mat-pct').value) || 0;
       const perfPct = parseFloat(document.getElementById('mat-perf-pct').value) || 75;
+      const trivPct = parseFloat(document.getElementById('mat-trivial-pct').value) || 5;
 
-      // Show warning for negative/zero benchmark
-      const warning = document.getElementById('mat-warning');
-      if (amount <= 0 && document.getElementById('mat-amount').value) {
-        warning.style.display = 'block';
-      } else {
-        warning.style.display = 'none';
-      }
+      const warning = document.getElementById('mat-amount-warning');
+      warning.style.display = (amount <= 0 && document.getElementById('mat-amount').value) ? 'block' : 'none';
 
       if (amount <= 0 || pct <= 0) {
         document.getElementById('mat-results').style.display = 'none';
         return;
       }
 
-      const trivialPct = parseFloat(document.getElementById('mat-trivial-pct')?.value) || 5;
-
-      const overall = Math.round(amount * (pct / 100));
+      const overall     = Math.round(amount * (pct / 100));
       const performance = Math.round(overall * (perfPct / 100));
-      const trivial = Math.round(overall * (trivialPct / 100));
-
+      const trivial     = Math.round(overall * (trivPct / 100));
       const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 0 });
 
-      document.getElementById('mat-overall').textContent = fmt(overall);
-      document.getElementById('mat-performance').textContent = fmt(performance);
-      document.getElementById('mat-trivial').textContent = fmt(trivial);
-      document.getElementById('mat-trivial-pct-label').textContent = trivialPct;
+      document.getElementById('mat-overall').textContent      = fmt(overall);
+      document.getElementById('mat-performance').textContent  = fmt(performance);
+      document.getElementById('mat-trivial').textContent      = fmt(trivial);
+      document.getElementById('mat-trivial-pct-label').textContent = trivPct;
+
+      const benchLabels = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity', other: 'Other' };
+      const bm = document.getElementById('mat-benchmark').value;
+      const bmLabel = benchLabels[bm] || bm || '';
+      document.getElementById('mat-benchmark-info').textContent = bmLabel
+        ? 'Based on ' + bmLabel + ': ' + Number(amount).toLocaleString() + ' at ' + pct + '%'
+        : '';
       document.getElementById('mat-results').style.display = 'block';
     }
 
-    async function saveMateriality() {
-      const benchmark = document.getElementById('mat-benchmark').value;
-      const amount = parseFloat(document.getElementById('mat-amount').value) || 0;
-      const pct = parseFloat(document.getElementById('mat-pct').value) || 0;
-      const perfPct = parseFloat(document.getElementById('mat-perf-pct').value) || 75;
+    function renderSpecificMaterialityRows() {
+      const tbody = document.getElementById('mat-specific-rows');
+      if (!matSpecificItems.length) { tbody.innerHTML = ''; return; }
+      tbody.innerHTML = matSpecificItems.map(it => {
+        const localId = it.id || ('_new_' + (++_matRowCounter));
+        return `<tr data-id="${escHtml(localId)}">
+          <td style="padding:6px 8px; border-bottom:1px solid var(--gray-100);">
+            <input type="text" class="form-control" value="${escHtml(it.class_or_account || '')}" oninput="updateSpecificRow('${escHtml(localId)}', 'class_or_account', this.value)" placeholder="e.g. Related party balances">
+          </td>
+          <td style="padding:6px 8px; border-bottom:1px solid var(--gray-100); text-align:right;">
+            <input type="number" class="form-control" value="${it.specific_amount ?? ''}" oninput="updateSpecificRow('${escHtml(localId)}', 'specific_amount', this.value)" style="text-align:right;">
+          </td>
+          <td style="padding:6px 8px; border-bottom:1px solid var(--gray-100);">
+            <input type="text" class="form-control" value="${escHtml(it.rationale || '')}" oninput="updateSpecificRow('${escHtml(localId)}', 'rationale', this.value)" placeholder="Why a lower threshold here?">
+          </td>
+          <td style="padding:6px 8px; border-bottom:1px solid var(--gray-100); text-align:center;">
+            <button class="btn btn-outline btn-sm" type="button" onclick="removeSpecificRow('${escHtml(localId)}')" style="padding:2px 8px; color:#DC2626; border-color:#FECACA;">&times;</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+    function addSpecificMaterialityRow() {
+      matSpecificItems.push({ id: null, class_or_account: '', specific_amount: null, rationale: '', sort_order: matSpecificItems.length + 1 });
+      renderSpecificMaterialityRows();
+    }
+    function updateSpecificRow(localId, field, value) {
+      const idx = matSpecificItems.findIndex(it => (it.id || ('_new_' + matSpecificItems.indexOf(it))) === localId);
+      // Fallback by index search since the localId might not match perfectly for new rows
+      const targetIdx = matSpecificItems.findIndex(it => it.id === localId);
+      const useIdx = targetIdx >= 0 ? targetIdx : matSpecificItems.findIndex((it, i) => !it.id && ('_new_' + (i + 1)) === localId);
+      const final = useIdx >= 0 ? useIdx : (idx >= 0 ? idx : 0);
+      if (field === 'specific_amount') {
+        matSpecificItems[final][field] = value === '' ? null : parseFloat(value);
+      } else {
+        matSpecificItems[final][field] = value;
+      }
+    }
+    function removeSpecificRow(localId) {
+      // Find by id first, then by _new_ index
+      let idx = matSpecificItems.findIndex(it => it.id === localId);
+      if (idx < 0) {
+        idx = matSpecificItems.findIndex((it, i) => !it.id && ('_new_' + (i + 1)) === localId);
+      }
+      if (idx >= 0) matSpecificItems.splice(idx, 1);
+      _matRowCounter = 0;  // reset to keep ids stable on re-render
+      renderSpecificMaterialityRows();
+    }
 
-      if (!benchmark || amount <= 0 || pct <= 0) {
-        alert('Please select a benchmark and enter an amount and percentage.');
-        return;
+    function renderMaterialityHistory() {
+      const wrap = document.getElementById('mat-history-wrap');
+      const list = document.getElementById('mat-history-list');
+      if (!matHistory.length) { wrap.style.display = 'none'; return; }
+      wrap.style.display = 'block';
+      list.innerHTML = matHistory.map(v => {
+        const when = v.superseded_at ? new Date(v.superseded_at).toLocaleDateString() : '';
+        const fmt = (n) => n != null ? Number(n).toLocaleString() : '—';
+        const approved = v.approved_at ? 'approved ' + new Date(v.approved_at).toLocaleDateString() : 'unapproved';
+        return `<div style="border:0.5px solid var(--glass-border); border-radius:8px; padding:10px 14px; background:rgba(255,255,255,0.55);">
+          <div style="font-size:13px; font-weight:600;">Overall ${fmt(v.overall_materiality)} · Performance ${fmt(v.performance_materiality_amount)} · Trivial ${fmt(v.trivial_amount)}</div>
+          <div style="font-size:11px; color:var(--gray-500); margin-top:2px;">${escHtml(approved)} · superseded ${escHtml(when)}</div>
+          ${v.reason_for_revision ? `<div style="font-size:11px; color:var(--gray-700); margin-top:6px;"><strong>Reason for revision:</strong> ${escHtml(v.reason_for_revision)}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function showMatError(msg) {
+      const el = document.getElementById('mat-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    async function startMateriality() {
+      const { data, error } = await supabaseClient
+        .from('engagement_materiality_versions')
+        .insert({
+          engagement_id:   engagementId,
+          organization_id: currentOrg.id,
+          status:          'draft',
+          percentage_applied: 5,
+          performance_materiality_pct: 75,
+          trivial_pct: 5,
+          benchmark_period: 'current',
+          created_by:      currentUser.id,
+        })
+        .select()
+        .single();
+      if (error) { showMatError('Could not create draft: ' + error.message); return; }
+      await logActivity(engagementId, 'started_materiality', 'engagement_materiality_version', data.id, {});
+      await initMateriality();
+    }
+
+    function collectMaterialityForm() {
+      const amount  = parseFloat(document.getElementById('mat-amount').value) || null;
+      const pct     = parseFloat(document.getElementById('mat-pct').value) || null;
+      const perfPct = parseFloat(document.getElementById('mat-perf-pct').value) || null;
+      const trivPct = parseFloat(document.getElementById('mat-trivial-pct').value) || null;
+      const overall = (amount && pct) ? Math.round(amount * (pct / 100)) : null;
+      const perfAmount = (overall && perfPct) ? Math.round(overall * (perfPct / 100)) : null;
+      const trivAmount = (overall && trivPct) ? Math.round(overall * (trivPct / 100)) : null;
+
+      return {
+        benchmark:                          document.getElementById('mat-benchmark').value || null,
+        benchmark_other_label:              document.getElementById('mat-benchmark-other').value.trim() || null,
+        benchmark_amount:                   amount,
+        benchmark_selection_reason:         document.getElementById('mat-bench-reason').value || null,
+        benchmark_selection_other_text:     document.getElementById('mat-bench-reason-other').value.trim() || null,
+        benchmark_period:                   document.getElementById('mat-period').value || 'current',
+        benchmark_period_reason:            document.getElementById('mat-period-reason').value.trim() || null,
+        percentage_applied:                 pct,
+        overall_materiality:                overall,
+        performance_materiality_pct:        perfPct,
+        performance_materiality_amount:     perfAmount,
+        performance_materiality_reason:     document.getElementById('mat-perf-reason').value || null,
+        performance_materiality_other_text: document.getElementById('mat-perf-reason-other').value.trim() || null,
+        trivial_pct:                        trivPct,
+        trivial_amount:                     trivAmount,
+        qual_regulatory_sensitivity:        document.getElementById('mat-q-regulatory').checked,
+        qual_covenant_compliance:           document.getElementById('mat-q-covenant').checked,
+        qual_fraud_risk_indicators:         document.getElementById('mat-q-fraud').checked,
+        qual_sensitive_disclosures:         document.getElementById('mat-q-disclosures').checked,
+        qual_mgmt_compensation_impact:      document.getElementById('mat-q-compensation').checked,
+        qual_key_ratios_trends:             document.getElementById('mat-q-ratios').checked,
+        qual_other_text:                    document.getElementById('mat-q-other').value.trim() || null,
+        has_specific_materiality:           document.getElementById('mat-has-specific').checked,
+        rationale:                          document.getElementById('mat-rationale').value.trim() || null,
+        reason_for_revision:                document.getElementById('mat-reason-revision').value.trim() || null,
+        strategy_reviewed_on_revision:      document.getElementById('mat-strategy-reviewed').checked || null,
+        strategy_reviewed_date:             document.getElementById('mat-strategy-reviewed-date').value || null,
+      };
+    }
+
+    async function persistSpecificItems(versionId) {
+      // Strategy: delete all existing items for this version, then insert current array
+      // (matSpecificItems holds the in-memory truth). Simpler than diffing.
+      await supabaseClient
+        .from('engagement_specific_materiality_items')
+        .delete()
+        .eq('materiality_version_id', versionId);
+
+      const validItems = matSpecificItems.filter(it => it.class_or_account && it.specific_amount != null && it.specific_amount > 0);
+      if (validItems.length) {
+        await supabaseClient
+          .from('engagement_specific_materiality_items')
+          .insert(validItems.map((it, i) => ({
+            materiality_version_id: versionId,
+            class_or_account: it.class_or_account,
+            specific_amount:  it.specific_amount,
+            rationale:        it.rationale || null,
+            sort_order:       i + 1,
+          })));
+      }
+    }
+
+    async function saveMaterialityVersion(targetStatus) {
+      if (!matActive) { showMatError('No active materiality row.'); return; }
+      document.getElementById('mat-error').style.display = 'none';
+      const msg = document.getElementById('mat-save-msg');
+      const form = collectMaterialityForm();
+
+      if (targetStatus === 'approved') {
+        if (!form.benchmark || !form.benchmark_amount || !form.percentage_applied || !form.overall_materiality) {
+          showMatError('Benchmark, amount, percentage, and overall materiality are all required before approval.');
+          return;
+        }
+        // v2+ requires reason for revision
+        if (matHistory.length > 0 && !form.reason_for_revision) {
+          showMatError('Reason for revision is required (ISA 320.12 — when revising materiality, document why).');
+          return;
+        }
+        if (form.has_specific_materiality) {
+          const validItems = matSpecificItems.filter(it => it.class_or_account && it.specific_amount != null && it.specific_amount > 0);
+          if (!validItems.length) {
+            showMatError('Specific materiality is toggled on but no valid rows. Either add rows or uncheck the toggle.');
+            return;
+          }
+        }
       }
 
-      const trivialPct = parseFloat(document.getElementById('mat-trivial-pct').value) || 5;
+      const btnDraft = document.getElementById('mat-btn-save-draft');
+      const btnApp   = document.getElementById('mat-btn-approve');
+      btnDraft.disabled = true;
+      btnApp.disabled   = true;
+      msg.textContent = 'Saving...';
 
-      const overall = Math.round(amount * (pct / 100));
-      const performance = Math.round(overall * (perfPct / 100));
-      const trivial = Math.round(overall * (trivialPct / 100));
+      try {
+        const { error: updErr } = await supabaseClient
+          .from('engagement_materiality_versions')
+          .update(form)
+          .eq('id', matActive.id);
+        if (updErr) throw new Error('Save failed: ' + updErr.message);
 
-      const rationale = document.getElementById('mat-rationale').value.trim();
+        await persistSpecificItems(matActive.id);
 
-      const { error } = await supabaseClient.from('engagements').update({
-        materiality_benchmark: benchmark,
-        materiality_amount: amount,
-        materiality_pct: pct,
-        materiality_perf_pct: perfPct,
-        materiality_overall: overall,
-        materiality_performance: performance,
-        materiality_trivial: trivial,
-        materiality_trivial_pct: trivialPct,
-        materiality_rationale: rationale
-      }).eq('id', engagementId);
+        if (targetStatus === 'approved') {
+          const { error: rpcErr } = await supabaseClient.rpc('approve_materiality', {
+            p_materiality_id: matActive.id,
+          });
+          if (rpcErr) throw new Error('Approval failed: ' + rpcErr.message);
+        }
 
-      if (error) { alert('Error: ' + error.message); return; }
+        await logActivity(engagementId,
+          targetStatus === 'approved' ? 'approved_materiality' : 'saved_materiality',
+          'engagement_materiality_version',
+          matActive.id,
+          { status: targetStatus }
+        );
 
-      engagement.materiality_benchmark = benchmark;
-      engagement.materiality_amount = amount;
-      engagement.materiality_pct = pct;
-      engagement.materiality_perf_pct = perfPct;
-      engagement.materiality_overall = overall;
-      engagement.materiality_performance = performance;
-      engagement.materiality_trivial = trivial;
+        msg.textContent = targetStatus === 'approved' ? 'Approved.' : 'Saved.';
+        setTimeout(() => { msg.textContent = ''; }, 2500);
+        await initMateriality();
+      } catch (err) {
+        showMatError(err.message);
+        msg.textContent = '';
+      } finally {
+        btnDraft.disabled = false;
+        btnApp.disabled   = false;
+      }
+    }
 
-      const benchLabels = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
-      document.getElementById('mat-benchmark-info').textContent = `Based on ${benchLabels[benchmark]}: ${Number(amount).toLocaleString()} at ${pct}%`;
-
-      await logActivity(engagementId, 'set_materiality', 'engagement', engagementId, { overall, performance, trivial, benchmark });
-
-      alert('Materiality saved.');
+    async function reviseMateriality() {
+      if (!matActive || matActive.status !== 'approved') return;
+      const ok = await showActionModal({
+        title: 'Revise materiality?',
+        message: 'The current approved materiality will be marked as superseded and preserved per ISA 320.12. A new draft will be created with all fields carried forward. You must record a reason for the revision before re-approval.',
+        okLabel: 'Create revision',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+      const { data, error } = await supabaseClient.rpc('revise_materiality', {
+        p_engagement_id:   engagementId,
+        p_organization_id: currentOrg.id,
+      });
+      if (error) { showMatError('Could not revise: ' + error.message); return; }
+      await logActivity(engagementId, 'revised_materiality', 'engagement_materiality_version', data, { prior_id: matActive.id });
+      await initMateriality();
     }
 
     // ---- Sections Tab ----
