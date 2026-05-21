@@ -9,20 +9,72 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #0D1626; line-height: 1.6; padding: 0; max-width: 900px; margin: 0 auto; font-size: 12px; }
 
-    /* ---- Cover ---- */
-    .cover { padding: 60px 48px 40px; margin-bottom: 0; page-break-after: always; text-align: center; }
-    .cover-brand { font-size: 13px; font-weight: 700; color: #1A3A5F; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 48px; }
-    .cover-divider { width: 60px; height: 3px; background: #1A3A5F; margin: 0 auto 40px; }
-    .cover h1 { font-size: 32px; font-weight: 700; color: #1A1A2E; margin-bottom: 8px; }
-    .cover-subtitle { font-size: 16px; color: #6b7280; margin-bottom: 48px; }
-    .cover-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 40px; text-align: left; max-width: 500px; margin: 0 auto 40px; font-size: 13px; }
-    .cover-details dt { font-weight: 600; color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .cover-details dd { color: #1A1A2E; font-weight: 500; margin-bottom: 8px; }
-    .cover-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 500px; margin: 0 auto; }
-    .cover-metric { border: 1px solid #D9D9D9; border-radius: 8px; padding: 16px 8px; text-align: center; background: #F5F7FA; }
-    .cover-metric .val { font-size: 22px; font-weight: 700; color: #1A3A5F; }
-    .cover-metric .lbl { font-size: 9px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
-    .cover-footer { font-size: 10px; color: #9ca3af; margin-top: 48px; padding-top: 16px; border-top: 1px solid #D9D9D9; }
+    /* ---- Cover (formal partner-report layout) ---- */
+    .cover { padding: 0 0 40px; margin-bottom: 0; page-break-after: always; min-height: 90vh; display: flex; flex-direction: column; }
+    .cover-topbar {
+      background: #0A1A2F; color: white; padding: 14px 40px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    .cover-firm { font-weight: 700; letter-spacing: 2px; }
+    .cover-confidential {
+      background: rgba(255,255,255,0.10);
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 10px;
+      letter-spacing: 1.2px;
+    }
+    .cover-body { padding: 64px 56px 0; flex: 1; }
+    .cover-type-label {
+      font-size: 11px; font-weight: 700; color: #3A7BFF;
+      letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .cover h1 { font-size: 36px; font-weight: 700; color: #0A1A2F; margin-bottom: 6px; letter-spacing: -0.5px; }
+    .cover-subtitle { font-size: 15px; color: #555; margin-bottom: 40px; font-weight: 400; }
+    .cover-rule { height: 1px; background: #E5E5EA; margin: 0 0 28px; }
+    .cover-details {
+      display: grid; grid-template-columns: 180px 1fr; gap: 14px 24px;
+      max-width: 560px; margin-bottom: 36px; font-size: 12px;
+    }
+    .cover-details dt { font-weight: 600; color: #6E6E73; text-transform: uppercase; letter-spacing: 0.5px; font-size: 10px; padding-top: 1px; }
+    .cover-details dd { color: #0A1A2F; font-weight: 500; }
+    .cover-details dd.muted { color: #86868B; font-weight: 400; font-style: italic; }
+    .cover-stats { display: flex; gap: 28px; max-width: 560px; padding: 18px 0; border-top: 1px solid #E5E5EA; border-bottom: 1px solid #E5E5EA; }
+    .cover-stat { font-size: 12px; }
+    .cover-stat .lbl { font-size: 10px; color: #6E6E73; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .cover-stat .val { font-size: 18px; font-weight: 700; color: #0A1A2F; }
+    .cover-stat .val.alert { color: #C02A2A; }
+    .cover-stat .val.ok { color: #177A42; }
+    .cover-footer {
+      font-size: 10px; color: #86868B; padding: 16px 56px; margin-top: auto;
+      border-top: 1px solid #E5E5EA; display: flex; justify-content: space-between;
+    }
+
+    /* ---- Status chips (replaces bold uppercase status text) ---- */
+    .chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      vertical-align: middle;
+      line-height: 1.5;
+    }
+    .chip-grey   { background: #F5F5F7; color: #6E6E73; border: 1px solid #E5E5EA; }
+    .chip-amber  { background: #FEF6E0; color: #92400E; border: 1px solid #FDE68A; }
+    .chip-green  { background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
+    .chip-blue   { background: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; }
+    .chip-red    { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+    .chip-violet { background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; }
+
+    /* ---- Running page header (print only) ---- */
+    .page-hdr {
+      font-size: 9px; color: #86868B; padding: 8px 0;
+      margin-bottom: 16px; border-bottom: 1px solid #E5E5EA;
+      display: flex; justify-content: space-between;
+    }
 
     /* ---- Page header/footer ---- */
     .page-hdr { font-size: 9px; color: #9ca3af; padding: 8px 0; margin-bottom: 20px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; }
@@ -93,18 +145,40 @@
     /* ---- Phase label ---- */
     .phase-divider { font-size: 11px; font-weight: 700; color: #1A3A5F; text-transform: uppercase; letter-spacing: 1px; padding: 8px 0; margin: 24px 0 8px; border-bottom: 1px solid #D9D9D9; }
 
-    /* ---- Print ---- */
+    /* ---- Print: page numbers via @page counter, running header ---- */
+    @page {
+      margin: 16mm 14mm 20mm;
+      @bottom-right {
+        content: counter(page) " / " counter(pages);
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 9px;
+        color: #86868B;
+      }
+      @bottom-left {
+        content: var(--page-footer-text, "Audexon — Confidential");
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 9px;
+        color: #86868B;
+      }
+    }
+    @page :first {
+      margin: 0;
+      @bottom-right { content: none; }
+      @bottom-left { content: none; }
+    }
     @media print {
       .print-bar { display: none; }
-      body { padding: 24px; font-size: 10px; }
-      .cover { page-break-after: always; min-height: auto; padding: 48px 40px; }
+      body { padding: 0; font-size: 10px; max-width: none; margin: 0; }
+      .cover { page-break-after: always; padding: 0; min-height: auto; }
+      .cover-body { padding: 64px 56px 0; }
       .wp-header { page-break-inside: avoid; page-break-after: avoid; }
       .proc-block { page-break-inside: avoid; }
       .finding-block { page-break-inside: avoid; }
-      h2 { page-break-after: avoid; }
+      h2 { page-break-after: avoid; page-break-before: always; }
+      h2:first-of-type { page-break-before: avoid; }
       h4 { page-break-after: avoid; }
       .phase-divider { page-break-after: avoid; }
-      .page-hdr { display: flex; }
+      .page-hdr { display: none; }
     }
 
     @media screen {
@@ -115,10 +189,9 @@
 </head>
 <body>
   <div class="print-bar">
-    <select id="phase-filter" onchange="init()" style="padding:8px 12px; font-size:14px; border-radius:6px; border:1px solid #d1d5db;">
-      <option value="all">All Phases</option>
-      <option value="interim">Interim Only</option>
-      <option value="final">Final Only</option>
+    <select id="report-type-select" onchange="changeReportType()" style="padding:8px 12px; font-size:14px; border-radius:6px; border:1px solid #d1d5db;">
+      <option value="planning">Planning Memorandum (ISA 300)</option>
+      <option value="completion">Completion Memorandum (ISA 700)</option>
     </select>
     <button class="btn-print" onclick="window.print()">Save as PDF</button>
     <button class="btn-back" onclick="window.close()">Close</button>
@@ -130,8 +203,79 @@
   <script src="../js/config.js"></script>
   <script src="../js/auth.js"></script>
   <script>
-    const engagementId = new URLSearchParams(window.location.search).get('id');
+    const urlParams = new URLSearchParams(window.location.search);
+    const engagementId = urlParams.get('id');
+    const reportType   = (urlParams.get('type') === 'completion') ? 'completion' : 'planning';
     if (!engagementId) { document.body.innerHTML = '<p>No engagement ID.</p>'; }
+
+    function changeReportType() {
+      const sel = document.getElementById('report-type-select').value;
+      const u = new URL(window.location.href);
+      u.searchParams.set('type', sel);
+      window.location.href = u.toString();
+    }
+
+    // Long-form date: "31 December 2025"
+    function formatDateLong(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    // Pick the actual signing partner, not just any org admin.
+    // Priority: completion memo signer -> most recent section partner_approved_by -> org admin (last resort).
+    function findEngagementPartner(cm, sections, profiles, profilesRes) {
+      if (cm?.signed_by && profiles[cm.signed_by]) return profiles[cm.signed_by];
+      const approvedSecs = sections
+        .filter(s => s.partner_approved_by && s.partner_approved_at)
+        .sort((a, b) => new Date(b.partner_approved_at) - new Date(a.partner_approved_at));
+      if (approvedSecs[0] && profiles[approvedSecs[0].partner_approved_by]) {
+        return profiles[approvedSecs[0].partner_approved_by];
+      }
+      const partnerMember = (profilesRes.data || []).find(m => m.role === 'admin');
+      return partnerMember?.profiles?.full_name || partnerMember?.profiles?.email || null;
+    }
+    function findSupervisor(sections, profiles, profilesRes) {
+      const approvedSecs = sections
+        .filter(s => s.supervisor_approved_by && s.supervisor_approved_at)
+        .sort((a, b) => new Date(b.supervisor_approved_at) - new Date(a.supervisor_approved_at));
+      if (approvedSecs[0] && profiles[approvedSecs[0].supervisor_approved_by]) {
+        return profiles[approvedSecs[0].supervisor_approved_by];
+      }
+      const supervisorMember = (profilesRes.data || []).find(m => m.role === 'supervisor');
+      return supervisorMember?.profiles?.full_name || supervisorMember?.profiles?.email || null;
+    }
+
+    // Status -> chip mapping. Returns an HTML span.
+    function statusChip(status) {
+      if (!status) return '';
+      const s = String(status).toLowerCase();
+      const map = {
+        'approved':          ['Approved',   'chip-green'],
+        'confirmed':         ['Confirmed',  'chip-green'],
+        'signed':            ['Signed',     'chip-green'],
+        'complete':          ['Complete',   'chip-green'],
+        'locked':            ['Locked',     'chip-green'],
+        'in_progress':       ['In progress','chip-amber'],
+        'in progress':       ['In progress','chip-amber'],
+        'ready_for_supervisor_review': ['Ready: supervisor', 'chip-amber'],
+        'in_supervisor_review':        ['In supervisor review', 'chip-amber'],
+        'ready_for_partner_review':    ['Ready: partner',   'chip-amber'],
+        'in_partner_review':           ['In partner review','chip-amber'],
+        'returned_to_preparer':        ['Returned',         'chip-violet'],
+        'returned_to_supervisor':      ['Returned',         'chip-violet'],
+        'not_started':       ['Not started','chip-grey'],
+        'draft':             ['Draft',      'chip-grey'],
+        'pending':           ['Pending',    'chip-grey'],
+        'done':              ['Done',       'chip-green'],
+        'open':              ['Open',       'chip-amber'],
+        'resolved':          ['Resolved',   'chip-green'],
+        'reported':          ['Reported',   'chip-blue'],
+      };
+      const [label, cls] = map[s] || [String(status).replace(/_/g, ' '), 'chip-grey'];
+      return `<span class="chip ${cls}">${label}</span>`;
+    }
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -224,15 +368,17 @@
         }
       }
 
-      // Compute stats (filtered by phase)
-      const phaseFilter = document.getElementById('phase-filter').value;
-      const filtSections = phaseFilter === 'all' ? sections
-        : sections.filter(s => phaseFilter === 'interim' ? s.phase === 'interim' : s.phase !== 'interim');
-      const filtSecIds = new Set(filtSections.map(s => s.id));
-      const filtProcs = procedures.filter(p => filtSecIds.has(p.section_id));
-      const filtProcIds = new Set(filtProcs.map(p => p.id));
-      const filtResps = responses.filter(r => filtProcIds.has(r.procedure_id));
-      const filtFindings = findings.filter(f => filtSecIds.has(f.section_id));
+      // Sync dropdown with URL param
+      const rtSel = document.getElementById('report-type-select');
+      if (rtSel) rtSel.value = reportType;
+
+      // No phase filtering anymore — report type drives content (planning vs completion).
+      const filtSections = sections;
+      const filtSecIds   = new Set(sections.map(s => s.id));
+      const filtProcs    = procedures;
+      const filtProcIds  = new Set(procedures.map(p => p.id));
+      const filtResps    = responses;
+      const filtFindings = findings;
 
       const totalP = filtProcs.length;
       const doneP = filtResps.filter(r => r.status === 'done').length;
@@ -241,43 +387,102 @@
       const highF = filtFindings.filter(f => f.severity === 'high').length;
       const totalMisstatement = filtFindings.filter(f => f.finding_type === 'misstatement').reduce((s, f) => s + (Number(f.monetary_impact) || 0), 0);
 
-      // Find partner and supervisor names
-      const partnerMember = (profilesRes.data || []).find(m => m.role === 'admin');
-      const supervisorMember = (profilesRes.data || []).find(m => m.role === 'supervisor');
-      const partnerName = partnerMember?.profiles?.full_name || partnerMember?.profiles?.email || '—';
-      const supervisorName = supervisorMember?.profiles?.full_name || supervisorMember?.profiles?.email || '—';
+      // Smart partner/supervisor lookup — actual signers preferred over org-role guess
+      const partnerName    = findEngagementPartner(cm, sections, profiles, profilesRes);
+      const supervisorName = findSupervisor(sections, profiles, profilesRes);
 
       let html = '';
 
-      // ===== 1. COVER PAGE =====
-      const phaseLabel = phaseFilter !== 'all' ? ' — ' + phaseFilter.charAt(0).toUpperCase() + phaseFilter.slice(1) + ' Phase' : '';
+      // Firm name = the org name (e.g. "Millionaira"). Falls back to product name if absent.
+      const firmName = (org.name || 'Audexon').toUpperCase();
+      const docTypeLabel = reportType === 'planning'
+        ? 'PLANNING MEMORANDUM (ISA 300)'
+        : 'COMPLETION MEMORANDUM (ISA 700)';
+      const yearEndLong  = eng.year_end_date ? formatDateLong(eng.year_end_date) : null;
+      const generatedLong = formatDateLong(new Date().toISOString());
+
+      // Cover stats vary by report type
+      let coverStatsHtml;
+      if (reportType === 'planning') {
+        const sigRisks = risks.filter(r => r.is_significant).length;
+        const linkedSet = new Set(riskLinks.map(l => l.risk_id));
+        const unlinkedSigRisks = risks.filter(r => r.is_significant && !linkedSet.has(r.id)).length;
+        const materialityLabel = eng.materiality_overall
+          ? Number(eng.materiality_overall).toLocaleString()
+          : 'Not set';
+        coverStatsHtml = `
+          <div class="cover-stat">
+            <div class="lbl">Risks identified</div>
+            <div class="val">${risks.length}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Significant risks</div>
+            <div class="val">${sigRisks}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Unlinked (ISA 330.21)</div>
+            <div class="val ${unlinkedSigRisks > 0 ? 'alert' : 'ok'}">${unlinkedSigRisks}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Overall materiality</div>
+            <div class="val">${materialityLabel}</div>
+          </div>
+        `;
+      } else {
+        const opinion = cm?.opinion_type ? cm.opinion_type.replace(/_/g, ' ') : 'Not set';
+        coverStatsHtml = `
+          <div class="cover-stat">
+            <div class="lbl">Opinion type</div>
+            <div class="val">${esc(opinion).toUpperCase()}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Findings (open / total)</div>
+            <div class="val ${openF > 0 ? 'alert' : 'ok'}">${openF} / ${filtFindings.length}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Adj. entries posted</div>
+            <div class="val">${adjustingEntries.filter(a => a.is_posted).length} / ${adjustingEntries.length}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Sections approved</div>
+            <div class="val ${approvedS === filtSections.length && filtSections.length > 0 ? 'ok' : ''}">${approvedS} / ${filtSections.length}</div>
+          </div>
+        `;
+      }
+
       html += `
         <div class="cover">
-          <div class="cover-brand">Audexon Audit File</div>
-          <div class="cover-divider"></div>
-          <h1>${esc(eng.client_name)}</h1>
-          <div class="cover-subtitle">Year ended ${eng.year_end_date || '—'}${phaseLabel}</div>
-          <dl class="cover-details">
-            <dt>Engagement Partner</dt><dd>${esc(partnerName)}</dd>
-            <dt>Supervisor</dt><dd>${esc(supervisorName)}</dd>
-            <dt>File Status</dt><dd>${eng.status === 'completed' ? 'Closed' : 'Active'}</dd>
-            ${eng.closed_at ? `<dt>File Closed</dt><dd>${new Date(eng.closed_at).toLocaleDateString()}</dd>` : ''}
-          </dl>
-          <div class="cover-metrics">
-            <div class="cover-metric"><div class="val">${filtSections.length}</div><div class="lbl">Sections</div></div>
-            <div class="cover-metric"><div class="val">${doneP}/${totalP}</div><div class="lbl">Procedures</div></div>
-            <div class="cover-metric"><div class="val">${approvedS}/${filtSections.length}</div><div class="lbl">Approved</div></div>
-            <div class="cover-metric"><div class="val">${openF}</div><div class="lbl">Open Findings</div></div>
-            <div class="cover-metric"><div class="val">${adjustingEntries.length}</div><div class="lbl">Adj. Entries</div></div>
-            <div class="cover-metric"><div class="val">${filtFindings.filter(f => f.is_management_letter_point).length}</div><div class="lbl">ML Points</div></div>
+          <div class="cover-topbar">
+            <div class="cover-firm">${esc(firmName)}</div>
+            <div class="cover-confidential">CONFIDENTIAL</div>
           </div>
-          <div class="cover-footer">Audexon Audit File — Confidential — Generated ${new Date().toLocaleDateString()} by ${esc(currentUser.email)}</div>
+          <div class="cover-body">
+            <div class="cover-type-label">${docTypeLabel}</div>
+            <h1>${esc(eng.client_name)}</h1>
+            <div class="cover-subtitle">${yearEndLong ? 'Year ended ' + yearEndLong : 'Year-end not set'}</div>
+            <div class="cover-rule"></div>
+            <dl class="cover-details">
+              <dt>Engagement partner</dt>
+              <dd${partnerName ? '' : ' class="muted"'}>${esc(partnerName || 'Not yet assigned')}</dd>
+              <dt>Engagement supervisor</dt>
+              <dd${supervisorName ? '' : ' class="muted"'}>${esc(supervisorName || 'Not yet assigned')}</dd>
+              <dt>File status</dt>
+              <dd>${eng.status === 'completed' ? 'Closed' : 'Active'}${eng.closed_at ? ' — closed ' + formatDateLong(eng.closed_at) : ''}</dd>
+              <dt>Report generated</dt>
+              <dd>${generatedLong}</dd>
+            </dl>
+            <div class="cover-stats">${coverStatsHtml}</div>
+          </div>
+          <div class="cover-footer">
+            <div>Generated by Audexon — ${esc(currentUser.email)}</div>
+            <div>Confidential</div>
+          </div>
         </div>
       `;
 
-      // ===== 1B. ENGAGEMENT PLANNING WORKPAPERS =====
+      // ===== 1B. ENGAGEMENT PLANNING WORKPAPERS (planning report only) =====
       // Client Acceptance / Continuance (ISA 220)
-      if (eaccActive) {
+      if (reportType === 'planning' && eaccActive) {
         html += '<h2>Client Acceptance / Continuance (ISA 220)</h2>';
         const TYPE_LABELS = { initial: 'Initial acceptance', continuance: 'Annual continuance' };
         const DEC_LABELS = { accept: 'Accepted', accept_with_conditions: 'Accepted with conditions', decline: 'Declined' };
@@ -297,7 +502,7 @@
       }
 
       // Engagement Letter (ISA 210)
-      if (elActive) {
+      if (reportType === 'planning' && elActive) {
         html += '<h2>Engagement Letter (ISA 210)</h2>';
         const statusBadge = elActive.status === 'signed'
           ? '<span class="badge b-approved">SIGNED</span>'
@@ -322,7 +527,7 @@
       }
 
       // Independence & Ethics (ISA 220 R + IESBA)
-      if (eiActive) {
+      if (reportType === 'planning' && eiActive) {
         html += '<h2>Independence &amp; Ethics (ISA 220 R + IESBA)</h2>';
         const statusBadge = eiActive.status === 'confirmed'
           ? '<span class="badge b-approved">CONFIRMED</span>'
@@ -357,7 +562,7 @@
       }
 
       // Audit Strategy (ISA 300 + ISA 220 R)
-      if (easActive) {
+      if (reportType === 'planning' && easActive) {
         html += '<h2>Audit Strategy (ISA 300)</h2>';
         const statusBadge = easActive.status === 'approved'
           ? '<span class="badge b-approved">APPROVED</span>'
@@ -411,7 +616,8 @@
       }
 
       // ===== 2B. RISK ASSESSMENT (ISA 315 + ISA 330 + ISA 240) =====
-      if (risks.length > 0 || riskAssess) {
+      // Planning: full register + matrix. Completion: brief recap only.
+      if (reportType === 'planning' && (risks.length > 0 || riskAssess)) {
         html += '<h2>Risk Assessment (ISA 315 / ISA 330)</h2>';
 
         const ASSERT_LABELS = {
@@ -514,7 +720,24 @@
         }
       }
 
-      // ===== 3. FINDINGS & MISSTATEMENTS SUMMARY =====
+      // ===== 2C. RISK ASSESSMENT RECAP (completion report only) =====
+      if (reportType === 'completion' && (risks.length > 0 || riskAssess)) {
+        const sigCt = risks.filter(r => r.is_significant).length;
+        const linkedSet = new Set(riskLinks.map(l => l.risk_id));
+        const unlinkedSig = risks.filter(r => r.is_significant && !linkedSet.has(r.id)).length;
+        const assessLabel = riskAssess?.status === 'confirmed' ? 'Confirmed' : 'Draft';
+        html += '<h2>Risk Assessment Recap (ISA 315 / ISA 330)</h2>';
+        html += `<p style="font-size:11px; color:#6E6E73; margin-bottom:10px;">High-level recap of the risk assessment finalised during planning. The full register and matrix are in the Planning Memorandum.</p>`;
+        html += `<table><tbody>
+          <tr><th style="width:32%;">Assessment status</th><td>${statusChip(assessLabel)}</td></tr>
+          <tr><th>Total risks identified</th><td>${risks.length}</td></tr>
+          <tr><th>Significant risks</th><td>${sigCt}</td></tr>
+          <tr><th>Unlinked significant risks (ISA 330.21)</th><td>${unlinkedSig > 0 ? '<span class="chip chip-red">' + unlinkedSig + ' violation' + (unlinkedSig > 1 ? 's' : '') + '</span>' : statusChip('done')}</td></tr>
+        </tbody></table>`;
+      }
+
+      // ===== 3. FINDINGS & MISSTATEMENTS SUMMARY (completion report only) =====
+      if (reportType === 'completion') {
       html += '<h2>Summary of Findings</h2>';
       if (filtFindings.length === 0) {
         html += '<p class="no-data">No findings recorded.</p>';
@@ -556,19 +779,64 @@
         html += '</tbody></table>';
       }
 
-      // ===== 3. SECTION-BY-SECTION WORKPAPERS =====
-      html += '<h2>Section Workpapers</h2>';
+      } // end of FINDINGS & MISSTATEMENTS SUMMARY (completion-only wrapper)
 
-      const interimSections = filtSections.filter(s => s.phase === 'interim');
-      const finalSections = filtSections.filter(s => s.phase !== 'interim');
-      const orderedSections = [...interimSections, ...finalSections];
+      // ===== SECTION-BY-SECTION WORKPAPERS — DELIBERATELY OMITTED FROM PARTNER REPORTS =====
+      // Per audit methodology (ISA 220, KPMG Clara, EY Canvas, BDO etc.) the
+      // partner-facing reports contain PLANNING and COMPLETION only. Detailed
+      // section workpapers are the team's execution evidence file and live
+      // inside Audexon — they are not exported to the partner PDF. The
+      // Completion Memorandum's "Work-done summary" block (below) gives the
+      // partner a high-level conclusion per section without execution noise.
 
-      if (orderedSections.length === 0) {
-        html += '<p class="no-data">No sections.</p>';
+      // ===== 3B. WORK-DONE SUMMARY (completion report only) =====
+      // High-level per-section synthesis: status + procedure counts + findings.
+      // Replaces the previous Section Workpapers detail dump.
+      if (reportType === 'completion') {
+        html += '<h2>Work-done summary</h2>';
+        html += '<p style="font-size:11px; color:#6E6E73; margin-bottom:12px;">Per-section conclusion of work performed. Detailed procedures and evidence remain in the audit file inside Audexon.</p>';
+        const interimSections = filtSections.filter(s => s.phase === 'interim');
+        const finalSections = filtSections.filter(s => s.phase !== 'interim');
+        const orderedSections = [...interimSections, ...finalSections];
+        if (orderedSections.length === 0) {
+          html += '<p class="no-data">No sections.</p>';
+        } else {
+          html += '<table><thead><tr><th>Section</th><th style="width:12%;">Phase</th><th style="width:14%;">Procedures done</th><th style="width:12%;">Findings</th><th style="width:14%;">Status</th></tr></thead><tbody>';
+          for (const s of orderedSections) {
+            const secProcs    = procedures.filter(p => p.section_id === s.id);
+            const secProcIds  = new Set(secProcs.map(p => p.id));
+            const doneCt      = responses.filter(r => secProcIds.has(r.procedure_id) && r.status === 'done').length;
+            const secFindings = findings.filter(f => f.section_id === s.id);
+            const openFnd     = secFindings.filter(f => f.status === 'open').length;
+            const totalFnd    = secFindings.length;
+            const findCell    = totalFnd === 0
+              ? '<span style="color:#6E6E73;">None</span>'
+              : (openFnd > 0
+                  ? '<span style="color:#991B1B; font-weight:600;">' + openFnd + ' open</span> / ' + totalFnd
+                  : '<span style="color:#15803D; font-weight:600;">' + totalFnd + ' resolved</span>');
+            const phaseBadge  = s.phase === 'interim' ? '<span class="chip chip-blue">Interim</span>' : '<span class="chip chip-grey">Final</span>';
+            html += `<tr>
+              <td><strong>${esc(s.name)}</strong></td>
+              <td>${phaseBadge}</td>
+              <td>${doneCt} / ${secProcs.length}</td>
+              <td>${findCell}</td>
+              <td>${statusChip(s.status)}</td>
+            </tr>`;
+            if (s.conclusion) {
+              html += `<tr><td colspan="5" style="background:#FAFAFA; padding:8px 12px; font-size:11px; color:#374151; border-bottom:2px solid #E5E5EA;"><strong style="color:#6E6E73; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Section conclusion:</strong> ${esc(s.conclusion)}</td></tr>`;
+            }
+          }
+          html += '</tbody></table>';
+        }
       }
 
-      let currentPhase = '';
-      for (const s of orderedSections) {
+      // Detail-dump section-workpapers loop removed (was 130+ lines of execution noise).
+      // The block below is the old loop body, gated to always-false so it never renders.
+      // Kept temporarily as reference; safe to delete after pilot review.
+      if (false) {
+        const orderedSections = [];
+        let currentPhase = '';
+        for (const s of orderedSections) {
         const phase = s.phase || 'final';
         if (phase !== currentPhase) {
           currentPhase = phase;
@@ -688,9 +956,11 @@
         }
 
         html += '</div>'; // wp-section
-      }
+        }
+      } // end if (false) — dead detail-dump block, kept for reference only
 
-      // ===== 4. MANAGEMENT LETTER POINTS =====
+      // ===== 4. MANAGEMENT LETTER POINTS (completion report only) =====
+      if (reportType === 'completion') {
       const mlFindings = filtFindings.filter(f => f.is_management_letter_point);
       html += '<h2>Management Letter Points</h2>';
       if (mlFindings.length === 0) {
@@ -767,9 +1037,11 @@
         ).join('');
         html += '</tbody></table>';
       }
+      } // end if (reportType === 'completion') — wraps ML + CM + TB
 
       document.getElementById('report-content').innerHTML = html;
-      document.title = eng.client_name + ' — Audit File — Audexon';
+      const reportLabel = reportType === 'planning' ? 'Planning Memorandum' : 'Completion Memorandum';
+      document.title = eng.client_name + ' — ' + reportLabel + ' — Audexon';
     }
 
     function esc(str) {
