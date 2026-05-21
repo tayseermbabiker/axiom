@@ -381,7 +381,7 @@
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start;">
-          <button class="btn btn-outline btn-sm" onclick="exportReport()" title="Export engagement report as PDF">Export PDF</button>
+          <button class="btn btn-outline btn-sm" onclick="exportReport()" title="Generates a single inspection-ready PDF: acceptance, engagement letter, independence, audit strategy, materiality, risk assessment, sections, findings, completion memo, trial balance.">Inspection PDF</button>
           <div id="eng-actions" style="display:flex; gap:8px; align-items:flex-start;"></div>
         </div>
       </div>
@@ -1490,6 +1490,10 @@
               <!-- Completion memo button moved here from page header -->
               <a id="btn-completion-memo" class="btn btn-primary btn-sm" style="display:none;"
                 title="Open the Engagement Completion Memorandum (Pro)">Completion Memo</a>
+              <button class="btn btn-outline btn-sm" onclick="exportReport()"
+                title="Generates a single inspection-ready PDF covering acceptance, engagement letter, independence, audit strategy, materiality, risk assessment, sections, findings, completion memo, and trial balance.">
+                Inspection PDF
+              </button>
               <button class="btn btn-outline btn-sm" id="btn-review-close-conclusion" style="display:none;">
                 Review &amp; close
               </button>

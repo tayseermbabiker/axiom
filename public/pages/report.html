@@ -143,12 +143,44 @@
       const { data: eng } = await supabaseClient.from('engagements').select('*').eq('id', engagementId).single();
       if (!eng || eng.organization_id !== org.id) { document.getElementById('report-content').innerHTML = '<p>Engagement not found.</p>'; return; }
 
-      // Load all data
-      const [sectionsRes, tbRes, profilesRes] = await Promise.all([
+      // Load all data — including Sprint 1-3 Pro planning workpapers.
+      // Pro-gated tables may return empty for Essentials orgs (RLS); empty
+      // results are handled gracefully by the render blocks below.
+      const [
+        sectionsRes, tbRes, profilesRes,
+        eaccRes, elRes, eiRes, eiThreatsRes, eiNasRes,
+        easRes,
+        risksRes, riskLinksRes, riskAssessRes,
+        cmRes, cmAttestRes
+      ] = await Promise.all([
         supabaseClient.from('audit_sections').select('*').eq('engagement_id', engagementId).order('sort_order'),
         supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code'),
-        supabaseClient.from('organization_members').select('*, profiles:user_id(id, full_name, email)').eq('organization_id', org.id)
+        supabaseClient.from('organization_members').select('*, profiles:user_id(id, full_name, email)').eq('organization_id', org.id),
+        supabaseClient.from('engagement_acceptance').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false }),
+        supabaseClient.from('engagement_letters').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false }),
+        supabaseClient.from('engagement_independence').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false }),
+        supabaseClient.from('engagement_independence_threats').select('*'),
+        supabaseClient.from('engagement_nas').select('*').eq('engagement_id', engagementId).order('created_at'),
+        supabaseClient.from('engagement_audit_strategies').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: false }),
+        supabaseClient.from('engagement_risks').select('*').eq('engagement_id', engagementId).order('section_id').order('created_at'),
+        supabaseClient.from('engagement_risk_procedure_links').select('id, risk_id, procedure_id'),
+        supabaseClient.from('engagement_risk_assessment').select('*').eq('engagement_id', engagementId).maybeSingle(),
+        supabaseClient.from('engagement_completion_memo').select('*').eq('engagement_id', engagementId).maybeSingle(),
+        supabaseClient.from('completion_attestations').select('*'),
       ]);
+
+      // Active (non-superseded) versions of versioned workpapers
+      const eaccActive = (eaccRes.data || []).find(r => !r.is_superseded) || null;
+      const elActive   = (elRes.data   || []).find(r => !r.is_superseded) || null;
+      const eiActive   = (eiRes.data   || []).find(r => !r.is_superseded) || null;
+      const easActive  = (easRes.data  || []).find(r => !r.is_superseded) || null;
+      const eiThreats  = eiActive ? (eiThreatsRes.data || []).filter(t => t.engagement_independence_id === eiActive.id) : [];
+      const eiNas      = eiNasRes.data || [];
+      const risks      = risksRes.data || [];
+      const riskLinks  = riskLinksRes.data || [];
+      const riskAssess = riskAssessRes.data || null;
+      const cm         = cmRes.data || null;
+      const cmAttests  = cm ? (cmAttestRes.data || []).filter(a => a.engagement_completion_memo_id === cm.id) : [];
 
       const sections = sectionsRes.data || [];
       const tbLines = tbRes.data || [];
@@ -243,6 +275,114 @@
         </div>
       `;
 
+      // ===== 1B. ENGAGEMENT PLANNING WORKPAPERS =====
+      // Client Acceptance / Continuance (ISA 220)
+      if (eaccActive) {
+        html += '<h2>Client Acceptance / Continuance (ISA 220)</h2>';
+        const TYPE_LABELS = { initial: 'Initial acceptance', continuance: 'Annual continuance' };
+        const DEC_LABELS = { accept: 'Accepted', accept_with_conditions: 'Accepted with conditions', decline: 'Declined' };
+        const statusBadge = eaccActive.status === 'confirmed'
+          ? '<span class="badge b-approved">CONFIRMED</span>'
+          : '<span class="badge b-pending">DRAFT</span>';
+        html += `<table><tbody>
+          <tr><th style="width:32%;">Type</th><td>${esc(TYPE_LABELS[eaccActive.acceptance_type] || eaccActive.acceptance_type || '—')}</td></tr>
+          <tr><th>Decision</th><td>${esc(DEC_LABELS[eaccActive.decision] || eaccActive.decision || '—')} ${statusBadge}</td></tr>
+          <tr><th>Decision date</th><td>${eaccActive.decision_date || '—'}</td></tr>
+          <tr><th>Risk tier</th><td>${esc(eaccActive.risk_tier || '—')}</td></tr>
+          ${eaccActive.conditions_summary ? `<tr><th>Conditions</th><td>${esc(eaccActive.conditions_summary)}</td></tr>` : ''}
+          ${eaccActive.decision_rationale ? `<tr><th>Rationale</th><td>${esc(eaccActive.decision_rationale)}</td></tr>` : ''}
+          ${eaccActive.integrity_conclusion ? `<tr><th>Integrity conclusion</th><td>${esc(eaccActive.integrity_conclusion)}</td></tr>` : ''}
+          ${eaccActive.competence_resources_notes ? `<tr><th>Competence &amp; resources</th><td>${esc(eaccActive.competence_resources_notes)}</td></tr>` : ''}
+        </tbody></table>`;
+      }
+
+      // Engagement Letter (ISA 210)
+      if (elActive) {
+        html += '<h2>Engagement Letter (ISA 210)</h2>';
+        const statusBadge = elActive.status === 'signed'
+          ? '<span class="badge b-approved">SIGNED</span>'
+          : '<span class="badge b-pending">DRAFT</span>';
+        html += `<table><tbody>
+          <tr><th style="width:32%;">Status</th><td>${statusBadge}</td></tr>
+          <tr><th>Letter date</th><td>${elActive.letter_date || '—'}</td></tr>
+          <tr><th>Signed date</th><td>${elActive.signed_date || '—'}</td></tr>
+          <tr><th>Client signatory</th><td>${esc(elActive.client_signatory_name || '—')}${elActive.client_signatory_role ? ' (' + esc(elActive.client_signatory_role) + ')' : ''}</td></tr>
+          <tr><th>Reporting framework</th><td>${esc(elActive.reporting_framework || '—')}</td></tr>
+          <tr><th>Audit period</th><td>${elActive.audit_period_start || '—'} to ${elActive.audit_period_end || '—'}</td></tr>
+          ${elActive.file_name ? `<tr><th>Signed file</th><td>${esc(elActive.file_name)}${elActive.file_sha256 ? ' &middot; SHA-256: ' + elActive.file_sha256.slice(0,16) + '...' : ''}</td></tr>` : ''}
+        </tbody></table>`;
+        html += `<h4>ISA 210.10 minimum elements attested</h4>`;
+        html += `<table><tbody>
+          <tr><td style="width:80%;">Objective and scope of the audit</td><td style="text-align:center;">${elActive.isa_210_objective_scope ? '&#10003;' : '&minus;'}</td></tr>
+          <tr><td>Responsibilities of the auditor</td><td style="text-align:center;">${elActive.isa_210_auditor_responsibilities ? '&#10003;' : '&minus;'}</td></tr>
+          <tr><td>Responsibilities of management</td><td style="text-align:center;">${elActive.isa_210_mgmt_responsibilities ? '&#10003;' : '&minus;'}</td></tr>
+          <tr><td>Applicable financial reporting framework identified</td><td style="text-align:center;">${elActive.isa_210_framework_identified ? '&#10003;' : '&minus;'}</td></tr>
+          <tr><td>Expected form and content of any reports</td><td style="text-align:center;">${elActive.isa_210_report_form_referenced ? '&#10003;' : '&minus;'}</td></tr>
+        </tbody></table>`;
+      }
+
+      // Independence & Ethics (ISA 220 R + IESBA)
+      if (eiActive) {
+        html += '<h2>Independence &amp; Ethics (ISA 220 R + IESBA)</h2>';
+        const statusBadge = eiActive.status === 'confirmed'
+          ? '<span class="badge b-approved">CONFIRMED</span>'
+          : '<span class="badge b-pending">DRAFT</span>';
+        html += `<table><tbody>
+          <tr><th style="width:32%;">Status</th><td>${statusBadge}</td></tr>
+          <tr><th>Assessment date</th><td>${eiActive.assessment_date || '—'}</td></tr>
+          <tr><th>Partner attestation</th><td>${eiActive.partner_attestation_made ? '&#10003; ' + (eiActive.partner_attestation_date || '') : '&minus;'}</td></tr>
+          <tr><th>Fee % of firm total</th><td>${eiActive.fee_pct_of_firm_total != null ? eiActive.fee_pct_of_firm_total + '%' : '—'} ${eiActive.fee_dependence_band ? '<span class="badge b-' + (eiActive.fee_dependence_band === 'high' ? 'high' : 'medium') + '">' + eiActive.fee_dependence_band.toUpperCase() + '</span>' : ''}</td></tr>
+          ${eiActive.fee_dependence_safeguards ? `<tr><th>Fee dependence safeguards</th><td>${esc(eiActive.fee_dependence_safeguards)}</td></tr>` : ''}
+          <tr><th>Partner tenure (years)</th><td>${eiActive.partner_tenure_years != null ? eiActive.partner_tenure_years : '—'} ${eiActive.partner_rotation_required ? '<span class="badge b-medium">ROTATION DUE</span>' : ''}</td></tr>
+          ${eiActive.partner_rotation_action ? `<tr><th>Rotation action</th><td>${esc(eiActive.partner_rotation_action)}</td></tr>` : ''}
+          <tr><th>Non-audit services</th><td>${eiActive.no_nas_provided ? 'No NAS provided' : (eiNas.length + ' service(s) recorded')}</td></tr>
+          ${eiActive.overall_conclusion ? `<tr><th>Overall conclusion</th><td>${esc(eiActive.overall_conclusion)}</td></tr>` : ''}
+        </tbody></table>`;
+        if (eiThreats.length > 0) {
+          html += '<h4>IESBA threats assessed</h4>';
+          html += '<table><thead><tr><th>Threat category</th><th>Identified?</th><th>Description</th><th>Safeguards</th></tr></thead><tbody>';
+          eiThreats.forEach(t => {
+            html += `<tr><td>${esc((t.threat_category || '').replace(/_/g,' '))}</td><td style="text-align:center;">${t.identified ? '&#10003;' : '&minus;'}</td><td>${esc(t.description || '—')}</td><td>${esc(t.safeguards || '—')}</td></tr>`;
+          });
+          html += '</tbody></table>';
+        }
+        if (eiNas.length > 0) {
+          html += '<h4>Non-audit services</h4>';
+          html += '<table><thead><tr><th>Service</th><th>Fee</th><th>Permitted?</th><th>Safeguards</th></tr></thead><tbody>';
+          eiNas.forEach(n => {
+            html += `<tr><td>${esc(n.service_description || '—')}</td><td>${n.fee_amount != null ? Number(n.fee_amount).toLocaleString() : '—'}</td><td style="text-align:center;">${n.is_permitted ? '&#10003;' : '&#10007;'}</td><td>${esc(n.safeguards || '—')}</td></tr>`;
+          });
+          html += '</tbody></table>';
+        }
+      }
+
+      // Audit Strategy (ISA 300 + ISA 220 R)
+      if (easActive) {
+        html += '<h2>Audit Strategy (ISA 300)</h2>';
+        const statusBadge = easActive.status === 'approved'
+          ? '<span class="badge b-approved">APPROVED</span>'
+          : '<span class="badge b-pending">DRAFT</span>';
+        html += `<table><tbody><tr><th style="width:32%;">Status</th><td>${statusBadge} ${easActive.approved_at ? '&middot; ' + new Date(easActive.approved_at).toLocaleDateString() : ''}</td></tr></tbody></table>`;
+        const narrSection = (label, val) => val
+          ? `<h4>${esc(label)}</h4><div style="font-size:11px; color:#374151; white-space:pre-wrap; margin-bottom:12px; line-height:1.6;">${esc(val)}</div>`
+          : '';
+        html += narrSection('1. Characteristics defining scope (ISA 300.9(a))',         easActive.scope_characteristics);
+        html += narrSection('2. Reporting objectives, timing & communications (300.9(b))', easActive.reporting_objectives);
+        html += narrSection('3. Significant factors directing the team (300.9(c))',     easActive.significant_factors);
+        html += narrSection('4. Results of preliminary engagement activities (300.9(d))', easActive.preliminary_activities_summary);
+        html += narrSection('5. Nature, timing & extent of resources (300.9(e))',       easActive.resources_plan);
+        html += narrSection('Partner direction, supervision & review (ISA 220 R)',      easActive.partner_direction_plan);
+        if (easActive.team_composition || easActive.specialists_involved || easActive.budgeted_hours || easActive.eqr_required) {
+          html += '<h4>Team, specialists, EQR</h4>';
+          html += '<table><tbody>';
+          if (easActive.team_composition)     html += `<tr><th style="width:32%;">Team composition</th><td>${esc(easActive.team_composition)}</td></tr>`;
+          if (easActive.specialists_involved) html += `<tr><th>Specialists</th><td>${esc(easActive.specialists_involved)}</td></tr>`;
+          html += `<tr><th>EQR required</th><td>${easActive.eqr_required ? '&#10003; Yes — ' + esc(easActive.eqr_reviewer_name || '(reviewer not named)') : '&minus; No'}</td></tr>`;
+          if (easActive.budgeted_hours)       html += `<tr><th>Budgeted hours</th><td>${easActive.budgeted_hours}</td></tr>`;
+          html += '</tbody></table>';
+        }
+      }
+
       // ===== 2. PLANNING & MATERIALITY =====
       if (eng.materiality_overall) {
         const benchLabels = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
@@ -267,6 +407,110 @@
             <div style="font-size:9px; font-weight:700; color:#1A3A5F; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Rationale (ISA 320)</div>
             ${esc(eng.materiality_rationale)}
           </div>`;
+        }
+      }
+
+      // ===== 2B. RISK ASSESSMENT (ISA 315 + ISA 330 + ISA 240) =====
+      if (risks.length > 0 || riskAssess) {
+        html += '<h2>Risk Assessment (ISA 315 / ISA 330)</h2>';
+
+        const ASSERT_LABELS = {
+          existence:'Existence', completeness:'Completeness', accuracy:'Accuracy',
+          valuation:'Valuation', cutoff:'Cut-off', classification:'Classification',
+          rights_obligations:'Rights & obligations', presentation:'Presentation'
+        };
+        const SRC_LABELS = {
+          entity:'Entity', industry:'Industry', it:'IT', fraud:'Fraud',
+          management_override:'Mgmt override', rap:'RAP', other:'Other'
+        };
+
+        // Header summary
+        const sigCount = risks.filter(r => r.is_significant).length;
+        const linkedIds = new Set(riskLinks.map(l => l.risk_id));
+        const linkedRiskCount = risks.filter(r => linkedIds.has(r.id)).length;
+        const unlinkedSig = risks.filter(r => r.is_significant && !linkedIds.has(r.id)).length;
+        const assessBadge = riskAssess && riskAssess.status === 'confirmed'
+          ? `<span class="badge b-approved">CONFIRMED ${riskAssess.confirmed_at ? '&middot; ' + new Date(riskAssess.confirmed_at).toLocaleDateString() : ''}</span>`
+          : `<span class="badge b-pending">DRAFT</span>`;
+        html += `<table><tbody>
+          <tr><th style="width:32%;">Status</th><td>${assessBadge}</td></tr>
+          <tr><th>Total risks identified</th><td>${risks.length}</td></tr>
+          <tr><th>Significant risks</th><td>${sigCount}</td></tr>
+          <tr><th>Risks with linked procedures</th><td>${linkedRiskCount} / ${risks.length}</td></tr>
+          ${unlinkedSig > 0 ? `<tr><th>Unlinked significant risks</th><td style="color:#991B1B;font-weight:600;">${unlinkedSig} (ISA 330.21 violation)</td></tr>` : ''}
+        </tbody></table>`;
+
+        // Pivot matrix (sections × assertions)
+        const assertionKeys = Object.keys(ASSERT_LABELS);
+        const sectionsWithRisks = sections.filter(s => risks.some(r => r.section_id === s.id));
+        if (sectionsWithRisks.length > 0) {
+          html += '<h3>Risk matrix (sections &times; assertions)</h3>';
+          html += '<table style="font-size:10px;"><thead><tr><th>Section</th>';
+          assertionKeys.forEach(a => { html += `<th style="text-align:center;">${esc(ASSERT_LABELS[a])}</th>`; });
+          html += '</tr></thead><tbody>';
+          sectionsWithRisks.forEach(s => {
+            html += `<tr><td>${esc(s.name)}</td>`;
+            assertionKeys.forEach(a => {
+              const cell = risks.filter(r => r.section_id === s.id && r.assertion === a);
+              const sig = cell.filter(r => r.is_significant).length;
+              if (!cell.length) {
+                html += `<td style="text-align:center; color:#9ca3af;">&middot;</td>`;
+              } else {
+                html += `<td style="text-align:center; font-weight:600; ${sig ? 'background:#FEF9C3; color:#A16207;' : ''}">${cell.length}${sig ? ' (' + sig + ')' : ''}</td>`;
+              }
+            });
+            html += '</tr>';
+          });
+          html += '</tbody></table>';
+          html += '<p style="font-size:10px; color:#6b7280; margin:4px 0 14px;">Cells show risks identified; gold &amp; bold = significant risk count in brackets.</p>';
+        }
+
+        // Risk register grouped by section
+        html += '<h3>Risk register</h3>';
+        const risksBySection = {};
+        risks.forEach(r => {
+          if (!risksBySection[r.section_id]) risksBySection[r.section_id] = [];
+          risksBySection[r.section_id].push(r);
+        });
+        sections.filter(s => risksBySection[s.id]).forEach(s => {
+          html += `<h4>${esc(s.name)}</h4>`;
+          html += '<table><thead><tr><th>Risk</th><th>Assertion</th><th>Source</th><th>I</th><th>C</th><th>=</th><th>Sig?</th><th>Linked procs</th></tr></thead><tbody>';
+          risksBySection[s.id].forEach(r => {
+            const linkedProcCount = riskLinks.filter(l => l.risk_id === r.id).length;
+            const sigCell = r.is_significant
+              ? '<span style="color:#A16207; font-weight:700;">&#9733; Yes</span>'
+              : '&minus;';
+            const presumedBadge = r.is_locked_presumed ? ' <span class="badge b-medium" style="font-size:8px;">PRESUMED</span>' : '';
+            const rebuttedNote = r.presumption_rebutted
+              ? `<div style="font-size:9px; color:#065F46; margin-top:3px;"><em>Rebutted (ISA 240.26): ${esc(r.rebuttal_rationale || '')}</em></div>`
+              : '';
+            html += `<tr>
+              <td>${esc(r.risk_description)}${presumedBadge}${rebuttedNote}</td>
+              <td>${esc(ASSERT_LABELS[r.assertion] || r.assertion)}</td>
+              <td>${esc(SRC_LABELS[r.source] || r.source)}</td>
+              <td style="text-align:center;">${r.inherent_rating[0].toUpperCase()}</td>
+              <td style="text-align:center;">${r.control_rating[0].toUpperCase()}</td>
+              <td style="text-align:center; font-weight:600;">${r.combined_rating[0].toUpperCase()}</td>
+              <td style="text-align:center;">${sigCell}</td>
+              <td style="text-align:center; ${r.is_significant && linkedProcCount === 0 ? 'color:#991B1B; font-weight:700;' : ''}">${linkedProcCount}</td>
+            </tr>`;
+            // Show overall response on a sub-row for significant risks
+            if (r.is_significant && r.overall_response) {
+              html += `<tr><td colspan="8" style="background:#FFFBEB; font-size:10px;"><strong>Overall response (ISA 330.5):</strong> ${esc(r.overall_response)}</td></tr>`;
+            }
+          });
+          html += '</tbody></table>';
+        });
+
+        // Attestations summary
+        if (riskAssess) {
+          html += '<h4>Risk assessment attestations</h4>';
+          html += '<table><tbody>';
+          html += `<tr><td style="width:80%;">Risks assessed at assertion level (ISA 315.27)</td><td style="text-align:center;">${riskAssess.isa_315_27_assertions_assessed ? '&#10003;' : '&minus;'}</td></tr>`;
+          html += `<tr><td>Significant risks identified per professional judgement (ISA 315.28)</td><td style="text-align:center;">${riskAssess.isa_315_28_significant_risks_identified ? '&#10003;' : '&minus;'}</td></tr>`;
+          html += `<tr><td>Stand-back consideration of unflagged CoTABDs (ISA 315.A114)</td><td style="text-align:center;">${riskAssess.isa_315_stand_back_completed ? '&#10003;' : '&minus;'}</td></tr>`;
+          html += `<tr><td>All significant risks linked to responsive procedures (ISA 330.21)</td><td style="text-align:center;">${riskAssess.isa_330_responses_linked ? '&#10003;' : '&minus;'}</td></tr>`;
+          html += '</tbody></table>';
         }
       }
 
@@ -458,6 +702,51 @@
           html += `<tr><td>${i + 1}</td><td>${esc(f.title)}</td><td>${esc(secName)}</td><td><span class="badge b-${f.severity}">${f.severity}</span></td><td>${esc(f.recommendation || '—')}</td></tr>`;
         });
         html += '</tbody></table>';
+      }
+
+      // ===== 4B. COMPLETION MEMO (ISA 220 / ISA 700) =====
+      if (cm) {
+        html += '<h2>Engagement Completion Memorandum</h2>';
+        const cmStatus = cm.status === 'locked' ? 'b-approved' : (cm.status === 'complete' ? 'b-reported' : 'b-pending');
+        const cmStatusLabel = cm.status === 'locked' ? 'LOCKED &amp; SIGNED' : cm.status.toUpperCase();
+        const fmt = (n) => n != null ? Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 }) : '—';
+        const partnerSignedBy = cm.signed_by ? (profiles[cm.signed_by] || '—') : '—';
+
+        html += `<table><tbody>
+          <tr><th style="width:32%;">Status</th><td><span class="badge ${cmStatus}">${cmStatusLabel}</span> ${cm.signed_at ? '&middot; signed ' + new Date(cm.signed_at).toLocaleDateString() + ' by ' + esc(partnerSignedBy) : ''}</td></tr>
+          <tr><th>Opinion type</th><td>${esc((cm.opinion_type || '—').toUpperCase())}</td></tr>
+          ${cm.opinion_basis_notes ? `<tr><th>Opinion basis</th><td>${esc(cm.opinion_basis_notes)}</td></tr>` : ''}
+          <tr><th>Sections approved</th><td>${cm.sections_approved} / ${cm.total_sections}</td></tr>
+          <tr><th>Findings (open / resolved / reported)</th><td>${cm.findings_open} / ${cm.findings_resolved} / ${cm.findings_reported}</td></tr>
+          <tr><th>Adjusting entries (posted / unposted)</th><td>${cm.posted_adjustments} / ${cm.unposted_adjustments}</td></tr>
+          ${cm.overall_materiality_snapshot ? `<tr><th>Materiality (overall / performance)</th><td>${fmt(cm.overall_materiality_snapshot)} / ${fmt(cm.performance_materiality_snapshot)}</td></tr>` : ''}
+          ${cm.uncorrected_vs_materiality ? `<tr><th>Uncorrected vs materiality</th><td>${esc(cm.uncorrected_vs_materiality.replace(/_/g, ' '))}</td></tr>` : ''}
+          <tr><th>EQR required</th><td>${cm.eqr_required ? '&#10003; Yes' : '&minus; No'}${cm.eqr_completed_at ? ' &middot; completed ' + new Date(cm.eqr_completed_at).toLocaleDateString() : ''}</td></tr>
+        </tbody></table>`;
+
+        if (cm.going_concern_conclusion) {
+          html += `<h4>Going concern conclusion (ISA 570)</h4>`;
+          html += `<div style="font-size:11px; color:#374151; white-space:pre-wrap; line-height:1.6; margin-bottom:12px;">${esc(cm.going_concern_conclusion)}</div>`;
+        }
+        if (cm.subsequent_events_conclusion) {
+          html += `<h4>Subsequent events (ISA 560)</h4>`;
+          html += `<div style="font-size:11px; color:#374151; white-space:pre-wrap; line-height:1.6; margin-bottom:12px;">${esc(cm.subsequent_events_conclusion)}</div>`;
+        }
+        if (cm.other_matters) {
+          html += `<h4>Other matters</h4>`;
+          html += `<div style="font-size:11px; color:#374151; white-space:pre-wrap; line-height:1.6; margin-bottom:12px;">${esc(cm.other_matters)}</div>`;
+        }
+
+        if (cmAttests.length > 0) {
+          html += '<h4>Partner attestations</h4>';
+          html += '<table><thead><tr><th>Attestation</th><th style="text-align:center; width:50px;">Ack</th><th>By</th><th>At</th></tr></thead><tbody>';
+          cmAttests.forEach(a => {
+            const who = a.acknowledged_by ? (profiles[a.acknowledged_by] || '—') : '—';
+            const when = a.acknowledged_at ? new Date(a.acknowledged_at).toLocaleDateString() : '—';
+            html += `<tr><td>${esc(a.attestation_text || '—')}</td><td style="text-align:center;">${a.is_acknowledged ? '&#10003;' : '&minus;'}</td><td>${esc(who)}</td><td>${when}</td></tr>`;
+          });
+          html += '</tbody></table>';
+        }
       }
 
       // ===== 5. TRIAL BALANCE SUMMARY =====
