@@ -7,10 +7,15 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --primary: #1E3D6B;
-  --primary-hover: #1A3050;
-  --primary-light: #EDF3FA;
-  --accent: #2563AE;
+  /* ---- 60-30-10 palette (2026-05-21 refresh) ----
+     60% — White canvas (body, content)
+     30% — Navy structure (sidebar, primary CTAs, deep headings) — brand match to public marketing site
+     10% — Bright blue pop (links, active states, status accents)
+     Sub-tone within the 60% — Pearl cards (`#F4F4F6`) */
+  --primary: #0A1A2F;
+  --primary-hover: #050D1A;
+  --primary-light: #EEF3FA;
+  --accent: #3A7BFF;
   --success: #177A42;
   --success-light: #EDFAF3;
   --warning: #C47A00;
@@ -19,40 +24,43 @@
   --danger-light: #FEF0F0;
   --returned: #7C3AED;
   --returned-light: #EDE9FE;
-  --gray-50: #EEF1F7;
-  --gray-100: #D9E0EC;
-  --gray-200: #CBD2DF;
-  --gray-300: #B8C3D6;
-  --gray-400: #6B7A96;
-  --gray-500: #4E5E7A;
-  --gray-600: #3D4A63;
-  --gray-700: #2E3750;
-  --gray-800: #1C2130;
-  --gray-900: #0D1626;
+  /* Neutral grey scale — removes the blue cast that made everything feel "meh" */
+  --gray-50: #F5F5F7;
+  --gray-100: #E5E5EA;
+  --gray-200: #D2D2D7;
+  --gray-300: #B8B8C0;
+  --gray-400: #86868B;
+  --gray-500: #6E6E73;
+  --gray-600: #4D4D52;
+  --gray-700: #2C2C2E;
+  --gray-800: #1C1C1E;
+  --gray-900: #0D0D0F;
   --radius: 2px;
   --shadow-sm: none;
   --shadow: none;
   --shadow-md: none;
-  /* ---- Audexon Light Theme — airy pearl/blue ---- */
-  --bg-shell: linear-gradient(145deg, #f0f5ff 0%, #e8f2fb 35%, #f2f6ff 65%, #eaf4f8 100%);
-  --glass-panel: rgba(255,255,255,0.60);
-  --glass-border: rgba(180,205,235,0.45);
+  /* ---- Audexon Light Theme — airy white with brand-navy anchor ---- */
+  --bg-shell: #FAFAFA;
+  --glass-panel: rgba(255,255,255,0.92);
+  --glass-border: rgba(0,0,0,0.06);
   --glass-blur: blur(20px);
-  --orb-1: rgba(186,210,255,0.32);
-  --orb-2: rgba(186,225,245,0.24);
-  --phase-active-color: #2a6fc4;
-  --phase-done-color: #4a8fd4;
-  --phase-locked-color: #aac0d8;
-  --mod-tab-active: #0a2540;
-  --mod-tab-inactive: #8aaac4;
+  /* Soft diffused halo — Antigravity signature. Subtle blue + warm peach
+     instead of bright rainbow — keeps the audit-firm-serious tone. */
+  --orb-1: rgba(180,210,255,0.22);
+  --orb-2: rgba(255,220,210,0.16);
+  --phase-active-color: #0A1A2F;
+  --phase-done-color: #3A7BFF;
+  --phase-locked-color: #C8C8CC;
+  --mod-tab-active: #0A1A2F;
+  --mod-tab-inactive: #86868B;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  background: #F2F4F7;
-  color: #0D1626;
+  background: var(--bg-shell);
+  color: var(--gray-900);
   line-height: 1.5;
   min-height: 100vh;
   font-size: 13px;
@@ -67,7 +75,7 @@ body {
 
 .sidebar {
   width: 220px;
-  background: #0D1626;
+  background: var(--primary);
   color: white;
   padding: 20px 12px;
   display: flex;
@@ -77,7 +85,7 @@ body {
   left: 0;
   bottom: 0;
   z-index: 10;
-  border-right: 1px solid #1A3050;
+  border-right: 1px solid rgba(255,255,255,0.08);
 }
 
 .sidebar-logo {
@@ -120,7 +128,7 @@ body {
 }
 
 .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
-.sidebar-nav a.active { color: white; background: rgba(37,99,174,0.2); border-left: 2px solid #2563AE; }
+.sidebar-nav a.active { color: white; background: rgba(58,123,255,0.18); border-left: 2px solid var(--accent); }
 
 .sidebar-footer {
   padding-top: 16px;
