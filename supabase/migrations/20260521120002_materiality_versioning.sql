@@ -391,12 +391,18 @@ GRANT  EXECUTE ON FUNCTION public.revise_materiality(uuid, uuid) TO authenticate
 -- =========================================================================
 -- ONE-TIME AUTO-MIGRATION: existing engagements with materiality set get a
 -- v1 = approved row created automatically. Idempotent — uses NOT EXISTS
--- check so re-running won't duplicate. SECURITY DEFINER not needed since
--- this runs at migration time as the superuser.
+-- check so re-running won't duplicate.
+--
+-- The CHECK constraint requires approved_by when status='approved'. Since
+-- the legacy engagements.materiality_* columns don't record who originally
+-- set the materiality, we look up an org admin as the synthetic approver.
+-- If no admin exists for that org, we fall back to a draft (partner can
+-- re-approve via the new UI without losing data).
 -- =========================================================================
 DO $migrate$
 DECLARE
   e RECORD;
+  v_admin_id uuid;
 BEGIN
   FOR e IN
     SELECT id, organization_id, materiality_benchmark, materiality_amount,
@@ -410,25 +416,54 @@ BEGIN
       SELECT 1 FROM public.engagement_materiality_versions
       WHERE engagement_id = e.id
     ) THEN
-      INSERT INTO public.engagement_materiality_versions (
-        engagement_id, organization_id, status,
-        benchmark, benchmark_amount,
-        percentage_applied, overall_materiality,
-        performance_materiality_pct, performance_materiality_amount,
-        trivial_pct, trivial_amount,
-        rationale,
-        approved_at,
-        created_at, updated_at
-      ) VALUES (
-        e.id, e.organization_id, 'approved',
-        e.materiality_benchmark, e.materiality_amount,
-        e.materiality_pct, e.materiality_overall,
-        e.materiality_perf_pct, e.materiality_performance,
-        e.materiality_trivial_pct, e.materiality_trivial,
-        e.materiality_rationale,
-        now(),
-        now(), now()
-      );
+      -- Find an admin for this org to attribute as the historical approver
+      SELECT user_id INTO v_admin_id
+      FROM public.organization_members
+      WHERE organization_id = e.organization_id AND role = 'admin'
+      ORDER BY created_at NULLS LAST
+      LIMIT 1;
+
+      IF v_admin_id IS NOT NULL THEN
+        -- Approved-state row with synthetic admin attribution
+        INSERT INTO public.engagement_materiality_versions (
+          engagement_id, organization_id, status,
+          benchmark, benchmark_amount,
+          percentage_applied, overall_materiality,
+          performance_materiality_pct, performance_materiality_amount,
+          trivial_pct, trivial_amount,
+          rationale,
+          approved_by, approved_at,
+          created_by, created_at, updated_at
+        ) VALUES (
+          e.id, e.organization_id, 'approved',
+          e.materiality_benchmark, e.materiality_amount,
+          e.materiality_pct, e.materiality_overall,
+          e.materiality_perf_pct, e.materiality_performance,
+          e.materiality_trivial_pct, e.materiality_trivial,
+          e.materiality_rationale,
+          v_admin_id, now(),
+          v_admin_id, now(), now()
+        );
+      ELSE
+        -- No admin found — create as draft, partner can approve via UI later
+        INSERT INTO public.engagement_materiality_versions (
+          engagement_id, organization_id, status,
+          benchmark, benchmark_amount,
+          percentage_applied, overall_materiality,
+          performance_materiality_pct, performance_materiality_amount,
+          trivial_pct, trivial_amount,
+          rationale,
+          created_at, updated_at
+        ) VALUES (
+          e.id, e.organization_id, 'draft',
+          e.materiality_benchmark, e.materiality_amount,
+          e.materiality_pct, e.materiality_overall,
+          e.materiality_perf_pct, e.materiality_performance,
+          e.materiality_trivial_pct, e.materiality_trivial,
+          e.materiality_rationale,
+          now(), now()
+        );
+      END IF;
     END IF;
   END LOOP;
 END;
