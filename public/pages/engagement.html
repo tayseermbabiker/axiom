@@ -872,17 +872,13 @@
           </div>
           <div class="card-body">
             <p class="text-sm text-muted" style="margin-bottom:20px;">
-              Active modules are linked. Greyed-out modules will be available in the next release.
+              Click any module below to jump straight to it. All planning modules are now active.
             </p>
             <div style="display:flex; flex-direction:column; gap:8px; max-width:480px;">
               <div class="planning-module-row" onclick="switchModuleTab('engagement-acceptance')" style="cursor:pointer;">
                 <span class="badge badge-in-progress">Active</span>
                 <span style="font-size:13px; font-weight:500; margin-left:10px;">Client acceptance / continuance</span>
                 <span class="text-sm text-muted" style="margin-left:auto;">ISA 220</span>
-              </div>
-              <div class="planning-module-row" onclick="switchModuleTab('materiality')" style="cursor:pointer;">
-                <span class="badge badge-in-progress">Active</span>
-                <span style="font-size:13px; font-weight:500; margin-left:10px;">Materiality</span>
               </div>
               <div class="planning-module-row" onclick="switchModuleTab('engagement-letter')" style="cursor:pointer;">
                 <span class="badge badge-in-progress">Active</span>
@@ -894,25 +890,20 @@
                 <span style="font-size:13px; font-weight:500; margin-left:10px;">Independence &amp; ethics</span>
                 <span class="text-sm text-muted" style="margin-left:auto;">ISA 220 · IESBA</span>
               </div>
-              <div class="planning-module-row planning-coming-soon">
-                <span class="badge badge-not-started">Coming soon</span>
-                <span style="font-size:13px; font-weight:500; margin-left:10px;">Understanding the entity</span>
-                <span class="text-sm text-muted" style="margin-left:auto;">ISA 315</span>
-              </div>
-              <div class="planning-module-row planning-coming-soon">
-                <span class="badge badge-not-started">Coming soon</span>
-                <span style="font-size:13px; font-weight:500; margin-left:10px;">Risk assessment &amp; RoMM</span>
-                <span class="text-sm text-muted" style="margin-left:auto;">ISA 315 · 240</span>
-              </div>
-              <div class="planning-module-row planning-coming-soon">
-                <span class="badge badge-not-started">Coming soon</span>
-                <span style="font-size:13px; font-weight:500; margin-left:10px;">Overall audit strategy</span>
+              <div class="planning-module-row" onclick="switchModuleTab('audit-strategy')" style="cursor:pointer;">
+                <span class="badge badge-in-progress">Active</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Audit strategy</span>
                 <span class="text-sm text-muted" style="margin-left:auto;">ISA 300</span>
               </div>
-              <div class="planning-module-row planning-coming-soon">
-                <span class="badge badge-not-started">Coming soon</span>
-                <span style="font-size:13px; font-weight:500; margin-left:10px;">Audit plan — risk linkage</span>
-                <span class="text-sm text-muted" style="margin-left:auto;">ISA 330</span>
+              <div class="planning-module-row" onclick="switchModuleTab('materiality')" style="cursor:pointer;">
+                <span class="badge badge-in-progress">Active</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Materiality</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 320</span>
+              </div>
+              <div class="planning-module-row" onclick="switchModuleTab('risk-assessment')" style="cursor:pointer;">
+                <span class="badge badge-in-progress">Active</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Risk assessment &amp; RoMM</span>
+                <span class="text-sm text-muted" style="margin-left:auto;">ISA 315 · 240 · 330</span>
               </div>
             </div>
           </div>
