@@ -622,15 +622,24 @@
       document.getElementById('r-materiality-perf').textContent  = 'Performance: ' + (engagement.materiality_performance != null
         ? Number(engagement.materiality_performance).toLocaleString() : '—');
 
-      const cls = memo.uncorrected_vs_materiality || 'not_calculated';
+      // Distinguish (a) materiality genuinely not entered yet vs (b) materiality
+      // entered but the misstatement-vs-materiality comparison not yet computed.
+      // Prior code conflated both into "Materiality not yet entered" which
+      // false-positived on engagements that had materiality set but no findings.
+      const hasMateriality = engagement.materiality_overall != null;
+      const cls = !hasMateriality
+        ? 'not_calculated'
+        : (memo.uncorrected_vs_materiality || 'not_calculated');
       const wrap = document.getElementById('materiality-status');
       wrap.className = 'materiality-status ' + cls;
-      const text = {
-        below: 'Uncorrected misstatements are below overall materiality (firm policy threshold — ISA 320 does not prescribe a fixed band).',
-        approaching: 'Uncorrected misstatements are approaching overall materiality (75–100% of overall — heightened review required by firm policy; not an ISA-mandated threshold).',
-        exceeds: 'Uncorrected misstatements EXCEED overall materiality. Resolve before signing per ISA 450.',
-        not_calculated: 'Materiality not yet entered — set it on the Engagement page first.',
-      }[cls];
+      const text = !hasMateriality
+        ? 'Materiality not yet entered — set it on the Engagement page first.'
+        : ({
+            below: 'Uncorrected misstatements are below overall materiality (firm policy threshold — ISA 320 does not prescribe a fixed band).',
+            approaching: 'Uncorrected misstatements are approaching overall materiality (75–100% of overall — heightened review required by firm policy; not an ISA-mandated threshold).',
+            exceeds: 'Uncorrected misstatements EXCEED overall materiality. Resolve before signing per ISA 450.',
+            not_calculated: 'Misstatement vs materiality comparison not yet computed. Recompute by clicking "Refresh System Checks" at the top of this page.',
+          }[cls]);
       document.getElementById('materiality-status-text').textContent = text;
     }
 
