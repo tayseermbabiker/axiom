@@ -169,17 +169,23 @@
     @media print {
       .print-bar { display: none; }
       body { padding: 0; font-size: 10px; max-width: none; margin: 0; }
+      /* Force background colors to print (Chrome dialog default is OFF) */
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       .cover { page-break-after: always; padding: 0; min-height: auto; }
       .cover-body { padding: 64px 56px 0; }
       .wp-header { page-break-inside: avoid; page-break-after: avoid; }
       .proc-block { page-break-inside: avoid; }
       .finding-block { page-break-inside: avoid; }
-      h2 { page-break-after: avoid; page-break-before: always; }
-      h2:first-of-type { page-break-before: avoid; }
-      h4 { page-break-after: avoid; }
+      /* Sections flow naturally — only avoid breaks INSIDE atomic units */
+      h2 { page-break-after: avoid; break-after: avoid; }
+      h4 { page-break-after: avoid; break-after: avoid; }
       .phase-divider { page-break-after: avoid; }
+      table { break-inside: auto; }
+      tr, .risk-group { break-inside: avoid; page-break-inside: avoid; }
       .page-hdr { display: none; }
     }
+    /* Force background printing on cover topbar even outside @media print */
+    .cover-topbar { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
     @media screen {
       body { padding: 0 24px 40px; }
@@ -224,8 +230,9 @@
     }
 
     // Pick the actual signing partner, not just any org admin.
-    // Priority: completion memo signer -> most recent section partner_approved_by -> org admin (last resort).
-    function findEngagementPartner(cm, sections, profiles, profilesRes) {
+    // Priority: completion memo signer -> most recent section partner_approved_by ->
+    // any org admin/owner -> current authenticated user (PDF generator).
+    function findEngagementPartner(cm, sections, profiles, profilesRes, currentUser) {
       if (cm?.signed_by && profiles[cm.signed_by]) return profiles[cm.signed_by];
       const approvedSecs = sections
         .filter(s => s.partner_approved_by && s.partner_approved_at)
@@ -233,8 +240,16 @@
       if (approvedSecs[0] && profiles[approvedSecs[0].partner_approved_by]) {
         return profiles[approvedSecs[0].partner_approved_by];
       }
-      const partnerMember = (profilesRes.data || []).find(m => m.role === 'admin');
-      return partnerMember?.profiles?.full_name || partnerMember?.profiles?.email || null;
+      // Try common admin role variants (handles role string differences across orgs)
+      const adminRoles = ['admin', 'owner', 'partner'];
+      const partnerMember = (profilesRes.data || []).find(m =>
+        m.role && adminRoles.includes(String(m.role).toLowerCase())
+      );
+      if (partnerMember?.profiles) {
+        return partnerMember.profiles.full_name || partnerMember.profiles.email;
+      }
+      // Final fallback: the user generating the PDF (almost always the partner in small firms)
+      return currentUser?.user_metadata?.full_name || currentUser?.email || null;
     }
     function findSupervisor(sections, profiles, profilesRes) {
       const approvedSecs = sections
@@ -243,7 +258,10 @@
       if (approvedSecs[0] && profiles[approvedSecs[0].supervisor_approved_by]) {
         return profiles[approvedSecs[0].supervisor_approved_by];
       }
-      const supervisorMember = (profilesRes.data || []).find(m => m.role === 'supervisor');
+      const supervisorRoles = ['supervisor', 'manager', 'senior'];
+      const supervisorMember = (profilesRes.data || []).find(m =>
+        m.role && supervisorRoles.includes(String(m.role).toLowerCase())
+      );
       return supervisorMember?.profiles?.full_name || supervisorMember?.profiles?.email || null;
     }
 
@@ -336,9 +354,9 @@
       // "Revised materiality" = the active version if v2+. Same row if not revised.
       const matPlanning = matAllVersions[0] || null;
       const matIsRevised = !!(matActive && matPlanning && matActive.id !== matPlanning.id);
-      const matSpecificItems = matActive
-        ? (matItemsRes.data || []).filter(it => it.materiality_version_id === matActive.id)
-        : [];
+      // Keep the full set; filter per-version where the planning vs completion
+      // render decides which version's items to display.
+      const matAllItems = matItemsRes.data || [];
 
       const sections = sectionsRes.data || [];
       const tbLines = tbRes.data || [];
@@ -401,8 +419,10 @@
       const highF = filtFindings.filter(f => f.severity === 'high').length;
       const totalMisstatement = filtFindings.filter(f => f.finding_type === 'misstatement').reduce((s, f) => s + (Number(f.monetary_impact) || 0), 0);
 
-      // Smart partner/supervisor lookup — actual signers preferred over org-role guess
-      const partnerName    = findEngagementPartner(cm, sections, profiles, profilesRes);
+      // Smart partner/supervisor lookup — actual signers preferred over org-role guess.
+      // Falls back to the current authenticated user if nothing else matches (small
+      // firms — almost always the partner is also generating the report).
+      const partnerName    = findEngagementPartner(cm, sections, profiles, profilesRes, currentUser);
       const supervisorName = findSupervisor(sections, profiles, profilesRes);
 
       let html = '';
@@ -506,7 +526,7 @@
         html += `<table><tbody>
           <tr><th style="width:32%;">Type</th><td>${esc(TYPE_LABELS[eaccActive.acceptance_type] || eaccActive.acceptance_type || '—')}</td></tr>
           <tr><th>Decision</th><td>${esc(DEC_LABELS[eaccActive.decision] || eaccActive.decision || '—')} ${statusBadge}</td></tr>
-          <tr><th>Decision date</th><td>${eaccActive.decision_date || '—'}</td></tr>
+          <tr><th>Decision date</th><td>${formatDateLong(eaccActive.decision_date) || '—'}</td></tr>
           <tr><th>Risk tier</th><td>${esc(eaccActive.risk_tier || '—')}</td></tr>
           ${eaccActive.conditions_summary ? `<tr><th>Conditions</th><td>${esc(eaccActive.conditions_summary)}</td></tr>` : ''}
           ${eaccActive.decision_rationale ? `<tr><th>Rationale</th><td>${esc(eaccActive.decision_rationale)}</td></tr>` : ''}
@@ -523,11 +543,11 @@
           : '<span class="badge b-pending">DRAFT</span>';
         html += `<table><tbody>
           <tr><th style="width:32%;">Status</th><td>${statusBadge}</td></tr>
-          <tr><th>Letter date</th><td>${elActive.letter_date || '—'}</td></tr>
-          <tr><th>Signed date</th><td>${elActive.signed_date || '—'}</td></tr>
+          <tr><th>Letter date</th><td>${formatDateLong(elActive.letter_date) || '—'}</td></tr>
+          <tr><th>Signed date</th><td>${formatDateLong(elActive.signed_date) || '—'}</td></tr>
           <tr><th>Client signatory</th><td>${esc(elActive.client_signatory_name || '—')}${elActive.client_signatory_role ? ' (' + esc(elActive.client_signatory_role) + ')' : ''}</td></tr>
           <tr><th>Reporting framework</th><td>${esc(elActive.reporting_framework || '—')}</td></tr>
-          <tr><th>Audit period</th><td>${elActive.audit_period_start || '—'} to ${elActive.audit_period_end || '—'}</td></tr>
+          <tr><th>Audit period</th><td>${formatDateLong(elActive.audit_period_start) || '—'} to ${formatDateLong(elActive.audit_period_end) || '—'}</td></tr>
           ${elActive.file_name ? `<tr><th>Signed file</th><td>${esc(elActive.file_name)}${elActive.file_sha256 ? ' &middot; SHA-256: ' + elActive.file_sha256.slice(0,16) + '...' : ''}</td></tr>` : ''}
         </tbody></table>`;
         html += `<h4>ISA 210.10 minimum elements attested</h4>`;
@@ -548,8 +568,8 @@
           : '<span class="badge b-pending">DRAFT</span>';
         html += `<table><tbody>
           <tr><th style="width:32%;">Status</th><td>${statusBadge}</td></tr>
-          <tr><th>Assessment date</th><td>${eiActive.assessment_date || '—'}</td></tr>
-          <tr><th>Partner attestation</th><td>${eiActive.partner_attestation_made ? '&#10003; ' + (eiActive.partner_attestation_date || '') : '&minus;'}</td></tr>
+          <tr><th>Assessment date</th><td>${formatDateLong(eiActive.assessment_date) || '—'}</td></tr>
+          <tr><th>Partner attestation</th><td>${eiActive.partner_attestation_made ? '&#10003; ' + (formatDateLong(eiActive.partner_attestation_date) || '') : '&minus;'}</td></tr>
           <tr><th>Fee % of firm total</th><td>${eiActive.fee_pct_of_firm_total != null ? eiActive.fee_pct_of_firm_total + '%' : '—'} ${eiActive.fee_dependence_band ? '<span class="badge b-' + (eiActive.fee_dependence_band === 'high' ? 'high' : 'medium') + '">' + eiActive.fee_dependence_band.toUpperCase() + '</span>' : ''}</td></tr>
           ${eiActive.fee_dependence_safeguards ? `<tr><th>Fee dependence safeguards</th><td>${esc(eiActive.fee_dependence_safeguards)}</td></tr>` : ''}
           <tr><th>Partner tenure (years)</th><td>${eiActive.partner_tenure_years != null ? eiActive.partner_tenure_years : '—'} ${eiActive.partner_rotation_required ? '<span class="badge b-medium">ROTATION DUE</span>' : ''}</td></tr>
@@ -557,19 +577,37 @@
           <tr><th>Non-audit services</th><td>${eiActive.no_nas_provided ? 'No NAS provided' : (eiNas.length + ' service(s) recorded')}</td></tr>
           ${eiActive.overall_conclusion ? `<tr><th>Overall conclusion</th><td>${esc(eiActive.overall_conclusion)}</td></tr>` : ''}
         </tbody></table>`;
-        if (eiThreats.length > 0) {
+        // IESBA threats — only render rows that have meaningful content
+        // (filtering avoids the 5-blank-rows look). Show threat category
+        // explicitly even when null so the column has content.
+        const THREAT_CATEGORY_LABELS = {
+          self_interest: 'Self-interest', self_review: 'Self-review',
+          advocacy: 'Advocacy', familiarity: 'Familiarity', intimidation: 'Intimidation'
+        };
+        const meaningfulThreats = (eiThreats || []).filter(t =>
+          t.identified
+          || (t.description && t.description.trim())
+          || (t.safeguards && t.safeguards.trim())
+        );
+        if (meaningfulThreats.length > 0) {
           html += '<h4>IESBA threats assessed</h4>';
           html += '<table><thead><tr><th>Threat category</th><th>Identified?</th><th>Description</th><th>Safeguards</th></tr></thead><tbody>';
-          eiThreats.forEach(t => {
-            html += `<tr><td>${esc((t.threat_category || '').replace(/_/g,' '))}</td><td style="text-align:center;">${t.identified ? '&#10003;' : '&minus;'}</td><td>${esc(t.description || '—')}</td><td>${esc(t.safeguards || '—')}</td></tr>`;
+          meaningfulThreats.forEach(t => {
+            const catLabel = THREAT_CATEGORY_LABELS[t.threat_category]
+              || (t.threat_category ? t.threat_category.replace(/_/g,' ') : 'Unspecified');
+            html += `<tr><td>${esc(catLabel)}</td><td style="text-align:center;">${t.identified ? '&#10003;' : '&minus;'}</td><td>${esc(t.description || '—')}</td><td>${esc(t.safeguards || '—')}</td></tr>`;
           });
           html += '</tbody></table>';
         }
-        if (eiNas.length > 0) {
+        // Non-audit services — only render rows with a service description
+        // (empty rows previously showed "—" for both service and fee, which
+        // looked like data corruption).
+        const meaningfulNas = (eiNas || []).filter(n => n.service_description && n.service_description.trim());
+        if (meaningfulNas.length > 0) {
           html += '<h4>Non-audit services</h4>';
           html += '<table><thead><tr><th>Service</th><th>Fee</th><th>Permitted?</th><th>Safeguards</th></tr></thead><tbody>';
-          eiNas.forEach(n => {
-            html += `<tr><td>${esc(n.service_description || '—')}</td><td>${n.fee_amount != null ? Number(n.fee_amount).toLocaleString() : '—'}</td><td style="text-align:center;">${n.is_permitted ? '&#10003;' : '&#10007;'}</td><td>${esc(n.safeguards || '—')}</td></tr>`;
+          meaningfulNas.forEach(n => {
+            html += `<tr><td>${esc(n.service_description)}</td><td>${n.fee_amount != null ? Number(n.fee_amount).toLocaleString() : '—'}</td><td style="text-align:center;">${n.is_permitted ? '&#10003;' : '&#10007;'}</td><td>${esc(n.safeguards || '—')}</td></tr>`;
           });
           html += '</tbody></table>';
         }
@@ -581,7 +619,7 @@
         const statusBadge = easActive.status === 'approved'
           ? '<span class="badge b-approved">APPROVED</span>'
           : '<span class="badge b-pending">DRAFT</span>';
-        html += `<table><tbody><tr><th style="width:32%;">Status</th><td>${statusBadge} ${easActive.approved_at ? '&middot; ' + new Date(easActive.approved_at).toLocaleDateString() : ''}</td></tr></tbody></table>`;
+        html += `<table><tbody><tr><th style="width:32%;">Status</th><td>${statusBadge} ${easActive.approved_at ? '&middot; ' + formatDateLong(easActive.approved_at) : ''}</td></tr></tbody></table>`;
         const narrSection = (label, val) => val
           ? `<h4>${esc(label)}</h4><div style="font-size:11px; color:#374151; white-space:pre-wrap; margin-bottom:12px; line-height:1.6;">${esc(val)}</div>`
           : '';
@@ -620,7 +658,14 @@
       const fmtMat = (n) => n != null ? Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 }) : '—';
 
       if (matActive || eng.materiality_overall) {
-        const v = matActive || {
+        // Planning report shows v1 (planning materiality, locked at planning).
+        // Completion report shows v_active (revised, if any). The
+        // planning-vs-revised comparison block at the bottom is gated to
+        // reportType === 'completion'.
+        const sourceVersion = reportType === 'planning'
+          ? (matPlanning || matActive)
+          : (matActive || matPlanning);
+        const v = sourceVersion || {
           benchmark: eng.materiality_benchmark,
           benchmark_amount: eng.materiality_amount,
           percentage_applied: eng.materiality_pct,
@@ -636,8 +681,13 @@
         const statusBadge = v.status === 'approved'
           ? `<span class="chip chip-green">Approved${v.approved_at ? ' &middot; ' + formatDateLong(v.approved_at) : ''}</span>`
           : `<span class="chip chip-grey">Draft</span>`;
-        const revisedBadge = matIsRevised
+        // Revised badge only on COMPLETION report; planning report shows v1 as-was.
+        const revisedBadge = (reportType === 'completion' && matIsRevised)
           ? `<span class="chip chip-blue" style="margin-left:6px;">Revised v${matAllVersions.length}</span>`
+          : '';
+        // On planning report when revised, show a small note pointing to completion
+        const planningRevisionNote = (reportType === 'planning' && matIsRevised)
+          ? `<p style="font-size:11px; color:#92400E; margin-top:8px; padding:6px 10px; background:#FFFBEB; border-left:3px solid #92400E;">Note: this materiality was revised on ${formatDateLong(matActive.approved_at) || ''} (v${matAllVersions.length}). The Completion Memorandum shows the revised figures and the audit-strategy reassessment record per ISA 320.12-13.</p>`
           : '';
 
         html += '<h2>Materiality (ISA 320)</h2>';
@@ -653,8 +703,8 @@
           ${v.benchmark_period_reason ? `<tr><th>Reason for non-current period</th><td>${esc(v.benchmark_period_reason)}</td></tr>` : ''}
         </tbody></table>`;
 
-        // Qualitative considerations checklist (ISA 320.A1)
-        if (matActive) {
+        // Qualitative considerations checklist (ISA 320.A1) — read from sourceVersion
+        if (sourceVersion && sourceVersion.id) {
           const qualItems = [
             [v.qual_regulatory_sensitivity,    'Regulatory sensitivity'],
             [v.qual_covenant_compliance,       'Covenant compliance'],
@@ -677,11 +727,14 @@
           }
         }
 
-        // Specific materiality (ISA 320.10)
-        if (matActive && v.has_specific_materiality && matSpecificItems.length > 0) {
+        // Specific materiality (ISA 320.10) — filter items to the sourceVersion
+        const versionSpecificItems = sourceVersion && sourceVersion.id
+          ? matAllItems.filter(it => it.materiality_version_id === sourceVersion.id)
+          : [];
+        if (sourceVersion && sourceVersion.id && v.has_specific_materiality && versionSpecificItems.length > 0) {
           html += '<h4>Specific materiality (ISA 320.10)</h4>';
           html += '<table><thead><tr><th>Class / account / disclosure</th><th style="text-align:right;">Amount</th><th>Rationale</th></tr></thead><tbody>';
-          matSpecificItems.forEach(it => {
+          versionSpecificItems.forEach(it => {
             html += `<tr><td>${esc(it.class_or_account)}</td><td style="text-align:right;">${fmtMat(it.specific_amount)}</td><td>${esc(it.rationale || '—')}</td></tr>`;
           });
           html += '</tbody></table>';
@@ -693,6 +746,11 @@
             ${esc(v.rationale)}
           </div>`;
         }
+
+        // On the Planning report, when materiality was later revised, surface a
+        // small breadcrumb pointing to the Completion Memorandum (where the
+        // revised figures live).
+        if (planningRevisionNote) html += planningRevisionNote;
 
         // Completion report: show planning vs revised comparison if revised
         if (reportType === 'completion' && matIsRevised && matPlanning) {
@@ -741,7 +799,7 @@
         const linkedRiskCount = risks.filter(r => linkedIds.has(r.id)).length;
         const unlinkedSig = risks.filter(r => r.is_significant && !linkedIds.has(r.id)).length;
         const assessBadge = riskAssess && riskAssess.status === 'confirmed'
-          ? `<span class="badge b-approved">CONFIRMED ${riskAssess.confirmed_at ? '&middot; ' + new Date(riskAssess.confirmed_at).toLocaleDateString() : ''}</span>`
+          ? `<span class="badge b-approved">CONFIRMED ${riskAssess.confirmed_at ? '&middot; ' + formatDateLong(riskAssess.confirmed_at) : ''}</span>`
           : `<span class="badge b-pending">DRAFT</span>`;
         html += `<table><tbody>
           <tr><th style="width:32%;">Status</th><td>${assessBadge}</td></tr>
@@ -785,7 +843,9 @@
         });
         sections.filter(s => risksBySection[s.id]).forEach(s => {
           html += `<h4>${esc(s.name)}</h4>`;
-          html += '<table><thead><tr><th>Risk</th><th>Assertion</th><th>Source</th><th>I</th><th>C</th><th>=</th><th>Sig?</th><th>Linked procs</th></tr></thead><tbody>';
+          // Each risk uses its own <tbody class="risk-group"> so the risk
+          // row + overall-response row never split mid-content across pages.
+          html += '<table><thead><tr><th>Risk</th><th>Assertion</th><th>Source</th><th>I</th><th>C</th><th>=</th><th>Sig?</th><th>Linked procs</th></tr></thead>';
           risksBySection[s.id].forEach(r => {
             const linkedProcCount = riskLinks.filter(l => l.risk_id === r.id).length;
             const sigCell = r.is_significant
@@ -795,6 +855,7 @@
             const rebuttedNote = r.presumption_rebutted
               ? `<div style="font-size:9px; color:#065F46; margin-top:3px;"><em>Rebutted (ISA 240.26): ${esc(r.rebuttal_rationale || '')}</em></div>`
               : '';
+            html += '<tbody class="risk-group">';
             html += `<tr>
               <td>${esc(r.risk_description)}${presumedBadge}${rebuttedNote}</td>
               <td>${esc(ASSERT_LABELS[r.assertion] || r.assertion)}</td>
@@ -805,12 +866,12 @@
               <td style="text-align:center;">${sigCell}</td>
               <td style="text-align:center; ${r.is_significant && linkedProcCount === 0 ? 'color:#991B1B; font-weight:700;' : ''}">${linkedProcCount}</td>
             </tr>`;
-            // Show overall response on a sub-row for significant risks
             if (r.is_significant && r.overall_response) {
               html += `<tr><td colspan="8" style="background:#FFFBEB; font-size:10px;"><strong>Overall response (ISA 330.5):</strong> ${esc(r.overall_response)}</td></tr>`;
             }
+            html += '</tbody>';
           });
-          html += '</tbody></table>';
+          html += '</table>';
         });
 
         // Attestations summary
@@ -955,9 +1016,9 @@
         const secNotes = reviewNotes.filter(n => n.section_id === s.id);
 
         // Sign-off info
-        const supApproved = s.supervisor_approved_at ? new Date(s.supervisor_approved_at).toLocaleDateString() : '—';
+        const supApproved = formatDateLong(s.supervisor_approved_at) || '—';
         const supName = s.supervisor_approved_by ? (profiles[s.supervisor_approved_by] || '—') : '—';
-        const partApproved = s.partner_approved_at ? new Date(s.partner_approved_at).toLocaleDateString() : '—';
+        const partApproved = formatDateLong(s.partner_approved_at) || '—';
         const partName2 = s.partner_approved_by ? (profiles[s.partner_approved_by] || '—') : '—';
 
         html += `<div class="wp-section">`;
@@ -1053,7 +1114,7 @@
           html += '<table><thead><tr><th>Reviewer</th><th>Date</th><th>Note</th><th>Type</th></tr></thead><tbody>';
           significantNotes.forEach(n => {
             const who = n.profiles?.full_name || n.profiles?.email || 'User';
-            const date = new Date(n.created_at).toLocaleDateString();
+            const date = formatDateLong(n.created_at) || '—';
             const typeLabel = n.note_type === 'return_reason' ? 'Return' : 'Review';
             html += `<tr><td>${esc(who)}</td><td>${date}</td><td>${esc(n.note)}</td><td>${typeLabel}</td></tr>`;
           });
@@ -1088,7 +1149,7 @@
         const partnerSignedBy = cm.signed_by ? (profiles[cm.signed_by] || '—') : '—';
 
         html += `<table><tbody>
-          <tr><th style="width:32%;">Status</th><td><span class="badge ${cmStatus}">${cmStatusLabel}</span> ${cm.signed_at ? '&middot; signed ' + new Date(cm.signed_at).toLocaleDateString() + ' by ' + esc(partnerSignedBy) : ''}</td></tr>
+          <tr><th style="width:32%;">Status</th><td><span class="badge ${cmStatus}">${cmStatusLabel}</span> ${cm.signed_at ? '&middot; signed ' + formatDateLong(cm.signed_at) + ' by ' + esc(partnerSignedBy) : ''}</td></tr>
           <tr><th>Opinion type</th><td>${esc((cm.opinion_type || '—').toUpperCase())}</td></tr>
           ${cm.opinion_basis_notes ? `<tr><th>Opinion basis</th><td>${esc(cm.opinion_basis_notes)}</td></tr>` : ''}
           <tr><th>Sections approved</th><td>${cm.sections_approved} / ${cm.total_sections}</td></tr>
@@ -1096,7 +1157,7 @@
           <tr><th>Adjusting entries (posted / unposted)</th><td>${cm.posted_adjustments} / ${cm.unposted_adjustments}</td></tr>
           ${cm.overall_materiality_snapshot ? `<tr><th>Materiality (overall / performance)</th><td>${fmt(cm.overall_materiality_snapshot)} / ${fmt(cm.performance_materiality_snapshot)}</td></tr>` : ''}
           ${cm.uncorrected_vs_materiality ? `<tr><th>Uncorrected vs materiality</th><td>${esc(cm.uncorrected_vs_materiality.replace(/_/g, ' '))}</td></tr>` : ''}
-          <tr><th>EQR required</th><td>${cm.eqr_required ? '&#10003; Yes' : '&minus; No'}${cm.eqr_completed_at ? ' &middot; completed ' + new Date(cm.eqr_completed_at).toLocaleDateString() : ''}</td></tr>
+          <tr><th>EQR required</th><td>${cm.eqr_required ? '&#10003; Yes' : '&minus; No'}${cm.eqr_completed_at ? ' &middot; completed ' + formatDateLong(cm.eqr_completed_at) : ''}</td></tr>
         </tbody></table>`;
 
         if (cm.going_concern_conclusion) {
@@ -1117,7 +1178,7 @@
           html += '<table><thead><tr><th>Attestation</th><th style="text-align:center; width:50px;">Ack</th><th>By</th><th>At</th></tr></thead><tbody>';
           cmAttests.forEach(a => {
             const who = a.acknowledged_by ? (profiles[a.acknowledged_by] || '—') : '—';
-            const when = a.acknowledged_at ? new Date(a.acknowledged_at).toLocaleDateString() : '—';
+            const when = formatDateLong(a.acknowledged_at) || '—';
             html += `<tr><td>${esc(a.attestation_text || '—')}</td><td style="text-align:center;">${a.is_acknowledged ? '&#10003;' : '&minus;'}</td><td>${esc(who)}</td><td>${when}</td></tr>`;
           });
           html += '</tbody></table>';
