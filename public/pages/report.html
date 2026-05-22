@@ -1020,6 +1020,9 @@
               <td>${findCell}</td>
               <td>${statusChip(s.status)}</td>
             </tr>`;
+            if (s.engagement_specific_risks) {
+              html += `<tr><td colspan="5" style="background:#FFFBEB; padding:8px 12px; font-size:11px; color:#374151;"><strong style="color:#92400E; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Engagement-specific risks (ISA 330):</strong> ${esc(s.engagement_specific_risks)}</td></tr>`;
+            }
             if (s.conclusion) {
               html += `<tr><td colspan="5" style="background:#FAFAFA; padding:8px 12px; font-size:11px; color:#374151; border-bottom:2px solid #E5E5EA;"><strong style="color:#6E6E73; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Section conclusion:</strong> ${esc(s.conclusion)}</td></tr>`;
             }

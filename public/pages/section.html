@@ -519,6 +519,23 @@
           </div>
         </div>
 
+        <!-- 3B. Engagement-specific risks (ISA 330 — tailoring evidence) -->
+        <div class="content-section" id="sec-specific-risks">
+          <div class="section-card">
+            <div class="card-header">
+              <h2>Significant risks specific to this engagement</h2>
+              <span class="text-sm text-muted">ISA 330 — required before partner sign-off</span>
+            </div>
+            <div class="card-body">
+              <p class="text-sm text-muted" style="margin-bottom:10px;">What in THIS client's specific facts makes the standard procedures above appropriate, or what additional tailoring did you apply? One paragraph. "No engagement-specific risks beyond standard procedures" is acceptable if genuinely true.</p>
+              <div class="form-group" style="margin:0;">
+                <textarea class="form-control" id="specific-risks-text" rows="3" placeholder="e.g. Owner-managed entity with cash-intensive operations; elevated revenue cut-off testing planned. Or: Standard procedures apply — no engagement-specific risks beyond the default set."></textarea>
+              </div>
+              <button class="btn btn-primary btn-sm mt-8" id="btn-save-specific-risks" onclick="saveSpecificRisks()" style="display:none;">Save</button>
+            </div>
+          </div>
+        </div>
+
         <!-- 4. Section Conclusion -->
         <div class="content-section" id="sec-conclusion">
           <div class="section-card">
@@ -838,8 +855,10 @@
       }
       if (can('save_conclusion')) {
         document.getElementById('btn-save-conclusion').style.display = '';
+        document.getElementById('btn-save-specific-risks').style.display = '';
       } else {
         document.getElementById('conclusion-text').disabled = true;
+        document.getElementById('specific-risks-text').disabled = true;
       }
       if (can('edit_section_tags')) {
         document.getElementById('btn-edit-tags').style.display = '';
@@ -2044,6 +2063,22 @@
       alert('Conclusion saved.');
     }
 
+    // ---- Engagement-specific risks (ISA 330 tailoring evidence) ----
+    async function saveSpecificRisks() {
+      if (!can('save_conclusion')) { alert('You do not have permission to edit this section.'); return; }
+      const text = document.getElementById('specific-risks-text').value.trim();
+
+      const { error } = await supabaseClient.from('audit_sections').update({
+        engagement_specific_risks: text || null
+      }).eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.engagement_specific_risks = text;
+      await logActivity(engagementId, 'saved_specific_risks', 'section', sectionId, {});
+      alert('Engagement-specific risks saved.');
+    }
+
     // ---- Review Notes ----
     async function loadReviewNotes() {
       const { data } = await supabaseClient
@@ -2248,6 +2283,20 @@
 
     // ---- Partner gives final approval ----
     async function partnerApprove() {
+      // ISA 330 tailoring evidence: warn (soft) if engagement_specific_risks
+      // hasn't been filled. Doesn't block — partner can override if standard
+      // procedures genuinely cover everything — but flags the gap.
+      const hasSpecificRisks = section.engagement_specific_risks && section.engagement_specific_risks.trim();
+      if (!hasSpecificRisks) {
+        const proceed = await showActionModal({
+          title: 'Engagement-specific risks not documented',
+          message: 'You have not filled in "Significant risks specific to this engagement" for this section. ISA 330 expects partners to articulate client-specific risk tailoring before approval — even if it\'s just "Standard procedures apply, no engagement-specific risks beyond defaults."\n\nApprove anyway, or go back and fill it in?',
+          okLabel: 'Approve anyway',
+          okClass: 'btn-success'
+        });
+        if (!proceed) return;
+      }
+
       const ok = await showActionModal({
         title: 'Final Approval (Partner)',
         message: 'Give final sign-off on this section. This marks it as complete.',
@@ -2422,6 +2471,7 @@
     function applyApprovedState() {
       // Always render conclusion and actions
       document.getElementById('conclusion-text').value = section.conclusion || '';
+      document.getElementById('specific-risks-text').value = section.engagement_specific_risks || '';
       if (section.conclusion_by) {
         resolveProfileName(section.conclusion_by).then(name => {
           document.getElementById('conclusion-meta').textContent = 'Written by ' + name;
@@ -2446,8 +2496,10 @@
         if (can('add_finding')) document.getElementById('btn-add-finding').style.display = '';
         if (can('save_conclusion')) {
           document.getElementById('btn-save-conclusion').style.display = '';
+          document.getElementById('btn-save-specific-risks').style.display = '';
         } else {
           document.getElementById('conclusion-text').disabled = true;
+          document.getElementById('specific-risks-text').disabled = true;
         }
         if (can('add_review_comment') || can('add_preparer_response')) {
           document.getElementById('add-note-area').style.display = '';
