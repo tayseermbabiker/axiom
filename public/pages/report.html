@@ -558,6 +558,24 @@
           <tr><td>Applicable financial reporting framework identified</td><td style="text-align:center;">${elActive.isa_210_framework_identified ? '&#10003;' : '&minus;'}</td></tr>
           <tr><td>Expected form and content of any reports</td><td style="text-align:center;">${elActive.isa_210_report_form_referenced ? '&#10003;' : '&minus;'}</td></tr>
         </tbody></table>`;
+
+        // Reporting considerations (ISA 700 planning-side — 2-AI gap-closure item)
+        if (elActive.expected_report_type || elActive.modification_risk_notes || elActive.report_delivery_target_date) {
+          const REPORT_TYPE_LABELS = {
+            unmodified: 'Unmodified opinion (expected)',
+            qualified:  'Qualified — modification anticipated',
+            adverse:    'Adverse — major issue anticipated',
+            disclaimer: 'Disclaimer of opinion',
+            unknown:    'Unknown — to be assessed'
+          };
+          const typeLabel = REPORT_TYPE_LABELS[elActive.expected_report_type] || elActive.expected_report_type || '—';
+          html += `<h4>Reporting considerations (ISA 700)</h4>`;
+          html += `<table><tbody>
+            <tr><th style="width:32%;">Expected report type</th><td>${esc(typeLabel)}</td></tr>
+            ${elActive.report_delivery_target_date ? `<tr><th>Report delivery target</th><td>${formatDateLong(elActive.report_delivery_target_date) || '—'}</td></tr>` : ''}
+            ${elActive.modification_risk_notes ? `<tr><th>Modification risk notes</th><td>${esc(elActive.modification_risk_notes)}</td></tr>` : ''}
+          </tbody></table>`;
+        }
       }
 
       // Independence & Ethics (ISA 220 R + IESBA)
@@ -636,6 +654,20 @@
           if (easActive.specialists_involved) html += `<tr><th>Specialists</th><td>${esc(easActive.specialists_involved)}</td></tr>`;
           html += `<tr><th>EQR required</th><td>${easActive.eqr_required ? '&#10003; Yes — ' + esc(easActive.eqr_reviewer_name || '(reviewer not named)') : '&minus; No'}</td></tr>`;
           if (easActive.budgeted_hours)       html += `<tr><th>Budgeted hours</th><td>${easActive.budgeted_hours}</td></tr>`;
+          html += '</tbody></table>';
+        }
+        // ISA-specific planning narratives (gap-closure items from 2-AI synthesis)
+        html += narrSection('Internal controls overview (ISA 315.12-26)',         easActive.internal_controls_overview);
+        html += narrSection('Planning analytics (ISA 315.6)',                     easActive.planning_analytics_note);
+        html += narrSection('Going concern — planning assessment (ISA 570)',      easActive.going_concern_planning_note);
+        html += narrSection('Subsequent events — planning approach (ISA 560)',    easActive.subsequent_events_planning_note);
+        // Fraud team discussion (ISA 240.17) — render the structured fields
+        if (easActive.fraud_team_discussion_held || easActive.fraud_team_discussion_date || easActive.fraud_team_discussion_attendees) {
+          html += '<h4>Fraud team discussion (ISA 240.17)</h4>';
+          html += '<table><tbody>';
+          html += `<tr><th style="width:32%;">Discussion held</th><td>${easActive.fraud_team_discussion_held ? '<span class="chip chip-green">Yes</span>' : '<span class="chip chip-red">No — required by ISA 240.17</span>'}</td></tr>`;
+          if (easActive.fraud_team_discussion_date)     html += `<tr><th>Date</th><td>${formatDateLong(easActive.fraud_team_discussion_date) || '—'}</td></tr>`;
+          if (easActive.fraud_team_discussion_attendees) html += `<tr><th>Attendees</th><td>${esc(easActive.fraud_team_discussion_attendees)}</td></tr>`;
           html += '</tbody></table>';
         }
       }

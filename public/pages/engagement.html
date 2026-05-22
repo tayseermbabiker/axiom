@@ -1017,6 +1017,32 @@
                 <textarea id="el-other-terms" class="form-control" rows="2" placeholder="Component auditors, experts, internal audit reliance, group reporting, etc." onchange="markElDirty()"></textarea>
               </div>
 
+              <!-- Section: reporting considerations (ISA 700 planning-side anticipation) -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Reporting considerations (ISA 700)</h3>
+              <p class="text-sm text-muted" style="margin-bottom:8px;">Anticipated reporting at the planning stage. Documented now so any modification risk surfaces early, not at completion.</p>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Expected report type</label>
+                  <select id="el-expected-report-type" class="form-control" onchange="markElDirty()">
+                    <option value="">-- Not yet determined --</option>
+                    <option value="unmodified">Unmodified opinion (expected)</option>
+                    <option value="qualified">Qualified — modification anticipated</option>
+                    <option value="adverse">Adverse — major issue anticipated</option>
+                    <option value="disclaimer">Disclaimer of opinion</option>
+                    <option value="unknown">Unknown — to be assessed</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Report delivery target date</label>
+                  <input type="date" id="el-report-target-date" class="form-control" max="9999-12-31" onchange="markElDirty()">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Modification risk notes</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">If a modification is anticipated, describe the underlying issue and the planned audit response.</small>
+                <textarea id="el-modification-risk" class="form-control" rows="2" placeholder="e.g. Going concern uncertainty due to covenant pressure; plan to seek lender confirmation by [date]." onchange="markElDirty()"></textarea>
+              </div>
+
               <!-- Section: signed PDF -->
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Signed letter (PDF)</h3>
               <div id="el-file-status" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:12px 16px; margin-bottom:12px;">
@@ -1526,7 +1552,57 @@
                 </div>
               </div>
 
-              <!-- Section D: Attestations -->
+              <!-- Section D: ISA-specific planning narratives (gap items from 2-AI synthesis) -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">ISA-specific planning narratives</h3>
+              <p class="text-sm text-muted" style="margin-bottom:8px;">Inspector-required planning items. One short paragraph each is enough for small-firm files.</p>
+
+              <div class="form-group">
+                <label class="text-sm">Internal controls overview (ISA 315.12-26)</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Are we relying on any controls, or purely substantive? One paragraph.</small>
+                <textarea id="eas-internal-controls" class="form-control" rows="2" placeholder="e.g. Entity uses QuickBooks; no ERP; controls considered but no reliance planned — fully substantive approach."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="text-sm">Planning analytics (ISA 315.6)</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Preliminary analytical review at planning — prior year vs current year, key ratios, unusual variances. Most commonly cited deficiency in small-firm inspections.</small>
+                <textarea id="eas-planning-analytics" class="form-control" rows="3" placeholder="e.g. Revenue up 18% YoY, margin stable. AR turnover deteriorated from 45 to 62 days — flag for receivables testing. Cash position halved due to expansion capex."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="text-sm">Going concern — planning assessment (ISA 570)</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Preliminary view at planning: any indicators? Planned procedures? Who's responsible?</small>
+                <textarea id="eas-going-concern" class="form-control" rows="2" placeholder="e.g. No going concern indicators identified at planning; standard procedures planned. Final assessment in Going Concern execution section."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="text-sm">Subsequent events — planning approach (ISA 560)</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">When and how the post-year-end review will be conducted, and by whom.</small>
+                <textarea id="eas-subsequent-events" class="form-control" rows="2" placeholder="e.g. Cut-off review at completion fieldwork; partner to inquire of management 1 week before report sign-off. Detailed procedures in Subsequent Events section."></textarea>
+              </div>
+
+              <!-- Fraud team discussion (ISA 240.17) -->
+              <div style="border:0.5px solid var(--gray-200); border-radius:8px; padding:14px 16px; margin:12px 0; background:rgba(255,255,255,0.55);">
+                <h4 style="font-size:12px; font-weight:600; margin:0 0 8px; color:var(--gray-700); text-transform:uppercase; letter-spacing:0.5px;">Fraud team discussion (ISA 240.17)</h4>
+                <p class="text-sm text-muted" style="margin-bottom:8px;">Required by ISA 240. The engagement team must brainstorm fraud susceptibility during planning. One sentence is enough — just document that it happened.</p>
+                <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; margin-bottom:8px;">
+                  <input type="checkbox" id="eas-fraud-discussion-held" onchange="onEasFraudDiscussionChange()" style="margin-top:3px;">
+                  <span>Fraud team discussion held (ISA 240.17 confirmed)</span>
+                </label>
+                <div id="eas-fraud-discussion-details" style="display:none;">
+                  <div style="display:grid; grid-template-columns:200px 1fr; gap:12px;">
+                    <div class="form-group" style="margin:0;">
+                      <label class="text-sm">Date held</label>
+                      <input type="date" id="eas-fraud-discussion-date" class="form-control" max="9999-12-31">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                      <label class="text-sm">Attendees</label>
+                      <input type="text" id="eas-fraud-discussion-attendees" class="form-control" placeholder="e.g. T. Babiker (Partner), S. Khan (Manager), J. Doe (Senior)">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section E: Attestations -->
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Partner attestations</h3>
               <p class="text-sm text-muted" style="margin-bottom:12px;">All four required before this strategy can be approved.</p>
               <div style="display:flex; flex-direction:column; gap:8px;">
@@ -4726,6 +4802,9 @@
       document.getElementById('el-fees-basis').value       = l.fees_basis || '';
       document.getElementById('el-other-reporting').value  = l.other_reporting_obligations || '';
       document.getElementById('el-other-terms').value      = l.other_terms || '';
+      document.getElementById('el-expected-report-type').value = l.expected_report_type || '';
+      document.getElementById('el-report-target-date').value   = l.report_delivery_target_date || '';
+      document.getElementById('el-modification-risk').value    = l.modification_risk_notes || '';
 
       document.getElementById('el-isa-objective-scope').checked = !!l.isa_210_objective_scope;
       document.getElementById('el-isa-auditor-resp').checked    = !!l.isa_210_auditor_responsibilities;
@@ -4821,6 +4900,9 @@
         fees_basis:                   document.getElementById('el-fees-basis').value.trim() || null,
         other_reporting_obligations:  document.getElementById('el-other-reporting').value.trim() || null,
         other_terms:                  document.getElementById('el-other-terms').value.trim() || null,
+        expected_report_type:         document.getElementById('el-expected-report-type').value || null,
+        report_delivery_target_date:  document.getElementById('el-report-target-date').value || null,
+        modification_risk_notes:      document.getElementById('el-modification-risk').value.trim() || null,
         isa_210_objective_scope:           document.getElementById('el-isa-objective-scope').checked,
         isa_210_auditor_responsibilities:  document.getElementById('el-isa-auditor-resp').checked,
         isa_210_mgmt_responsibilities:     document.getElementById('el-isa-mgmt-resp').checked,
@@ -5852,6 +5934,20 @@
       document.getElementById('eas-att-resources').checked  = !!r.isa_300_resources_assessed;
       document.getElementById('eas-att-team').checked       = !!r.isa_300_team_briefed;
       document.getElementById('eas-att-direction').checked  = !!r.isa_220_direction_supervision_planned;
+      // ISA gap items (2026-05-22 — closed gaps from Perplexity + claude.ai PDF review)
+      document.getElementById('eas-internal-controls').value     = r.internal_controls_overview      || '';
+      document.getElementById('eas-planning-analytics').value    = r.planning_analytics_note         || '';
+      document.getElementById('eas-going-concern').value         = r.going_concern_planning_note     || '';
+      document.getElementById('eas-subsequent-events').value     = r.subsequent_events_planning_note || '';
+      document.getElementById('eas-fraud-discussion-held').checked = !!r.fraud_team_discussion_held;
+      document.getElementById('eas-fraud-discussion-date').value   = r.fraud_team_discussion_date   || '';
+      document.getElementById('eas-fraud-discussion-attendees').value = r.fraud_team_discussion_attendees || '';
+      onEasFraudDiscussionChange();
+    }
+
+    function onEasFraudDiscussionChange() {
+      const on = document.getElementById('eas-fraud-discussion-held').checked;
+      document.getElementById('eas-fraud-discussion-details').style.display = on ? 'block' : 'none';
     }
 
     function renderAuditStrategyApproved() {
@@ -5867,6 +5963,10 @@
       const eqrLine = r.eqr_required
         ? 'EQR required — reviewer: ' + (r.eqr_reviewer_name || '(name not recorded)')
         : 'EQR not required';
+      const fraudLine = r.fraud_team_discussion_held
+        ? '&#10003; Held' + (r.fraud_team_discussion_date ? ' on ' + r.fraud_team_discussion_date : '')
+          + (r.fraud_team_discussion_attendees ? ' &middot; Attendees: ' + escHtml(r.fraud_team_discussion_attendees) : '')
+        : '&minus; Not yet held';
       body.innerHTML =
         section('1. Scope characteristics',                  r.scope_characteristics) +
         section('2. Reporting objectives & timing',          r.reporting_objectives) +
@@ -5876,7 +5976,12 @@
         section('Partner direction (ISA 220 R)',             r.partner_direction_plan) +
         section('Team composition',                          r.team_composition) +
         section('Specialists',                               r.specialists_involved) +
-        `<div style="margin-bottom:16px;"><div style="font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">EQR &amp; budget</div><div style="font-size:13px; color:var(--gray-800);">${escHtml(eqrLine)}${r.budgeted_hours ? ' · Budget: ' + r.budgeted_hours + ' hrs' : ''}</div></div>`;
+        `<div style="margin-bottom:16px;"><div style="font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">EQR &amp; budget</div><div style="font-size:13px; color:var(--gray-800);">${escHtml(eqrLine)}${r.budgeted_hours ? ' · Budget: ' + r.budgeted_hours + ' hrs' : ''}</div></div>` +
+        section('Internal controls overview (ISA 315.12-26)',     r.internal_controls_overview) +
+        section('Planning analytics (ISA 315.6)',                 r.planning_analytics_note) +
+        section('Going concern — planning assessment (ISA 570)',  r.going_concern_planning_note) +
+        section('Subsequent events — planning approach (ISA 560)', r.subsequent_events_planning_note) +
+        `<div style="margin-bottom:16px;"><div style="font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Fraud team discussion (ISA 240.17)</div><div style="font-size:13px; color:var(--gray-800);">${fraudLine}</div></div>`;
     }
 
     function renderAuditStrategyHistory() {
@@ -5939,6 +6044,14 @@
         isa_300_resources_assessed:             document.getElementById('eas-att-resources').checked,
         isa_300_team_briefed:                   document.getElementById('eas-att-team').checked,
         isa_220_direction_supervision_planned:  document.getElementById('eas-att-direction').checked,
+        // ISA gap items
+        internal_controls_overview:             document.getElementById('eas-internal-controls').value.trim()  || null,
+        planning_analytics_note:                document.getElementById('eas-planning-analytics').value.trim() || null,
+        going_concern_planning_note:            document.getElementById('eas-going-concern').value.trim()      || null,
+        subsequent_events_planning_note:        document.getElementById('eas-subsequent-events').value.trim()  || null,
+        fraud_team_discussion_held:             document.getElementById('eas-fraud-discussion-held').checked,
+        fraud_team_discussion_date:             document.getElementById('eas-fraud-discussion-date').value     || null,
+        fraud_team_discussion_attendees:        document.getElementById('eas-fraud-discussion-attendees').value.trim() || null,
       };
     }
 
