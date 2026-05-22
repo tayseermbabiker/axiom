@@ -514,6 +514,17 @@
         name: m.profiles?.full_name || m.profiles?.email || 'Unknown',
         email: m.profiles?.email,
       }));
+      // Fallback: if RLS / profile-row gaps return an empty list (a
+      // recurring staging-vs-prod issue), inject the current user so
+      // dropdowns aren't empty for solo-firm scenarios.
+      if (currentUser && !orgMembers.some(m => m.id === currentUser.id)) {
+        orgMembers.push({
+          id:    currentUser.id,
+          role:  currentRole || 'admin',
+          name:  currentUser.user_metadata?.full_name || currentUser.email || 'Me',
+          email: currentUser.email,
+        });
+      }
     }
 
     async function loadOrCreateMemo() {
