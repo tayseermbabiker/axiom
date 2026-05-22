@@ -572,8 +572,21 @@
 
     async function refreshChecks() {
       if (!memo) return;
-      await supabaseClient.rpc('recompute_attestation_checks', { p_memo_id: memo.id });
-      // Re-fetch memo (rollups updated by trigger) and attestations (system_check_passed updated)
+      // 1. Refresh the memo rollups (sections/findings/AJEs counts). On staging
+      // this RPC may be missing if migration 20260519120005 wasn't applied —
+      // surface the actual error instead of failing silently.
+      const { error: rollupErr } = await supabaseClient.rpc('refresh_completion_memo_rollups', { p_memo_id: memo.id });
+      if (rollupErr) {
+        alert('Rollup refresh failed: ' + rollupErr.message + '\n\nThis usually means the migration 20260519120005_triggers.sql or 20260522120003 was not applied. Send a screenshot to support.');
+        return;
+      }
+      // 2. Recompute attestation system checks
+      const { error: checkErr } = await supabaseClient.rpc('recompute_attestation_checks', { p_memo_id: memo.id });
+      if (checkErr) {
+        alert('System checks failed: ' + checkErr.message);
+        return;
+      }
+      // 3. Re-fetch memo + attestations
       const { data: m } = await supabaseClient
         .from('engagement_completion_memo')
         .select('*')
