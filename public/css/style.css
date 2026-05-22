@@ -7,15 +7,14 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  /* ---- 60-30-10 palette (2026-05-21 refresh) ----
-     60% — White canvas (body, content)
-     30% — Navy structure (sidebar, primary CTAs, deep headings) — brand match to public marketing site
-     10% — Bright blue pop (links, active states, status accents)
-     Sub-tone within the 60% — Pearl cards (`#F4F4F6`) */
-  --primary: #0A1A2F;
-  --primary-hover: #050D1A;
-  --primary-light: #EEF3FA;
-  --accent: #3A7BFF;
+  /* ---- Gemini design system (2026-05-22 refresh) ----
+     Light sidebar + light grey workspace + white floating cards +
+     cobalt primary CTAs. Antigravity-style elevation via diffused
+     box-shadow, no harsh borders. */
+  --primary: #0047AB;             /* Saturated cobalt blue */
+  --primary-hover: #003585;
+  --primary-light: #e8f0fb;       /* Soft blue pill (active nav, button tints) */
+  --accent: #2a6fc4;              /* Slightly softer secondary blue */
   --success: #177A42;
   --success-light: #EDFAF3;
   --warning: #C47A00;
@@ -24,35 +23,37 @@
   --danger-light: #FEF0F0;
   --returned: #7C3AED;
   --returned-light: #EDE9FE;
-  /* Neutral grey scale — removes the blue cast that made everything feel "meh" */
-  --gray-50: #F5F5F7;
-  --gray-100: #E5E5EA;
-  --gray-200: #D2D2D7;
-  --gray-300: #B8B8C0;
-  --gray-400: #86868B;
-  --gray-500: #6E6E73;
-  --gray-600: #4D4D52;
-  --gray-700: #2C2C2E;
-  --gray-800: #1C1C1E;
-  --gray-900: #0D0D0F;
-  --radius: 2px;
-  --shadow-sm: none;
-  --shadow: none;
-  --shadow-md: none;
-  /* ---- Audexon Light Theme — airy white with brand-navy anchor ---- */
-  --bg-shell: #FAFAFA;
-  --glass-panel: rgba(255,255,255,0.92);
+  /* Neutral grey scale with a hint of blue (matches the cobalt accent) */
+  --gray-50: #F5F7FA;
+  --gray-100: #E8ECF1;
+  --gray-200: #D5DBE3;
+  --gray-300: #BAC2CE;
+  --gray-400: #8A95A3;
+  --gray-500: #5c6f84;            /* Gemini muted-text token */
+  --gray-600: #4A5868;
+  --gray-700: #2C3847;
+  --gray-800: #1A2330;
+  --gray-900: #0f2f50;            /* Gemini deep navy for headings */
+  --radius: 12px;                 /* Soft rounded corners across cards/buttons */
+  --shadow-sm: 0 2px 8px rgba(15, 47, 80, 0.04);
+  --shadow:    0 10px 25px -5px rgba(15, 47, 80, 0.05),
+               0 8px 16px -6px rgba(15, 47, 80, 0.03);
+  --shadow-md: 0 12px 30px -5px rgba(15, 47, 80, 0.08);
+  /* ---- Workspace + sidebar backgrounds ---- */
+  --bg-shell: #f3f5f8;            /* Crisp solid neutral workspace */
+  --bg-sidebar: #f8f9fb;          /* Slightly lighter sidebar plane */
+  --glass-panel: #ffffff;         /* Cards are flat opaque white now */
   --glass-border: rgba(0,0,0,0.06);
   --glass-blur: blur(20px);
-  /* Soft diffused halo — Antigravity signature. Subtle blue + warm peach
-     instead of bright rainbow — keeps the audit-firm-serious tone. */
-  --orb-1: rgba(180,210,255,0.22);
-  --orb-2: rgba(255,220,210,0.16);
-  --phase-active-color: #0A1A2F;
-  --phase-done-color: #3A7BFF;
+  /* Decorative orbs from prior refresh — kept but lower opacity so they
+     don't fight the new card shadows */
+  --orb-1: rgba(180,210,255,0.14);
+  --orb-2: rgba(255,220,210,0.10);
+  --phase-active-color: #0047AB;
+  --phase-done-color: #2a6fc4;
   --phase-locked-color: #C8C8CC;
-  --mod-tab-active: #0A1A2F;
-  --mod-tab-inactive: #86868B;
+  --mod-tab-active: #0047AB;
+  --mod-tab-inactive: #5c6f84;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -67,6 +68,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Generous gap between major sections (Gemini "airy" rule) */
+.main-content > * + * { margin-top: 24px; }
+
 /* ---- Layout ---- */
 .app-layout {
   display: flex;
@@ -74,10 +78,10 @@ body {
 }
 
 .sidebar {
-  width: 220px;
-  background: var(--primary);
-  color: white;
-  padding: 20px 12px;
+  width: 260px;
+  background: var(--bg-sidebar);
+  color: var(--gray-900);
+  padding: 24px;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -85,26 +89,27 @@ body {
   left: 0;
   bottom: 0;
   z-index: 10;
-  border-right: 1px solid rgba(255,255,255,0.08);
+  border-right: 1px solid rgba(0,0,0,0.08);
 }
 
 .sidebar-logo {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
-  margin-bottom: 8px;
-  padding: 0 8px;
+  margin-bottom: 4px;
   letter-spacing: 0.02em;
+  color: var(--gray-900);
 }
 
 .sidebar-org {
-  padding: 0 8px 16px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
 }
 
 .sidebar-org-name {
-  font-size: 13px;
-  color: var(--gray-400);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -117,35 +122,41 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  color: #A3BFE0;
+  padding: 10px 16px;
+  color: var(--gray-900);
   text-decoration: none;
-  border-radius: 2px;
-  font-size: 13px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 500;
-  margin-bottom: 1px;
-  transition: all 0.1s;
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
 }
 
-.sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
-.sidebar-nav a.active { color: white; background: rgba(58,123,255,0.18); border-left: 2px solid var(--accent); }
+.sidebar-nav a:hover { background: rgba(0, 71, 171, 0.06); }
+.sidebar-nav a.active {
+  background: var(--primary-light);
+  color: var(--accent);
+  font-weight: 600;
+}
 
 .sidebar-footer {
-  padding-top: 16px;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 20px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  color: var(--gray-600);
 }
 
 .sidebar-footer button {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 16px;
   background: none;
   border: none;
-  color: var(--gray-400);
+  color: var(--gray-600);
   cursor: pointer;
   font-size: 14px;
   text-align: left;
-  border-radius: 6px;
+  border-radius: 8px;
 }
+.sidebar-footer button:hover { background: rgba(0,0,0,0.04); color: var(--gray-900); }
 
 .sidebar-footer button:hover { color: white; background: rgba(255,255,255,0.08); }
 
@@ -176,20 +187,30 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
-  font-size: 12px;
+  padding: 10px 20px;
+  font-size: 13px;
   font-weight: 600;
   border: 1px solid transparent;
-  border-radius: var(--radius);
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.1s;
+  transition: all 0.2s ease;
   text-decoration: none;
   font-family: inherit;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 
-.btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
-.btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 71, 171, 0.2);
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: 0 6px 16px rgba(0, 71, 171, 0.25);
+  transform: translateY(-1px);
+}
 
 .btn-success { background: var(--success); color: white; }
 .btn-success:hover { opacity: 0.9; }
@@ -202,27 +223,57 @@ body {
 
 .btn-outline {
   background: white;
-  color: var(--gray-600);
+  color: var(--gray-700);
   border: 1px solid var(--gray-200);
 }
-.btn-outline:hover { border-color: var(--accent); color: var(--primary); }
+.btn-outline:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
 
-.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-sm { padding: 7px 14px; font-size: 12px; }
 
-/* ---- Cards ---- */
+/* ---- Metric numbers (Gemini hero typography) ---- */
+.metric-number {
+  color: var(--primary);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.metric-label {
+  color: var(--gray-500);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+/* ---- Cards (Gemini "floating" Antigravity-style elevation) ---- */
 .card {
-  background: white;
-  border: 1px solid #CBD2DF;
+  background: var(--glass-panel);
+  border: none;
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Interactive cards (e.g., dashboard tiles) get the lift treatment */
+.card.card-hover:hover,
+a.card:hover,
+.sec-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .card-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid #CBD2DF;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #EEF1F7;
+  background: transparent;
 }
 
 .card-header h2 {
@@ -233,7 +284,7 @@ body {
   color: var(--gray-500);
 }
 
-.card-body { padding: 16px; }
+.card-body { padding: 24px; }
 
 /* ---- Tables ---- */
 .table-wrap { overflow-x: auto; }
@@ -1021,118 +1072,141 @@ body::after {
 }
 
 /* Page header */
-.page-header h1 { color: #0a2540 !important; }
+.page-header h1 { color: var(--gray-900) !important; }
 
-/* Stats row — glass cards */
+/* ==========================================================================
+   GEMINI DESIGN SYSTEM OVERRIDES (2026-05-22)
+   Replaces the prior pearl-glass overrides. Light bg + floating white
+   cards with diffused shadows + cobalt accents. !important is preserved
+   so this block wins against legacy rules and inline styles.
+   ========================================================================== */
+
+/* Stats row — floating white cards */
 .stat-card {
-  background: rgba(255,255,255,0.65) !important;
-  border: 0.5px solid rgba(180,210,240,0.50) !important;
-  border-top: 2.5px solid #4a8fd4 !important;
+  background: #ffffff !important;
+  border: none !important;
   border-radius: 12px !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  transition: all 0.18s !important;
-  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  box-shadow: var(--shadow) !important;
 }
 .stat-card:hover {
-  background: rgba(255,255,255,0.88) !important;
+  background: #ffffff !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 4px 18px rgba(80,140,220,0.08) !important;
-  border-color: rgba(100,170,230,0.45) !important;
+  box-shadow: var(--shadow-md) !important;
 }
-.stat-value { color: #0a2540 !important; }
-.stat-label { color: #8aaac4 !important; }
+.stat-value {
+  color: var(--primary) !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
+.stat-label {
+  color: var(--gray-500) !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-weight: 700 !important;
+}
 
-/* Cards — glass */
+/* Cards — floating white */
 .card {
-  background: rgba(255,255,255,0.60) !important;
-  border: 0.5px solid var(--glass-border) !important;
+  background: #ffffff !important;
+  border: none !important;
   border-radius: 12px !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: var(--shadow) !important;
 }
 .card-header {
-  background: rgba(255,255,255,0.35) !important;
-  border-bottom: 0.5px solid var(--glass-border) !important;
+  background: transparent !important;
+  border-bottom: 1px solid rgba(0,0,0,0.06) !important;
   border-radius: 12px 12px 0 0 !important;
+  padding: 18px 24px !important;
 }
-.card-header h2 { color: #7a9bb8 !important; }
+.card-header h2 { color: var(--gray-700) !important; }
+.card-body { padding: 24px !important; }
 
-/* Buttons */
+/* Buttons — cobalt primary, refined outline */
 .btn-primary {
-  background: #2a6fc4 !important;
-  border-color: #2a6fc4 !important;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
   border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(42,111,196,0.20) !important;
+  box-shadow: 0 4px 12px rgba(0, 71, 171, 0.20) !important;
+  color: #fff !important;
 }
 .btn-primary:hover {
-  background: #1f5db0 !important;
-  border-color: #1f5db0 !important;
-  box-shadow: 0 3px 14px rgba(42,111,196,0.28) !important;
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  box-shadow: 0 6px 16px rgba(0, 71, 171, 0.28) !important;
+  transform: translateY(-1px);
 }
 .btn-outline {
-  background: rgba(255,255,255,0.72) !important;
-  border: 0.5px solid rgba(160,195,230,0.55) !important;
-  color: #2a5f8a !important;
+  background: #ffffff !important;
+  border: 1px solid var(--gray-200) !important;
+  color: var(--gray-700) !important;
   border-radius: 8px !important;
 }
 .btn-outline:hover {
-  background: #fff !important;
-  border-color: rgba(100,160,220,0.60) !important;
-  color: #1a4f85 !important;
+  background: var(--primary-light) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
 }
 
-/* Tables */
+/* Tables — clean neutral */
 table { background: transparent !important; }
 thead th {
-  background: rgba(240,246,255,0.70) !important;
-  color: #7a9bb8 !important;
-  border-bottom: 0.5px solid var(--glass-border) !important;
+  background: var(--gray-50) !important;
+  color: var(--gray-500) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.08) !important;
 }
-tbody td { border-bottom: 0.5px solid rgba(180,210,240,0.30) !important; }
-tbody tr:hover { background: rgba(230,241,255,0.45) !important; }
+tbody td { border-bottom: 1px solid rgba(0,0,0,0.05) !important; }
+tbody tr:hover { background: var(--gray-50) !important; }
 
 /* Modal */
 .modal {
   border-radius: 14px !important;
-  backdrop-filter: blur(20px) !important;
-  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: none !important;
+  background: #ffffff !important;
+  box-shadow: 0 20px 60px -10px rgba(15, 47, 80, 0.18) !important;
 }
-.modal-header { border-bottom-color: var(--glass-border) !important; }
-.modal-footer { border-top-color: var(--glass-border) !important; }
+.modal-header { border-bottom-color: rgba(0,0,0,0.06) !important; }
+.modal-footer { border-top-color: rgba(0,0,0,0.06) !important; }
 
 /* Folder reminder banner */
 #folder-reminder-banner {
-  background: rgba(255,250,225,0.85) !important;
-  border: 0.5px solid rgba(210,175,50,0.30) !important;
+  background: #FFFBEB !important;
+  border: 1px solid #FDE68A !important;
   border-radius: 10px !important;
-  backdrop-filter: blur(8px) !important;
+  backdrop-filter: none !important;
 }
 
 /* Engagement section cards */
 .sec-card {
-  background: rgba(255,255,255,0.65) !important;
-  border: 0.5px solid var(--glass-border) !important;
+  background: #ffffff !important;
+  border: none !important;
   border-radius: 12px !important;
-  backdrop-filter: blur(12px) !important;
-  box-shadow: none !important;
+  backdrop-filter: none !important;
+  box-shadow: var(--shadow) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 .sec-card:hover {
-  box-shadow: 0 4px 18px rgba(80,140,220,0.09) !important;
-  border-color: rgba(100,170,230,0.45) !important;
+  box-shadow: var(--shadow-md) !important;
   transform: translateY(-2px) !important;
 }
 
 /* Finding cards */
 .finding-card-eng {
-  background: rgba(255,255,255,0.65) !important;
-  border: 0.5px solid var(--glass-border) !important;
+  background: #ffffff !important;
+  border: none !important;
   border-radius: 12px !important;
-  box-shadow: none !important;
+  box-shadow: var(--shadow) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 .finding-card-eng:hover {
-  box-shadow: 0 4px 18px rgba(80,140,220,0.09) !important;
-  transform: translateY(-1px) !important;
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-2px) !important;
 }
 
 /* ---- PHASE STEPPER (new) ---- */
