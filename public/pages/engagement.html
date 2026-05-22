@@ -3567,11 +3567,30 @@
         const canReassign = can('reassign_section');
         let assigneeControl;
         if (canReassign) {
-          const opts = orgMembers.map(m => {
+          // Build a deduped list: orgMembers + currentUser fallback.
+          // Some staging orgs hit RLS or profile-row gaps that make orgMembers
+          // come back empty even though the user is clearly a member — so we
+          // always inject currentUser if not already in the list.
+          const seen = new Set();
+          const members = [];
+          orgMembers.forEach(m => {
             const uid = m.profiles?.id || m.user_id;
-            const name = m.profiles?.full_name || m.profiles?.email || 'Unknown';
-            return `<option value="${uid}"${uid === sec.assigned_to ? ' selected' : ''}>${escHtml(name)}</option>`;
-          }).join('');
+            if (!uid || seen.has(uid)) return;
+            seen.add(uid);
+            members.push({
+              uid,
+              name: m.profiles?.full_name || m.profiles?.email || 'Unknown',
+            });
+          });
+          if (currentUser && !seen.has(currentUser.id)) {
+            members.push({
+              uid: currentUser.id,
+              name: currentUser.user_metadata?.full_name || currentUser.email || 'Me',
+            });
+          }
+          const opts = members.map(m =>
+            `<option value="${m.uid}"${m.uid === sec.assigned_to ? ' selected' : ''}>${escHtml(m.name)}</option>`
+          ).join('');
           assigneeControl = `<span class="sec-card-assignee-wrap" onclick="event.stopPropagation(); event.preventDefault();" style="display:inline-flex;"><select class="sec-card-assignee-select" title="Reassign section" onchange="reassignSection('${sec.id}', this.value, '${sec.assigned_to || ''}')" onclick="event.stopPropagation();" style="font-size:11px; padding:2px 6px; max-width:140px; border-radius:6px; border:1px solid var(--gray-200); background:#fff; color:var(--gray-700); cursor:pointer;"><option value=""${!sec.assigned_to ? ' selected' : ''}>— Unassigned —</option>${opts}</select></span>`;
         } else {
           assigneeControl = `<div class="sec-card-avatar${assignedName ? '' : ' unassigned'}" title="${assignedName || 'Unassigned'}">${initials}</div>`;
