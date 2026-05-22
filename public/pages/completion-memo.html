@@ -718,9 +718,28 @@
         check.className = checkClass;
         check.textContent = checkChar;
 
-        if (!isLocked && (sysOK || isManual) && currentRole === 'admin') {
+        // The partner can always tick an attestation. System checks are
+        // helpful automation, not hard gates — when sysOK is false (e.g.
+        // the underlying section was deleted, or the auto-check is wrong
+        // for this engagement's facts), the partner can manually override
+        // with a confirm dialog. The override is recorded with attested_by
+        // + attested_at so an inspector can see who took responsibility.
+        if (!isLocked && currentRole === 'admin') {
           check.style.cursor = 'pointer';
-          check.onclick = () => toggleAttestation(a);
+          check.onclick = () => {
+            if (!ticked && !sysOK && !isManual) {
+              const ok = confirm(
+                'System check did NOT pass for this attestation:\n\n  "' +
+                (a.source_check || humaniseKey(a.attestation_key)) +
+                '"\n\nThis usually means the underlying section or condition is missing. ' +
+                'As the engagement partner, you can manually attest based on professional judgement ' +
+                '(e.g., the work was performed under a different section name, or N/A to this engagement).\n\n' +
+                'Override and attest anyway?'
+              );
+              if (!ok) return;
+            }
+            toggleAttestation(a);
+          };
         }
 
         const body = document.createElement('div');
