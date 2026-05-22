@@ -3020,6 +3020,19 @@
 
       currentPhase = phase;
 
+      // Read execution progress from existing stats — used to decide
+      // whether to re-lock conclusion when switching phases. Without this,
+      // switchPhase blindly re-applied 'locked' to conclusion even when
+      // every section was approved.
+      const approvedEl = document.getElementById('stat-approved');
+      let execApproved = 0, execTotal = 0;
+      if (approvedEl) {
+        const parts = approvedEl.textContent.split('/');
+        execApproved = parseInt(parts[0]) || 0;
+        execTotal    = parseInt(parts[1]) || 0;
+      }
+      const execComplete = execTotal > 0 && execApproved >= execTotal;
+
       // Update stepper button states
       ['planning', 'execution', 'conclusion'].forEach(p => {
         const btn = document.getElementById('phase-btn-' + p);
@@ -3031,21 +3044,23 @@
           btn.classList.add('done');
           const numEl = btn.querySelector('.step-num');
           if (numEl) numEl.textContent = '✓';
-        } else if (p === 'conclusion' && phase === 'planning') {
-          btn.classList.add('locked');
-        } else if (p === 'conclusion' && phase === 'execution') {
+        } else if (p === 'conclusion' && !execComplete) {
+          // Only lock conclusion when execution is not actually complete
           btn.classList.add('locked');
         }
       });
 
-      // Restore execution step number (it gets set to ✓ when on conclusion)
-      if (phase !== 'conclusion') {
-        const execNum = document.getElementById('step-num-execution');
-        if (execNum && phase === 'conclusion') execNum.textContent = '✓';
-        if (execNum && phase !== 'conclusion') execNum.textContent = '2';
-      }
+      // Step numbers
+      const execNum = document.getElementById('step-num-execution');
+      if (execNum) execNum.textContent = phase === 'conclusion' ? '✓' : '2';
       const planNum = document.getElementById('step-num-planning');
       if (planNum) planNum.textContent = phase === 'planning' ? '1' : '✓';
+
+      // Step sub-labels — keep them honest as state changes
+      const planSub = document.getElementById('step-sub-planning');
+      if (planSub) planSub.textContent = phase === 'planning' ? 'In progress' : 'Done';
+      const concSub = document.getElementById('step-sub-conclusion');
+      if (concSub) concSub.textContent = execComplete ? 'Unlocked' : 'Locked';
 
       // Render module tabs for this phase
       renderModuleTabs(phase);
@@ -3091,10 +3106,23 @@
       const execSub = document.getElementById('step-sub-execution');
       if (execSub) execSub.textContent = approvedCount + ' of ' + totalCount + ' sections done';
 
-      // Unlock conclusion if all done
+      // Unlock conclusion if all done — and keep its sub-label honest
       const conclusionBtn = document.getElementById('phase-btn-conclusion');
-      if (conclusionBtn && approvedCount >= totalCount && totalCount > 0) {
-        conclusionBtn.classList.remove('locked');
+      const concSubProg = document.getElementById('step-sub-conclusion');
+      const execComplete = totalCount > 0 && approvedCount >= totalCount;
+      if (conclusionBtn) {
+        if (execComplete) {
+          conclusionBtn.classList.remove('locked');
+        } else if (currentPhase !== 'conclusion') {
+          conclusionBtn.classList.add('locked');
+        }
+      }
+      if (concSubProg) concSubProg.textContent = execComplete ? 'Unlocked' : 'Locked';
+
+      // Planning sub-label: once approved sections exist, planning is "Done"
+      const planSubProg = document.getElementById('step-sub-planning');
+      if (planSubProg && currentPhase !== 'planning') {
+        planSubProg.textContent = approvedCount > 0 ? 'Done' : 'Not started';
       }
 
       // Update conclusion locked/unlocked message
