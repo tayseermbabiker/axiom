@@ -1317,5 +1317,7 @@ tbody tr:hover { background: rgba(230,241,255,0.45) !important; }
 /* Legacy dot — hidden; the pill does the job now */
 .module-tab-dot { display: none; }
 
-/* Hide OLD flat .tabs bar — replaced by module-nav */
-.tabs { display: none !important; }
+/* NOTE: previously had `.tabs { display: none !important; }` here to hide
+   the old engagement-page tabs bar. Removed 2026-05-22 — engagement.html
+   no longer uses the .tabs class (replaced by .module-nav), and the
+   global rule was hiding the completion-memo page's tabs row too. */
