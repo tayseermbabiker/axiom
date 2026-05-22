@@ -1765,43 +1765,18 @@
             </div>
             <div id="conclusion-modules" style="display:none;">
               <p class="text-sm text-muted" style="margin-bottom:20px;">
-                Execution complete. Work through the conclusion modules below.
+                Click a module below to jump straight to it. The Completion Memo covers acceptance/independence/strategy/materiality/risk recap, findings, attestations, going concern, subsequent events, opinion, and EQR — all in one ISA-aligned workpaper.
               </p>
               <div style="display:flex; flex-direction:column; gap:8px; max-width:480px;">
-                <div class="planning-module-row planning-coming-soon">
-                  <span class="badge badge-not-started">Coming soon</span>
-                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Engagement conclusion</span>
-                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 220 · 450</span>
-                </div>
-                <div class="planning-module-row planning-coming-soon">
-                  <span class="badge badge-not-started">Coming soon</span>
-                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Subsequent events</span>
-                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 560</span>
-                </div>
-                <div class="planning-module-row planning-coming-soon">
-                  <span class="badge badge-not-started">Coming soon</span>
-                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Going concern conclusion</span>
-                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 570</span>
-                </div>
-                <div class="planning-module-row planning-coming-soon">
-                  <span class="badge badge-not-started">Coming soon</span>
-                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Management representation letter</span>
-                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 580</span>
-                </div>
-                <div class="planning-module-row planning-coming-soon">
-                  <span class="badge badge-not-started">Coming soon</span>
-                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Communication with TCWG</span>
-                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 260 · 265</span>
-                </div>
-                <div class="planning-module-row planning-coming-soon">
-                  <span class="badge badge-not-started">Coming soon</span>
-                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Audit opinion drafting</span>
-                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 700 · 705 · 706</span>
-                </div>
-                <div class="planning-module-row planning-coming-soon">
-                  <span class="badge badge-not-started">Coming soon</span>
-                  <span style="font-size:13px; font-weight:500; margin-left:10px;">EQCR review</span>
-                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 220 revised</span>
+                <a href="completion-memo.html" id="conclusion-link-memo" class="planning-module-row" style="cursor:pointer; text-decoration:none; color:inherit;">
+                  <span class="badge badge-in-progress">Active</span>
+                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Completion Memo</span>
+                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 220 · 450 · 560 · 570 · 580 · 700</span>
+                </a>
+                <div class="planning-module-row" onclick="exportReport('completion')" style="cursor:pointer;">
+                  <span class="badge badge-in-progress">Active</span>
+                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Completion PDF (partner-facing)</span>
+                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 700</span>
                 </div>
               </div>
             </div>
@@ -2409,6 +2384,11 @@
       if (memoBtn && currentRole === 'admin') {
         memoBtn.href = 'completion-memo.html#' + engagementId;
         memoBtn.style.display = '';
+      }
+      // Conclusion-phase Overview body — also point Completion Memo card at this engagement
+      const memoLink = document.getElementById('conclusion-link-memo');
+      if (memoLink) {
+        memoLink.href = 'completion-memo.html#' + engagementId;
       }
 
       // Local Compliance nav: admin + Pro only
