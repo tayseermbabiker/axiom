@@ -2216,6 +2216,11 @@
         if (['ready_for_partner_review', 'in_partner_review'].includes(status)) {
           actionBtns += '<button class="btn btn-success btn-sm" onclick="partnerApprove()">Final Approve (Partner)</button>';
           actionBtns += '<button class="btn btn-returned btn-sm" onclick="returnToSupervisor()">Return to Supervisor</button>';
+        } else if (['not_started', 'in_progress', 'returned_to_preparer', 'returned_to_supervisor'].includes(status)) {
+          // Solo-firm shortcut: partner can direct-approve without
+          // routing through supervisor. Skip-the-chain button for
+          // engagements where the partner is also doing the work.
+          actionBtns += '<button class="btn btn-success btn-sm" onclick="partnerApprove()" title="Skip supervisor review and approve directly (solo-firm shortcut)">Final Approve (Partner)</button>';
         }
       }
 
