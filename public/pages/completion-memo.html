@@ -22,9 +22,10 @@
     .memo-status-complete{ background: var(--primary-light); color: var(--primary); }
     .memo-status-locked  { background: var(--success-light); color: var(--success); }
 
-    /* Tabs */
+    /* Tabs — !important defends against any global .tabs override
+       (was hidden by a stale display:none in style.css until 2026-05-22) */
     .tabs {
-      display: flex;
+      display: flex !important;
       gap: 0;
       border-bottom: 2px solid var(--gray-200);
       margin-bottom: 24px;
