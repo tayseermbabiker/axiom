@@ -237,6 +237,9 @@
     .access-blocked h2 { color: var(--gray-900); margin-bottom: 8px; }
     .access-blocked p  { color: var(--gray-700); margin-bottom: 16px; }
   </style>
+  <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
+  <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
+  <script src="../js/sentry-init.js"></script>
 </head>
 <body>
   <div class="app-layout">
