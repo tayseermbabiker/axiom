@@ -401,13 +401,40 @@
             </div>
 
             <div id="eqr-fields" style="display:none; padding-top:16px; border-top:1px solid var(--gray-200);">
-              <div class="narrative-field">
-                <label for="eqr-reviewer">Engagement Quality Reviewer</label>
+
+              <!-- External-EQR toggle (ISA 220 R common for small firms) -->
+              <div style="margin-bottom:16px;">
+                <label style="display:flex; align-items:center; gap:10px; font-size:13px; font-weight:500; color:var(--gray-700);">
+                  <input type="checkbox" id="eqr-is-external" onchange="toggleEqrExternal()" style="width:16px; height:16px;">
+                  External EQR (reviewer is outside this firm)
+                </label>
+                <div class="hint" style="margin-top:6px; font-size:12px; color:var(--gray-500);">
+                  Small firms commonly engage an external EQR (another firm's partner, freelance senior, or network resource) when no internal reviewer is independent of the engagement.
+                </div>
+              </div>
+
+              <!-- Internal reviewer dropdown (default mode) -->
+              <div id="eqr-internal-block" class="narrative-field">
+                <label for="eqr-reviewer">Engagement Quality Reviewer (internal)</label>
                 <select id="eqr-reviewer" style="width:100%; max-width:400px; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px;">
                   <option value="">— Select reviewer —</option>
                 </select>
-                <div class="hint">Must be different from the engagement admin (partner).</div>
+                <div class="hint">Must be different from the engagement admin (partner) per ISA 220 (Revised).</div>
               </div>
+
+              <!-- External reviewer fields (shown when toggle is on) -->
+              <div id="eqr-external-block" style="display:none;">
+                <div class="narrative-field" style="margin-bottom:12px;">
+                  <label for="eqr-external-name">External reviewer — full name *</label>
+                  <input type="text" id="eqr-external-name" style="width:100%; max-width:400px; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px;" placeholder="e.g. Mohammed Al-Sayed">
+                </div>
+                <div class="narrative-field">
+                  <label for="eqr-external-firm">External reviewer — firm / qualification</label>
+                  <input type="text" id="eqr-external-firm" style="width:100%; max-width:400px; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px;" placeholder="e.g. Al-Sayed CPAs / CPA, 20 yrs audit experience">
+                  <div class="hint">Optional — firm name, qualification, or basis of independence.</div>
+                </div>
+              </div>
+
               <div style="margin-top:16px;">
                 <button class="btn btn-primary btn-sm" onclick="saveEqrReviewer()">Save Reviewer</button>
                 <button class="btn btn-outline btn-sm" id="btn-mark-eqr-complete" onclick="markEqrComplete()" style="margin-left:8px;">Mark EQR Complete</button>
@@ -776,6 +803,13 @@
       document.getElementById('eqr-required').checked = !!memo.eqr_required;
       document.getElementById('eqr-fields').style.display = memo.eqr_required ? 'block' : 'none';
 
+      // External vs internal reviewer mode
+      const isExternal = !!memo.eqr_is_external;
+      document.getElementById('eqr-is-external').checked = isExternal;
+      document.getElementById('eqr-internal-block').style.display = isExternal ? 'none' : 'block';
+      document.getElementById('eqr-external-block').style.display = isExternal ? 'block' : 'none';
+
+      // Internal dropdown — exclude the engagement partner (ISA 220 R)
       const select = document.getElementById('eqr-reviewer');
       select.innerHTML = '<option value="">— Select reviewer —</option>';
       orgMembers.forEach(m => {
@@ -786,10 +820,20 @@
         select.appendChild(opt);
       });
 
+      // External fields
+      document.getElementById('eqr-external-name').value = memo.eqr_external_reviewer_name || '';
+      document.getElementById('eqr-external-firm').value = memo.eqr_external_reviewer_firm || '';
+
       const status = document.getElementById('eqr-status');
       if (memo.eqr_completed_at) {
-        const reviewer = orgMembers.find(m => m.id === memo.eqr_completed_by)?.name || 'unknown';
-        status.textContent = `EQR completed by ${reviewer} on ${new Date(memo.eqr_completed_at).toLocaleString()}.`;
+        let reviewerLabel;
+        if (memo.eqr_is_external) {
+          reviewerLabel = memo.eqr_external_reviewer_name || '(external reviewer)';
+          if (memo.eqr_external_reviewer_firm) reviewerLabel += ' — ' + memo.eqr_external_reviewer_firm;
+        } else {
+          reviewerLabel = orgMembers.find(m => m.id === memo.eqr_reviewer_id)?.name || 'unknown';
+        }
+        status.textContent = `EQR completed by ${reviewerLabel} on ${new Date(memo.eqr_completed_at).toLocaleString()}.`;
       } else {
         status.textContent = '';
       }
@@ -797,8 +841,17 @@
       if (isLocked) {
         document.getElementById('eqr-required').disabled = true;
         document.getElementById('eqr-reviewer').disabled = true;
+        document.getElementById('eqr-is-external').disabled = true;
+        document.getElementById('eqr-external-name').disabled = true;
+        document.getElementById('eqr-external-firm').disabled = true;
         document.getElementById('btn-mark-eqr-complete').disabled = true;
       }
+    }
+
+    function toggleEqrExternal() {
+      const isExternal = document.getElementById('eqr-is-external').checked;
+      document.getElementById('eqr-internal-block').style.display = isExternal ? 'none' : 'block';
+      document.getElementById('eqr-external-block').style.display = isExternal ? 'block' : 'none';
     }
 
     function renderSignoffBar() {
@@ -903,27 +956,67 @@
 
     async function saveEqrReviewer() {
       const msg = document.getElementById('eqr-save-msg');
-      const reviewerId = document.getElementById('eqr-reviewer').value || null;
-      if (reviewerId && engagement.created_by && reviewerId === engagement.created_by) {
-        msg.textContent = 'Reviewer should not be the engagement admin.';
-        return;
+      const isExternal = document.getElementById('eqr-is-external').checked;
+
+      let payload;
+      if (isExternal) {
+        const extName = document.getElementById('eqr-external-name').value.trim();
+        const extFirm = document.getElementById('eqr-external-firm').value.trim();
+        if (!extName) {
+          msg.textContent = 'External reviewer name is required.';
+          return;
+        }
+        payload = {
+          eqr_is_external:            true,
+          eqr_external_reviewer_name: extName,
+          eqr_external_reviewer_firm: extFirm || null,
+          eqr_reviewer_id:            null,
+        };
+      } else {
+        const reviewerId = document.getElementById('eqr-reviewer').value || null;
+        if (reviewerId && engagement.created_by && reviewerId === engagement.created_by) {
+          msg.textContent = 'Reviewer must be different from the engagement partner (ISA 220 R). Use "External EQR" if no other internal reviewer is independent.';
+          return;
+        }
+        payload = {
+          eqr_is_external:            false,
+          eqr_external_reviewer_name: null,
+          eqr_external_reviewer_firm: null,
+          eqr_reviewer_id:            reviewerId,
+        };
       }
+
       const { error } = await supabaseClient
         .from('engagement_completion_memo')
-        .update({ eqr_reviewer_id: reviewerId })
+        .update(payload)
         .eq('id', memo.id);
-      msg.textContent = error ? ('Save failed: ' + error.message) : 'Saved.';
-      if (!error) memo.eqr_reviewer_id = reviewerId;
+      if (error) {
+        msg.textContent = 'Save failed: ' + error.message;
+        return;
+      }
+      Object.assign(memo, payload);
+      msg.textContent = 'Saved.';
+      renderEqr();
     }
 
     async function markEqrComplete() {
-      if (!memo.eqr_reviewer_id) {
-        alert('Assign a reviewer first.');
-        return;
-      }
-      if (currentUser.id !== memo.eqr_reviewer_id) {
-        alert('Only the assigned EQR reviewer can mark this complete.');
-        return;
+      // External mode: partner stamps that the external EQR happened
+      // (the partner attests on behalf of the external reviewer who isn't
+      // a Supabase user). Internal mode: only the assigned reviewer can stamp.
+      if (memo.eqr_is_external) {
+        if (!memo.eqr_external_reviewer_name) {
+          alert('Save the external reviewer name first.');
+          return;
+        }
+      } else {
+        if (!memo.eqr_reviewer_id) {
+          alert('Assign a reviewer first.');
+          return;
+        }
+        if (currentUser.id !== memo.eqr_reviewer_id) {
+          alert('Only the assigned EQR reviewer can mark this complete. (External EQR? Toggle "External EQR" above.)');
+          return;
+        }
       }
       const { error } = await supabaseClient
         .from('engagement_completion_memo')
