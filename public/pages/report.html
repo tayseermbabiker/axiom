@@ -1195,14 +1195,74 @@
           <tr><th>EQR required</th><td>${cm.eqr_required ? '&#10003; Yes' : '&minus; No'}${cm.eqr_completed_at ? ' &middot; completed ' + formatDateLong(cm.eqr_completed_at) : ''}</td></tr>
         </tbody></table>`;
 
-        if (cm.going_concern_conclusion) {
-          html += `<h4>Going concern conclusion (ISA 570)</h4>`;
-          html += `<div style="font-size:11px; color:#374151; white-space:pre-wrap; line-height:1.6; margin-bottom:12px;">${esc(cm.going_concern_conclusion)}</div>`;
+        // ----- ISA 570 — Going Concern (structured assessment + rationale) -----
+        if (cm.going_concern_assessment || cm.going_concern_conclusion) {
+          const GC_LABELS = {
+            no_uncertainty:                  'No material uncertainty identified',
+            identified_disclosed:            'Material uncertainty identified — adequately disclosed',
+            identified_adverse_implications: 'Material uncertainty identified — adverse / disclaimer implications'
+          };
+          const gcLabel = GC_LABELS[cm.going_concern_assessment] || cm.going_concern_assessment || '—';
+          html += `<h4>Going concern (ISA 570)</h4>`;
+          html += `<table><tbody>
+            <tr><th style="width:32%;">Assessment</th><td>${esc(gcLabel)}</td></tr>
+            ${cm.going_concern_conclusion ? `<tr><th>Rationale</th><td style="white-space:pre-wrap;">${esc(cm.going_concern_conclusion)}</td></tr>` : ''}
+          </tbody></table>`;
         }
-        if (cm.subsequent_events_conclusion) {
+
+        // ----- ISA 560 — Subsequent Events (structured: procedures + review-through + identified + conclusion) -----
+        if (cm.subseq_events_procedures || cm.subseq_events_review_through || cm.subsequent_events_conclusion) {
           html += `<h4>Subsequent events (ISA 560)</h4>`;
-          html += `<div style="font-size:11px; color:#374151; white-space:pre-wrap; line-height:1.6; margin-bottom:12px;">${esc(cm.subsequent_events_conclusion)}</div>`;
+          html += `<table><tbody>
+            ${cm.subseq_events_procedures ? `<tr><th style="width:32%;">Procedures performed</th><td style="white-space:pre-wrap;">${esc(cm.subseq_events_procedures)}</td></tr>` : ''}
+            ${cm.subseq_events_review_through ? `<tr><th>Reviewed through date</th><td>${formatDateLong(cm.subseq_events_review_through) || '—'}</td></tr>` : ''}
+            <tr><th>Events identified</th><td>${cm.subseq_events_identified ? '&#10003; Yes' : '&minus; No'}</td></tr>
+            ${cm.subsequent_events_conclusion ? `<tr><th>Conclusion</th><td style="white-space:pre-wrap;">${esc(cm.subsequent_events_conclusion)}</td></tr>` : ''}
+          </tbody></table>`;
         }
+
+        // ----- ISA 520 — Final Analytical Review -----
+        if (cm.final_analytical_review_conclusion) {
+          html += `<h4>Final analytical review (ISA 520)</h4>`;
+          html += `<div style="font-size:11px; color:#374151; white-space:pre-wrap; line-height:1.6; margin-bottom:12px;">${esc(cm.final_analytical_review_conclusion)}</div>`;
+        }
+
+        // ----- ISA 450 — Uncorrected Misstatements Evaluation -----
+        if (cm.uncorrected_misstatements_evaluation || cm.uncorrected_misstatements_mgmt_rationale) {
+          html += `<h4>Uncorrected misstatements evaluation (ISA 450)</h4>`;
+          html += `<table><tbody>
+            ${cm.uncorrected_misstatements_evaluation ? `<tr><th style="width:32%;">Auditor's evaluation</th><td style="white-space:pre-wrap;">${esc(cm.uncorrected_misstatements_evaluation)}</td></tr>` : ''}
+            ${cm.uncorrected_misstatements_mgmt_rationale ? `<tr><th>Management's rationale for not correcting</th><td style="white-space:pre-wrap;">${esc(cm.uncorrected_misstatements_mgmt_rationale)}</td></tr>` : ''}
+          </tbody></table>`;
+        }
+
+        // ----- ISA 220 / IESBA — Final Independence Conclusion -----
+        if (cm.final_independence_conclusion) {
+          html += `<h4>Final independence conclusion (ISA 220 / IESBA Code)</h4>`;
+          html += `<div style="font-size:11px; color:#374151; white-space:pre-wrap; line-height:1.6; margin-bottom:12px;">${esc(cm.final_independence_conclusion)}</div>`;
+        }
+
+        // ----- ISA 580 — Management Representation Letter -----
+        if (cm.mgmt_rep_letter_obtained || cm.mgmt_rep_letter_date) {
+          html += `<h4>Management representation letter (ISA 580)</h4>`;
+          html += `<table><tbody>
+            <tr><th style="width:32%;">Obtained</th><td>${cm.mgmt_rep_letter_obtained ? '<span class="chip chip-green">Yes</span>' : '<span class="chip chip-red">No — required before sign-off</span>'}</td></tr>
+            ${cm.mgmt_rep_letter_date ? `<tr><th>Letter date</th><td>${formatDateLong(cm.mgmt_rep_letter_date) || '—'}</td></tr>` : ''}
+            ${cm.mgmt_rep_letter_reference ? `<tr><th>File reference</th><td>${esc(cm.mgmt_rep_letter_reference)}</td></tr>` : ''}
+          </tbody></table>`;
+        }
+
+        // ----- ISA 260 — Communication with TCWG -----
+        if (cm.tcwg_communicated || cm.tcwg_communication_date) {
+          html += `<h4>Communication with TCWG (ISA 260)</h4>`;
+          html += `<table><tbody>
+            <tr><th style="width:32%;">Communicated</th><td>${cm.tcwg_communicated ? '<span class="chip chip-green">Yes</span>' : '<span class="chip chip-grey">Not yet</span>'}</td></tr>
+            ${cm.tcwg_communication_date ? `<tr><th>Communication date</th><td>${formatDateLong(cm.tcwg_communication_date) || '—'}</td></tr>` : ''}
+            ${cm.tcwg_matters_communicated ? `<tr><th>Matters communicated</th><td style="white-space:pre-wrap;">${esc(cm.tcwg_matters_communicated)}</td></tr>` : ''}
+            ${cm.tcwg_response ? `<tr><th>TCWG response</th><td style="white-space:pre-wrap;">${esc(cm.tcwg_response)}</td></tr>` : ''}
+          </tbody></table>`;
+        }
+
         if (cm.other_matters) {
           html += `<h4>Other matters</h4>`;
           html += `<div style="font-size:11px; color:#374151; white-space:pre-wrap; line-height:1.6; margin-bottom:12px;">${esc(cm.other_matters)}</div>`;

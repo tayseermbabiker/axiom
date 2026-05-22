@@ -295,6 +295,7 @@
           <button class="tab-btn active" onclick="switchTab('rollup')">Rollup</button>
           <button class="tab-btn" onclick="switchTab('attestations')">Attestations <span id="attest-counter" class="text-sm text-muted"></span></button>
           <button class="tab-btn" onclick="switchTab('narrative')">Narrative</button>
+          <button class="tab-btn" onclick="switchTab('reps')">Reps &amp; Comms</button>
           <button class="tab-btn" onclick="switchTab('opinion')">Opinion</button>
           <button class="tab-btn" onclick="switchTab('eqr')">EQR</button>
         </div>
@@ -345,26 +346,132 @@
 
         <!-- Narrative Tab -->
         <div class="tab-panel" id="tab-narrative">
+
+          <!-- ISA 570 — Going Concern (structured: dropdown + rationale) -->
           <div class="narrative-field">
-            <label for="narr-going-concern">Going Concern Conclusion (ISA 570)</label>
-            <textarea id="narr-going-concern" placeholder="State the partner's conclusion on management's going concern assessment..."></textarea>
-            <div class="hint">Auto-populated from the Going Concern section if available. Edit as needed.</div>
+            <label for="gc-assessment">Going Concern Assessment (ISA 570)</label>
+            <select id="gc-assessment" style="width:100%; max-width:500px; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px; margin-bottom:8px;">
+              <option value="">— Select assessment —</option>
+              <option value="no_uncertainty">No material uncertainty identified</option>
+              <option value="identified_disclosed">Material uncertainty identified — adequately disclosed</option>
+              <option value="identified_adverse_implications">Material uncertainty identified — adverse / disclaimer implications</option>
+            </select>
+            <label for="narr-going-concern" style="margin-top:6px;">Going Concern Rationale</label>
+            <textarea id="narr-going-concern" placeholder="State the partner's conclusion on management's going concern assessment, citing the basis (cash flow forecasts, lender confirmations, post year-end performance, etc.)."></textarea>
+            <div class="hint">ISA 570.16 requires the basis of the conclusion to be documented, not just the conclusion itself.</div>
           </div>
+
+          <!-- ISA 560 — Subsequent Events (structured: procedures + cutoff + identified + conclusion) -->
           <div class="narrative-field">
-            <label for="narr-subsequent">Subsequent Events Conclusion (ISA 560)</label>
-            <textarea id="narr-subsequent" placeholder="State the conclusion on subsequent events review..."></textarea>
+            <label>Subsequent Events Review (ISA 560)</label>
+            <div style="display:grid; grid-template-columns:1fr 220px; gap:12px; margin-top:6px;">
+              <div>
+                <label for="se-procedures" style="font-size:12px; color:var(--gray-600); margin-bottom:4px;">Procedures performed</label>
+                <textarea id="se-procedures" placeholder="e.g. Reviewed board minutes, post year-end bank statements, lawyer letters, and inquired of management..." style="min-height:60px;"></textarea>
+              </div>
+              <div>
+                <label for="se-review-through" style="font-size:12px; color:var(--gray-600); margin-bottom:4px;">Reviewed through date</label>
+                <input type="date" id="se-review-through" max="9999-12-31" style="width:100%; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px;">
+                <label style="display:flex; align-items:center; gap:8px; margin-top:8px; font-size:13px; cursor:pointer;">
+                  <input type="checkbox" id="se-identified"> Events identified
+                </label>
+              </div>
+            </div>
+            <label for="narr-subsequent" style="margin-top:8px;">Subsequent Events Conclusion</label>
+            <textarea id="narr-subsequent" placeholder="If events identified — describe them and the audit response (adjusting / disclosing / no effect). If none — confirm none identified through the review date."></textarea>
           </div>
+
+          <!-- ISA 520 — Final Analytical Review -->
+          <div class="narrative-field">
+            <label for="narr-analytical">Final Analytical Review Conclusion (ISA 520)</label>
+            <textarea id="narr-analytical" placeholder="State whether the financial statements are consistent with your understanding of the entity. Note any unusual fluctuations and their resolution."></textarea>
+            <div class="hint">ISA 520.6 requires the final analytical review to assess overall consistency. Most commonly cited deficiency when missing.</div>
+          </div>
+
+          <!-- ISA 450 — Uncorrected Misstatements (qualitative evaluation) -->
+          <div class="narrative-field">
+            <label for="narr-uncorrected">Evaluation of Uncorrected Misstatements (ISA 450)</label>
+            <textarea id="narr-uncorrected" placeholder="State whether uncorrected misstatements are immaterial individually and in aggregate to the financial statements. Reference the quantitative classifier above."></textarea>
+            <div class="hint">Quantitative band (below / approaching / exceeds) is auto-classified. ISA 450.11 additionally requires the qualitative evaluation here.</div>
+            <label for="narr-uncorrected-mgmt" style="margin-top:8px;">Management's Rationale for Not Correcting</label>
+            <textarea id="narr-uncorrected-mgmt" placeholder="Document management's rationale for declining to correct identified misstatements (if any)."></textarea>
+          </div>
+
+          <!-- ISA 220 / IESBA — Final Independence Conclusion -->
+          <div class="narrative-field">
+            <label for="narr-independence">Final Independence Conclusion (ISA 220 / IESBA Code)</label>
+            <textarea id="narr-independence" placeholder="Partner's documented conclusion that independence requirements were met throughout the engagement period. Reference any threats identified and safeguards applied."></textarea>
+            <div class="hint">Network inspectors treat this as a hard fail when missing. Independence is a precondition for issuing the opinion.</div>
+          </div>
+
+          <!-- ISA 220 R — Resources, Specialists, Consultations -->
           <div class="narrative-field">
             <label for="narr-resources">Resources, Specialists &amp; Consultations (ISA 220 Revised)</label>
             <textarea id="narr-resources" placeholder="Document any specialist engaged, external resources used, or formal consultations on complex/contentious matters..."></textarea>
             <div class="hint">Pre-populated with the N/A default so the field is never blank at inspection. Overwrite when a specialist was engaged (e.g., valuation, actuarial) or when a formal consultation took place.</div>
           </div>
+
+          <!-- Other Matters -->
           <div class="narrative-field">
             <label for="narr-other">Other Matters</label>
             <textarea id="narr-other" placeholder="Any other matter the partner wishes to document for the audit file..."></textarea>
           </div>
+
           <button class="btn btn-primary btn-sm" onclick="saveNarrative()">Save Narrative</button>
           <span id="narrative-save-msg" class="text-sm text-muted" style="margin-left:12px;"></span>
+        </div>
+
+        <!-- Reps & Comms Tab -->
+        <div class="tab-panel" id="tab-reps">
+          <div style="background:white; border:1px solid var(--gray-200); border-radius:10px; padding:20px; margin-bottom:20px;">
+            <h3 style="font-size:14px; font-weight:600; margin:0 0 6px;">Management Representation Letter (ISA 580)</h3>
+            <p class="text-sm text-muted" style="margin-bottom:14px;">Required for every audit. Must be dated no earlier than the audit report date. <strong>Memo cannot be signed unless this is confirmed obtained.</strong></p>
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-bottom:14px;">
+              <input type="checkbox" id="rep-obtained" style="width:18px; height:18px;">
+              <span style="font-size:14px; font-weight:500;">Management Representation Letter has been obtained, signed, and is on file</span>
+            </label>
+            <div id="rep-fields" style="display:none;">
+              <div style="display:grid; grid-template-columns:220px 1fr; gap:12px;">
+                <div class="narrative-field" style="margin:0;">
+                  <label for="rep-date" style="font-size:12px; color:var(--gray-600);">Letter date</label>
+                  <input type="date" id="rep-date" max="9999-12-31" style="width:100%; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px;">
+                  <small style="color:var(--gray-500); font-size:11px;">Must be ≥ audit report date</small>
+                </div>
+                <div class="narrative-field" style="margin:0;">
+                  <label for="rep-reference" style="font-size:12px; color:var(--gray-600);">File reference / location</label>
+                  <input type="text" id="rep-reference" placeholder="e.g. Letter ref MRL-2025-001, filed in /Closing/Reps/" style="width:100%; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:white; border:1px solid var(--gray-200); border-radius:10px; padding:20px;">
+            <h3 style="font-size:14px; font-weight:600; margin:0 0 6px;">Communication with Those Charged with Governance (ISA 260)</h3>
+            <p class="text-sm text-muted" style="margin-bottom:14px;">Document the formal communication of audit matters to TCWG (board, audit committee, or owner-manager for SMEs).</p>
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-bottom:14px;">
+              <input type="checkbox" id="tcwg-communicated" style="width:18px; height:18px;">
+              <span style="font-size:14px; font-weight:500;">Communication with TCWG has occurred</span>
+            </label>
+            <div id="tcwg-fields" style="display:none;">
+              <div class="narrative-field" style="margin-bottom:12px;">
+                <label for="tcwg-date" style="font-size:12px; color:var(--gray-600);">Communication date</label>
+                <input type="date" id="tcwg-date" max="9999-12-31" style="max-width:220px; padding:10px; border:1px solid var(--gray-300); border-radius:8px; font-size:14px;">
+              </div>
+              <div class="narrative-field" style="margin-bottom:12px;">
+                <label for="tcwg-matters" style="font-size:12px; color:var(--gray-600);">Matters communicated</label>
+                <textarea id="tcwg-matters" placeholder="e.g. Significant findings, audit adjustments, control deficiencies (ISA 265), management letter points, independence statements..."></textarea>
+              </div>
+              <div class="narrative-field" style="margin:0;">
+                <label for="tcwg-response" style="font-size:12px; color:var(--gray-600);">TCWG response / actions agreed</label>
+                <textarea id="tcwg-response" placeholder="Any response received from TCWG; actions they committed to take, or note if no response received."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary btn-sm" onclick="saveRepsAndComms()">Save Reps &amp; Comms</button>
+            <span id="reps-save-msg" class="text-sm text-muted" style="margin-left:12px;"></span>
+          </div>
         </div>
 
         <!-- Opinion Tab -->
@@ -641,6 +748,7 @@
       renderRollup();
       renderAttestations();
       renderNarrative();
+      renderReps();
       renderOpinion();
       renderEqr();
       renderSignoffBar();
@@ -787,16 +895,56 @@
 
     function renderNarrative() {
       const isLocked = memo.status === 'locked';
+      // Existing fields
       document.getElementById('narr-going-concern').value = memo.going_concern_conclusion || '';
       document.getElementById('narr-subsequent').value    = memo.subsequent_events_conclusion || '';
       document.getElementById('narr-resources').value     = memo.resources_consultations || '';
       document.getElementById('narr-other').value         = memo.other_matters || '';
+      // New Tier 1 fields
+      document.getElementById('gc-assessment').value             = memo.going_concern_assessment || '';
+      document.getElementById('se-procedures').value             = memo.subseq_events_procedures || '';
+      document.getElementById('se-review-through').value         = memo.subseq_events_review_through || '';
+      document.getElementById('se-identified').checked           = !!memo.subseq_events_identified;
+      document.getElementById('narr-analytical').value           = memo.final_analytical_review_conclusion || '';
+      document.getElementById('narr-uncorrected').value          = memo.uncorrected_misstatements_evaluation || '';
+      document.getElementById('narr-uncorrected-mgmt').value     = memo.uncorrected_misstatements_mgmt_rationale || '';
+      document.getElementById('narr-independence').value         = memo.final_independence_conclusion || '';
 
       if (isLocked) {
-        ['narr-going-concern','narr-subsequent','narr-resources','narr-other']
-          .forEach(id => document.getElementById(id).disabled = true);
+        ['narr-going-concern','narr-subsequent','narr-resources','narr-other',
+         'gc-assessment','se-procedures','se-review-through','se-identified',
+         'narr-analytical','narr-uncorrected','narr-uncorrected-mgmt','narr-independence']
+          .forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
       }
     }
+
+    function renderReps() {
+      const isLocked = memo.status === 'locked';
+      document.getElementById('rep-obtained').checked = !!memo.mgmt_rep_letter_obtained;
+      document.getElementById('rep-date').value       = memo.mgmt_rep_letter_date || '';
+      document.getElementById('rep-reference').value  = memo.mgmt_rep_letter_reference || '';
+      document.getElementById('rep-fields').style.display = memo.mgmt_rep_letter_obtained ? 'block' : 'none';
+
+      document.getElementById('tcwg-communicated').checked = !!memo.tcwg_communicated;
+      document.getElementById('tcwg-date').value           = memo.tcwg_communication_date || '';
+      document.getElementById('tcwg-matters').value        = memo.tcwg_matters_communicated || '';
+      document.getElementById('tcwg-response').value       = memo.tcwg_response || '';
+      document.getElementById('tcwg-fields').style.display = memo.tcwg_communicated ? 'block' : 'none';
+
+      if (isLocked) {
+        ['rep-obtained','rep-date','rep-reference','tcwg-communicated','tcwg-date','tcwg-matters','tcwg-response']
+          .forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
+      }
+    }
+
+    document.addEventListener('change', e => {
+      if (e.target && e.target.id === 'rep-obtained') {
+        document.getElementById('rep-fields').style.display = e.target.checked ? 'block' : 'none';
+      }
+      if (e.target && e.target.id === 'tcwg-communicated') {
+        document.getElementById('tcwg-fields').style.display = e.target.checked ? 'block' : 'none';
+      }
+    });
 
     function renderOpinion() {
       const isLocked = memo.status === 'locked';
@@ -925,6 +1073,53 @@
           subsequent_events_conclusion: document.getElementById('narr-subsequent').value.trim() || null,
           resources_consultations:      resourcesVal,
           other_matters:                document.getElementById('narr-other').value.trim() || null,
+          // Tier 1 ISA fields
+          going_concern_assessment:                  document.getElementById('gc-assessment').value || null,
+          subseq_events_procedures:                  document.getElementById('se-procedures').value.trim() || null,
+          subseq_events_review_through:              document.getElementById('se-review-through').value || null,
+          subseq_events_identified:                  document.getElementById('se-identified').checked,
+          final_analytical_review_conclusion:        document.getElementById('narr-analytical').value.trim() || null,
+          uncorrected_misstatements_evaluation:      document.getElementById('narr-uncorrected').value.trim() || null,
+          uncorrected_misstatements_mgmt_rationale:  document.getElementById('narr-uncorrected-mgmt').value.trim() || null,
+          final_independence_conclusion:             document.getElementById('narr-independence').value.trim() || null,
+        })
+        .eq('id', memo.id);
+      msg.textContent = error ? ('Save failed: ' + error.message) : 'Saved.';
+      if (!error) {
+        const { data: m } = await supabaseClient
+          .from('engagement_completion_memo').select('*').eq('id', memo.id).single();
+        if (m) memo = m;
+      }
+    }
+
+    async function saveRepsAndComms() {
+      const msg = document.getElementById('reps-save-msg');
+      msg.textContent = 'Saving...';
+      const repObtained = document.getElementById('rep-obtained').checked;
+      const repDate     = document.getElementById('rep-date').value || null;
+      const repRef      = document.getElementById('rep-reference').value.trim() || null;
+      if (repObtained && !repDate) {
+        msg.textContent = 'Letter date is required when the rep letter is confirmed obtained.';
+        return;
+      }
+      const tcwgComm = document.getElementById('tcwg-communicated').checked;
+      const tcwgDate = document.getElementById('tcwg-date').value || null;
+      const tcwgMat  = document.getElementById('tcwg-matters').value.trim() || null;
+      const tcwgResp = document.getElementById('tcwg-response').value.trim() || null;
+      if (tcwgComm && !tcwgDate) {
+        msg.textContent = 'Communication date is required when TCWG communication is confirmed.';
+        return;
+      }
+      const { error } = await supabaseClient
+        .from('engagement_completion_memo')
+        .update({
+          mgmt_rep_letter_obtained:  repObtained,
+          mgmt_rep_letter_date:      repObtained ? repDate : null,
+          mgmt_rep_letter_reference: repObtained ? repRef : null,
+          tcwg_communicated:         tcwgComm,
+          tcwg_communication_date:   tcwgComm ? tcwgDate : null,
+          tcwg_matters_communicated: tcwgComm ? tcwgMat : null,
+          tcwg_response:             tcwgComm ? tcwgResp : null,
         })
         .eq('id', memo.id);
       msg.textContent = error ? ('Save failed: ' + error.message) : 'Saved.';
@@ -1049,6 +1244,29 @@
     }
 
     async function signMemo() {
+      // ISA-mandated hard gates before file closure.
+      // Per 3-AI synthesis: EQR (if required) + Mgmt Rep Letter are
+      // pass/fail items at network inspection — silently signing without
+      // them lets the partner ship a non-compliant file.
+      const blockers = [];
+      if (memo.eqr_required && !memo.eqr_completed_at) {
+        blockers.push('EQR is required but has not been marked complete (ISA 220 R)');
+      }
+      if (!memo.mgmt_rep_letter_obtained) {
+        blockers.push('Management Representation Letter is not yet confirmed obtained (ISA 580)');
+      }
+      if (memo.opinion_type && memo.opinion_type !== 'unmodified' && !memo.opinion_basis_notes) {
+        blockers.push('Modified opinion (' + memo.opinion_type + ') requires a documented basis (ISA 705)');
+      }
+      if (blockers.length > 0) {
+        alert(
+          'Cannot sign — the following ISA requirements are not met:\n\n' +
+          blockers.map((b, i) => `  ${i + 1}. ${b}`).join('\n') +
+          '\n\nFix the above and try again.'
+        );
+        return;
+      }
+
       if (!confirm('Sign and lock this completion memo? After signing, all fields become read-only and the engagement can be moved to "Completed".')) return;
 
       const { error } = await supabaseClient
