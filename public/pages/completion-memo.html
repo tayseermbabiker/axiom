@@ -490,6 +490,8 @@
             <label for="opinion-basis">Basis for Opinion (required for modified opinions)</label>
             <textarea id="opinion-basis" placeholder="Describe the basis for the qualified / adverse / disclaimer opinion..."></textarea>
           </div>
+          <!-- Opinion logic warning — surfaces when modified opinion contradicts findings state -->
+          <div id="opinion-warning" style="display:none; background:#FEF6E0; border-left:3px solid #C47A00; padding:10px 14px; margin-top:10px; font-size:12px; color:#92400E; border-radius:4px;"></div>
           <button class="btn btn-primary btn-sm" onclick="saveOpinion()">Save Opinion</button>
           <span id="opinion-save-msg" class="text-sm text-muted" style="margin-left:12px;"></span>
         </div>
@@ -960,6 +962,24 @@
     function toggleOpinionBasis() {
       const t = document.getElementById('opinion-type').value;
       document.getElementById('opinion-basis-wrap').style.display = (t && t !== 'unmodified') ? 'block' : 'none';
+      // ISA 705 sanity check — modified opinions imply unresolved misstatements.
+      // If partner picks Adverse/Disclaimer but the memo shows zero open
+      // findings and zero unposted adjustments, surface a warning. This is
+      // the contradiction claude.ai flagged ('Adverse with all findings
+      // resolved makes no sense'). Soft warning, not a hard block — partner
+      // may have legitimate reasoning.
+      const warningEl = document.getElementById('opinion-warning');
+      if (!warningEl) return;
+      const isModified = t && t !== 'unmodified' && t !== '';
+      const openFindings = memo && (memo.findings_open || 0);
+      const unpostedAdj  = memo && (memo.unposted_adjustments || 0);
+      if (isModified && openFindings === 0 && unpostedAdj === 0) {
+        const opLabel = { qualified: 'Qualified', adverse: 'Adverse', disclaimer: 'Disclaimer' }[t] || t;
+        warningEl.innerHTML = `&#9888; <strong>Opinion logic check:</strong> A ${opLabel} opinion typically implies unresolved misstatements or scope limitations, but this engagement shows <strong>0 open findings</strong> and <strong>0 unposted adjustments</strong>. Either the opinion type may need revisiting, or the basis below should clearly explain the pervasive misstatement / scope limitation driving this opinion (ISA 705.6-9).`;
+        warningEl.style.display = 'block';
+      } else {
+        warningEl.style.display = 'none';
+      }
     }
     document.addEventListener('change', e => {
       if (e.target && e.target.id === 'opinion-type') toggleOpinionBasis();

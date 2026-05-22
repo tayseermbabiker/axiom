@@ -940,16 +940,26 @@
       if (filtFindings.length === 0) {
         html += '<p class="no-data">No findings recorded.</p>';
       } else {
-        html += '<table><thead><tr><th>Finding Title</th><th>Section</th><th>Type</th><th>Severity</th><th>Status</th><th>ML</th><th>Adj.</th><th>Adj. Entry Status</th></tr></thead><tbody>';
+        // Auto-derive ISA reference from finding_type — inspectors expect to
+        // see which ISA each finding implicates. Override path available in
+        // the future via a per-finding isa_reference column if needed.
+        const ISA_REF_BY_TYPE = {
+          misstatement:        'ISA 450',
+          control_deficiency:  'ISA 265',
+          observation:         'ISA 230',
+        };
+        html += '<table><thead><tr><th>Finding Title</th><th>Section</th><th>Type</th><th>ISA Ref</th><th>Severity</th><th>Status</th><th>ML</th><th>Adj.</th><th>Adj. Entry Status</th></tr></thead><tbody>';
         html += filtFindings.map(f => {
           const secName = sections.find(s => s.id === f.section_id)?.name || '—';
           const fAdj = adjustingEntries.filter(a => a.finding_id === f.id);
           const hasAdj = fAdj.length > 0;
           const adjStatus = hasAdj ? (fAdj.every(a => a.is_posted) ? 'Posted' : 'Not Posted') : '';
+          const isaRef = f.isa_reference || ISA_REF_BY_TYPE[f.finding_type] || '—';
           return `<tr>
             <td>${esc(f.title)}</td>
             <td>${esc(secName)}</td>
             <td>${(f.finding_type || 'observation').replace(/_/g, ' ')}</td>
+            <td style="font-size:10px; color:#4B5563; font-weight:600;">${esc(isaRef)}</td>
             <td><span style="color:${f.severity === 'high' ? '#991B1B' : f.severity === 'medium' ? '#92400E' : '#4B5563'};font-weight:600;">${f.severity.toUpperCase()}</span></td>
             <td><span style="color:${f.status === 'open' ? '#92400E' : f.status === 'resolved' ? '#065F46' : '#1E40AF'};font-weight:600;">${f.status.toUpperCase()}</span></td>
             <td>${f.is_management_letter_point ? 'Yes' : ''}</td>
@@ -1286,17 +1296,53 @@
         html += '<p class="no-data">No trial balance imported.</p>';
       } else {
         const groups = {};
+        let grandTotal = 0;
+        let totalDebits = 0;
+        let totalCredits = 0;
         tbLines.forEach(line => {
           const cls = line.classification || 'Unclassified';
           if (!groups[cls]) groups[cls] = { count: 0, total: 0 };
+          const bal = parseFloat(line.balance) || 0;
           groups[cls].count++;
-          groups[cls].total += parseFloat(line.balance) || 0;
+          groups[cls].total += bal;
+          grandTotal += bal;
+          // Debits = positive balances on asset/expense; credits = negative.
+          // For TBs imported with explicit debit/credit columns, prefer those.
+          if (line.debit_amount != null || line.credit_amount != null) {
+            totalDebits  += parseFloat(line.debit_amount)  || 0;
+            totalCredits += parseFloat(line.credit_amount) || 0;
+          } else {
+            // Sign-based fallback when only `balance` is populated
+            if (bal >= 0) totalDebits  += bal;
+            else          totalCredits += Math.abs(bal);
+          }
         });
+        // Balance check — tolerate 0.01 rounding for currency
+        const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01;
+        const totalLines = tbLines.length;
+
         html += '<table><thead><tr><th>Classification</th><th>Lines</th><th>Total Balance</th></tr></thead><tbody>';
         html += Object.entries(groups).map(([cls, g]) =>
           `<tr><td>${esc(cls)}</td><td>${g.count}</td><td style="text-align:right;">${g.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>`
         ).join('');
+        // Totals row + balance check
+        html += `<tr style="background:#F5F7FA; font-weight:700; border-top:2px solid #CBD2DF;">
+          <td>TOTAL</td>
+          <td>${totalLines}</td>
+          <td style="text-align:right;">${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+        </tr>`;
         html += '</tbody></table>';
+        // Balance check indicator
+        html += `<div style="margin-top:10px; padding:10px 14px; border-radius:6px; font-size:12px; ${
+          isBalanced
+            ? 'background:#EDFAF3; color:#065F46; border-left:3px solid #065F46;'
+            : 'background:#FEF0F0; color:#991B1B; border-left:3px solid #991B1B;'
+        }">
+          ${isBalanced
+            ? `&#10003; <strong>Trial balance is in balance.</strong> Debits ${totalDebits.toLocaleString(undefined, { minimumFractionDigits: 2 })} = Credits ${totalCredits.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+            : `&#10007; <strong>Trial balance is OUT OF BALANCE.</strong> Debits ${totalDebits.toLocaleString(undefined, { minimumFractionDigits: 2 })} &ne; Credits ${totalCredits.toLocaleString(undefined, { minimumFractionDigits: 2 })} (diff ${Math.abs(totalDebits - totalCredits).toLocaleString(undefined, { minimumFractionDigits: 2 })})`
+          }
+        </div>`;
       }
       } // end if (reportType === 'completion') — wraps ML + CM + TB
 
