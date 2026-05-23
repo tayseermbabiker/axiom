@@ -1,0 +1,1005 @@
+================================================================================
+AUDEXON — COVERAGE REPORT
+Generated: 2026-05-23
+Source of truth: supabase/migrations/*.sql + staging-bootstrap.sql + public/pages/*.html
+================================================================================
+
+This report enumerates every module currently built in Audexon, with every
+table/column, every UI element, sign-off state, and outputs. Generated from
+the actual code, not from memory.
+
+================================================================================
+LEGEND
+================================================================================
+
+STATUS values:
+  COMPLETE — full ISA workpaper with all required fields, sign-off chain,
+             PDF render. Inspector-defensible as-is.
+  PARTIAL  — core fields exist but missing structured sub-fields, attestation
+             coverage, or PDF render. Demo-defensible, not inspection-final.
+  STUB     — table/UI exists but only basic placeholders. Not usable yet.
+
+================================================================================
+================================================================================
+PHASE 1 — PLANNING
+================================================================================
+================================================================================
+
+---
+MODULE: Client Acceptance / Continuance
+ISA: ISA 220 Revised — Quality Management for an Audit of FS (acceptance, integrity, competence)
+PHASE: Planning
+TABLE(S): engagement_acceptance (versioned with revise_engagement_acceptance RPC)
+FIELDS:
+  - id (uuid, PK)
+  - engagement_id (FK engagements)
+  - organization_id (FK organizations)
+  - is_superseded (boolean)
+  - superseded_at (timestamptz)
+  - superseded_by (FK profiles)
+  - acceptance_type (enum: initial / continuance)
+  - status (enum: draft / confirmed)
+  - decision (enum: accept / accept_with_conditions / decline)
+  - decision_date (date)
+  - decision_rationale (text)
+  - conditions_summary (text, required when decision=accept_with_conditions)
+  - risk_tier (enum: low / medium / high)
+  - integrity_method_prior_experience (boolean)
+  - integrity_method_internet_search (boolean)
+  - integrity_method_predecessor_inquiry (boolean)
+  - integrity_method_other (boolean)
+  - integrity_method_other_description (text)
+  - integrity_conclusion (text)
+  - competence_resources_considered (boolean)
+  - competence_resources_notes (text)
+  - had_predecessor_auditor (boolean)
+  - predecessor_auditor_name (text)
+  - predecessor_communication_done (boolean)
+  - predecessor_communication_summary (text)
+  - predecessor_workpapers_accessed (boolean)
+  - prior_year_issues_considered (boolean)
+  - prior_year_issues_summary (text)
+  - independence_assessment_completed (boolean — soft link to Independence)
+  - partner_attestation_made (boolean)
+  - partner_attestation_date (date)
+  - partner_attestation_user_id (FK profiles)
+  - notes (text)
+  - created_by (FK profiles)
+  - created_at, updated_at (timestamptz)
+  - CHECK: confirmed requires acceptance_type + decision + decision_date + risk_tier + partner_attestation
+UI ELEMENTS (engagement.html, Acceptance tab under Planning):
+  - Type radio: Initial / Continuance
+  - Decision dropdown: Accept / Accept with conditions / Decline
+  - Decision date picker (max=9999-12-31)
+  - Decision rationale textarea
+  - Conditions summary textarea (revealed when decision=accept_with_conditions)
+  - Risk tier dropdown: Low / Medium / High
+  - 4 integrity method checkboxes + "Other description" text input
+  - Integrity conclusion textarea
+  - Competence & resources considered checkbox + notes textarea
+  - Predecessor section: had_predecessor checkbox, name input, communication checkbox + summary, workpapers checkbox
+  - Prior-year issues section (for continuance): considered checkbox + summary
+  - Independence cross-check soft warning if independence not yet done
+  - Partner attestation checkbox + date picker + (auto-stamps user_id)
+  - Notes textarea
+  - Save draft / Confirm Acceptance buttons
+  - Revise button (admin only, opens carry-forward draft from prior version)
+  - Previous-versions history list (collapsed)
+SIGN-OFF: Partner-only attestation (admin role + Pro tier RLS gate). No supervisor in chain.
+OUTPUTS:
+  - Renders to Planning PDF (report.html, type=planning) as "Client acceptance" block
+  - Soft link to Independence workpaper (UI warning if not done)
+  - Risk tier feeds informally into materiality + EQR decisions
+STATUS: COMPLETE
+
+---
+MODULE: Engagement Letter
+ISA: ISA 210 — Agreeing the Terms of Audit Engagements
+PHASE: Planning
+TABLE(S): engagement_letters (versioned with revise_engagement_letter RPC)
+FIELDS:
+  - id, engagement_id, organization_id
+  - version_label (text)
+  - is_superseded (boolean), superseded_at, superseded_by
+  - status (enum: draft / signed)
+  - letter_date (date)
+  - signed_date (date)
+  - client_signatory_name (text)
+  - client_signatory_role (text)
+  - reporting_framework (text)
+  - audit_period_start (date)
+  - audit_period_end (date)
+  - fees_basis (text)
+  - other_reporting_obligations (text)
+  - other_terms (text)
+  - isa_210_objective_scope (boolean)
+  - isa_210_auditor_responsibilities (boolean)
+  - isa_210_mgmt_responsibilities (boolean)
+  - isa_210_framework_identified (boolean)
+  - isa_210_report_form_referenced (boolean)
+  - expected_report_type (enum: unmodified / qualified / adverse / disclaimer / unknown) [Tier 1 add 2026-05-22]
+  - modification_risk_notes (text) [Tier 1 add 2026-05-22]
+  - report_delivery_target_date (date) [Tier 1 add 2026-05-22]
+  - file_name, file_path, file_size_bytes, file_sha256, mime_type (signed PDF upload)
+  - created_by, created_at, updated_at
+  - CHECK: signed requires signed_date + file_path + letter_date + client_signatory_name
+UI ELEMENTS (engagement.html, Engagement letter tab):
+  - Status badge: Draft / Signed
+  - Letter date + signed date pickers
+  - Client signatory name + role text inputs
+  - Reporting framework input (e.g., IFRS, IFRS for SMEs)
+  - Audit period start + end date pickers
+  - Fees basis textarea
+  - Other reporting obligations textarea
+  - Other terms textarea
+  - ISA 210.10 attestations: 5 checkboxes (objective_scope, auditor_resp, mgmt_resp, framework_identified, report_form_referenced)
+  - Reporting considerations section (ISA 700):
+    * Expected report type dropdown (5 options)
+    * Modification risk notes textarea
+    * Report delivery target date picker
+  - Signed PDF upload control + download button when present
+  - Save draft / Mark Signed buttons
+  - Revise button (carry-forward draft from prior version)
+  - Previous-versions history list
+SIGN-OFF: Single admin sign-off (status=signed). No multi-level chain.
+OUTPUTS:
+  - Renders to Planning PDF as "Engagement letter" block with ISA 210.10 attestation table + reporting considerations
+  - Signed PDF stored in Supabase Storage bucket 'fs-documents' under {org}/{eng}/engagement-letter/
+STATUS: COMPLETE
+
+---
+MODULE: Independence & Ethics
+ISA: ISA 220 Revised + IESBA Code (self-interest, self-review, advocacy, familiarity, intimidation threats)
+PHASE: Planning
+TABLE(S): engagement_independence (parent, versioned) + engagement_independence_threats (child, 5 IESBA threats) + engagement_nas (child, non-audit services list)
+FIELDS — engagement_independence:
+  - id, engagement_id, organization_id
+  - is_superseded, superseded_at, superseded_by
+  - status (enum: draft / confirmed)
+  - assessment_date (date)
+  - partner_attestation_made (boolean)
+  - partner_attestation_date (date)
+  - partner_attestation_user_id (FK profiles)
+  - fee_pct_of_firm_total (numeric)
+  - fee_dependence_band (enum: lt_10 / 10_to_15 / 15_to_20 / gt_20)
+  - fee_dependence_safeguards (text)
+  - partner_tenure_years (integer)
+  - partner_rotation_required (boolean)
+  - partner_rotation_action (text)
+  - no_nas_provided (boolean)
+  - overall_conclusion (text)
+  - notes (text)
+  - created_by, created_at, updated_at
+  - CHECK: confirmed requires partner_attestation_made=true + partner_attestation_date NOT NULL
+FIELDS — engagement_independence_threats:
+  - id, engagement_independence_id (FK parent), organization_id
+  - threat_type (enum: self_interest / self_review / advocacy / familiarity / intimidation)
+  - present (boolean)
+  - description (text)
+  - safeguards (text)
+  - conclusion (text)
+  - sort_order (int)
+  - UNIQUE (engagement_independence_id, threat_type)
+FIELDS — engagement_nas:
+  - id, engagement_id, organization_id
+  - service_type (text)
+  - description (text)
+  - threat_category (enum: self_interest / self_review / advocacy / familiarity / intimidation)
+  - safeguards (text)
+  - conclusion (text)
+  - is_prohibited (boolean)
+  - service_provider (text)
+  - is_active (boolean)
+  - created_by, created_at, updated_at
+UI ELEMENTS (engagement.html, Independence tab):
+  - Assessment date picker
+  - Fee % of firm-total numeric input + auto-band display
+  - Fee dependence safeguards textarea
+  - Partner tenure years numeric input
+  - Partner rotation required checkbox + action plan textarea
+  - "No NAS provided" toggle
+  - 5 IESBA threat rows (one per threat_type): present checkbox + description + safeguards + conclusion textareas
+  - NAS list: add-row UI with service type, description, threat category dropdown, safeguards, conclusion, prohibited toggle, provider, active toggle
+  - Overall conclusion textarea
+  - Notes textarea
+  - Partner attestation checkbox + date picker
+  - Save draft / Confirm Independence buttons
+SIGN-OFF: Partner-only attestation (admin role + Pro tier RLS gate)
+OUTPUTS:
+  - Renders to Planning PDF as "Independence & Ethics" block with threats table + NAS table
+STATUS: COMPLETE
+
+---
+MODULE: Audit Strategy
+ISA: ISA 300 (planning) + ISA 220 Revised (partner direction, supervision, review)
+PHASE: Planning
+TABLE(S): engagement_audit_strategies (versioned with revise_audit_strategy RPC + approve_audit_strategy RPC)
+FIELDS:
+  - id, engagement_id, organization_id
+  - version_label, is_superseded, superseded_at, superseded_by
+  - status (enum: draft / approved)
+  - scope_characteristics (text — ISA 300.9(a))
+  - reporting_objectives (text — ISA 300.9(b))
+  - significant_factors (text — ISA 300.9(c))
+  - preliminary_activities_summary (text — ISA 300.9(d))
+  - resources_plan (text — ISA 300.9(e))
+  - partner_direction_plan (text — ISA 220 R)
+  - team_composition (text)
+  - specialists_involved (text)
+  - eqr_required (boolean)
+  - eqr_reviewer_name (text)
+  - budgeted_hours (numeric)
+  - isa_300_strategy_documented (boolean attestation)
+  - isa_300_resources_assessed (boolean attestation)
+  - isa_300_team_briefed (boolean attestation)
+  - isa_220_direction_supervision_planned (boolean attestation)
+  - going_concern_planning_note (text) [ISA gap items add 2026-05-22, ISA 570 planning side]
+  - subsequent_events_planning_note (text) [add 2026-05-22, ISA 560 planning side]
+  - internal_controls_overview (text) [add 2026-05-22, ISA 315.12-26]
+  - planning_analytics_note (text) [add 2026-05-22, ISA 315.6]
+  - fraud_team_discussion_held (boolean) [add 2026-05-22, ISA 240.17]
+  - fraud_team_discussion_date (date)
+  - fraud_team_discussion_attendees (text)
+  - approved_by (FK profiles)
+  - approved_at (timestamptz)
+  - created_by, created_at, updated_at
+  - CHECK: approved requires all 4 attestations + approved_by + approved_at
+UI ELEMENTS (engagement.html, Audit strategy tab):
+  - 5 ISA 300.9 narrative textareas (scope / reporting / significant factors / preliminary activities / resources)
+  - Partner direction plan textarea (ISA 220 R)
+  - Team composition textarea
+  - Specialists involved textarea
+  - EQR required checkbox + reviewer name input
+  - Budgeted hours numeric input
+  - ISA-specific planning narratives block (added 2026-05-22):
+    * Internal controls overview textarea (ISA 315.12-26)
+    * Planning analytics textarea (ISA 315.6)
+    * Going concern planning narrative textarea (ISA 570)
+    * Subsequent events planning narrative textarea (ISA 560)
+  - Fraud team discussion sub-block (ISA 240.17):
+    * Held checkbox (reveals fields when ticked)
+    * Date picker
+    * Attendees text input
+  - 4 partner attestations (ISA 300 strategy + resources + team briefed; ISA 220 R direction)
+  - Save draft / Approve strategy buttons
+  - Revise button (carry-forward draft)
+  - Previous-versions history list
+SIGN-OFF: Single admin approve (atomic single-UPDATE via approve_audit_strategy RPC). No supervisor chain.
+OUTPUTS:
+  - Renders to Planning PDF as "Audit strategy" block with all 5 ISA 300.9 narratives + ISA 220R direction + team/specialists/EQR table + ISA-specific narratives + fraud discussion structured table
+STATUS: COMPLETE
+
+---
+MODULE: Materiality (Versioned)
+ISA: ISA 320 — Materiality in Planning and Performing an Audit (including ISA 320.10 specific materiality, ISA 320.12-13 revision)
+PHASE: Planning
+TABLE(S): engagement_materiality_versions (parent, versioned) + engagement_specific_materiality_items (child, per-version specific items)
+FIELDS — engagement_materiality_versions:
+  - id, engagement_id, organization_id
+  - version_label, is_superseded, superseded_at, superseded_by
+  - status (enum: draft / approved)
+  - benchmark (enum: pbt / revenue / assets / equity / other)
+  - benchmark_other_label (text)
+  - benchmark_amount (numeric)
+  - benchmark_selection_reason (enum: profit_based / asset_based / revenue_driven / volatile_profits / other)
+  - benchmark_selection_other_text (text)
+  - benchmark_period (enum: current / normalized / prior / other; default current — ISA 320.A4)
+  - benchmark_period_other_text (text)
+  - benchmark_period_reason (text)
+  - percentage_applied (numeric)
+  - overall_materiality (numeric)
+  - performance_materiality_pct (numeric, default 75)
+  - performance_materiality_amount (numeric)
+  - performance_materiality_reason (enum: no_history / prior_misstatements / first_year / other)
+  - performance_materiality_other_text (text)
+  - trivial_pct (numeric, default 5)
+  - trivial_amount (numeric)
+  - qual_regulatory_sensitivity (boolean — ISA 320.A1)
+  - qual_covenant_compliance (boolean)
+  - qual_fraud_risk_indicators (boolean)
+  - qual_sensitive_disclosures (boolean)
+  - qual_mgmt_compensation_impact (boolean)
+  - qual_key_ratios_trends (boolean)
+  - qual_other_text (text)
+  - has_specific_materiality (boolean — ISA 320.10 toggle)
+  - rationale (text)
+  - reason_for_revision (text — required v2+)
+  - strategy_reviewed_on_revision (boolean — ISA 320.13)
+  - strategy_reviewed_date (date)
+  - approved_by (FK profiles), approved_at (timestamptz)
+  - created_by, created_at, updated_at
+  - CHECK: approved requires benchmark + amount + pct + overall + approved_by/at
+FIELDS — engagement_specific_materiality_items:
+  - id, materiality_version_id (FK parent)
+  - class_or_account (text)
+  - specific_amount (numeric)
+  - rationale (text)
+  - sort_order, created_at
+UI ELEMENTS (engagement.html, Materiality tab):
+  - Benchmark dropdown (5 options) + "Other" label input
+  - Benchmark amount numeric input
+  - Benchmark selection reason dropdown + other-text input
+  - Benchmark period dropdown (current/normalized/prior/other) + other-text + reason
+  - Percentage applied numeric input
+  - Overall materiality auto-calculated display
+  - Performance materiality % numeric input (default 75) + reason dropdown + other-text
+  - Performance materiality amount auto-calculated
+  - Trivial % numeric input (default 5) + amount auto-calculated
+  - 6 qualitative considerations checkboxes (ISA 320.A1 checklist) + Other-text input
+  - Specific materiality toggle (ISA 320.10) — reveals item table
+  - Specific materiality items: add-row with class/account, amount, rationale
+  - Rationale textarea
+  - Revision section (v2+ only):
+    * Reason for revision textarea (required)
+    * Strategy reviewed checkbox + date (ISA 320.13)
+  - Save draft / Approve materiality buttons
+  - Revise button (carry-forward + version increment)
+  - Previous-versions history with planning-vs-revised comparison badges
+SIGN-OFF: Single admin approve. No supervisor chain.
+OUTPUTS:
+  - Renders to Planning PDF (v1 = planning) and Completion PDF (active version = revised, with planning-vs-revised comparison if v2+)
+  - "Revised v2" chip on Completion PDF when revised
+  - Amber breadcrumb on Planning PDF when revised pointing to Completion
+STATUS: COMPLETE
+
+---
+MODULE: Risk Assessment
+ISA: ISA 315 (Revised 2019) — Identifying & Assessing Risks + ISA 330 (responses) + ISA 240.26/.31 (presumed fraud risks)
+PHASE: Planning
+TABLE(S): engagement_risks (per-section per-assertion risk register) + engagement_risk_procedure_links (many-to-many) + engagement_risk_assessment (engagement-level attestation summary)
+FIELDS — engagement_risks:
+  - id, engagement_id, organization_id, section_id
+  - assertion (enum: existence / completeness / accuracy / valuation / cutoff / classification / rights_obligations / presentation)
+  - risk_description (text)
+  - source (enum: entity / industry / it / fraud / management_override / rap / other)
+  - inherent_rating (enum: low / medium / high)
+  - control_rating (enum: low / medium / high)
+  - combined_rating (enum: low / medium / high)
+  - is_significant (boolean)
+  - significant_rationale (text — required when is_significant=true)
+  - overall_response (text)
+  - is_locked_presumed (boolean — ISA 240 auto-seeded revenue + mgmt override)
+  - presumption_rebutted (boolean — ISA 240.26 revenue rebuttal only)
+  - rebuttal_rationale (text)
+  - rebuttal_approved_by (FK profiles), rebuttal_approved_at (timestamptz)
+  - created_by, created_at, updated_at
+  - CHECK: significant requires rationale
+  - CHECK: rebuttal requires rationale + approver + timestamp
+  - CHECK: management_override cannot be rebutted (ISA 240.31)
+FIELDS — engagement_risk_procedure_links:
+  - id, risk_id (FK), procedure_id (FK audit_procedures)
+  - notes (text)
+  - UNIQUE (risk_id, procedure_id)
+FIELDS — engagement_risk_assessment:
+  - engagement_id (PK), organization_id
+  - status (enum: draft / confirmed)
+  - isa_315_27_assertions_assessed (boolean attestation)
+  - isa_315_28_significant_risks_identified (boolean)
+  - isa_315_stand_back_completed (boolean)
+  - isa_330_responses_linked (boolean)
+  - confirmed_by (FK profiles), confirmed_at (timestamptz)
+  - created_at, updated_at
+UI ELEMENTS (engagement.html, Risk assessment tab):
+  - Risk matrix grid: rows = sections, columns = assertions
+  - Per-cell: add risk button, opens modal
+  - Risk modal: description textarea, source dropdown, assertion dropdown, inherent/control/combined dropdowns, significant toggle + rationale, overall response textarea
+  - ISA 240 presumed-risk badges (PRESUMED chip on auto-seeded revenue + mgmt override)
+  - Rebuttal flow (revenue only): rebut button + rationale + auto-stamps approver/date
+  - Linked-procedures count per risk + linkage modal to select procedures
+  - 4 attestations checklist (ISA 315.27 / 315.28 / stand-back / ISA 330)
+  - Confirm risk assessment button (gated on hard rule: significant risks must have ≥1 linked procedure)
+  - Hard-block error if attempting to confirm with unlinked significant risks
+SIGN-OFF: Single admin confirm. No supervisor chain.
+OUTPUTS:
+  - Renders to Planning PDF as risk register table grouped by section (tbody.risk-group prevents mid-page splits)
+  - Each risk row + overall-response sub-row stay together on page
+  - Linked procs count displayed per risk (red text if significant + 0 linked)
+STATUS: COMPLETE
+
+================================================================================
+================================================================================
+PHASE 2 — EXECUTION
+================================================================================
+================================================================================
+
+---
+MODULE: Trial Balance (Versioned)
+ISA: ISA 500 (audit evidence) — supports all balance-sheet/P&L section testing
+PHASE: Execution
+TABLE(S): tb_versions (parent) + trial_balance_lines (per-line balances)
+FIELDS — tb_versions:
+  - id, engagement_id, label (text), uploaded_by (FK profiles), uploaded_at
+FIELDS — trial_balance_lines:
+  - id, engagement_id, account_code, account_name, balance (numeric), classification (text), tb_version_id (FK)
+  - created_at
+UI ELEMENTS (engagement.html, Trial Balance tab):
+  - Upload Excel button (parses to lines)
+  - Replace TB button (creates new version, supersedes prior)
+  - Version selector dropdown (history)
+  - Lines table: account code, name, balance, classification
+  - Edit Tags inline button (classification adjustment)
+SIGN-OFF: None — TB upload by admin or supervisor (RLS-gated). No sign-off chain.
+OUTPUTS:
+  - Sections reference tb_version_id to anchor procedures against a specific TB
+  - Renders to Completion PDF as "Trial Balance Summary" table:
+    * Classification groups with line counts + totals
+    * TOTAL row
+    * Balance check banner (green "in balance" / red "out of balance" with diff)
+STATUS: COMPLETE
+
+---
+MODULE: Audit Sections (19 standard + 20th optional Local Compliance)
+ISA: ISA 230 (audit documentation) + section-specific ISAs (varies per section name)
+PHASE: Execution
+TABLE(S): audit_sections (per-section workpaper)
+FIELDS:
+  - id, engagement_id, name, assigned_to (FK profiles)
+  - status (enum: not_started / in_progress / ready_for_supervisor_review / in_supervisor_review / ready_for_partner_review / in_partner_review / returned_to_preparer / returned_to_supervisor / approved)
+  - conclusion (text)
+  - conclusion_by (FK profiles)
+  - approved_by, approved_at
+  - supervisor_approved_by, supervisor_approved_at
+  - partner_approved_by, partner_approved_at
+  - classification_tags (text[])
+  - assertions (text[])
+  - phase (enum: interim / final)
+  - tb_version_id (FK)
+  - engagement_specific_risks (text) [ISA 330 tailoring evidence, added 2026-05-22]
+  - sort_order, created_at, updated_at
+THE 19 STANDARD SECTIONS (seeded by audit-templates.js at engagement creation):
+  Balance Sheet — Assets:
+    1. Cash & Bank
+    2. Accounts Receivable
+    3. Prepayments & Other Receivables
+    4. Inventory
+    5. PPE / Fixed Assets
+  Balance Sheet — Liabilities & Equity:
+    6. Accounts Payable
+    7. Loans & Borrowings
+    8. Provisions & End-of-Service Benefits
+    9. Equity & Share Capital
+  Income Statement:
+    10. Revenue
+    11. Cost of Sales
+    12. Payroll & HR
+    13. Operating Expenses
+    14. Tax
+  Cross-cutting:
+    15. Related Parties (ISA 550)
+    16. Subsequent Events (ISA 560)
+    17. Going Concern (ISA 570)
+    18. Journal Entry Testing (ISA 240)
+    19. Out of Scope / Below Materiality
+  PLUS 20th seeded from org's local_compliance template if configured
+UI ELEMENTS (engagement.html sections list + section.html workpaper page):
+  - Section card: name, phase badge (interim/final), assignee avatar/dropdown, status badge, progress bar (done procs / total), TB lines count, procedures count, open findings count, delete button (partner only, blocked if approved)
+  - Section workpaper (section.html):
+    * Header: name, status badge, assignee, classification tags
+    * Trial Balance accordion (lines for this section)
+    * Procedures list (collapsible cards with type dropdown + DONE/PENDING badge)
+      - Each procedure expanded: response textarea, save button, mark as done toggle, edit + delete buttons (admin/supervisor only)
+      - Working paper file uploads + source document uploads
+    * Findings list with severity color-coding
+      - Add finding modal: title, severity, type (misstatement/control_deficiency/observation), description, condition, criteria, cause, effect, recommendation, management response, monetary impact, ML-flag checkbox
+      - Adjusting entry sub-form (revealed when type=misstatement): debit account, credit account, amount, narration, posted toggle
+    * Engagement-specific risks textarea (ISA 330 tailoring evidence card)
+    * Section conclusion textarea
+    * Review notes thread (preparer ↔ supervisor ↔ partner immutable comments)
+    * Action bar: Send to Supervisor, Approve (Supervisor), Send to Partner, Final Approve (Partner), Return to Preparer/Supervisor, Reopen (admin only)
+    * Solo-firm partner shortcut: "Final Approve (Partner)" button on any status for admin
+SIGN-OFF: Three-level chain (preparer → supervisor → partner approval). Soft warning if engagement_specific_risks empty at partner sign-off.
+OUTPUTS:
+  - Feeds Completion Memo rollup (sections_approved, sections_with_open_issues)
+  - Renders to Completion PDF as "Work-done summary" table:
+    * Status chip per section
+    * Engagement-specific risks sub-row (amber, ISA 330)
+    * Section conclusion sub-row (grey)
+STATUS: COMPLETE
+
+---
+MODULE: Audit Procedures (per section)
+ISA: ISA 330 (responses to risks) + ISA 500 (sufficient appropriate evidence)
+PHASE: Execution
+TABLE(S): audit_procedures (per section, 5-12 seeded from PROCEDURE_TEMPLATES)
+FIELDS:
+  - id, section_id (FK)
+  - description (text)
+  - procedure_type (enum: test_of_detail / analytical / controls / other)
+  - sort_order, created_at
+  - assertions (text[])
+UI ELEMENTS:
+  - Per-procedure card with type dropdown + DONE/PENDING badge (visible in section workpaper)
+  - Expanded: response textarea, save, mark as done, edit, delete (admin/supervisor)
+  - Add Procedure button + Upload from Excel + Download template
+SIGN-OFF: None at procedure level — sign-off rolls up to section
+OUTPUTS:
+  - procedure_responses captures the auditor's work-done evidence
+  - Linked to engagement_risks via engagement_risk_procedure_links junction
+STATUS: COMPLETE
+
+---
+MODULE: Procedure Responses
+ISA: ISA 230 (documentation of work performed)
+PHASE: Execution
+TABLE(S): procedure_responses
+FIELDS:
+  - id, procedure_id (FK), user_id (FK)
+  - response (text — what the auditor did)
+  - status (enum: pending / done)
+  - created_at, updated_at
+UI ELEMENTS:
+  - Inline textarea in each expanded procedure card
+  - Save button + Mark as Done toggle
+  - File upload (working paper + source documents) per response
+SIGN-OFF: None (rolls up to section approval chain)
+OUTPUTS:
+  - Feeds attestation #8 "all_procedures_responded" in Completion Memo
+STATUS: COMPLETE
+
+---
+MODULE: Findings (Misstatements, Control Deficiencies, Observations)
+ISA: ISA 230 (documentation) + ISA 265 (control deficiencies) + ISA 450 (misstatements)
+PHASE: Execution
+TABLE(S): findings + adjusting_entries (linked to misstatement findings only)
+FIELDS — findings:
+  - id, section_id (FK), procedure_id (FK, optional), reported_by (FK profiles)
+  - title (text)
+  - condition, criteria, cause, effect (text — classic 4-element finding model)
+  - recommendation (text)
+  - management_response (text)
+  - severity (enum: high / medium / low)
+  - status (enum: open / resolved / reported)
+  - monetary_impact (numeric)
+  - finding_type (enum: misstatement / control_deficiency / observation)
+  - is_management_letter_point (boolean)
+  - identified_in_phase (enum: interim / final)
+  - close_category (enum: unadjusted_immaterial / communicated_to_management / control_deficiency_communicated / control_deficiency_significant / observation_no_action)
+  - created_at, updated_at
+FIELDS — adjusting_entries:
+  - id, finding_id (FK)
+  - debit_account (text)
+  - credit_account (text)
+  - amount (numeric)
+  - narration (text)
+  - is_posted (boolean)
+  - created_at
+UI ELEMENTS:
+  - Add Finding button (preparer + supervisor + admin)
+  - Edit Finding button (supervisor + admin)
+  - Finding modal: title, severity dropdown, type dropdown, description, condition, criteria, cause, effect, recommendation, mgmt response, monetary impact, ML-flag checkbox
+  - Adjusting entry sub-panel (revealed when type=misstatement):
+    * Debit account input
+    * Credit account input
+    * Amount numeric input
+    * Narration textarea
+    * Is-posted dropdown (true/false)
+  - Pre-loads existing adjusting entry on edit (fixed 2026-05-22)
+  - Partial-fill validation: all three required (debit + credit + amount) or clear all
+SIGN-OFF: None at finding level (rolls up to section approval)
+OUTPUTS:
+  - Renders to Completion PDF in "Findings Summary" table with ISA Ref column (auto-derived: misstatement→ISA 450, control_deficiency→ISA 265, observation→ISA 230)
+  - "Summary of Unadjusted Misstatements (ISA 450)" sub-table with totals
+  - Feeds attestations #2 (no_open_findings), #4 (misstatements_communicated)
+  - adjusting_entries feed completion memo rollup (posted_adjustments, unposted_adjustments) + uncorrected_vs_materiality classifier (below/approaching/exceeds)
+STATUS: COMPLETE (but NO consolidated misstatement schedule view across sections — this is the real gap)
+
+---
+MODULE: Documents (working papers + source documents)
+ISA: ISA 230 (audit documentation)
+PHASE: Execution
+TABLE(S): documents
+FIELDS:
+  - id
+  - section_id (FK, optional) — attached at section level
+  - procedure_response_id (FK, optional) — attached at procedure-response level
+  - file_name, file_url (external link to Google Drive / OneDrive / SharePoint / Dropbox)
+  - source_type (enum: google_drive / onedrive / sharepoint / dropbox / other)
+  - file_type (enum: pdf / image / excel / word / other)
+  - linked_by (FK profiles)
+  - doc_category (enum: working_paper / source_document)
+  - description (text)
+  - created_at
+  - CHECK: section_id OR procedure_response_id must be set
+UI ELEMENTS:
+  - "My Work Files" list per procedure (working_paper category)
+  - "Source Documents" list per procedure (source_document category)
+  - Add Document modal: source dropdown, file type dropdown, name, URL, description
+SIGN-OFF: None
+OUTPUTS:
+  - Not rendered in PDFs (links are external, would break)
+  - Tracked for inspector "where is the evidence" trail
+STATUS: COMPLETE
+
+---
+MODULE: Review Notes
+ISA: ISA 220 R (review by engagement partner) + ISA 230 (documentation)
+PHASE: Execution
+TABLE(S): review_notes (per-section, immutable thread)
+FIELDS:
+  - id, section_id (FK), user_id (FK)
+  - note (text)
+  - note_type (enum: review_comment / preparer_response / return_reason)
+  - created_at
+UI ELEMENTS:
+  - Notes thread in section.html
+  - Add comment box for supervisor/admin
+  - Preparer-response box (replies only)
+  - Return-reason captured when supervisor/partner returns section
+SIGN-OFF: None
+OUTPUTS:
+  - Visible per section for audit trail
+  - Feeds attestation #11 (review_notes_resolved) — manual tick
+STATUS: COMPLETE
+
+---
+MODULE: Activity Log
+ISA: ISA 230 (documentation of changes)
+PHASE: Execution (cross-cutting)
+TABLE(S): activity_log (immutable audit trail)
+FIELDS:
+  - id, engagement_id (FK), user_id (FK)
+  - action (text — e.g., 'updated_finding', 'partner_approved', 'sign_completion_memo')
+  - target_type (enum: engagement / trial_balance / document / review_note / organization / member / section / procedure / finding / response / procedure_response)
+  - target_id (uuid)
+  - details (jsonb — payload of the change)
+  - created_at
+UI ELEMENTS:
+  - Activity Log tab on engagement.html (timeline view)
+  - Per-row: user, action, target, timestamp
+SIGN-OFF: None
+OUTPUTS:
+  - Not rendered in PDFs
+  - Available for inspector review of who-did-what-when
+STATUS: COMPLETE
+
+---
+MODULE: Local Compliance Template (firm-authored)
+ISA: Firm-specific (not directly an ISA — supports jurisdiction-specific regulatory work)
+PHASE: Execution (seeds the 20th section per engagement)
+TABLE(S): org_local_compliance_templates (master) + org_compliance_procedures (procedure library)
+FIELDS — org_local_compliance_templates:
+  - id, organization_id (UNIQUE, one per org)
+  - name (default 'Local Compliance & Regulatory')
+  - section_description (text)
+  - jurisdiction (text, e.g., 'UAE', 'Qatar', 'KSA')
+  - sort_order (default 20)
+  - phase (enum: interim / final)
+  - is_active (boolean)
+  - created_by, created_at, updated_at
+FIELDS — org_compliance_procedures:
+  - id, template_id (FK), organization_id
+  - description (text)
+  - procedure_type (enum: test_of_detail / analytical / controls / other)
+  - sort_order
+  - regulatory_ref (text)
+  - is_active (boolean)
+  - created_at, updated_at
+UI ELEMENTS (local-compliance.html, admin-only):
+  - Section template form: name, description, jurisdiction, phase, sort order, active toggle
+  - Procedures list with add/edit/delete + procedure type + regulatory ref
+  - Save Template button
+SIGN-OFF: None (firm-level template, not engagement-level)
+OUTPUTS:
+  - Seeds a 20th section on every new engagement created after template is active
+  - Procedures copied (not referenced) into the engagement's section
+STATUS: COMPLETE
+
+================================================================================
+================================================================================
+PHASE 3 — CONCLUSION
+================================================================================
+================================================================================
+
+---
+MODULE: Completion Memorandum
+ISA: ISA 700 (audit opinion) + ISA 450 (misstatements rollup) + ISA 230 (file assembly)
+PHASE: Conclusion
+TABLE(S): engagement_completion_memo (one per engagement, UNIQUE) + completion_attestations (13 seeded per memo)
+FIELDS — engagement_completion_memo:
+  - id, engagement_id (UNIQUE), organization_id
+  - status (enum: draft / complete / locked)
+  - Rollup fields (live in draft, frozen at lock):
+    * total_sections, sections_approved, sections_with_open_issues
+    * total_findings, findings_resolved, findings_reported, findings_open
+    * total_misstatements, posted_adjustments, unposted_adjustments
+  - overall_materiality_snapshot, performance_materiality_snapshot (numeric — frozen at lock)
+  - uncorrected_vs_materiality (enum: below / approaching / exceeds / not_calculated)
+  - eqr_required (boolean)
+  - eqr_reviewer_id (FK profiles — internal reviewer)
+  - eqr_completed_at (timestamptz)
+  - eqr_completed_by (FK profiles)
+  - eqr_is_external (boolean) [add 2026-05-22]
+  - eqr_external_reviewer_name (text) [add 2026-05-22]
+  - eqr_external_reviewer_firm (text) [add 2026-05-22]
+  - going_concern_conclusion (text — rationale)
+  - subsequent_events_conclusion (text)
+  - other_matters (text)
+  - resources_consultations (text — ISA 220 R)
+  - opinion_type (enum: unmodified / qualified / adverse / disclaimer)
+  - opinion_basis_notes (text)
+  - mgmt_rep_letter_obtained (boolean) [Tier 1 add 2026-05-22 — ISA 580]
+  - mgmt_rep_letter_date (date)
+  - mgmt_rep_letter_reference (text)
+  - tcwg_communicated (boolean) [Tier 1 add — ISA 260]
+  - tcwg_communication_date (date)
+  - tcwg_matters_communicated (text)
+  - tcwg_response (text)
+  - going_concern_assessment (enum: no_uncertainty / identified_disclosed / identified_adverse_implications) [Tier 1 add — ISA 570]
+  - subseq_events_procedures (text) [Tier 1 add — ISA 560]
+  - subseq_events_review_through (date)
+  - subseq_events_identified (boolean)
+  - final_analytical_review_conclusion (text) [Tier 1 add — ISA 520]
+  - uncorrected_misstatements_evaluation (text) [Tier 1 add — ISA 450]
+  - uncorrected_misstatements_mgmt_rationale (text)
+  - final_independence_conclusion (text) [Tier 1 add — ISA 220 / IESBA]
+  - all_attestations_complete (boolean — set by trigger when 13/13 ticked)
+  - signed_by (FK profiles), signed_at (timestamptz)
+  - snapshot_taken_at (timestamptz)
+  - created_at, updated_at
+FIELDS — completion_attestations (13 rows per memo):
+  - id, memo_id (FK), organization_id, engagement_id
+  - attestation_key (text)
+  - attestation_order (int)
+  - isa_reference (text)
+  - source_table (text)
+  - source_check (text)
+  - system_check_passed (boolean)
+  - system_checked_at (timestamptz)
+  - attested_by (FK profiles), attested_at (timestamptz)
+  - UNIQUE (memo_id, attestation_key)
+THE 13 ATTESTATIONS (seeded by seed_attestations_for_memo RPC):
+  1. all_sections_approved (ISA 230.7) — auto-check
+  2. no_open_findings (ISA 450.14) — auto-check
+  3. uncorrected_below_materiality (ISA 450.14) — auto-check
+  4. misstatements_communicated (ISA 450.14) — auto-check
+  5. going_concern_assessed (ISA 570.26) — auto-check
+  6. subsequent_events_reviewed (ISA 560.10) — auto-check
+  7. related_parties_complete (ISA 550.27) — auto-check
+  8. all_procedures_responded (ISA 500.6) — auto-check
+  9. independence_reconfirmed (ISA 220.14) — MANUAL
+  10. written_reps_obtained (ISA 580.10) — MANUAL
+  11. review_notes_resolved (ISA 220.17) — MANUAL
+  12. opinion_type_selected (ISA 700.10) — auto-check
+  13. eqr_review_complete (ISQM 2 / ISA 220 Rev) — auto-check (auto-pass if eqr_required=false)
+UI ELEMENTS (completion-memo.html — 5 tabs):
+  TAB: Rollup
+    - 4 metric cards: Sections approved / Findings (open/resolved/reported) / Misstatements (posted/unposted) / Overall Materiality
+    - Materiality status banner: below (green) / approaching (amber) / exceeds (red) / not_calculated (grey)
+    - "Refresh System Checks" button (calls refresh_completion_memo_rollups + recompute_attestation_checks RPCs)
+  TAB: Attestations
+    - 13 attestation rows with auto-check indicator (green ✓ / red ! / blocked) + isa_reference badge
+    - Click-to-tick (admin only)
+    - System-fail override modal: partner confirms ISA judgement before ticking
+  TAB: Narrative
+    - Going Concern (ISA 570): assessment dropdown + rationale textarea
+    - Subsequent Events (ISA 560): procedures + review-through date + identified checkbox + conclusion
+    - Final Analytical Review (ISA 520): conclusion textarea
+    - Uncorrected Misstatements (ISA 450): evaluation textarea + mgmt rationale textarea
+    - Final Independence (ISA 220/IESBA): conclusion textarea
+    - Resources, Specialists & Consultations (ISA 220 R): textarea
+    - Other Matters: textarea
+    - Save Narrative button
+  TAB: Reps & Comms (added 2026-05-22)
+    - Mgmt Rep Letter card: obtained checkbox + date picker + file reference (conditional reveal)
+    - TCWG Communication card: communicated checkbox + date + matters textarea + response textarea (conditional reveal)
+    - Save Reps & Comms button
+  TAB: Opinion
+    - Opinion type dropdown (4 options)
+    - Basis for opinion textarea (revealed for modified opinions)
+    - Opinion logic warning (amber banner when Adverse/Disclaimer + 0 open findings + 0 unposted adj — ISA 705 sanity check)
+    - Save Opinion button
+  TAB: EQR
+    - EQR required checkbox (ISQM 2 / ISA 220 R)
+    - External EQR toggle (revealed when required) — switches between internal dropdown and external text fields
+    - Internal: reviewer dropdown (org members, excludes engagement partner)
+    - External: reviewer name + firm/qualification text inputs
+    - Mark EQR Complete button (with partial-fill validation)
+  Signoff bar (always visible at bottom):
+    - "X / 13 attestations complete" counter
+    - Sign & Lock Memo button (admin-only, gated)
+SIGN-OFF: Single admin sign-off. Hard gates in signMemo():
+  - EQR required + not completed → blocked
+  - Mgmt Rep Letter not obtained → blocked
+  - Modified opinion + no basis_notes → blocked
+  - 13/13 attestations ticked required
+OUTPUTS:
+  - Renders to Completion PDF as multiple blocks:
+    * Rollup summary table
+    * Going concern (structured)
+    * Subsequent events (structured)
+    * Final analytical review
+    * Uncorrected misstatements evaluation
+    * Final independence conclusion
+    * Mgmt rep letter (with red chip if not obtained)
+    * TCWG communication
+    * Other matters
+    * Partner attestations table
+  - Once locked: status=locked, signed_by + signed_at + snapshot_taken_at stamps, all fields read-only
+STATUS: COMPLETE
+
+================================================================================
+================================================================================
+FIRM LEVEL
+================================================================================
+================================================================================
+
+---
+MODULE: Organizations & Members
+ISA: ISQM 1 (firm-level quality management — partial)
+PHASE: Firm level
+TABLE(S): organizations + organization_members + organization_invites
+FIELDS — organizations:
+  - id, name, plan (enum: starter / team / firm), max_members (int)
+  - created_by, created_at
+  - trial_expires_at, stripe_customer_id, country
+FIELDS — organization_members:
+  - id, organization_id (FK), user_id (FK)
+  - role (enum: admin / supervisor / preparer)
+  - created_at
+  - UNIQUE (org, user)
+FIELDS — organization_invites:
+  - id, organization_id, email, role
+  - invited_by, status (enum: pending / accepted / expired)
+  - created_at
+UI ELEMENTS (team.html):
+  - Members list with role badges
+  - Invite member form: email + role
+  - Pending invites list with resend/cancel
+SIGN-OFF: None (admin manages)
+OUTPUTS:
+  - RLS gating across all tables (organization_id → get_user_org_ids())
+  - Role-based permissions per the auth.js PERMISSIONS matrix
+STATUS: COMPLETE
+
+---
+MODULE: Engagements (Index)
+ISA: Cross-cutting (engagement metadata)
+PHASE: Firm level
+TABLE(S): engagements
+FIELDS:
+  - id, organization_id, client_name, year_end_date
+  - engagement_type (enum: audit / review / compilation)
+  - status (enum: active / completed / archived)
+  - created_by, created_at
+  - shared_folder_url (text — Google Drive / OneDrive link)
+  - closed_by (FK profiles), closed_at, close_acknowledgment (text)
+  - Legacy materiality fields (kept for migration period; new materiality_versions table is source of truth):
+    * materiality_benchmark, materiality_amount, materiality_pct, materiality_perf_pct
+    * materiality_overall, materiality_performance, materiality_trivial, materiality_trivial_pct
+    * materiality_rationale
+UI ELEMENTS (dashboard.html):
+  - Engagement cards list: client name, year-end, status badge
+  - Create Engagement form: client name + year-end + type
+  - Year-end period filter (12-month dropdown)
+  - Status filter
+  - Per-engagement click → engagement.html
+SIGN-OFF: None
+OUTPUTS:
+  - Auto-seeds 19 sections on creation (PROCEDURE_TEMPLATES) + 20th if local compliance template active
+  - Auto-creates engagement_risk_assessment row
+STATUS: COMPLETE
+
+---
+MODULE: Financial Statement Uploads
+ISA: ISA 230 (link signed FS to file) — supports the closing chain
+PHASE: Firm level (engagement-attached)
+TABLE(S): engagement_fs_uploads
+FIELDS:
+  - id, engagement_id, organization_id
+  - version_type (enum: draft / final_for_review / signed)
+  - file_name, file_path (Supabase Storage path), file_size_bytes, mime_type
+  - version_label
+  - uploaded_by (FK profiles), uploaded_at
+  - is_superseded, superseded_at, superseded_by
+  - notes, created_at
+  - Partial unique index: at most one non-superseded 'signed' upload per engagement
+UI ELEMENTS (engagement.html FS tab):
+  - Upload button with version type selector
+  - File list with download + supersede actions
+  - Active 'signed' badge
+SIGN-OFF: None (uploader stamp)
+OUTPUTS:
+  - Files stored in Supabase Storage bucket 'fs-documents'
+  - Not rendered in PDFs (linked, not embedded)
+STATUS: COMPLETE
+
+================================================================================
+================================================================================
+INFRASTRUCTURE / MONITORING (not ISA modules — supporting tooling)
+================================================================================
+================================================================================
+
+---
+MODULE: Sentry Error Tracking
+ISA: N/A (engineering quality)
+PHASE: Cross-cutting
+TABLE(S): None (external service)
+FIELDS: External (Sentry dashboard)
+UI ELEMENTS: None visible to user
+SIGN-OFF: None
+OUTPUTS:
+  - public/js/sentry-init.js: CDN script + DSN-guarded init
+  - Hooked into 9 app pages: engagement, section, completion-memo, report, dashboard, login, team, local-compliance, onboarding
+  - Auto-attaches user email via audexon:user-loaded event (auth.js getCurrentUser)
+  - Environment auto-detected (local/staging/production from hostname)
+STATUS: STUB (wired, parked — no DSN set yet, no-op until activated; see docs/SENTRY-SETUP.md)
+
+================================================================================
+================================================================================
+SUMMARY
+================================================================================
+================================================================================
+
+PLANNING — 6 modules, all COMPLETE
+  - Client Acceptance, Engagement Letter, Independence, Audit Strategy,
+    Materiality (versioned), Risk Assessment
+
+EXECUTION — 10 modules, all COMPLETE (one with caveat)
+  - Trial Balance, Audit Sections (19+1 = 20 templates),
+    Audit Procedures, Procedure Responses, Findings + Adjusting Entries
+    (caveat: NO consolidated cross-section misstatement schedule view),
+    Documents, Review Notes, Activity Log, Local Compliance Template,
+    Section-Level Engagement-Specific Risks
+
+CONCLUSION — 1 module (the Completion Memo), COMPLETE with 13 attestations,
+  5 tabs (Rollup / Attestations / Narrative / Reps & Comms / Opinion / EQR),
+  hard gates on sign-off, full PDF render
+
+FIRM LEVEL — 3 modules, all COMPLETE
+  - Organizations & Members, Engagements (index), Financial Statement Uploads
+
+INFRASTRUCTURE
+  - Sentry: wired but parked (no DSN)
+  - Pre-commit checklist: in docs/PRE-COMMIT-CHECKLIST.md
+  - Staging environment: staging branch on staging--auditsaas.netlify.app
+
+================================================================================
+KNOWN GAPS (deferred / not built)
+================================================================================
+
+The following ISA modules / inspection items are NOT in the product today.
+These came from the 3-AI coverage assessment (Perplexity + claude.ai + Copilot).
+
+1. ISA 450 — Consolidated misstatement schedule across all sections
+   Currently: adjusting_entries per finding per section, no aggregated view.
+   Impact: partner must mentally aggregate. Real inspector ask.
+   Effort: ~2-3 hours (render-side, query adjusting_entries + findings joined).
+
+2. ISA 315 — Understanding the entity (separate structured module)
+   Currently: buried in audit strategy 'significant_factors' free-text.
+   Impact: defensible for SME but ideal as its own structured module.
+
+3. ISA 505 — External confirmations tracker
+   Currently: documented in section workpapers as free text.
+   Impact: missing structured sent/received/exception tracking.
+
+4. ISA 510 — Opening balances
+   Currently: no dedicated section.
+   Impact: relevant mainly for first-year audits.
+
+5. ISA 530 — Audit sampling documentation (structured)
+   Currently: free text only in procedure_responses.
+   Impact: real raise in quality if added.
+
+6. ISA 540 — Accounting estimates (structured)
+   Currently: covered as findings or in PPE/Provisions sections.
+   Impact: critical for trading/manufacturing clients with NRV, EoSB, impairment.
+
+7. ISA 230 — File lock / 60-day assembly archive workflow
+   Currently: engagement.status='completed' is the closest equivalent.
+   Impact: no formal lock with assembly-deadline countdown.
+
+8. ISQM 1 — Firm-level quality dashboard
+   Currently: each engagement is siloed; no portfolio view.
+   Impact: small but real ask for firms with multiple engagements.
+
+9. FS upload + TB-to-FS reconciliation
+   Currently: FS upload table exists (engagement_fs_uploads) but no
+   reconciliation workflow.
+
+10. Engagement budget vs actual hours tracking
+    Currently: budgeted_hours captured in audit_strategy, no actuals.
+
+================================================================================
+END OF REPORT
+================================================================================
