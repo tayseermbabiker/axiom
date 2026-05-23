@@ -1,6 +1,8 @@
-# Sprint 3 #2 — Audit Planning (rename + embed ISA 315) — PARKED
+# Sprint 3 #2 — Audit Planning (rename + embed ISA 315) — RESUMED 2026-05-23
 
-**Status:** PARKED 2026-05-21. Not building this sprint. Pick up post-pilot if Qatar partner flags the ISA 315 gap during demo, or in Sprint 4.
+**Status:** RESUMED 2026-05-23 as Sprint 4 Task #5. The 4-AI standards-floor synthesis (2026-05-23) confirmed the parked design and the [[feedback-audexon-perplexity-benchmark]] rule moved this from "wait for partner to flag" to "build because standards require it." Migration `20260523120001_isa_315_understanding.sql` implements this spec. See commit log for ship details.
+
+**Original status (2026-05-21):** PARKED. Not building this sprint. Pick up post-pilot if Qatar partner flags the ISA 315 gap during demo, or in Sprint 4.
 
 **Decision basis:** Qatar partner gap list (May 2026) did NOT specifically flag ISA 315 understanding — they named planning + materiality + risk + completion memo + FS upload. Sprint 3 #3 (Risk Assessment matrix) and #5 (Inspection PDF) are the actual partner-facing wins for 2026-06-01 demo. Parking #2 frees ~1.5d of build velocity.
 

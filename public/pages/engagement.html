@@ -901,7 +901,7 @@
               </div>
               <div class="planning-module-row" onclick="switchModuleTab('audit-strategy')" style="cursor:pointer;">
                 <span class="badge badge-in-progress">Active</span>
-                <span style="font-size:13px; font-weight:500; margin-left:10px;">Audit strategy</span>
+                <span style="font-size:13px; font-weight:500; margin-left:10px;">Audit planning</span>
                 <span class="text-sm text-muted" style="margin-left:auto;">ISA 300</span>
               </div>
               <div class="planning-module-row" onclick="switchModuleTab('materiality')" style="cursor:pointer;">
@@ -1463,19 +1463,19 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <h2>Audit Strategy</h2>
-              <p class="text-sm text-muted" style="margin:4px 0 0;">ISA 300 — Overall audit strategy. ISA 220 (Revised) — Partner direction. Pro feature.</p>
+              <h2>Audit Planning</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">ISA 300 — Overall audit strategy. ISA 315 — Understanding the entity. ISA 220 (Revised) — Partner direction. Pro feature.</p>
             </div>
             <div style="display:flex; gap:8px;">
               <span id="eas-status-badge" class="badge" style="display:none;"></span>
-              <button class="btn btn-outline btn-sm" id="eas-btn-revise" onclick="reviseAuditStrategy()" style="display:none;">Revise strategy</button>
+              <button class="btn btn-outline btn-sm" id="eas-btn-revise" onclick="reviseAuditStrategy()" style="display:none;">Revise planning</button>
             </div>
           </div>
           <div class="card-body">
 
             <!-- Pro-tier blocked -->
             <div id="eas-pro-blocked" style="display:none; background:var(--warning-light); border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
-              <strong style="color:var(--gray-900);">Audit Strategy is a Pro feature</strong>
+              <strong style="color:var(--gray-900);">Audit Planning is a Pro feature</strong>
               <p class="text-sm text-muted" style="margin:8px 0 12px;">ISA 300 overall strategy workpaper with partner direction (ISA 220 R) and EQR flagging. Available on Pro.</p>
               <a href="../index.html#pricing" class="btn btn-primary btn-sm">View Pro pricing</a>
             </div>
@@ -1627,9 +1627,45 @@
                 </div>
               </div>
 
+              <!-- Section D.5: Understanding the entity (ISA 315) -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Understanding the entity (ISA 315)</h3>
+              <p class="text-sm text-muted" style="margin-bottom:8px;">Captures the ISA 315 understanding inside this workpaper (no separate file). IFAC SME ISA Guide endorses integration over per-ISA workpapers.</p>
+
+              <div class="form-group">
+                <label class="text-sm">Industry and external environment (ISA 315.19(a))</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Industry/regulatory changes affecting this client's risk profile this year. One short paragraph is enough.</small>
+                <textarea id="eas-industry-environment" class="form-control" rows="2" placeholder="e.g. UAE Corporate Tax Year 1 implementation; sector slowdown in retail; new VAT inspection focus on related-party transactions."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="text-sm">Significant changes since prior period (ISA 315.A47)</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Ownership / management / business model / contracts / financing / going concern. Fill as a <em>diff</em> from prior year — not from scratch. Pre-populates the Risk Register header (Sprint 3+).</small>
+                <textarea id="eas-significant-changes" class="form-control" rows="3" placeholder="e.g. New CFO appointed Q3 2025; lost major customer X (12% of revenue) in Q4; refinanced long-term loan to bank Y at lower rate; no other material changes vs prior period."></textarea>
+              </div>
+
+              <!-- ISA 315.14 procedure attestations -->
+              <div style="border:0.5px solid var(--gray-200); border-radius:8px; padding:14px 16px; margin:12px 0; background:rgba(255,255,255,0.55);">
+                <h4 style="font-size:12px; font-weight:600; margin:0 0 8px; color:var(--gray-700); text-transform:uppercase; letter-spacing:0.5px;">Risk assessment procedures performed (ISA 315.14)</h4>
+                <p class="text-sm text-muted" style="margin-bottom:10px;">ISA 315.14 requires the auditor to perform risk assessment procedures across three categories. All three are required for approval.</p>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="eas-isa315-inquiry" style="margin-top:3px;">
+                    <span>Inquiries of management, those charged with governance, and others within the entity (ISA 315.14(a)).</span>
+                  </label>
+                  <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="eas-isa315-analytical" style="margin-top:3px;">
+                    <span>Analytical procedures performed as risk assessment procedures (ISA 315.14(b)).</span>
+                  </label>
+                  <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="eas-isa315-observation" style="margin-top:3px;">
+                    <span>Observation and inspection of premises, operations, and accounting records (ISA 315.14(c)).</span>
+                  </label>
+                </div>
+              </div>
+
               <!-- Section E: Attestations -->
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Partner attestations</h3>
-              <p class="text-sm text-muted" style="margin-bottom:12px;">All four required before this strategy can be approved.</p>
+              <p class="text-sm text-muted" style="margin-bottom:12px;">All four ISA 300 / 220 attestations + all three ISA 315.14 procedures (above) are required before approval.</p>
               <div style="display:flex; flex-direction:column; gap:8px;">
                 <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
                   <input type="checkbox" id="eas-att-strategy" style="margin-top:3px;">
@@ -1655,7 +1691,7 @@
               <!-- Save bar -->
               <div style="display:flex; gap:8px; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--gray-100);">
                 <button class="btn btn-outline btn-sm" id="eas-btn-save-draft" onclick="saveAuditStrategy('draft')">Save draft</button>
-                <button class="btn btn-primary btn-sm" id="eas-btn-approve" onclick="saveAuditStrategy('approved')">Approve strategy</button>
+                <button class="btn btn-primary btn-sm" id="eas-btn-approve" onclick="saveAuditStrategy('approved')">Approve planning</button>
                 <span class="text-sm text-muted" id="eas-save-msg" style="margin-left:8px;"></span>
               </div>
             </div>
@@ -3084,7 +3120,7 @@
         { label: 'Acceptance',         tab: 'engagement-acceptance'   },
         { label: 'Engagement letter',  tab: 'engagement-letter'       },
         { label: 'Independence',       tab: 'engagement-independence' },
-        { label: 'Audit strategy',     tab: 'audit-strategy'          },
+        { label: 'Audit planning',     tab: 'audit-strategy'          },
         { label: 'Materiality',        tab: 'materiality'             },
         { label: 'Risk assessment',    tab: 'risk-assessment'         },
       ],
@@ -6105,6 +6141,12 @@
       document.getElementById('eas-fraud-discussion-held').checked = !!r.fraud_team_discussion_held;
       document.getElementById('eas-fraud-discussion-date').value   = r.fraud_team_discussion_date   || '';
       document.getElementById('eas-fraud-discussion-attendees').value = r.fraud_team_discussion_attendees || '';
+      // ISA 315 — Understanding the entity (Sprint 4)
+      document.getElementById('eas-industry-environment').value    = r.industry_external_environment       || '';
+      document.getElementById('eas-significant-changes').value     = r.significant_changes_from_prior_year || '';
+      document.getElementById('eas-isa315-inquiry').checked        = !!r.isa_315_inquiry_performed;
+      document.getElementById('eas-isa315-analytical').checked     = !!r.isa_315_analytical_performed;
+      document.getElementById('eas-isa315-observation').checked    = !!r.isa_315_observation_inspection_performed;
       onEasFraudDiscussionChange();
     }
 
@@ -6144,6 +6186,9 @@
         section('Planning analytics (ISA 315.6)',                 r.planning_analytics_note) +
         section('Going concern — planning assessment (ISA 570)',  r.going_concern_planning_note) +
         section('Subsequent events — planning approach (ISA 560)', r.subsequent_events_planning_note) +
+        section('Industry & external environment (ISA 315.19(a))', r.industry_external_environment) +
+        section('Significant changes since prior period (ISA 315.A47)', r.significant_changes_from_prior_year) +
+        `<div style="margin-bottom:16px;"><div style="font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Risk assessment procedures (ISA 315.14)</div><div style="font-size:13px; color:var(--gray-800);">${r.isa_315_inquiry_performed ? '&#10003;' : '&minus;'} Inquiries &middot; ${r.isa_315_analytical_performed ? '&#10003;' : '&minus;'} Analytical &middot; ${r.isa_315_observation_inspection_performed ? '&#10003;' : '&minus;'} Observation/inspection</div></div>` +
         `<div style="margin-bottom:16px;"><div style="font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Fraud team discussion (ISA 240.17)</div><div style="font-size:13px; color:var(--gray-800);">${fraudLine}</div></div>`;
     }
 
@@ -6215,6 +6260,12 @@
         fraud_team_discussion_held:             document.getElementById('eas-fraud-discussion-held').checked,
         fraud_team_discussion_date:             document.getElementById('eas-fraud-discussion-date').value     || null,
         fraud_team_discussion_attendees:        document.getElementById('eas-fraud-discussion-attendees').value.trim() || null,
+        // ISA 315 — Understanding the entity
+        industry_external_environment:           document.getElementById('eas-industry-environment').value.trim() || null,
+        significant_changes_from_prior_year:     document.getElementById('eas-significant-changes').value.trim()  || null,
+        isa_315_inquiry_performed:               document.getElementById('eas-isa315-inquiry').checked,
+        isa_315_analytical_performed:            document.getElementById('eas-isa315-analytical').checked,
+        isa_315_observation_inspection_performed: document.getElementById('eas-isa315-observation').checked,
       };
     }
 
@@ -6229,6 +6280,9 @@
         if (!form.isa_300_resources_assessed)            { showEasError('Tick attestation #2 (resources) before approval.'); return; }
         if (!form.isa_300_team_briefed)                  { showEasError('Tick attestation #3 (team brief) before approval.'); return; }
         if (!form.isa_220_direction_supervision_planned) { showEasError('Tick attestation #4 (ISA 220 R direction) before approval.'); return; }
+        if (!form.isa_315_inquiry_performed)              { showEasError('Tick ISA 315.14(a) — inquiries of management performed.');     return; }
+        if (!form.isa_315_analytical_performed)           { showEasError('Tick ISA 315.14(b) — analytical procedures performed.');       return; }
+        if (!form.isa_315_observation_inspection_performed) { showEasError('Tick ISA 315.14(c) — observation/inspection performed.');    return; }
         if (form.eqr_required && !form.eqr_reviewer_name) { showEasError('EQR reviewer name is required when EQR is flagged.'); return; }
       }
 

@@ -647,9 +647,9 @@
         }
       }
 
-      // Audit Strategy (ISA 300 + ISA 220 R)
+      // Audit Planning (ISA 300 strategy + ISA 315 understanding + ISA 220 R direction)
       if (reportType === 'planning' && easActive) {
-        html += '<h2>Audit Strategy (ISA 300)</h2>';
+        html += '<h2>Audit Planning (ISA 300 + ISA 315)</h2>';
         const statusBadge = easActive.status === 'approved'
           ? '<span class="badge b-approved">APPROVED</span>'
           : '<span class="badge b-pending">DRAFT</span>';
@@ -677,6 +677,23 @@
         html += narrSection('Planning analytics (ISA 315.6)',                     easActive.planning_analytics_note);
         html += narrSection('Going concern — planning assessment (ISA 570)',      easActive.going_concern_planning_note);
         html += narrSection('Subsequent events — planning approach (ISA 560)',    easActive.subsequent_events_planning_note);
+
+        // ISA 315 — Understanding the entity (Sprint 4 standards floor)
+        html += narrSection('Industry & external environment (ISA 315.19(a))',    easActive.industry_external_environment);
+        html += narrSection('Significant changes since prior period (ISA 315.A47)', easActive.significant_changes_from_prior_year);
+        // ISA 315.14 — risk assessment procedures performed
+        const isa315Any = easActive.isa_315_inquiry_performed
+                       || easActive.isa_315_analytical_performed
+                       || easActive.isa_315_observation_inspection_performed;
+        if (isa315Any || easActive.status === 'approved') {
+          html += '<h4>Risk assessment procedures performed (ISA 315.14)</h4>';
+          html += '<table><tbody>';
+          html += `<tr><td style="width:80%;">Inquiries of management, TCWG, and others (ISA 315.14(a))</td><td style="text-align:center;">${easActive.isa_315_inquiry_performed ? '&#10003;' : '&minus;'}</td></tr>`;
+          html += `<tr><td>Analytical procedures as risk assessment (ISA 315.14(b))</td><td style="text-align:center;">${easActive.isa_315_analytical_performed ? '&#10003;' : '&minus;'}</td></tr>`;
+          html += `<tr><td>Observation and inspection (ISA 315.14(c))</td><td style="text-align:center;">${easActive.isa_315_observation_inspection_performed ? '&#10003;' : '&minus;'}</td></tr>`;
+          html += '</tbody></table>';
+        }
+
         // Fraud team discussion (ISA 240.17) — render the structured fields
         if (easActive.fraud_team_discussion_held || easActive.fraud_team_discussion_date || easActive.fraud_team_discussion_attendees) {
           html += '<h4>Fraud team discussion (ISA 240.17)</h4>';
