@@ -973,21 +973,93 @@
         html += '</tbody></table>';
       }
 
-      // Unadjusted misstatements — only misstatements with actual monetary impact
-      const unadjusted = filtFindings.filter(f => f.finding_type === 'misstatement' && f.status !== 'resolved');
-      if (unadjusted.length > 0) {
-        html += '<h3>Summary of Unadjusted Misstatements (ISA 450)</h3>';
-        html += '<table><thead><tr><th>Finding</th><th>Section</th><th>Amount</th><th>Categorization</th></tr></thead><tbody>';
-        let totalUnadj = 0;
-        html += unadjusted.map(f => {
-          const secName = sections.find(s => s.id === f.section_id)?.name || '—';
-          const amt = Number(f.monetary_impact) || 0;
-          totalUnadj += amt;
-          const cat = f.close_category ? f.close_category.replace(/_/g, ' ') : '—';
-          return `<tr><td>${esc(f.title)}</td><td>${esc(secName)}</td><td>${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td><td>${cat}</td></tr>`;
-        }).join('');
-        html += `<tr style="font-weight:700; border-top:2px solid #d1d5db;"><td colspan="2">Total Unadjusted</td><td>${totalUnadj.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td><td></td></tr>`;
-        html += '</tbody></table>';
+      // ===== ISA 450 — Consolidated misstatement schedule (grouped) =====
+      // Classification:
+      //   corrected       — has at least one POSTED adjusting entry (booked)
+      //   clearly_trivial — close_category = unadjusted_immaterial (ISA 450.5)
+      //   uncorrected     — everything else: identified, not booked, not trivial
+      const misstatementFindings = filtFindings.filter(f => f.finding_type === 'misstatement');
+      if (misstatementFindings.length > 0) {
+        const classified = misstatementFindings.map(f => {
+          const ajes = adjustingEntries.filter(a => a.finding_id === f.id);
+          const hasPosted = ajes.some(a => a.is_posted);
+          const isTrivial = f.close_category === 'unadjusted_immaterial';
+          let cls;
+          if (hasPosted) cls = 'corrected';
+          else if (isTrivial) cls = 'clearly_trivial';
+          else cls = 'uncorrected';
+          return { f, ajes, cls };
+        });
+        const groups = {
+          corrected:       classified.filter(r => r.cls === 'corrected'),
+          uncorrected:     classified.filter(r => r.cls === 'uncorrected'),
+          clearly_trivial: classified.filter(r => r.cls === 'clearly_trivial'),
+        };
+        const groupMeta = {
+          corrected:       { label: 'Corrected misstatements',       hint: 'Management posted adjusting entries — already reflected in the financial statements.' },
+          uncorrected:     { label: 'Uncorrected misstatements',     hint: 'Identified misstatements not posted by management — accumulate against materiality per ISA 450.11.' },
+          clearly_trivial: { label: 'Clearly trivial misstatements', hint: 'Below the clearly-trivial threshold — not accumulated per ISA 450.5.' },
+        };
+        const sums = { corrected: 0, uncorrected: 0, clearly_trivial: 0 };
+
+        html += '<h3>Misstatement Schedule (ISA 450)</h3>';
+        html += '<p style="font-size:11px; color:#6E6E73; margin-bottom:12px;">Line-by-line view of every misstatement identified during the audit, grouped per ISA 450.5 (clearly trivial) and ISA 450.11 (corrected vs uncorrected).</p>';
+
+        ['corrected', 'uncorrected', 'clearly_trivial'].forEach(key => {
+          const rows = groups[key];
+          if (rows.length === 0) return;
+          const m = groupMeta[key];
+          html += `<h4 style="margin-top:14px;">${m.label} (${rows.length})</h4>`;
+          html += `<p style="font-size:10px; color:#6E6E73; margin-bottom:6px;">${m.hint}</p>`;
+          html += '<table><thead><tr><th>Finding</th><th>Section</th><th>Impact</th><th>Adjusting Entry</th><th>Posted?</th></tr></thead><tbody>';
+          rows.forEach(r => {
+            const secName = sections.find(s => s.id === r.f.section_id)?.name || '—';
+            const amt = Number(r.f.monetary_impact) || 0;
+            sums[key] += Math.abs(amt);
+            let aeCell;
+            if (r.ajes.length === 0) {
+              aeCell = '—';
+            } else {
+              aeCell = r.ajes.map(a =>
+                `Dr ${esc(a.debit_account)} / Cr ${esc(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+              ).join('<br>');
+            }
+            let postedCell;
+            if (r.ajes.length === 0)                       postedCell = '—';
+            else if (r.ajes.every(a => a.is_posted))       postedCell = '<span style="color:#065F46; font-weight:600;">POSTED</span>';
+            else if (r.ajes.some(a => a.is_posted))        postedCell = '<span style="color:#92400E; font-weight:600;">PARTIAL</span>';
+            else                                            postedCell = '<span style="color:#92400E; font-weight:600;">NOT POSTED</span>';
+            html += `<tr>
+              <td>${esc(r.f.title)}</td>
+              <td>${esc(secName)}</td>
+              <td style="text-align:right;">${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td>${aeCell}</td>
+              <td>${postedCell}</td>
+            </tr>`;
+          });
+          html += `<tr style="font-weight:700; border-top:2px solid #d1d5db;">
+            <td colspan="2">${m.label} (Σ)</td>
+            <td style="text-align:right;">${sums[key].toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td></td><td></td>
+          </tr>`;
+          html += '</tbody></table>';
+        });
+
+        // Summary vs materiality
+        const matOverall = Number(eng.materiality_overall) || 0;
+        const matPerf    = Number(eng.materiality_performance) || 0;
+        if (matOverall || matPerf) {
+          html += '<h4 style="margin-top:14px;">Aggregate evaluation vs materiality (ISA 450.11)</h4>';
+          html += '<table><tbody>';
+          if (matOverall) html += `<tr><th>Overall materiality</th><td style="text-align:right;">${matOverall.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>`;
+          if (matPerf)    html += `<tr><th>Performance materiality</th><td style="text-align:right;">${matPerf.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>`;
+          html += `<tr><th>Uncorrected misstatements (Σ)</th><td style="text-align:right; font-weight:700;">${sums.uncorrected.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>`;
+          if (matOverall && sums.uncorrected > 0) {
+            const pct = (sums.uncorrected / matOverall) * 100;
+            html += `<tr><th>Uncorrected as % of overall materiality</th><td style="text-align:right;">${pct.toFixed(1)}%</td></tr>`;
+          }
+          html += '</tbody></table>';
+        }
       }
 
       } // end of FINDINGS & MISSTATEMENTS SUMMARY (completion-only wrapper)

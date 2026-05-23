@@ -95,6 +95,37 @@
     .materiality-status.exceeds     { background: var(--danger-light);  color: var(--danger);  }
     .materiality-status.not_calculated { background: var(--gray-100);   color: var(--gray-600); }
 
+    /* ISA 450 — line-by-line misstatement schedule */
+    .misstatement-schedule { margin-top: 8px; }
+    .misstatement-schedule .ms-title { font-size: 14px; font-weight: 600; color: var(--gray-900); margin-bottom: 4px; }
+    .misstatement-schedule .ms-hint  { font-size: 12px; color: var(--gray-500); margin-bottom: 14px; max-width: 760px; }
+    .misstatement-schedule .ms-empty { font-size: 13px; color: var(--gray-500); padding: 14px 18px; background: var(--gray-50); border-radius: 10px; }
+    .ms-group { margin-bottom: 18px; }
+    .ms-group-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+    .ms-group-head h4 { font-size: 13px; font-weight: 600; margin: 0; }
+    .ms-group-head .ms-group-hint { font-size: 11px; color: var(--gray-500); }
+    .ms-group.corrected h4       { color: var(--success); }
+    .ms-group.uncorrected h4     { color: var(--warning); }
+    .ms-group.clearly_trivial h4 { color: var(--gray-600); }
+    .ms-table { width: 100%; border-collapse: collapse; font-size: 12px; background: white; border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden; }
+    .ms-table th { text-align: left; padding: 8px 10px; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); font-weight: 600; color: var(--gray-600); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .ms-table td { padding: 10px; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+    .ms-table tr:last-child td { border-bottom: 0; }
+    .ms-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .ms-aje { font-size: 11px; line-height: 1.4; color: var(--gray-700); }
+    .ms-aje .ms-aje-side { color: var(--gray-500); }
+    .ms-posted-yes { color: var(--success); font-weight: 600; }
+    .ms-posted-partial { color: var(--warning); font-weight: 600; }
+    .ms-posted-no { color: var(--warning); font-weight: 600; }
+    .ms-posted-none { color: var(--gray-400); }
+    .ms-totals { background: var(--gray-50); border-radius: 10px; padding: 14px 18px; font-size: 12px; margin-top: 14px; }
+    .ms-totals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .ms-totals-grid .lbl { color: var(--gray-500); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .ms-totals-grid .val { font-size: 15px; font-weight: 600; margin-top: 2px; }
+    .ms-totals-grid .val.corrected   { color: var(--success); }
+    .ms-totals-grid .val.uncorrected { color: var(--warning); }
+    .ms-vs-mat { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 12px; color: var(--gray-700); }
+
     /* Attestations */
     .attest-list { display: flex; flex-direction: column; gap: 10px; }
     .attest-row {
@@ -336,6 +367,15 @@
             <div class="materiality-status" id="materiality-status">
               <span id="materiality-status-text">Materiality not yet entered &mdash; set it on the Engagement page first.</span>
             </div>
+          </div>
+
+          <!-- ISA 450 — Line-by-line misstatement schedule -->
+          <div class="misstatement-schedule" id="misstatement-schedule">
+            <h3 class="ms-title">Misstatement Schedule (ISA 450)</h3>
+            <p class="ms-hint">Every misstatement identified during the audit, grouped per ISA 450.5 (clearly trivial) and ISA 450.11 (corrected vs uncorrected). Adjusting entries marked posted reflect corrections accepted by management.</p>
+            <div id="ms-empty" class="ms-empty" style="display:none;">No misstatements have been raised on this engagement.</div>
+            <div id="ms-groups"></div>
+            <div id="ms-totals"></div>
           </div>
         </div>
 
@@ -581,6 +621,14 @@
     let memo = null;
     let attestations = [];
     let orgMembers = [];
+    let misstatementRows = [];
+
+    function escHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
 
     // ---- Init ----
     async function init() {
@@ -620,6 +668,7 @@
       await loadOrgMembers();
       await loadOrCreateMemo();
       await loadAttestations();
+      await loadMisstatementSchedule();
       await refreshChecks();
       renderAll();
 
@@ -721,6 +770,56 @@
       attestations = data || [];
     }
 
+    // ISA 450 line-by-line misstatement schedule.
+    // Pure query on existing tables (findings.finding_type='misstatement'
+    // joined to adjusting_entries) — no new schema. Classification per
+    // ISA 450.5 (clearly trivial) and 450.11 (corrected vs uncorrected).
+    async function loadMisstatementSchedule() {
+      misstatementRows = [];
+      const { data: secs } = await supabaseClient
+        .from('audit_sections')
+        .select('id, name')
+        .eq('engagement_id', engagementId);
+      const sections = secs || [];
+      const secIds = sections.map(s => s.id);
+      const secById = Object.fromEntries(sections.map(s => [s.id, s.name]));
+      if (secIds.length === 0) return;
+
+      const { data: findings } = await supabaseClient
+        .from('findings')
+        .select('id, section_id, title, condition, effect, monetary_impact, close_category, status, management_response, severity, is_management_letter_point')
+        .in('section_id', secIds)
+        .eq('finding_type', 'misstatement');
+      const fs = findings || [];
+      if (fs.length === 0) return;
+
+      const fIds = fs.map(f => f.id);
+      const { data: aes } = await supabaseClient
+        .from('adjusting_entries')
+        .select('id, finding_id, debit_account, credit_account, amount, narration, is_posted')
+        .in('finding_id', fIds);
+      const aesByFinding = {};
+      (aes || []).forEach(a => {
+        (aesByFinding[a.finding_id] = aesByFinding[a.finding_id] || []).push(a);
+      });
+
+      misstatementRows = fs.map(f => {
+        const ajes = aesByFinding[f.id] || [];
+        const hasPosted = ajes.some(a => a.is_posted);
+        const isTrivial = f.close_category === 'unadjusted_immaterial';
+        let classification;
+        if (hasPosted) classification = 'corrected';
+        else if (isTrivial) classification = 'clearly_trivial';
+        else classification = 'uncorrected';
+        return {
+          finding: f,
+          section_name: secById[f.section_id] || '—',
+          adjusting_entries: ajes,
+          classification,
+        };
+      });
+    }
+
     async function refreshChecks() {
       if (!memo) return;
       // 1. Refresh the memo rollups (sections/findings/AJEs counts). On staging
@@ -737,7 +836,7 @@
         alert('System checks failed: ' + checkErr.message);
         return;
       }
-      // 3. Re-fetch memo + attestations
+      // 3. Re-fetch memo + attestations + misstatement schedule
       const { data: m } = await supabaseClient
         .from('engagement_completion_memo')
         .select('*')
@@ -745,18 +844,115 @@
         .single();
       if (m) memo = m;
       await loadAttestations();
+      await loadMisstatementSchedule();
       renderAll();
     }
 
     function renderAll() {
       renderHeader();
       renderRollup();
+      renderMisstatementSchedule();
       renderAttestations();
       renderNarrative();
       renderReps();
       renderOpinion();
       renderEqr();
       renderSignoffBar();
+    }
+
+    function renderMisstatementSchedule() {
+      const empty = document.getElementById('ms-empty');
+      const groupsEl = document.getElementById('ms-groups');
+      const totalsEl = document.getElementById('ms-totals');
+      groupsEl.innerHTML = '';
+      totalsEl.innerHTML = '';
+
+      if (misstatementRows.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      const groups = {
+        corrected:       misstatementRows.filter(r => r.classification === 'corrected'),
+        uncorrected:     misstatementRows.filter(r => r.classification === 'uncorrected'),
+        clearly_trivial: misstatementRows.filter(r => r.classification === 'clearly_trivial'),
+      };
+      const meta = {
+        corrected:       { label: 'Corrected misstatements',       hint: 'Adjusting entry posted by management — already in the books.' },
+        uncorrected:     { label: 'Uncorrected misstatements',     hint: 'No posted adjustment — these accumulate against materiality per ISA 450.11.' },
+        clearly_trivial: { label: 'Clearly trivial misstatements', hint: 'Below the clearly-trivial threshold — not accumulated per ISA 450.5.' },
+      };
+      const sums = { corrected: 0, uncorrected: 0, clearly_trivial: 0 };
+
+      ['corrected', 'uncorrected', 'clearly_trivial'].forEach(key => {
+        const rows = groups[key];
+        if (rows.length === 0) return;
+        const m = meta[key];
+        let html = `<div class="ms-group ${key}">
+          <div class="ms-group-head">
+            <h4>${m.label} (${rows.length})</h4>
+            <span class="ms-group-hint">${m.hint}</span>
+          </div>
+          <table class="ms-table"><thead><tr>
+            <th>Finding</th>
+            <th>Section</th>
+            <th class="num">Impact</th>
+            <th>Adjusting entry</th>
+            <th>Posted?</th>
+          </tr></thead><tbody>`;
+        rows.forEach(r => {
+          const amt = Number(r.finding.monetary_impact) || 0;
+          sums[key] += Math.abs(amt);
+          let aeCell;
+          if (r.adjusting_entries.length === 0) {
+            aeCell = '<span class="ms-posted-none">—</span>';
+          } else {
+            aeCell = r.adjusting_entries.map(a =>
+              `<div class="ms-aje"><span class="ms-aje-side">Dr</span> ${escHtml(a.debit_account)} / <span class="ms-aje-side">Cr</span> ${escHtml(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>`
+            ).join('');
+          }
+          let postedCell;
+          if (r.adjusting_entries.length === 0) {
+            postedCell = '<span class="ms-posted-none">—</span>';
+          } else if (r.adjusting_entries.every(a => a.is_posted)) {
+            postedCell = '<span class="ms-posted-yes">Posted</span>';
+          } else if (r.adjusting_entries.some(a => a.is_posted)) {
+            postedCell = '<span class="ms-posted-partial">Partial</span>';
+          } else {
+            postedCell = '<span class="ms-posted-no">Not posted</span>';
+          }
+          const effectExcerpt = r.finding.effect
+            ? `<div style="font-size:11px; color:var(--gray-500); margin-top:2px;">${escHtml(r.finding.effect.length > 200 ? r.finding.effect.slice(0, 200) + '…' : r.finding.effect)}</div>`
+            : '';
+          html += `<tr>
+            <td><div style="font-weight:500;">${escHtml(r.finding.title)}</div>${effectExcerpt}</td>
+            <td>${escHtml(r.section_name)}</td>
+            <td class="num">${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td>${aeCell}</td>
+            <td>${postedCell}</td>
+          </tr>`;
+        });
+        html += '</tbody></table></div>';
+        groupsEl.insertAdjacentHTML('beforeend', html);
+      });
+
+      const matOverall = Number(engagement.materiality_overall) || 0;
+      const matPerf    = Number(engagement.materiality_performance) || 0;
+      const uncSum     = sums.uncorrected;
+      let totalsHtml = `<div class="ms-totals"><div class="ms-totals-grid">
+        <div><div class="lbl">Corrected (Σ)</div><div class="val corrected">${sums.corrected.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>
+        <div><div class="lbl">Uncorrected (Σ)</div><div class="val uncorrected">${uncSum.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>
+        <div><div class="lbl">Clearly trivial (Σ)</div><div class="val">${sums.clearly_trivial.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>`;
+      if (matOverall) totalsHtml += `<div><div class="lbl">Overall materiality</div><div class="val">${matOverall.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>`;
+      if (matPerf)    totalsHtml += `<div><div class="lbl">Performance materiality</div><div class="val">${matPerf.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>`;
+      totalsHtml += '</div>';
+      if (matOverall && uncSum > 0) {
+        const pct = (uncSum / matOverall) * 100;
+        totalsHtml += `<div class="ms-vs-mat">Uncorrected vs overall materiality: <strong>${pct.toFixed(1)}%</strong></div>`;
+      }
+      totalsHtml += '</div>';
+      totalsEl.innerHTML = totalsHtml;
     }
 
     function renderHeader() {
