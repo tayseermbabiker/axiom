@@ -803,6 +803,81 @@
     </div>
   </div>
 
+  <!-- ISA 530 Sampling modal -->
+  <div class="modal-overlay" id="modal-sampling">
+    <div class="modal" style="max-width:680px;">
+      <div class="modal-header">
+        <h3 id="sampling-modal-title">Sampling documentation (ISA 530)</h3>
+        <button class="modal-close" onclick="closeSamplingForm()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted" style="margin-bottom:12px;" id="sampling-proc-desc"></p>
+
+        <div class="form-group">
+          <label class="text-sm">Population description (ISA 530.7)</label>
+          <textarea id="sampling-population" class="form-control" rows="2" placeholder="e.g. All revenue transactions for the year ended 31 Dec 2025 (invoices issued, excluding credit notes)."></textarea>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="text-sm">Population size (units / AED)</label>
+            <input type="number" id="sampling-pop-size" class="form-control" min="0" step="any" placeholder="e.g. 850">
+          </div>
+          <div class="form-group">
+            <label class="text-sm">Sample size</label>
+            <input type="number" id="sampling-sample-size" class="form-control" min="0" step="any" placeholder="e.g. 30">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Sampling method (ISA 530.8)</label>
+          <select id="sampling-method" class="form-control" style="max-width:280px;">
+            <option value="">— Select method —</option>
+            <option value="random">Random</option>
+            <option value="systematic">Systematic</option>
+            <option value="haphazard">Haphazard</option>
+            <option value="monetary_unit">Monetary unit (MUS)</option>
+            <option value="judgmental">Judgmental</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Selection basis</label>
+          <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">How items were picked. e.g. RANDBETWEEN in Excel; every 28th invoice starting from item 14; all items above AED 25K.</small>
+          <textarea id="sampling-selection" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Results summary (ISA 530.A21)</label>
+          <textarea id="sampling-results" class="form-control" rows="2" placeholder="e.g. All 30 items traced without exception. 2 cut-off errors identified — AED 3,400 total."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Projected misstatement <span class="text-muted">(if any, AED)</span></label>
+          <input type="number" id="sampling-projection" class="form-control" min="0" step="any" placeholder="e.g. 96400 (projected from 2 errors of AED 3,400 in sample of 30 → AED 96,400 over population of 850)">
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Conclusion (ISA 530.15)</label>
+          <textarea id="sampling-conclusion" class="form-control" rows="2" placeholder="e.g. Projected misstatement of AED 96,400 is below performance materiality of AED 150K. Sample provides sufficient appropriate evidence. No further work required."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Notes <span class="text-muted">(optional)</span></label>
+          <textarea id="sampling-notes" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div id="sampling-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline btn-sm" onclick="closeSamplingForm()">Cancel</button>
+        <button class="btn btn-danger btn-sm" id="sampling-btn-delete" onclick="deleteSampling()" style="display:none; margin-right:auto;">Delete</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSampling()">Save sampling</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
@@ -818,6 +893,8 @@
     let procedures = [];
     let responses = [];
     let documents = [];
+    let samplings = [];                // ISA 530 — one per procedure (UNIQUE)
+    let editingSamplingProcId = null;  // procedure_id whose sampling is being edited
     let findings = [];
     let reviewNotes = [];
     let tbLines = [];
@@ -1301,9 +1378,17 @@
           .order('created_at');
 
         documents = [...procDocs, ...(secDocs || [])];
+
+        // ISA 530 sampling (Sprint 4) — at most one per procedure
+        const { data: sampData } = await supabaseClient
+          .from('procedure_sampling')
+          .select('*')
+          .in('procedure_id', procIds);
+        samplings = sampData || [];
       } else {
         responses = [];
         documents = [];
+        samplings = [];
       }
 
       renderProcedures();
@@ -1368,12 +1453,27 @@
                     <button class="btn btn-outline btn-sm" onclick="toggleResponseStatus('${proc.id}')">
                       Mark as ${status === 'pending' ? 'Done' : 'Pending'}
                     </button>
+                    <button class="btn btn-outline btn-sm" onclick="openSamplingForm('${proc.id}')" title="ISA 530 — document the population, method, sample size, results, and projection.">
+                      ${samplings.find(s => s.procedure_id === proc.id) ? 'Edit sampling' : '+ Sampling'}
+                    </button>
                     ${can('add_procedure') ? `
                       <button class="btn btn-outline btn-sm" onclick="editProcedure('${proc.id}')" style="margin-left:auto;">Edit</button>
                       <button class="btn btn-outline btn-sm" onclick="deleteProcedure('${proc.id}')" style="color:var(--danger); border-color:var(--danger);">Delete</button>
                     ` : ''}
                   </div>
                 ` : ''}
+
+                ${(() => {
+                  const s = samplings.find(x => x.procedure_id === proc.id);
+                  if (!s) return '';
+                  const methodLabel = s.sampling_method ? s.sampling_method.replace(/_/g, ' ') : 'not specified';
+                  const popPart = s.population_size != null ? s.population_size : '?';
+                  const sampPart = s.sample_size != null ? s.sample_size : '?';
+                  return `<div style="background:#F8FAFC; border:0.5px solid #E2E8F0; border-radius:6px; padding:8px 12px; margin-bottom:14px; font-size:12px;">
+                    <strong style="color:var(--gray-700);">ISA 530 sampling:</strong>
+                    <span style="color:var(--gray-700);">${escHtml(String(sampPart))} of ${escHtml(String(popPart))} &middot; method: ${escHtml(methodLabel)}${s.results_summary ? ' &middot; ' + escHtml(s.results_summary.length > 60 ? s.results_summary.slice(0, 60) + '…' : s.results_summary) : ''}</span>
+                  </div>`;
+                })()}
 
                 <!-- My Work Files -->
                 <div class="mb-16">
@@ -1723,6 +1823,112 @@
 
       await loadProcedures();
       applyApprovedState();
+    }
+
+    // ---- ISA 530 sampling per procedure (Sprint 4 standards floor) ----
+    function openSamplingForm(procId) {
+      const proc = procedures.find(p => p.id === procId);
+      if (!proc) return;
+      editingSamplingProcId = procId;
+
+      document.getElementById('sampling-proc-desc').textContent = 'Procedure: ' + proc.description;
+      const existing = samplings.find(s => s.procedure_id === procId);
+      document.getElementById('sampling-modal-title').textContent = existing
+        ? 'Edit sampling (ISA 530)'
+        : 'Add sampling documentation (ISA 530)';
+      document.getElementById('sampling-btn-delete').style.display = existing ? '' : 'none';
+
+      document.getElementById('sampling-population').value  = existing?.population_description || '';
+      document.getElementById('sampling-pop-size').value    = existing?.population_size ?? '';
+      document.getElementById('sampling-sample-size').value = existing?.sample_size ?? '';
+      document.getElementById('sampling-method').value      = existing?.sampling_method || '';
+      document.getElementById('sampling-selection').value   = existing?.selection_basis || '';
+      document.getElementById('sampling-results').value     = existing?.results_summary || '';
+      document.getElementById('sampling-projection').value  = existing?.projection_amount ?? '';
+      document.getElementById('sampling-conclusion').value  = existing?.conclusion || '';
+      document.getElementById('sampling-notes').value       = existing?.notes || '';
+      document.getElementById('sampling-error').style.display = 'none';
+
+      document.getElementById('modal-sampling').classList.add('active');
+    }
+
+    function closeSamplingForm() {
+      document.getElementById('modal-sampling').classList.remove('active');
+      editingSamplingProcId = null;
+    }
+
+    function showSamplingError(msg) {
+      const el = document.getElementById('sampling-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function readNullableNumber(id) {
+      const v = document.getElementById(id).value;
+      if (v === '' || v == null) return null;
+      const n = Number(v);
+      return Number.isNaN(n) ? null : n;
+    }
+
+    async function saveSampling() {
+      if (!editingSamplingProcId) return;
+      const popSize  = readNullableNumber('sampling-pop-size');
+      const sampSize = readNullableNumber('sampling-sample-size');
+      if (popSize != null && sampSize != null && sampSize > popSize) {
+        showSamplingError('Sample size cannot exceed population size.');
+        return;
+      }
+
+      const payload = {
+        population_description: document.getElementById('sampling-population').value.trim() || null,
+        population_size:        popSize,
+        sample_size:            sampSize,
+        sampling_method:        document.getElementById('sampling-method').value || null,
+        selection_basis:        document.getElementById('sampling-selection').value.trim() || null,
+        results_summary:        document.getElementById('sampling-results').value.trim() || null,
+        projection_amount:      readNullableNumber('sampling-projection'),
+        conclusion:             document.getElementById('sampling-conclusion').value.trim() || null,
+        notes:                  document.getElementById('sampling-notes').value.trim() || null,
+      };
+
+      const existing = samplings.find(s => s.procedure_id === editingSamplingProcId);
+      if (existing) {
+        const { error } = await supabaseClient
+          .from('procedure_sampling')
+          .update(payload)
+          .eq('id', existing.id);
+        if (error) { showSamplingError('Update failed: ' + error.message); return; }
+        await logActivity(engagementId, 'updated_sampling', 'procedure_sampling', existing.id, { procedure_id: editingSamplingProcId });
+      } else {
+        payload.procedure_id = editingSamplingProcId;
+        payload.created_by   = currentUser.id;
+        const { data, error } = await supabaseClient
+          .from('procedure_sampling')
+          .insert(payload)
+          .select()
+          .single();
+        if (error) { showSamplingError('Save failed: ' + error.message); return; }
+        await logActivity(engagementId, 'created_sampling', 'procedure_sampling', data.id, { procedure_id: editingSamplingProcId });
+      }
+
+      closeSamplingForm();
+      await loadProcedures();
+    }
+
+    async function deleteSampling() {
+      if (!editingSamplingProcId) return;
+      const existing = samplings.find(s => s.procedure_id === editingSamplingProcId);
+      if (!existing) return;
+      if (!confirm('Delete sampling documentation for this procedure? This cannot be undone.')) return;
+
+      const { error } = await supabaseClient
+        .from('procedure_sampling')
+        .delete()
+        .eq('id', existing.id);
+      if (error) { showSamplingError('Delete failed: ' + error.message); return; }
+      await logActivity(engagementId, 'deleted_sampling', 'procedure_sampling', existing.id, { procedure_id: editingSamplingProcId });
+      closeSamplingForm();
+      await loadProcedures();
     }
 
     function isLinkInsideSharedFolder(fileUrl) {

@@ -318,7 +318,7 @@
         risksRes, riskLinksRes, riskAssessRes,
         cmRes, cmAttestRes,
         matVersRes, matItemsRes,
-        estimatesRes, confirmationsRes
+        estimatesRes, confirmationsRes, samplingsRes
       ] = await Promise.all([
         supabaseClient.from('audit_sections').select('*').eq('engagement_id', engagementId).order('sort_order'),
         supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code'),
@@ -338,6 +338,9 @@
         supabaseClient.from('engagement_specific_materiality_items').select('*'),
         supabaseClient.from('engagement_estimates').select('*').eq('engagement_id', engagementId).order('created_at'),
         supabaseClient.from('engagement_confirmations').select('*').eq('engagement_id', engagementId).order('created_at'),
+        // ISA 530 sampling: child of audit_procedures. We fetch all rows for procedures in this
+        // engagement. The procedures themselves are loaded a few lines below (procedures const).
+        supabaseClient.from('procedure_sampling').select('*'),
       ]);
 
       // Active (non-superseded) versions of versioned workpapers
@@ -354,6 +357,7 @@
       const cmAttests  = cm ? (cmAttestRes.data || []).filter(a => a.engagement_completion_memo_id === cm.id) : [];
       const estimates     = estimatesRes.data || [];
       const confirmations = confirmationsRes.data || [];
+      const samplingsAll  = samplingsRes.data || [];
 
       // Materiality: versioned workpaper (ISA 320). Sort ascending — first is "planning".
       const matAllVersions = matVersRes.data || [];
@@ -1164,6 +1168,36 @@
           </tr>`;
         });
         html += '</tbody></table>';
+      }
+
+      // ===== ISA 530 — AUDIT SAMPLING (completion report only) =====
+      if (reportType === 'completion') {
+        const procById   = Object.fromEntries(procedures.map(p => [p.id, p]));
+        const samplings  = samplingsAll.filter(s => procById[s.procedure_id]);
+        if (samplings.length > 0) {
+          const METHOD_LABELS = {
+            random: 'Random', systematic: 'Systematic', haphazard: 'Haphazard',
+            monetary_unit: 'Monetary unit', judgmental: 'Judgmental', other: 'Other',
+          };
+          html += '<h2>Audit Sampling Documentation (ISA 530)</h2>';
+          html += '<p style="font-size:11px; color:#6E6E73; margin-bottom:12px;">Per-procedure sampling judgments: population, method, sample size, selection basis, results, and projection per ISA 530.7-15.</p>';
+          samplings.forEach(s => {
+            const proc = procById[s.procedure_id];
+            const sec  = sections.find(x => x.id === proc.section_id);
+            const ratio = (s.population_size != null && s.sample_size != null)
+              ? `${s.sample_size} of ${s.population_size}` : '—';
+            html += `<h4 style="margin-top:14px;">${esc((sec && sec.name) || 'Section')} &mdash; ${esc(proc.description.length > 90 ? proc.description.slice(0,90) + '…' : proc.description)}</h4>`;
+            html += '<table><tbody>';
+            html += `<tr><th style="width:32%;">Sample / Population</th><td>${esc(ratio)}</td></tr>`;
+            html += `<tr><th>Method</th><td>${esc(METHOD_LABELS[s.sampling_method] || s.sampling_method || '—')}</td></tr>`;
+            if (s.population_description) html += `<tr><th>Population</th><td style="white-space:pre-wrap;">${esc(s.population_description)}</td></tr>`;
+            if (s.selection_basis)        html += `<tr><th>Selection basis</th><td style="white-space:pre-wrap;">${esc(s.selection_basis)}</td></tr>`;
+            if (s.results_summary)        html += `<tr><th>Results</th><td style="white-space:pre-wrap;">${esc(s.results_summary)}</td></tr>`;
+            if (s.projection_amount != null) html += `<tr><th>Projected misstatement</th><td>${Number(s.projection_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>`;
+            if (s.conclusion)             html += `<tr><th>Conclusion</th><td style="white-space:pre-wrap;">${esc(s.conclusion)}</td></tr>`;
+            html += '</tbody></table>';
+          });
+        }
       }
 
       // ===== SECTION-BY-SECTION WORKPAPERS — DELIBERATELY OMITTED FROM PARTNER REPORTS =====
