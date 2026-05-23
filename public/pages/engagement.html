@@ -407,6 +407,12 @@
         <span class="text-sm" style="color:#991b1b; margin-left:8px;" id="eng-closed-text">This engagement has been closed. All sections are read-only.</span>
       </div>
 
+      <!-- Archived banner (ISA 230 file assembly) -->
+      <div id="eng-archived-banner" style="display:none; background:#F1F5F9; border:1px solid #CBD5E1; border-radius:8px; padding:12px 16px; margin-bottom:16px; align-items:center;">
+        <span class="badge" style="background:#475569; color:white;">Archived</span>
+        <span class="text-sm" style="color:#334155; margin-left:8px;" id="eng-archived-text">File assembled and archived per ISA 230. No further changes permitted without partner reopening.</span>
+      </div>
+
       <!-- Stats -->
       <div class="stats-row">
         <div class="stat-card">
@@ -1396,6 +1402,22 @@
                   <label class="text-sm">Summary of prior-year issues + impact on continuance</label>
                   <textarea id="eacc-prior-issues-summary" class="form-control" rows="3" placeholder="e.g. Prior-year management override findings — additional fraud-risk procedures planned this year"></textarea>
                 </div>
+              </div>
+
+              <!-- Section: opening balances (ISA 510) -->
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Opening balances (ISA 510)</h3>
+              <div class="form-group">
+                <label class="text-sm">Status</label>
+                <select id="eacc-opening-balances-status" class="form-control" style="max-width:420px;" onchange="onEaccOpeningBalancesChange()">
+                  <option value="">— Not yet considered —</option>
+                  <option value="na_continuance">N/A — continuance engagement (prior period audited; opening balances are our prior closing)</option>
+                  <option value="verified">Verified — first-year engagement, ISA 510 procedures performed</option>
+                </select>
+              </div>
+              <div class="form-group" id="eacc-opening-balances-notes-wrap" style="display:none;">
+                <label class="text-sm">Notes / approach</label>
+                <textarea id="eacc-opening-balances-notes" class="form-control" rows="2" placeholder="For 'verified': describe the approach (predecessor inquiry / alternative procedures / re-audit) and conclusion. For 'N/A': leave blank or note any changes vs prior period."></textarea>
+                <div style="font-size:11px; color:var(--gray-500); margin-top:4px;">ISA 510.A1-A7 — partner documents how comfort was obtained over opening balances in first-year audits.</div>
               </div>
 
               <!-- Section: partner attestation -->
@@ -2741,7 +2763,31 @@
     function renderEngagementActions() {
       const container = document.getElementById('eng-actions');
       const banner = document.getElementById('eng-closed-banner');
+      const archBanner = document.getElementById('eng-archived-banner');
       const isClosed = engagement.status === 'completed';
+      const isArchived = !!engagement.is_archived;
+
+      // Archived state takes precedence — the file is locked per ISA 230.
+      // Only admin sees an Unarchive option (logged as post-assembly change
+      // per ISA 560.A14-A19).
+      if (isArchived) {
+        archBanner.style.display = 'flex';
+        const when = engagement.archived_at ? new Date(engagement.archived_at).toLocaleDateString() : '';
+        document.getElementById('eng-archived-text').textContent =
+          'File assembled and archived per ISA 230' + (when ? ' on ' + when : '') + '. No further changes permitted without partner reopening.';
+        banner.style.display = 'none';
+        document.getElementById('btn-new-section').style.display = 'none';
+        document.getElementById('btn-upload-tb').style.display = 'none';
+        document.getElementById('btn-replace-tb').style.display = 'none';
+        document.querySelectorAll('.role-admin-supervisor').forEach(el => el.style.display = 'none');
+        if (currentRole === 'admin') {
+          container.innerHTML = '<button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="unarchiveEngagement()">Unarchive (post-assembly change)</button>';
+        } else {
+          container.innerHTML = '';
+        }
+        return;
+      }
+      archBanner.style.display = 'none';
 
       if (isClosed) {
         banner.style.display = 'flex';
@@ -2753,7 +2799,11 @@
         document.querySelectorAll('.role-admin-supervisor').forEach(el => el.style.display = 'none');
 
         if (currentRole === 'admin') {
-          container.innerHTML = '<button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="reopenEngagement()">Reopen Engagement</button>';
+          // Reopen + Archive options. Archive requires memo locked (RPC enforces);
+          // we surface the button unconditionally and let the RPC error guide the partner.
+          container.innerHTML =
+            '<button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="reopenEngagement()">Reopen Engagement</button>' +
+            '<button class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="archiveEngagement()" title="ISA 230 file assembly — requires completion memo to be locked first">Archive (ISA 230)</button>';
         } else {
           container.innerHTML = '';
         }
@@ -2956,6 +3006,72 @@
 
       renderEngagementActions();
       initMateriality();
+    }
+
+    // ISA 230 file assembly — admin only. RPC enforces that the completion
+    // memo is locked before allowing archive. Once archived the engagement
+    // is read-only across the UI; unarchive is available but is logged as
+    // a post-assembly change per ISA 560.A14-A19.
+    async function archiveEngagement() {
+      if (currentRole !== 'admin') { alert('Only partners can archive engagements.'); return; }
+      const ok = confirm(
+        'Archive this engagement per ISA 230?\n\n' +
+        'This marks the file assembly date. The engagement becomes read-only.\n' +
+        'The completion memo must already be locked.\n\n' +
+        'You can unarchive later if a subsequent fact is identified (ISA 560), ' +
+        'but the unarchive will be logged as a post-assembly change.'
+      );
+      if (!ok) return;
+
+      const { error } = await supabaseClient.rpc('archive_engagement', {
+        p_engagement_id:   engagementId,
+        p_organization_id: currentOrg.id,
+      });
+      if (error) { alert('Could not archive: ' + error.message); return; }
+
+      // Re-fetch engagement to get archived_at/by
+      const { data: refreshed } = await supabaseClient
+        .from('engagements')
+        .select('*')
+        .eq('id', engagementId)
+        .single();
+      if (refreshed) engagement = refreshed;
+
+      await logActivity(engagementId, 'archived_engagement', 'engagement', engagementId, {
+        client_name: engagement.client_name,
+      });
+      renderEngagementActions();
+    }
+
+    async function unarchiveEngagement() {
+      if (currentRole !== 'admin') { alert('Only partners can unarchive engagements.'); return; }
+      const reason = await showActionModal({
+        title: 'Unarchive engagement (post-assembly change)',
+        message: 'This will be logged as a post-assembly change per ISA 230 / ISA 560.A14-A19. Inspectors review unarchives carefully — document the trigger fact precisely.',
+        inputLabel: 'Reason for unarchiving',
+        okLabel: 'Unarchive',
+        okClass: 'btn-returned'
+      });
+      if (!reason || !reason.trim()) return;
+
+      const { error } = await supabaseClient.rpc('unarchive_engagement', {
+        p_engagement_id:   engagementId,
+        p_organization_id: currentOrg.id,
+      });
+      if (error) { alert('Could not unarchive: ' + error.message); return; }
+
+      const { data: refreshed } = await supabaseClient
+        .from('engagements')
+        .select('*')
+        .eq('id', engagementId)
+        .single();
+      if (refreshed) engagement = refreshed;
+
+      await logActivity(engagementId, 'unarchived_engagement', 'engagement', engagementId, {
+        reason: reason.trim(),
+        client_name: engagement.client_name,
+      });
+      renderEngagementActions();
     }
 
     /* ══════════════════════════════════════════════════════════════
@@ -5647,6 +5763,9 @@
       document.getElementById('eacc-prior-issues-considered').checked = !!e.prior_year_issues_considered;
       document.getElementById('eacc-prior-issues-summary').value     = e.prior_year_issues_summary || '';
 
+      document.getElementById('eacc-opening-balances-status').value  = e.opening_balances_status || '';
+      document.getElementById('eacc-opening-balances-notes').value   = e.opening_balances_notes || '';
+
       document.getElementById('eacc-partner-attestation').checked    = !!e.partner_attestation_made;
       document.getElementById('eacc-attestation-date').value         = e.partner_attestation_date || '';
 
@@ -5656,6 +5775,7 @@
       onEaccDecisionChange();
       onEaccOtherChange();
       onEaccHadPredecessorChange();
+      onEaccOpeningBalancesChange();
 
       const badge = document.getElementById('eacc-status-badge');
       if (e.status === 'confirmed') {
@@ -5717,6 +5837,12 @@
       const h = document.getElementById('eacc-had-predecessor').checked;
       document.getElementById('eacc-predecessor-details').style.display = h ? 'block' : 'none';
     }
+    function onEaccOpeningBalancesChange() {
+      const v = document.getElementById('eacc-opening-balances-status').value;
+      // Show the notes field whenever a status is selected. Required for
+      // 'verified' (ISA 510 documentation of approach), optional for 'na_continuance'.
+      document.getElementById('eacc-opening-balances-notes-wrap').style.display = v ? 'block' : 'none';
+    }
     function onEaccAttestationChange() {
       if (document.getElementById('eacc-partner-attestation').checked) {
         if (!document.getElementById('eacc-attestation-date').value) {
@@ -5768,6 +5894,9 @@
         predecessor_workpapers_accessed:     document.getElementById('eacc-predecessor-workpapers').checked,
         prior_year_issues_considered:        document.getElementById('eacc-prior-issues-considered').checked,
         prior_year_issues_summary:           document.getElementById('eacc-prior-issues-summary').value.trim() || null,
+
+        opening_balances_status:             document.getElementById('eacc-opening-balances-status').value || null,
+        opening_balances_notes:              document.getElementById('eacc-opening-balances-notes').value.trim() || null,
         partner_attestation_made:            document.getElementById('eacc-partner-attestation').checked,
         partner_attestation_date:            document.getElementById('eacc-attestation-date').value || null,
         notes:                               document.getElementById('eacc-notes').value.trim() || null,
@@ -5791,6 +5920,10 @@
         if (!payload.partner_attestation_date) { showEaccError('Attestation date is required to confirm.'); return; }
         if (payload.decision === 'accept_with_conditions' && !payload.conditions_summary) {
           showEaccError('Conditions summary is required when accepting with conditions.');
+          return;
+        }
+        if (payload.opening_balances_status === 'verified' && !payload.opening_balances_notes) {
+          showEaccError('Opening balances marked as verified — describe the ISA 510 approach in the notes field.');
           return;
         }
         if (payload.partner_attestation_made && !payload.partner_attestation_date) {

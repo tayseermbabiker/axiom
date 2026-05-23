@@ -536,6 +536,19 @@
           ${eaccActive.integrity_conclusion ? `<tr><th>Integrity conclusion</th><td>${esc(eaccActive.integrity_conclusion)}</td></tr>` : ''}
           ${eaccActive.competence_resources_notes ? `<tr><th>Competence &amp; resources</th><td>${esc(eaccActive.competence_resources_notes)}</td></tr>` : ''}
         </tbody></table>`;
+
+        // ISA 510 — opening balances
+        if (eaccActive.opening_balances_status) {
+          const OB_LABELS = {
+            verified: 'Verified (first-year — ISA 510 procedures performed)',
+            na_continuance: 'N/A (continuance — prior period audited, opening balances are prior closing)',
+          };
+          html += `<h4>Opening balances (ISA 510)</h4>`;
+          html += `<table><tbody>
+            <tr><th style="width:32%;">Status</th><td>${esc(OB_LABELS[eaccActive.opening_balances_status] || eaccActive.opening_balances_status)}</td></tr>
+            ${eaccActive.opening_balances_notes ? `<tr><th>Approach / notes</th><td style="white-space:pre-wrap;">${esc(eaccActive.opening_balances_notes)}</td></tr>` : ''}
+          </tbody></table>`;
+        }
       }
 
       // Engagement Letter (ISA 210)
@@ -1278,6 +1291,7 @@
           ${cm.overall_materiality_snapshot ? `<tr><th>Materiality (overall / performance)</th><td>${fmt(cm.overall_materiality_snapshot)} / ${fmt(cm.performance_materiality_snapshot)}</td></tr>` : ''}
           ${cm.uncorrected_vs_materiality ? `<tr><th>Uncorrected vs materiality</th><td>${esc(cm.uncorrected_vs_materiality.replace(/_/g, ' '))}</td></tr>` : ''}
           <tr><th>EQR required</th><td>${cm.eqr_required ? '&#10003; Yes' : '&minus; No'}${cm.eqr_completed_at ? ' &middot; completed ' + formatDateLong(cm.eqr_completed_at) : ''}</td></tr>
+          ${eng.is_archived ? `<tr><th>File assembly (ISA 230)</th><td><span class="badge b-approved">ARCHIVED</span> ${eng.archived_at ? '&middot; assembled ' + formatDateLong(eng.archived_at) : ''}${eng.archived_by && profiles[eng.archived_by] ? ' by ' + esc(profiles[eng.archived_by]) : ''}</td></tr>` : ''}
         </tbody></table>`;
 
         // ----- ISA 570 — Going Concern (structured assessment + rationale) -----
