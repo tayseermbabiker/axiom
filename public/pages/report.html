@@ -317,7 +317,8 @@
         easRes,
         risksRes, riskLinksRes, riskAssessRes,
         cmRes, cmAttestRes,
-        matVersRes, matItemsRes
+        matVersRes, matItemsRes,
+        estimatesRes
       ] = await Promise.all([
         supabaseClient.from('audit_sections').select('*').eq('engagement_id', engagementId).order('sort_order'),
         supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code'),
@@ -335,6 +336,7 @@
         supabaseClient.from('completion_attestations').select('*'),
         supabaseClient.from('engagement_materiality_versions').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: true }),
         supabaseClient.from('engagement_specific_materiality_items').select('*'),
+        supabaseClient.from('engagement_estimates').select('*').eq('engagement_id', engagementId).order('created_at'),
       ]);
 
       // Active (non-superseded) versions of versioned workpapers
@@ -349,6 +351,7 @@
       const riskAssess = riskAssessRes.data || null;
       const cm         = cmRes.data || null;
       const cmAttests  = cm ? (cmAttestRes.data || []).filter(a => a.engagement_completion_memo_id === cm.id) : [];
+      const estimates  = estimatesRes.data || [];
 
       // Materiality: versioned workpaper (ISA 320). Sort ascending — first is "planning".
       const matAllVersions = matVersRes.data || [];
@@ -1093,6 +1096,34 @@
       }
 
       } // end of FINDINGS & MISSTATEMENTS SUMMARY (completion-only wrapper)
+
+      // ===== ISA 540 — ACCOUNTING ESTIMATES (completion report only) =====
+      if (reportType === 'completion' && estimates.length > 0) {
+        const RISK_LABELS = {
+          low: 'Low', medium: 'Medium', high: 'High', significant: 'Significant (ISA 540.18)'
+        };
+        const RISK_CLASS = {
+          low: 'chip-green', medium: 'chip-amber', high: 'chip-red', significant: 'chip-red'
+        };
+        html += '<h2>Significant Accounting Estimates (ISA 540)</h2>';
+        html += `<p style="font-size:11px; color:#6E6E73; margin-bottom:12px;">Management's significant accounting estimates and auditor's evaluation under ISA 540. Includes method, key assumptions, data sources, sensitivity, risk assessment, and conclusion for each estimate.</p>`;
+        estimates.forEach(e => {
+          const secName = (sections.find(s => s.id === e.section_id) || {}).name;
+          const riskBadge = e.misstatement_risk
+            ? `<span class="chip ${RISK_CLASS[e.misstatement_risk] || ''}">${esc(RISK_LABELS[e.misstatement_risk] || e.misstatement_risk)}</span>`
+            : '<span style="color:#6E6E73;">Not assessed</span>';
+          html += `<h4 style="margin-top:14px;">${esc(e.estimate_name)}</h4>`;
+          html += '<table><tbody>';
+          html += `<tr><th style="width:32%;">Risk of material misstatement</th><td>${riskBadge}</td></tr>`;
+          if (secName)                html += `<tr><th>Linked section</th><td>${esc(secName)}</td></tr>`;
+          if (e.method_used)          html += `<tr><th>Method used (540.13(a))</th><td style="white-space:pre-wrap;">${esc(e.method_used)}</td></tr>`;
+          if (e.key_assumptions)      html += `<tr><th>Key assumptions (540.13(c))</th><td style="white-space:pre-wrap;">${esc(e.key_assumptions)}</td></tr>`;
+          if (e.data_sources)         html += `<tr><th>Data sources (540.13(b))</th><td style="white-space:pre-wrap;">${esc(e.data_sources)}</td></tr>`;
+          if (e.sensitivity_analysis) html += `<tr><th>Sensitivity analysis (540.15)</th><td style="white-space:pre-wrap;">${esc(e.sensitivity_analysis)}</td></tr>`;
+          if (e.conclusion)           html += `<tr><th>Auditor's conclusion</th><td style="white-space:pre-wrap;">${esc(e.conclusion)}</td></tr>`;
+          html += '</tbody></table>';
+        });
+      }
 
       // ===== SECTION-BY-SECTION WORKPAPERS — DELIBERATELY OMITTED FROM PARTNER REPORTS =====
       // Per audit methodology (ISA 220, KPMG Clara, EY Canvas, BDO etc.) the

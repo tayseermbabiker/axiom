@@ -811,6 +811,105 @@
       </div>
 
       <!-- Financial Statements Tab -->
+      <!-- Estimates Tab (ISA 540) -->
+      <div class="tab-panel" id="tab-estimates">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Accounting estimates (ISA 540)</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">Structured documentation of management's significant accounting estimates — EoSB, NRV, doubtful debts, impairment, provisions. Inspection hot spot for UAE files. Pro feature.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-add-estimate" onclick="openEstimateForm(null)" style="display:none;">Add estimate</button>
+          </div>
+          <div class="card-body">
+            <div id="estimates-pro-blocked" style="display:none; background:var(--warning-light); border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">Accounting estimates is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:6px 0 0;">Upgrade to Pro to document significant accounting estimates per ISA 540.</p>
+            </div>
+            <div id="estimates-empty" class="empty-state" style="display:none;">
+              <p>No accounting estimates documented yet.</p>
+              <p class="text-sm text-muted" style="margin-top:6px;">Typical UAE-SME estimates: end-of-service benefits, doubtful debts allowance, inventory NRV write-down, fixed-asset impairment, warranty provisions.</p>
+              <button class="btn btn-primary" id="btn-add-estimate-empty" onclick="openEstimateForm(null)" style="margin-top:12px; display:none;">Add the first estimate</button>
+            </div>
+            <div id="estimates-list-wrap" style="display:none;">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="min-width:160px;">Estimate</th>
+                      <th>Method &amp; assumptions</th>
+                      <th style="width:130px;">Risk</th>
+                      <th style="width:140px;">Linked section</th>
+                      <th style="width:140px; text-align:right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="estimates-table"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estimate edit modal (ISA 540) -->
+      <div class="modal-overlay" id="modal-estimate">
+        <div class="modal" style="max-width:720px;">
+          <div class="modal-header">
+            <h3 id="modal-estimate-title">Add accounting estimate</h3>
+            <button class="modal-close" onclick="closeEstimateForm()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="text-sm">Estimate name <span style="color:var(--danger);">*</span></label>
+              <input type="text" id="estimate-name" class="form-control" placeholder="e.g. End-of-service benefits (EoSB) provision">
+            </div>
+            <div class="form-group">
+              <label class="text-sm">Linked audit section <span class="text-muted">(optional)</span></label>
+              <select id="estimate-section" class="form-control">
+                <option value="">— Not linked —</option>
+              </select>
+              <small style="color:var(--gray-500); font-size:11px;">Pick the section where this estimate is tested (PPE, Inventory, Provisions, Receivables, etc.).</small>
+            </div>
+            <div class="form-group">
+              <label class="text-sm">Method used (ISA 540.13(a))</label>
+              <textarea id="estimate-method" class="form-control" rows="2" placeholder="e.g. UAE Labour Law accrual — 21 days per year of service, paid at last basic salary; final 12 months of service compensated at 30 days/year."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="text-sm">Key assumptions (ISA 540.13(c))</label>
+              <textarea id="estimate-assumptions" class="form-control" rows="2" placeholder="e.g. No early departures expected; salary increase at 5% per annum; full headcount of 24 employees as of year-end."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="text-sm">Data sources (ISA 540.13(b))</label>
+              <textarea id="estimate-data" class="form-control" rows="2" placeholder="e.g. HR system payroll register at year-end; signed labour contracts; prior-year leaver history."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="text-sm">Sensitivity analysis (ISA 540.15)</label>
+              <textarea id="estimate-sensitivity" class="form-control" rows="2" placeholder="e.g. 1% change in average salary growth = AED 12K impact on accrual. 5% turnover decrease = AED 8K reduction."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="text-sm">Risk of material misstatement</label>
+              <select id="estimate-risk" class="form-control" style="max-width:260px;">
+                <option value="">— Not yet assessed —</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="significant">Significant (ISA 540.18)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="text-sm">Auditor's conclusion</label>
+              <textarea id="estimate-conclusion" class="form-control" rows="3" placeholder="e.g. Recalculated EoSB independently — agrees within AED 1,200 (immaterial). Assumptions reasonable. No indicators of management bias. Accept as recorded."></textarea>
+            </div>
+            <div id="estimate-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline btn-sm" onclick="closeEstimateForm()">Cancel</button>
+            <button class="btn btn-danger btn-sm" id="estimate-btn-delete" onclick="deleteEstimate()" style="display:none; margin-right:auto;">Delete</button>
+            <button class="btn btn-primary btn-sm" onclick="saveEstimate()">Save estimate</button>
+          </div>
+        </div>
+      </div>
+
       <div class="tab-panel" id="tab-fs">
         <div class="card">
           <div class="card-header">
@@ -2412,6 +2511,8 @@
     let fileColumns = [];
     let profileCache = {};
     let sectionView = 'all'; // 'all' or 'mine' — preparer-only toggle
+    let estimates = [];
+    let editingEstimateId = null;
 
     // ---- Init ----
     async function init() {
@@ -3125,11 +3226,12 @@
         { label: 'Risk assessment',    tab: 'risk-assessment'         },
       ],
       execution: [
-        { label: 'Trial balance',      tab: 'tb'       },
-        { label: 'Sections',           tab: 'sections' },
-        { label: 'Findings',           tab: 'findings' },
-        { label: 'Financial statements', tab: 'fs'     },
-        { label: 'Activity log',       tab: 'activity' },
+        { label: 'Trial balance',      tab: 'tb'         },
+        { label: 'Sections',           tab: 'sections'   },
+        { label: 'Findings',           tab: 'findings'   },
+        { label: 'Estimates',          tab: 'estimates'  },
+        { label: 'Financial statements', tab: 'fs'       },
+        { label: 'Activity log',       tab: 'activity'   },
       ],
       conclusion: [
         { label: 'Overview', tab: 'conclusion-home' },
@@ -3296,6 +3398,7 @@
       if (tab === 'engagement-acceptance') loadEngagementAcceptance();
       if (tab === 'audit-strategy') loadAuditStrategy();
       if (tab === 'risk-assessment') loadRiskAssessment();
+      if (tab === 'estimates') loadEstimates();
     }
 
     // ---- Materiality Tab (versioned workpaper, ISA 320) ----
@@ -6344,6 +6447,192 @@
       if (error) { showEasError('Could not create revision: ' + error.message); return; }
       await logActivity(engagementId, 'revised_audit_strategy', 'engagement_audit_strategy', data, { prior_id: easActive.id });
       await loadAuditStrategy();
+    }
+
+    // ---- Accounting estimates (ISA 540) — Sprint 4 standards floor ----
+    const ESTIMATE_RISK_LABELS = {
+      low:         { label: 'Low',         color: '#15803D', bg: '#F0FDF4', border: '#BBF7D0' },
+      medium:      { label: 'Medium',      color: '#92400E', bg: '#FFFBEB', border: '#FDE68A' },
+      high:        { label: 'High',        color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
+      significant: { label: 'Significant', color: '#9F1239', bg: '#FFF1F2', border: '#FECDD3' },
+    };
+
+    async function loadEstimates() {
+      const isPro = currentOrg && currentOrg.feature_tier === 'pro';
+      const isAdmin = currentRole === 'admin';
+
+      document.getElementById('estimates-pro-blocked').style.display = isPro ? 'none' : 'block';
+      if (!isPro) {
+        document.getElementById('estimates-empty').style.display = 'none';
+        document.getElementById('estimates-list-wrap').style.display = 'none';
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from('engagement_estimates')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: true });
+      if (error) {
+        alert('Could not load estimates: ' + error.message);
+        return;
+      }
+      estimates = data || [];
+
+      const empty = document.getElementById('estimates-empty');
+      const wrap  = document.getElementById('estimates-list-wrap');
+      const addBtn       = document.getElementById('btn-add-estimate');
+      const addBtnEmpty  = document.getElementById('btn-add-estimate-empty');
+      addBtn.style.display      = isAdmin ? '' : 'none';
+      addBtnEmpty.style.display = isAdmin ? '' : 'none';
+
+      if (estimates.length === 0) {
+        empty.style.display = 'block';
+        wrap.style.display  = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      wrap.style.display  = 'block';
+      renderEstimatesTable();
+    }
+
+    function renderEstimatesTable() {
+      const tbody = document.getElementById('estimates-table');
+      const isAdmin = currentRole === 'admin';
+      const sectionById = Object.fromEntries(sections.map(s => [s.id, s.name]));
+      tbody.innerHTML = estimates.map(e => {
+        const r = e.misstatement_risk ? ESTIMATE_RISK_LABELS[e.misstatement_risk] : null;
+        const riskCell = r
+          ? `<span style="display:inline-block; padding:2px 8px; border-radius:99px; background:${r.bg}; color:${r.color}; border:1px solid ${r.border}; font-size:11px; font-weight:600;">${r.label}</span>`
+          : '<span class="text-muted" style="font-size:11px;">—</span>';
+        const method = e.method_used
+          ? `<div style="font-size:12px; color:var(--gray-700);">${escHtml(e.method_used.length > 100 ? e.method_used.slice(0, 100) + '…' : e.method_used)}</div>`
+          : '<span class="text-muted" style="font-size:11px;">No method recorded</span>';
+        const assumptions = e.key_assumptions
+          ? `<div style="font-size:11px; color:var(--gray-500); margin-top:3px;">${escHtml(e.key_assumptions.length > 80 ? e.key_assumptions.slice(0, 80) + '…' : e.key_assumptions)}</div>`
+          : '';
+        const linkedSec = e.section_id && sectionById[e.section_id]
+          ? `<a href="section.html#${e.section_id}" style="font-size:12px; color:var(--primary);">${escHtml(sectionById[e.section_id])}</a>`
+          : '<span class="text-muted" style="font-size:11px;">—</span>';
+        const actions = isAdmin
+          ? `<button class="btn btn-outline btn-sm" onclick="openEstimateForm('${e.id}')">Edit</button>`
+          : `<button class="btn btn-outline btn-sm" onclick="openEstimateForm('${e.id}')">View</button>`;
+        return `<tr>
+          <td style="font-weight:500;">${escHtml(e.estimate_name)}</td>
+          <td>${method}${assumptions}</td>
+          <td>${riskCell}</td>
+          <td>${linkedSec}</td>
+          <td style="text-align:right;">${actions}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openEstimateForm(estimateId) {
+      editingEstimateId = estimateId || null;
+      const isAdmin = currentRole === 'admin';
+      const readonly = !isAdmin;
+
+      const sel = document.getElementById('estimate-section');
+      sel.innerHTML = '<option value="">— Not linked —</option>' +
+        sections.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+
+      if (estimateId) {
+        const e = estimates.find(x => x.id === estimateId);
+        if (!e) { alert('Estimate not found.'); return; }
+        document.getElementById('modal-estimate-title').textContent = readonly ? 'Accounting estimate (read-only)' : 'Edit accounting estimate';
+        document.getElementById('estimate-name').value          = e.estimate_name      || '';
+        document.getElementById('estimate-section').value       = e.section_id         || '';
+        document.getElementById('estimate-method').value        = e.method_used        || '';
+        document.getElementById('estimate-assumptions').value   = e.key_assumptions    || '';
+        document.getElementById('estimate-data').value          = e.data_sources       || '';
+        document.getElementById('estimate-sensitivity').value   = e.sensitivity_analysis || '';
+        document.getElementById('estimate-risk').value          = e.misstatement_risk  || '';
+        document.getElementById('estimate-conclusion').value    = e.conclusion         || '';
+        document.getElementById('estimate-btn-delete').style.display = isAdmin ? '' : 'none';
+      } else {
+        document.getElementById('modal-estimate-title').textContent = 'Add accounting estimate';
+        ['name','method','assumptions','data','sensitivity','conclusion'].forEach(k => {
+          document.getElementById('estimate-' + k).value = '';
+        });
+        document.getElementById('estimate-section').value = '';
+        document.getElementById('estimate-risk').value    = '';
+        document.getElementById('estimate-btn-delete').style.display = 'none';
+      }
+      document.getElementById('estimate-error').style.display = 'none';
+
+      // Disable inputs if read-only
+      ['estimate-name','estimate-section','estimate-method','estimate-assumptions',
+       'estimate-data','estimate-sensitivity','estimate-risk','estimate-conclusion'
+      ].forEach(id => { document.getElementById(id).disabled = readonly; });
+
+      document.getElementById('modal-estimate').classList.add('active');
+    }
+
+    function closeEstimateForm() {
+      document.getElementById('modal-estimate').classList.remove('active');
+      editingEstimateId = null;
+    }
+
+    function showEstimateError(msg) {
+      const el = document.getElementById('estimate-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    async function saveEstimate() {
+      if (currentRole !== 'admin') { closeEstimateForm(); return; }
+      const name = document.getElementById('estimate-name').value.trim();
+      if (!name) { showEstimateError('Estimate name is required.'); return; }
+
+      const payload = {
+        estimate_name:        name,
+        section_id:           document.getElementById('estimate-section').value     || null,
+        method_used:          document.getElementById('estimate-method').value.trim()      || null,
+        key_assumptions:      document.getElementById('estimate-assumptions').value.trim() || null,
+        data_sources:         document.getElementById('estimate-data').value.trim()        || null,
+        sensitivity_analysis: document.getElementById('estimate-sensitivity').value.trim() || null,
+        misstatement_risk:    document.getElementById('estimate-risk').value || null,
+        conclusion:           document.getElementById('estimate-conclusion').value.trim()  || null,
+      };
+
+      if (editingEstimateId) {
+        const { error } = await supabaseClient
+          .from('engagement_estimates')
+          .update(payload)
+          .eq('id', editingEstimateId);
+        if (error) { showEstimateError('Update failed: ' + error.message); return; }
+        await logActivity(engagementId, 'updated_estimate', 'engagement_estimate', editingEstimateId, { name });
+      } else {
+        payload.engagement_id   = engagementId;
+        payload.organization_id = currentOrg.id;
+        payload.created_by      = currentUser.id;
+        const { data, error } = await supabaseClient
+          .from('engagement_estimates')
+          .insert(payload)
+          .select()
+          .single();
+        if (error) { showEstimateError('Save failed: ' + error.message); return; }
+        await logActivity(engagementId, 'created_estimate', 'engagement_estimate', data.id, { name });
+      }
+
+      closeEstimateForm();
+      await loadEstimates();
+    }
+
+    async function deleteEstimate() {
+      if (currentRole !== 'admin' || !editingEstimateId) return;
+      const e = estimates.find(x => x.id === editingEstimateId);
+      if (!e) return;
+      if (!confirm('Delete estimate "' + e.estimate_name + '"? This cannot be undone.')) return;
+
+      const { error } = await supabaseClient
+        .from('engagement_estimates')
+        .delete()
+        .eq('id', editingEstimateId);
+      if (error) { showEstimateError('Delete failed: ' + error.message); return; }
+      await logActivity(engagementId, 'deleted_estimate', 'engagement_estimate', editingEstimateId, { name: e.estimate_name });
+      closeEstimateForm();
+      await loadEstimates();
     }
 
     // ---- Risk Assessment Tab (ISA 315 + ISA 330 + ISA 240) ----
