@@ -910,6 +910,121 @@
         </div>
       </div>
 
+      <!-- Confirmations Tab (ISA 505) -->
+      <div class="tab-panel" id="tab-confirmations">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>External confirmations (ISA 505)</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">Track bank, AR, AP, legal, and related-party confirmations — sent, returned, exceptions, and alternative procedures performed (ISA 505.12). Pro feature.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-add-confirmation" onclick="openConfirmationForm(null)" style="display:none;">Add confirmation</button>
+          </div>
+          <div class="card-body">
+            <div id="confirmations-pro-blocked" style="display:none; background:var(--warning-light); border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">Confirmations tracker is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:6px 0 0;">Upgrade to Pro to track external confirmations per ISA 505.</p>
+            </div>
+            <div id="confirmations-empty" class="empty-state" style="display:none;">
+              <p>No external confirmations tracked yet.</p>
+              <p class="text-sm text-muted" style="margin-top:6px;">Typical confirmations: bank balances, accounts receivable, accounts payable, legal letters, related-party balances.</p>
+              <button class="btn btn-primary" id="btn-add-confirmation-empty" onclick="openConfirmationForm(null)" style="margin-top:12px; display:none;">Add the first confirmation</button>
+            </div>
+            <div id="confirmations-list-wrap" style="display:none;">
+              <!-- Summary chips -->
+              <div id="confirmations-summary" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;"></div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="min-width:160px;">Counterparty</th>
+                      <th style="width:110px;">Type</th>
+                      <th style="width:110px;">Sent</th>
+                      <th style="width:110px;">Returned</th>
+                      <th style="width:120px;">Result</th>
+                      <th style="width:140px;">Linked section</th>
+                      <th style="width:120px; text-align:right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="confirmations-table"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation edit modal (ISA 505) -->
+      <div class="modal-overlay" id="modal-confirmation">
+        <div class="modal" style="max-width:680px;">
+          <div class="modal-header">
+            <h3 id="modal-confirmation-title">Add external confirmation</h3>
+            <button class="modal-close" onclick="closeConfirmationForm()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="text-sm">Counterparty <span style="color:var(--danger);">*</span></label>
+              <input type="text" id="confirmation-counterparty" class="form-control" placeholder="e.g. Emirates NBD — current account 1234567">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label class="text-sm">Type <span style="color:var(--danger);">*</span></label>
+                <select id="confirmation-type" class="form-control">
+                  <option value="">— Select —</option>
+                  <option value="bank">Bank</option>
+                  <option value="ar">Accounts receivable</option>
+                  <option value="ap">Accounts payable</option>
+                  <option value="legal">Legal letter</option>
+                  <option value="related_party">Related party</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Linked audit section <span class="text-muted">(optional)</span></label>
+                <select id="confirmation-section" class="form-control">
+                  <option value="">— Not linked —</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label class="text-sm">Sent date</label>
+                <input type="date" id="confirmation-sent" class="form-control" max="9999-12-31">
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Returned date</label>
+                <input type="date" id="confirmation-returned" class="form-control" max="9999-12-31">
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Result</label>
+                <select id="confirmation-result" class="form-control">
+                  <option value="">— Pending —</option>
+                  <option value="clean">Clean (agrees)</option>
+                  <option value="exception">Exception (disagrees)</option>
+                  <option value="partial">Partial</option>
+                  <option value="no_reply">No reply</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" id="confirmation-alt-wrap">
+              <label class="text-sm">Alternative procedures performed (ISA 505.12)</label>
+              <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Required when no reply or exception. Describe the substantive procedures performed in lieu of / in addition to the confirmation.</small>
+              <textarea id="confirmation-alt" class="form-control" rows="2" placeholder="e.g. Reviewed subsequent bank statements through audit date; agreed YE balance to next-day stmt; verified Dr/Cr movements to GL."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="text-sm">Notes <span class="text-muted">(optional)</span></label>
+              <textarea id="confirmation-notes" class="form-control" rows="2" placeholder="Any additional context — sent via courier, contact person, follow-up dates, etc."></textarea>
+            </div>
+            <div id="confirmation-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline btn-sm" onclick="closeConfirmationForm()">Cancel</button>
+            <button class="btn btn-danger btn-sm" id="confirmation-btn-delete" onclick="deleteConfirmation()" style="display:none; margin-right:auto;">Delete</button>
+            <button class="btn btn-primary btn-sm" onclick="saveConfirmation()">Save confirmation</button>
+          </div>
+        </div>
+      </div>
+
       <div class="tab-panel" id="tab-fs">
         <div class="card">
           <div class="card-header">
@@ -2513,6 +2628,8 @@
     let sectionView = 'all'; // 'all' or 'mine' — preparer-only toggle
     let estimates = [];
     let editingEstimateId = null;
+    let confirmations = [];
+    let editingConfirmationId = null;
 
     // ---- Init ----
     async function init() {
@@ -3226,12 +3343,13 @@
         { label: 'Risk assessment',    tab: 'risk-assessment'         },
       ],
       execution: [
-        { label: 'Trial balance',      tab: 'tb'         },
-        { label: 'Sections',           tab: 'sections'   },
-        { label: 'Findings',           tab: 'findings'   },
-        { label: 'Estimates',          tab: 'estimates'  },
-        { label: 'Financial statements', tab: 'fs'       },
-        { label: 'Activity log',       tab: 'activity'   },
+        { label: 'Trial balance',      tab: 'tb'            },
+        { label: 'Sections',           tab: 'sections'      },
+        { label: 'Findings',           tab: 'findings'      },
+        { label: 'Estimates',          tab: 'estimates'     },
+        { label: 'Confirmations',      tab: 'confirmations' },
+        { label: 'Financial statements', tab: 'fs'          },
+        { label: 'Activity log',       tab: 'activity'      },
       ],
       conclusion: [
         { label: 'Overview', tab: 'conclusion-home' },
@@ -3399,6 +3517,7 @@
       if (tab === 'audit-strategy') loadAuditStrategy();
       if (tab === 'risk-assessment') loadRiskAssessment();
       if (tab === 'estimates') loadEstimates();
+      if (tab === 'confirmations') loadConfirmations();
     }
 
     // ---- Materiality Tab (versioned workpaper, ISA 320) ----
@@ -6633,6 +6752,231 @@
       await logActivity(engagementId, 'deleted_estimate', 'engagement_estimate', editingEstimateId, { name: e.estimate_name });
       closeEstimateForm();
       await loadEstimates();
+    }
+
+    // ---- External confirmations (ISA 505) — Sprint 4 standards floor ----
+    const CONFIRMATION_TYPE_LABELS = {
+      bank: 'Bank', ar: 'Accounts receivable', ap: 'Accounts payable',
+      legal: 'Legal letter', related_party: 'Related party', other: 'Other',
+    };
+    const CONFIRMATION_RESULT_LABELS = {
+      clean:     { label: 'Clean',     color: '#15803D', bg: '#F0FDF4', border: '#BBF7D0' },
+      exception: { label: 'Exception', color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
+      partial:   { label: 'Partial',   color: '#92400E', bg: '#FFFBEB', border: '#FDE68A' },
+      no_reply:  { label: 'No reply',  color: '#92400E', bg: '#FFFBEB', border: '#FDE68A' },
+    };
+
+    async function loadConfirmations() {
+      const isPro = currentOrg && currentOrg.feature_tier === 'pro';
+      const isAdmin = currentRole === 'admin';
+
+      document.getElementById('confirmations-pro-blocked').style.display = isPro ? 'none' : 'block';
+      if (!isPro) {
+        document.getElementById('confirmations-empty').style.display = 'none';
+        document.getElementById('confirmations-list-wrap').style.display = 'none';
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from('engagement_confirmations')
+        .select('*')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: true });
+      if (error) {
+        alert('Could not load confirmations: ' + error.message);
+        return;
+      }
+      confirmations = data || [];
+
+      const empty = document.getElementById('confirmations-empty');
+      const wrap  = document.getElementById('confirmations-list-wrap');
+      document.getElementById('btn-add-confirmation').style.display       = isAdmin ? '' : 'none';
+      document.getElementById('btn-add-confirmation-empty').style.display = isAdmin ? '' : 'none';
+
+      if (confirmations.length === 0) {
+        empty.style.display = 'block';
+        wrap.style.display  = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      wrap.style.display  = 'block';
+      renderConfirmationsSummary();
+      renderConfirmationsTable();
+    }
+
+    function renderConfirmationsSummary() {
+      const wrap = document.getElementById('confirmations-summary');
+      const counts = { clean: 0, exception: 0, partial: 0, no_reply: 0, pending: 0 };
+      confirmations.forEach(c => {
+        if (!c.result) counts.pending++;
+        else counts[c.result] = (counts[c.result] || 0) + 1;
+      });
+      const chips = [
+        { key: 'clean',     label: 'Clean',     color: '#15803D', bg: '#F0FDF4', border: '#BBF7D0' },
+        { key: 'exception', label: 'Exception', color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
+        { key: 'partial',   label: 'Partial',   color: '#92400E', bg: '#FFFBEB', border: '#FDE68A' },
+        { key: 'no_reply',  label: 'No reply',  color: '#92400E', bg: '#FFFBEB', border: '#FDE68A' },
+        { key: 'pending',   label: 'Pending',   color: 'var(--gray-600)', bg: 'var(--gray-50)', border: 'var(--gray-200)' },
+      ];
+      wrap.innerHTML = chips.map(c => `
+        <div style="display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:99px; background:${c.bg}; color:${c.color}; border:1px solid ${c.border}; font-size:12px; font-weight:600;">
+          <span>${c.label}</span>
+          <span>${counts[c.key] || 0}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderConfirmationsTable() {
+      const tbody = document.getElementById('confirmations-table');
+      const isAdmin = currentRole === 'admin';
+      const sectionById = Object.fromEntries(sections.map(s => [s.id, s.name]));
+      tbody.innerHTML = confirmations.map(c => {
+        const r = c.result ? CONFIRMATION_RESULT_LABELS[c.result] : null;
+        const resultCell = r
+          ? `<span style="display:inline-block; padding:2px 8px; border-radius:99px; background:${r.bg}; color:${r.color}; border:1px solid ${r.border}; font-size:11px; font-weight:600;">${r.label}</span>`
+          : '<span class="text-muted" style="font-size:11px;">Pending</span>';
+        const typeLabel = CONFIRMATION_TYPE_LABELS[c.confirmation_type] || c.confirmation_type;
+        const linkedSec = c.section_id && sectionById[c.section_id]
+          ? `<a href="section.html#${c.section_id}" style="font-size:12px; color:var(--primary);">${escHtml(sectionById[c.section_id])}</a>`
+          : '<span class="text-muted" style="font-size:11px;">—</span>';
+        const actions = isAdmin
+          ? `<button class="btn btn-outline btn-sm" onclick="openConfirmationForm('${c.id}')">Edit</button>`
+          : `<button class="btn btn-outline btn-sm" onclick="openConfirmationForm('${c.id}')">View</button>`;
+        return `<tr>
+          <td style="font-weight:500;">${escHtml(c.counterparty)}</td>
+          <td><span style="font-size:11px; color:var(--gray-700);">${escHtml(typeLabel)}</span></td>
+          <td style="font-size:12px;">${c.sent_date || '<span class="text-muted">—</span>'}</td>
+          <td style="font-size:12px;">${c.returned_date || '<span class="text-muted">—</span>'}</td>
+          <td>${resultCell}</td>
+          <td>${linkedSec}</td>
+          <td style="text-align:right;">${actions}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openConfirmationForm(confirmationId) {
+      editingConfirmationId = confirmationId || null;
+      const isAdmin = currentRole === 'admin';
+      const readonly = !isAdmin;
+
+      const sel = document.getElementById('confirmation-section');
+      sel.innerHTML = '<option value="">— Not linked —</option>' +
+        sections.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+
+      if (confirmationId) {
+        const c = confirmations.find(x => x.id === confirmationId);
+        if (!c) { alert('Confirmation not found.'); return; }
+        document.getElementById('modal-confirmation-title').textContent = readonly ? 'External confirmation (read-only)' : 'Edit external confirmation';
+        document.getElementById('confirmation-counterparty').value = c.counterparty || '';
+        document.getElementById('confirmation-type').value         = c.confirmation_type || '';
+        document.getElementById('confirmation-section').value      = c.section_id || '';
+        document.getElementById('confirmation-sent').value         = c.sent_date || '';
+        document.getElementById('confirmation-returned').value     = c.returned_date || '';
+        document.getElementById('confirmation-result').value       = c.result || '';
+        document.getElementById('confirmation-alt').value          = c.alternative_procedures || '';
+        document.getElementById('confirmation-notes').value        = c.notes || '';
+        document.getElementById('confirmation-btn-delete').style.display = isAdmin ? '' : 'none';
+      } else {
+        document.getElementById('modal-confirmation-title').textContent = 'Add external confirmation';
+        ['counterparty','sent','returned','alt','notes'].forEach(k => {
+          document.getElementById('confirmation-' + k).value = '';
+        });
+        document.getElementById('confirmation-type').value    = '';
+        document.getElementById('confirmation-section').value = '';
+        document.getElementById('confirmation-result').value  = '';
+        document.getElementById('confirmation-btn-delete').style.display = 'none';
+      }
+      document.getElementById('confirmation-error').style.display = 'none';
+
+      ['confirmation-counterparty','confirmation-type','confirmation-section',
+       'confirmation-sent','confirmation-returned','confirmation-result',
+       'confirmation-alt','confirmation-notes'
+      ].forEach(id => { document.getElementById(id).disabled = readonly; });
+
+      document.getElementById('modal-confirmation').classList.add('active');
+    }
+
+    function closeConfirmationForm() {
+      document.getElementById('modal-confirmation').classList.remove('active');
+      editingConfirmationId = null;
+    }
+
+    function showConfirmationError(msg) {
+      const el = document.getElementById('confirmation-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    async function saveConfirmation() {
+      if (currentRole !== 'admin') { closeConfirmationForm(); return; }
+      const counterparty = document.getElementById('confirmation-counterparty').value.trim();
+      const type         = document.getElementById('confirmation-type').value;
+      const result       = document.getElementById('confirmation-result').value;
+      const altProc      = document.getElementById('confirmation-alt').value.trim();
+      const sent         = document.getElementById('confirmation-sent').value;
+      const returned     = document.getElementById('confirmation-returned').value;
+
+      if (!counterparty) { showConfirmationError('Counterparty is required.'); return; }
+      if (!type)         { showConfirmationError('Type is required.'); return; }
+      if (sent && returned && returned < sent) {
+        showConfirmationError('Returned date cannot be before sent date.');
+        return;
+      }
+      // ISA 505.12 soft gate: exception or no_reply should have alternative procedures
+      if ((result === 'exception' || result === 'no_reply') && !altProc) {
+        showConfirmationError('ISA 505.12 requires alternative procedures when the confirmation is unreturned or exception. Document them above.');
+        return;
+      }
+
+      const payload = {
+        counterparty:           counterparty,
+        confirmation_type:      type,
+        section_id:             document.getElementById('confirmation-section').value || null,
+        sent_date:              sent || null,
+        returned_date:          returned || null,
+        result:                 result || null,
+        alternative_procedures: altProc || null,
+        notes:                  document.getElementById('confirmation-notes').value.trim() || null,
+      };
+
+      if (editingConfirmationId) {
+        const { error } = await supabaseClient
+          .from('engagement_confirmations')
+          .update(payload)
+          .eq('id', editingConfirmationId);
+        if (error) { showConfirmationError('Update failed: ' + error.message); return; }
+        await logActivity(engagementId, 'updated_confirmation', 'engagement_confirmation', editingConfirmationId, { counterparty });
+      } else {
+        payload.engagement_id   = engagementId;
+        payload.organization_id = currentOrg.id;
+        payload.created_by      = currentUser.id;
+        const { data, error } = await supabaseClient
+          .from('engagement_confirmations')
+          .insert(payload)
+          .select()
+          .single();
+        if (error) { showConfirmationError('Save failed: ' + error.message); return; }
+        await logActivity(engagementId, 'created_confirmation', 'engagement_confirmation', data.id, { counterparty });
+      }
+
+      closeConfirmationForm();
+      await loadConfirmations();
+    }
+
+    async function deleteConfirmation() {
+      if (currentRole !== 'admin' || !editingConfirmationId) return;
+      const c = confirmations.find(x => x.id === editingConfirmationId);
+      if (!c) return;
+      if (!confirm('Delete confirmation "' + c.counterparty + '"? This cannot be undone.')) return;
+
+      const { error } = await supabaseClient
+        .from('engagement_confirmations')
+        .delete()
+        .eq('id', editingConfirmationId);
+      if (error) { showConfirmationError('Delete failed: ' + error.message); return; }
+      await logActivity(engagementId, 'deleted_confirmation', 'engagement_confirmation', editingConfirmationId, { counterparty: c.counterparty });
+      closeConfirmationForm();
+      await loadConfirmations();
     }
 
     // ---- Risk Assessment Tab (ISA 315 + ISA 330 + ISA 240) ----

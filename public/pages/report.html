@@ -318,7 +318,7 @@
         risksRes, riskLinksRes, riskAssessRes,
         cmRes, cmAttestRes,
         matVersRes, matItemsRes,
-        estimatesRes
+        estimatesRes, confirmationsRes
       ] = await Promise.all([
         supabaseClient.from('audit_sections').select('*').eq('engagement_id', engagementId).order('sort_order'),
         supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code'),
@@ -337,6 +337,7 @@
         supabaseClient.from('engagement_materiality_versions').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: true }),
         supabaseClient.from('engagement_specific_materiality_items').select('*'),
         supabaseClient.from('engagement_estimates').select('*').eq('engagement_id', engagementId).order('created_at'),
+        supabaseClient.from('engagement_confirmations').select('*').eq('engagement_id', engagementId).order('created_at'),
       ]);
 
       // Active (non-superseded) versions of versioned workpapers
@@ -351,7 +352,8 @@
       const riskAssess = riskAssessRes.data || null;
       const cm         = cmRes.data || null;
       const cmAttests  = cm ? (cmAttestRes.data || []).filter(a => a.engagement_completion_memo_id === cm.id) : [];
-      const estimates  = estimatesRes.data || [];
+      const estimates     = estimatesRes.data || [];
+      const confirmations = confirmationsRes.data || [];
 
       // Materiality: versioned workpaper (ISA 320). Sort ascending — first is "planning".
       const matAllVersions = matVersRes.data || [];
@@ -1123,6 +1125,45 @@
           if (e.conclusion)           html += `<tr><th>Auditor's conclusion</th><td style="white-space:pre-wrap;">${esc(e.conclusion)}</td></tr>`;
           html += '</tbody></table>';
         });
+      }
+
+      // ===== ISA 505 — EXTERNAL CONFIRMATIONS (completion report only) =====
+      if (reportType === 'completion' && confirmations.length > 0) {
+        const TYPE_LABELS = {
+          bank: 'Bank', ar: 'AR', ap: 'AP', legal: 'Legal',
+          related_party: 'Related party', other: 'Other'
+        };
+        const RESULT_LABELS = {
+          clean: { label: 'Clean', chip: 'chip-green' },
+          exception: { label: 'Exception', chip: 'chip-red' },
+          partial: { label: 'Partial', chip: 'chip-amber' },
+          no_reply: { label: 'No reply', chip: 'chip-amber' },
+        };
+        html += '<h2>External Confirmations (ISA 505)</h2>';
+        // Summary row
+        const counts = { clean: 0, exception: 0, partial: 0, no_reply: 0, pending: 0 };
+        confirmations.forEach(c => {
+          if (!c.result) counts.pending++; else counts[c.result] = (counts[c.result] || 0) + 1;
+        });
+        html += `<p style="font-size:11px; color:#6E6E73; margin-bottom:12px;">Summary: ${counts.clean} clean &middot; ${counts.exception} exception &middot; ${counts.partial} partial &middot; ${counts.no_reply} no reply &middot; ${counts.pending} pending. Per ISA 505.12, alternative procedures performed for unreturned / exception confirmations are documented in the rightmost column.</p>`;
+        html += '<table><thead><tr><th>Counterparty</th><th>Type</th><th>Sent</th><th>Returned</th><th>Result</th><th>Section</th><th>Alternative procedures (505.12)</th></tr></thead><tbody>';
+        confirmations.forEach(c => {
+          const r = c.result ? RESULT_LABELS[c.result] : null;
+          const resultCell = r
+            ? `<span class="chip ${r.chip}">${r.label}</span>`
+            : '<span style="color:#6E6E73;">Pending</span>';
+          const secName = (sections.find(s => s.id === c.section_id) || {}).name;
+          html += `<tr>
+            <td>${esc(c.counterparty)}</td>
+            <td>${esc(TYPE_LABELS[c.confirmation_type] || c.confirmation_type)}</td>
+            <td>${c.sent_date || '—'}</td>
+            <td>${c.returned_date || '—'}</td>
+            <td>${resultCell}</td>
+            <td>${secName ? esc(secName) : '—'}</td>
+            <td style="white-space:pre-wrap; font-size:10px;">${c.alternative_procedures ? esc(c.alternative_procedures) : '<span style="color:#6E6E73;">—</span>'}</td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
       }
 
       // ===== SECTION-BY-SECTION WORKPAPERS — DELIBERATELY OMITTED FROM PARTNER REPORTS =====
