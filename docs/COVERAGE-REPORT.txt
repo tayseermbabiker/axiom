@@ -1,6 +1,6 @@
 ================================================================================
 AUDEXON — COVERAGE REPORT
-Generated: 2026-05-23
+Generated: 2026-05-23 (updated post-Sprint-4 standards-floor build 2026-05-23)
 Source of truth: supabase/migrations/*.sql + staging-bootstrap.sql + public/pages/*.html
 ================================================================================
 
@@ -931,74 +931,101 @@ SUMMARY
 ================================================================================
 
 PLANNING — 6 modules, all COMPLETE
-  - Client Acceptance, Engagement Letter, Independence, Audit Strategy,
+  - Client Acceptance (+ ISA 510 opening balances field — Sprint 4),
+    Engagement Letter, Independence,
+    Audit Planning (ISA 300 + ISA 315 embedded — Sprint 4 un-park),
     Materiality (versioned), Risk Assessment
 
-EXECUTION — 10 modules, all COMPLETE (one with caveat)
+EXECUTION — 12 modules, all COMPLETE (Sprint 4 added 2 + closed misstatement caveat)
   - Trial Balance, Audit Sections (19+1 = 20 templates),
-    Audit Procedures, Procedure Responses, Findings + Adjusting Entries
-    (caveat: NO consolidated cross-section misstatement schedule view),
+    Audit Procedures, Procedure Responses,
+    Findings + Adjusting Entries (now consolidated via ISA 450 schedule — Sprint 4),
+    Accounting Estimates (ISA 540 — Sprint 4),
+    External Confirmations (ISA 505 — Sprint 4),
+    Per-Procedure Sampling (ISA 530 — Sprint 4),
     Documents, Review Notes, Activity Log, Local Compliance Template,
     Section-Level Engagement-Specific Risks
 
 CONCLUSION — 1 module (the Completion Memo), COMPLETE with 13 attestations,
   5 tabs (Rollup / Attestations / Narrative / Reps & Comms / Opinion / EQR),
-  hard gates on sign-off, full PDF render
+  hard gates on sign-off, full PDF render.
+  Sprint 4 additions: line-by-line ISA 450 misstatement schedule on Rollup
+  tab + PDF (corrected / uncorrected / clearly-trivial grouping vs materiality).
 
 FIRM LEVEL — 3 modules, all COMPLETE
-  - Organizations & Members, Engagements (index), Financial Statement Uploads
+  - Organizations & Members,
+    Engagements (index — Sprint 4 added is_archived + archived_at + archived_by
+      + archive_engagement / unarchive_engagement RPCs per ISA 230.A23),
+    Financial Statement Uploads
 
 INFRASTRUCTURE
   - Sentry: wired but parked (no DSN)
   - Pre-commit checklist: in docs/PRE-COMMIT-CHECKLIST.md
   - Staging environment: staging branch on staging--auditsaas.netlify.app
+  - Sprint 4 spec: specs/sprint-4-standards-floor.md (awaiting 3-AI close)
 
 ================================================================================
-KNOWN GAPS (deferred / not built)
+SPRINT 4 — STANDARDS FLOOR (2026-05-23, all shipped)
 ================================================================================
 
-The following ISA modules / inspection items are NOT in the product today.
-These came from the 3-AI coverage assessment (Perplexity + claude.ai + Copilot).
+The 4-AI coverage synthesis 2026-05-23 (Perplexity + Copilot + Claude.ai
+independent + Claude.ai meta-review) flagged 7 standards items every SME
+ISA file needs even if no inspector or partner has explicitly asked yet.
+User shifted the gap-benchmark rule mid-sprint: Perplexity (IFAC-anchored)
+is the floor, not partner verbal asks. All 7 built in 1-day push.
+See specs/sprint-4-standards-floor.md for full spec + 3-AI questions.
 
-1. ISA 450 — Consolidated misstatement schedule across all sections
-   Currently: adjusting_entries per finding per section, no aggregated view.
-   Impact: partner must mentally aggregate. Real inspector ask.
-   Effort: ~2-3 hours (render-side, query adjusting_entries + findings joined).
+  ✓ ISA 450 — Consolidated misstatement schedule (UI on existing data)
+  ✓ ISA 540 — Accounting estimates (new table)
+  ✓ ISA 505 — External confirmations (new table, includes 505.12 alt-procs)
+  ✓ ISA 530 — Sampling documentation (new table, per-procedure UNIQUE)
+  ✓ ISA 315 — Understanding the entity (embedded in Audit Planning, no new table)
+  ✓ ISA 510 — Opening balances (status field on Acceptance, not a module)
+  ✓ ISA 230 — File assembly archive (flag + RPC on engagements, not a module)
 
-2. ISA 315 — Understanding the entity (separate structured module)
-   Currently: buried in audit strategy 'significant_factors' free-text.
-   Impact: defensible for SME but ideal as its own structured module.
+Migrations applied to staging Supabase lbwowlvajgpdxsdpudem:
+  20260523120000_isa_510_and_230.sql
+  20260523120001_isa_315_understanding.sql
+  20260523120002_isa_540_estimates.sql
+  20260523120003_isa_505_confirmations.sql
+  20260523120004_isa_530_sampling.sql
 
-3. ISA 505 — External confirmations tracker
-   Currently: documented in section workpapers as free text.
-   Impact: missing structured sent/received/exception tracking.
+================================================================================
+KNOWN GAPS (deferred / not built after Sprint 4)
+================================================================================
 
-4. ISA 510 — Opening balances
-   Currently: no dedicated section.
-   Impact: relevant mainly for first-year audits.
+Items deliberately NOT built — see memory/audexon-scope-freeze.md for the
+full do-not-build list. Validated by 4-AI synthesis 2026-05-23.
 
-5. ISA 530 — Audit sampling documentation (structured)
-   Currently: free text only in procedure_responses.
-   Impact: real raise in quality if added.
-
-6. ISA 540 — Accounting estimates (structured)
-   Currently: covered as findings or in PPE/Provisions sections.
-   Impact: critical for trading/manufacturing clients with NRV, EoSB, impairment.
-
-7. ISA 230 — File lock / 60-day assembly archive workflow
-   Currently: engagement.status='completed' is the closest equivalent.
-   Impact: no formal lock with assembly-deadline countdown.
-
-8. ISQM 1 — Firm-level quality dashboard
+1. ISQM 1 — Firm-level quality dashboard
    Currently: each engagement is siloed; no portfolio view.
-   Impact: small but real ask for firms with multiple engagements.
+   Status: deferred to post-revenue tier. All four AIs converged on defer.
 
-9. FS upload + TB-to-FS reconciliation
-   Currently: FS upload table exists (engagement_fs_uploads) but no
-   reconciliation workflow.
+2. FS upload + TB-to-FS reconciliation (automated)
+   Currently: FS upload table exists (engagement_fs_uploads); a narrative
+   field in the completion memo documents how partner satisfied FS↔TB tie.
+   Status: per Perplexity, narrative field in completion memo is enough
+   for MVP. Full auto-recon is "nice but not required" for SME firms.
 
-10. Engagement budget vs actual hours tracking
-    Currently: budgeted_hours captured in audit_strategy, no actuals.
+3. Engagement budget vs actual hours tracking
+   Currently: budgeted_hours captured in audit_planning, no actuals.
+   Status: out of ISA scope. Time-tracking is a practice-management need,
+   not an audit-quality need. Won't build until paying users ask.
+
+4. ISA 230 RLS-level immutability on archived engagements
+   Currently: archive flag + UI gating + memo lock provide effective
+   immutability. Direct API call bypassing UI could still write to
+   child tables of an archived engagement.
+   Status: tracked as Sprint 4 follow-up. Touch-every-child-table-policy
+   refactor — low risk at v1, fix if network inspector flags during pilot.
+
+5. ISA 540 risk scoring engine
+   Currently: structured fields + qualitative risk dropdown.
+   Status: deliberate. Per audexon-scope-freeze.md, no risk-scoring engines.
+
+6. Automated sampling engine (ISA 530)
+   Currently: documentation of sampling judgment, not generation.
+   Status: deliberate. Per audexon-scope-freeze.md.
 
 ================================================================================
 END OF REPORT
