@@ -510,8 +510,6 @@
             <dl class="cover-details">
               <dt>Engagement partner</dt>
               <dd${partnerName ? '' : ' class="muted"'}>${esc(partnerName || 'Not yet assigned')}</dd>
-              <dt>Engagement supervisor</dt>
-              <dd${supervisorName ? '' : ' class="muted"'}>${esc(supervisorName || 'Not yet assigned')}</dd>
               <dt>File status</dt>
               <dd>${eng.status === 'completed' ? 'Closed' : 'Active'}${eng.closed_at ? ' — closed ' + formatDateLong(eng.closed_at) : ''}</dd>
               <dt>Report generated</dt>
@@ -623,34 +621,52 @@
         // IESBA threats — only render rows that have meaningful content
         // (filtering avoids the 5-blank-rows look). Show threat category
         // explicitly even when null so the column has content.
-        const THREAT_CATEGORY_LABELS = {
+        // Column names match the DB schema:
+        //   engagement_independence_threats.threat_type  (NOT threat_category)
+        //   engagement_independence_threats.present      (NOT identified)
+        const THREAT_TYPE_LABELS = {
           self_interest: 'Self-interest', self_review: 'Self-review',
           advocacy: 'Advocacy', familiarity: 'Familiarity', intimidation: 'Intimidation'
         };
         const meaningfulThreats = (eiThreats || []).filter(t =>
-          t.identified
+          t.present
           || (t.description && t.description.trim())
           || (t.safeguards && t.safeguards.trim())
+          || (t.conclusion && t.conclusion.trim())
         );
         if (meaningfulThreats.length > 0) {
           html += '<h4>IESBA threats assessed</h4>';
-          html += '<table><thead><tr><th>Threat category</th><th>Identified?</th><th>Description</th><th>Safeguards</th></tr></thead><tbody>';
+          html += '<table><thead><tr><th>Threat category</th><th>Present?</th><th>Description</th><th>Safeguards</th><th>Conclusion</th></tr></thead><tbody>';
           meaningfulThreats.forEach(t => {
-            const catLabel = THREAT_CATEGORY_LABELS[t.threat_category]
-              || (t.threat_category ? t.threat_category.replace(/_/g,' ') : 'Unspecified');
-            html += `<tr><td>${esc(catLabel)}</td><td style="text-align:center;">${t.identified ? '&#10003;' : '&minus;'}</td><td>${esc(t.description || '—')}</td><td>${esc(t.safeguards || '—')}</td></tr>`;
+            const catLabel = THREAT_TYPE_LABELS[t.threat_type]
+              || (t.threat_type ? t.threat_type.replace(/_/g,' ') : 'Unspecified');
+            html += `<tr><td>${esc(catLabel)}</td><td style="text-align:center;">${t.present ? '&#10003;' : '&minus;'}</td><td>${esc(t.description || '—')}</td><td>${esc(t.safeguards || '—')}</td><td>${esc(t.conclusion || '—')}</td></tr>`;
           });
           html += '</tbody></table>';
         }
-        // Non-audit services — only render rows with a service description
-        // (empty rows previously showed "—" for both service and fee, which
-        // looked like data corruption).
-        const meaningfulNas = (eiNas || []).filter(n => n.service_description && n.service_description.trim());
+        // Non-audit services — engagement_nas schema:
+        //   service_type (NOT service_description), description, threat_category,
+        //   safeguards, conclusion, is_prohibited (NOT is_permitted), service_provider
+        // No fee_amount column in this table — partner-relevant fact is whether
+        // the service was prohibited per IESBA and what the threat category is.
+        const NAS_TYPE_LABELS = {
+          bookkeeping: 'Bookkeeping', tax: 'Tax', valuation: 'Valuation',
+          it: 'IT', payroll: 'Payroll', other: 'Other'
+        };
+        const meaningfulNas = (eiNas || []).filter(n =>
+          (n.service_type && n.service_type.trim())
+          || (n.description && n.description.trim())
+        );
         if (meaningfulNas.length > 0) {
           html += '<h4>Non-audit services</h4>';
-          html += '<table><thead><tr><th>Service</th><th>Fee</th><th>Permitted?</th><th>Safeguards</th></tr></thead><tbody>';
+          html += '<table><thead><tr><th>Service</th><th>Description</th><th>Threat</th><th>Prohibited?</th><th>Safeguards</th></tr></thead><tbody>';
           meaningfulNas.forEach(n => {
-            html += `<tr><td>${esc(n.service_description)}</td><td>${n.fee_amount != null ? Number(n.fee_amount).toLocaleString() : '—'}</td><td style="text-align:center;">${n.is_permitted ? '&#10003;' : '&#10007;'}</td><td>${esc(n.safeguards || '—')}</td></tr>`;
+            const typeLabel = NAS_TYPE_LABELS[n.service_type] || (n.service_type ? n.service_type.replace(/_/g,' ') : '—');
+            const threatLabel = THREAT_TYPE_LABELS[n.threat_category] || (n.threat_category ? n.threat_category.replace(/_/g,' ') : '—');
+            const prohibitedCell = n.is_prohibited
+              ? '<span style="color:#991B1B; font-weight:600;">&#10003; Prohibited</span>'
+              : '<span style="color:#15803D;">&minus;</span>';
+            html += `<tr><td>${esc(typeLabel)}</td><td>${esc(n.description || '—')}</td><td>${esc(threatLabel)}</td><td style="text-align:center;">${prohibitedCell}</td><td>${esc(n.safeguards || '—')}</td></tr>`;
           });
           html += '</tbody></table>';
         }

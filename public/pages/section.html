@@ -2843,7 +2843,15 @@
       if (_actionResolve) { _actionResolve(null); _actionResolve = null; }
     }
 
-    init();
+    function disableAutofillOnAllInputs() {
+      document.querySelectorAll('input, textarea').forEach(el => {
+        el.setAttribute('autocomplete', 'off');
+        el.setAttribute('autocorrect', 'off');
+        el.setAttribute('spellcheck', 'false');
+      });
+    }
+
+    init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
   </script>
 </body>
 </html>

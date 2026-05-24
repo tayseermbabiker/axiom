@@ -1166,11 +1166,11 @@
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm">Letter date</label>
-                  <input type="date" id="el-letter-date" class="form-control" onchange="markElDirty()">
+                  <input type="date" id="el-letter-date" class="form-control" max="9999-12-31" onchange="markElDirty()">
                 </div>
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm">Signed date</label>
-                  <input type="date" id="el-signed-date" class="form-control" onchange="markElDirty()">
+                  <input type="date" id="el-signed-date" class="form-control" max="9999-12-31" onchange="markElDirty()">
                 </div>
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm">Client signatory name</label>
@@ -1191,11 +1191,11 @@
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm">Audit period — start</label>
-                  <input type="date" id="el-period-start" class="form-control" onchange="markElDirty()">
+                  <input type="date" id="el-period-start" class="form-control" max="9999-12-31" onchange="markElDirty()">
                 </div>
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm">Audit period — end</label>
-                  <input type="date" id="el-period-end" class="form-control" onchange="markElDirty()">
+                  <input type="date" id="el-period-end" class="form-control" max="9999-12-31" onchange="markElDirty()">
                 </div>
               </div>
 
@@ -1349,11 +1349,11 @@
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm">Assessment date</label>
-                  <input type="date" id="ei-assessment-date" class="form-control">
+                  <input type="date" id="ei-assessment-date" class="form-control" max="9999-12-31">
                 </div>
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm">Attestation date</label>
-                  <input type="date" id="ei-attestation-date" class="form-control">
+                  <input type="date" id="ei-attestation-date" class="form-control" max="9999-12-31">
                 </div>
               </div>
 
@@ -1508,7 +1508,7 @@
                 </div>
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm">Decision date</label>
-                  <input type="date" id="eacc-decision-date" class="form-control">
+                  <input type="date" id="eacc-decision-date" class="form-control" max="9999-12-31">
                 </div>
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm">Decision *</label>
@@ -1642,7 +1642,7 @@
               </label>
               <div class="form-group" style="margin-top:12px;">
                 <label class="text-sm">Attestation date</label>
-                <input type="date" id="eacc-attestation-date" class="form-control" style="max-width:240px;">
+                <input type="date" id="eacc-attestation-date" class="form-control" max="9999-12-31" style="max-width:240px;">
               </div>
 
               <!-- Notes -->
@@ -1774,7 +1774,7 @@
                 <textarea id="eas-specialists" class="form-control" rows="2"></textarea>
               </div>
 
-              <div style="display:grid; grid-template-columns:auto 1fr 200px; gap:12px; align-items:end;">
+              <div style="display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:end;">
                 <div class="form-group" style="margin:0;">
                   <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:6px;">
                     <input type="checkbox" id="eas-eqr-required">
@@ -1785,10 +1785,12 @@
                   <label class="text-sm">EQR reviewer name</label>
                   <input type="text" id="eas-eqr-reviewer" class="form-control" placeholder="(if EQR required)">
                 </div>
-                <div class="form-group" style="margin:0;">
-                  <label class="text-sm">Budgeted hours</label>
-                  <input type="number" id="eas-budget-hours" class="form-control" min="0" step="1">
-                </div>
+              </div>
+
+              <div class="form-group" style="margin-top:16px; max-width:240px;">
+                <label class="text-sm">Budgeted hours</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Engagement-wide planning estimate. Independent of EQR.</small>
+                <input type="number" id="eas-budget-hours" class="form-control" min="0" step="1">
               </div>
 
               <!-- Section D: ISA-specific planning narratives (gap items from 2-AI synthesis) -->
@@ -2310,7 +2312,7 @@
         </div>
         <div class="form-group" id="fs-report-date-row" style="display:none;">
           <label class="text-sm">Auditor's Report Date *</label>
-          <input type="date" id="fs-report-date" class="form-control">
+          <input type="date" id="fs-report-date" class="form-control" max="9999-12-31">
           <small style="color:var(--gray-500); font-size:11px;">Required for Signed uploads (ISA 560). The report date this signed FS attaches to. Restatements use a new report date.</small>
         </div>
         <div class="form-group">
@@ -7692,7 +7694,18 @@
       if (_actionResolve) { _actionResolve(null); _actionResolve = null; }
     }
 
-    init();
+    // Suppress browser autofill / history dropdowns on every form input —
+    // partners enter client-specific data, stale suggestions from a prior
+    // engagement are misleading. Runs after init() has rendered the DOM.
+    function disableAutofillOnAllInputs() {
+      document.querySelectorAll('input, textarea').forEach(el => {
+        el.setAttribute('autocomplete', 'off');
+        el.setAttribute('autocorrect', 'off');
+        el.setAttribute('spellcheck', 'false');
+      });
+    }
+
+    init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
   </script>
 </body>
 </html>
