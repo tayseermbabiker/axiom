@@ -1821,6 +1821,18 @@
                 <textarea id="eas-subsequent-events" class="form-control" rows="2" placeholder="e.g. Cut-off review at completion fieldwork; partner to inquire of management 1 week before report sign-off. Detailed procedures in Subsequent Events section."></textarea>
               </div>
 
+              <div class="form-group">
+                <label class="text-sm">Key laws &amp; regulations considered (ISA 250)</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Regulatory regimes that materially affect the FS (tax, AML, sector licensing, FX controls, etc.). One line is enough.</small>
+                <textarea id="eas-laws-regulations" class="form-control" rows="2" placeholder="e.g. UAE Federal Corporate Tax Law (No 47/2022); UAE VAT (No 8/2017); AML/CFT (Cabinet Decision 10/2019); Commercial Companies Law (No 32/2021); MoHRE Labour Law."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="text-sm">Planned communications with management &amp; TCWG (ISA 260)</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">How audit matters, control deficiencies, and significant findings will be communicated. Inspector look-for item.</small>
+                <textarea id="eas-planned-communications" class="form-control" rows="2" placeholder="e.g. Interim findings memo at month-end Jan; final TCWG meeting in week of report sign-off; control deficiencies in a separate management letter within 30 days post-opinion."></textarea>
+              </div>
+
               <!-- Fraud team discussion (ISA 240.17) -->
               <div style="border:0.5px solid var(--gray-200); border-radius:8px; padding:14px 16px; margin:12px 0; background:rgba(255,255,255,0.55);">
                 <h4 style="font-size:12px; font-weight:600; margin:0 0 8px; color:var(--gray-700); text-transform:uppercase; letter-spacing:0.5px;">Fraud team discussion (ISA 240.17)</h4>
@@ -6371,6 +6383,9 @@
       document.getElementById('eas-isa315-inquiry').checked        = !!r.isa_315_inquiry_performed;
       document.getElementById('eas-isa315-analytical').checked     = !!r.isa_315_analytical_performed;
       document.getElementById('eas-isa315-observation').checked    = !!r.isa_315_observation_inspection_performed;
+      // ISA 260 + ISA 250 polish (Perplexity 2026-05-24)
+      document.getElementById('eas-laws-regulations').value        = r.key_laws_regulations             || '';
+      document.getElementById('eas-planned-communications').value  = r.planned_communications_mgmt_tcwg || '';
       onEasFraudDiscussionChange();
     }
 
@@ -6412,6 +6427,8 @@
         section('Subsequent events — planning approach (ISA 560)', r.subsequent_events_planning_note) +
         section('Industry & external environment (ISA 315.19(a))', r.industry_external_environment) +
         section('Significant changes since prior period (ISA 315.A47)', r.significant_changes_from_prior_year) +
+        section('Key laws & regulations considered (ISA 250)',       r.key_laws_regulations) +
+        section('Planned communications with mgmt & TCWG (ISA 260)', r.planned_communications_mgmt_tcwg) +
         `<div style="margin-bottom:16px;"><div style="font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Risk assessment procedures (ISA 315.14)</div><div style="font-size:13px; color:var(--gray-800);">${r.isa_315_inquiry_performed ? '&#10003;' : '&minus;'} Inquiries &middot; ${r.isa_315_analytical_performed ? '&#10003;' : '&minus;'} Analytical &middot; ${r.isa_315_observation_inspection_performed ? '&#10003;' : '&minus;'} Observation/inspection</div></div>` +
         `<div style="margin-bottom:16px;"><div style="font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Fraud team discussion (ISA 240.17)</div><div style="font-size:13px; color:var(--gray-800);">${fraudLine}</div></div>`;
     }
@@ -6490,6 +6507,9 @@
         isa_315_inquiry_performed:               document.getElementById('eas-isa315-inquiry').checked,
         isa_315_analytical_performed:            document.getElementById('eas-isa315-analytical').checked,
         isa_315_observation_inspection_performed: document.getElementById('eas-isa315-observation').checked,
+        // ISA 260 + ISA 250 polish (Perplexity 2026-05-24)
+        key_laws_regulations:                    document.getElementById('eas-laws-regulations').value.trim()       || null,
+        planned_communications_mgmt_tcwg:        document.getElementById('eas-planned-communications').value.trim() || null,
       };
     }
 

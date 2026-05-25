@@ -706,6 +706,9 @@
         // ISA 315 — Understanding the entity (Sprint 4 standards floor)
         html += narrSection('Industry & external environment (ISA 315.19(a))',    easActive.industry_external_environment);
         html += narrSection('Significant changes since prior period (ISA 315.A47)', easActive.significant_changes_from_prior_year);
+        // ISA 260 + ISA 250 polish (Perplexity 2026-05-24)
+        html += narrSection('Key laws & regulations considered (ISA 250)',         easActive.key_laws_regulations);
+        html += narrSection('Planned communications with mgmt & TCWG (ISA 260)',   easActive.planned_communications_mgmt_tcwg);
         // ISA 315.14 — risk assessment procedures performed
         const isa315Any = easActive.isa_315_inquiry_performed
                        || easActive.isa_315_analytical_performed
