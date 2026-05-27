@@ -1278,8 +1278,9 @@
                 </div>
               </div>
               <div class="form-group">
+                <label id="el-file-label" style="font-size:12px; font-weight:600; color:var(--gray-700); display:block; margin-bottom:4px;">Upload signed letter</label>
                 <input type="file" id="el-file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="form-control">
-                <small style="color:var(--gray-500); font-size:11px;">PDF, DOC, or DOCX. Max 50 MB. Required to mark the letter as Signed.</small>
+                <small id="el-file-hint" style="color:var(--gray-500); font-size:11px;">PDF, DOC, or DOCX. Max 50 MB. Required to mark the letter as Signed.</small>
               </div>
 
               <!-- Error banner -->
@@ -5256,6 +5257,8 @@
 
       // File status
       const fileStatus = document.getElementById('el-file-status');
+      const fileLabel = document.getElementById('el-file-label');
+      const fileHint = document.getElementById('el-file-hint');
       if (l.file_path) {
         fileStatus.style.display = 'block';
         document.getElementById('el-file-name').textContent = l.file_name || '(unnamed)';
@@ -5263,8 +5266,14 @@
         const hashStr = l.file_sha256 ? ' · SHA-256 ' + shortHash(l.file_sha256) : '';
         document.getElementById('el-file-meta').textContent = sizeStr + hashStr;
         document.getElementById('el-btn-download').onclick = () => downloadEngagementLetterFile(l);
+        // Swap the upload prompt so it reads as a replace action, not a
+        // "still required" warning — the current file is shown above.
+        if (fileLabel) fileLabel.textContent = 'Replace signed letter (optional)';
+        if (fileHint)  fileHint.textContent  = 'Pick a new file to supersede the current one. PDF, DOC, or DOCX. Max 50 MB.';
       } else {
         fileStatus.style.display = 'none';
+        if (fileLabel) fileLabel.textContent = 'Upload signed letter';
+        if (fileHint)  fileHint.textContent  = 'PDF, DOC, or DOCX. Max 50 MB. Required to mark the letter as Signed.';
       }
 
       // Reset file input so picking the same filename again still fires change
