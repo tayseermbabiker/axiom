@@ -374,7 +374,17 @@
       const tbLines = tbRes.data || [];
 
       const profiles = {};
-      (profilesRes.data || []).forEach(m => { if (m.profiles) profiles[m.profiles.id] = m.profiles.full_name || m.profiles.email; });
+      (profilesRes.data || []).forEach(m => {
+        if (m.profiles) {
+          // Always store a non-empty label so signer/approver lookups
+          // never render as an empty string in the PDF. Priority:
+          // full_name → email → "User <short-id>" so the row is never
+          // blank in the rendered tables.
+          profiles[m.profiles.id] = m.profiles.full_name
+            || m.profiles.email
+            || ('User ' + String(m.profiles.id).slice(0, 8));
+        }
+      });
 
       // Load procedures, responses, documents, findings, review notes, adjusting entries per section
       const secIds = sections.map(s => s.id);
@@ -1072,7 +1082,13 @@
           html += '<table><thead><tr><th>Finding</th><th>Section</th><th>Impact</th><th>Adjusting Entry</th><th>Posted?</th></tr></thead><tbody>';
           rows.forEach(r => {
             const secName = sections.find(s => s.id === r.f.section_id)?.name || '—';
-            const amt = Number(r.f.monetary_impact) || 0;
+            // Impact: prefer explicit finding.monetary_impact, else fall
+            // back to sum of |AJE amounts| (same logic as completion-memo
+            // rollup) so the schedule doesn't report 0 when only the AJE
+            // amount was entered.
+            const findingAmt = Number(r.f.monetary_impact) || 0;
+            const ajeAmt = r.ajes.reduce((s, a) => s + Math.abs(Number(a.amount) || 0), 0);
+            const amt = findingAmt || ajeAmt;
             sums[key] += Math.abs(amt);
             let aeCell;
             if (r.ajes.length === 0) {
@@ -1421,7 +1437,13 @@
         const cmStatus = cm.status === 'locked' ? 'b-approved' : (cm.status === 'complete' ? 'b-reported' : 'b-pending');
         const cmStatusLabel = cm.status === 'locked' ? 'LOCKED &amp; SIGNED' : cm.status.toUpperCase();
         const fmt = (n) => n != null ? Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 }) : '—';
-        const partnerSignedBy = cm.signed_by ? (profiles[cm.signed_by] || '—') : '—';
+        // Memo signer: cm.signed_by → profiles cache (never empty after
+        // the cache hardening above) → fall back to the resolved
+        // partnerName from findEngagementPartner if signer isn't in the
+        // org's profile list for some reason (rare — external EQR, etc.).
+        const partnerSignedBy = cm.signed_by
+          ? (profiles[cm.signed_by] || partnerName || '—')
+          : '—';
 
         html += `<table><tbody>
           <tr><th style="width:32%;">Status</th><td><span class="badge ${cmStatus}">${cmStatusLabel}</span> ${cm.signed_at ? '&middot; signed ' + formatDateLong(cm.signed_at) + ' by ' + esc(partnerSignedBy) : ''}</td></tr>

@@ -902,7 +902,16 @@
             <th>Posted?</th>
           </tr></thead><tbody>`;
         rows.forEach(r => {
-          const amt = Number(r.finding.monetary_impact) || 0;
+          // Impact priority: explicit finding.monetary_impact (if any),
+          // else fall back to sum of |AJE amounts| so partners who only
+          // entered the AJE amount don't see Impact = 0 vs a populated
+          // adjusting-entry detail (the contradiction Perplexity flagged
+          // 2026-05-27 — "Σ = 0 vs narrative AED 45k").
+          const findingAmt = Number(r.finding.monetary_impact) || 0;
+          const ajeAmt = r.adjusting_entries.reduce(
+            (s, a) => s + Math.abs(Number(a.amount) || 0), 0
+          );
+          const amt = findingAmt || ajeAmt;
           sums[key] += Math.abs(amt);
           let aeCell;
           if (r.adjusting_entries.length === 0) {
