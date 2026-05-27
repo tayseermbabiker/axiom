@@ -7151,7 +7151,30 @@
         linksByRisk[l.risk_id]++;
       });
 
-      const html = eraSectionsCache.filter(s => bySection[s.id]).map(s => {
+      // Unlinked group: presumed risks whose section was deleted (ON DELETE
+      // SET NULL) end up here. Render at the top so the partner sees the
+      // re-link CTA before drilling into section groups.
+      const unlinked = eraRisks.filter(r => !r.section_id);
+      let html = '';
+      if (unlinked.length > 0) {
+        const sigCount = unlinked.filter(r => r.is_significant).length;
+        html += `
+          <div style="border:1px solid #FECACA; border-radius:8px; margin-bottom:12px; overflow:hidden; background:#FEF6F6;">
+            <div style="background:#FEE2E2; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:13px; font-weight:600; color:#991B1B;">Unlinked — re-link required</div>
+              <div style="font-size:11px; color:#991B1B;">${unlinked.length} risk${unlinked.length===1?'':'s'}${sigCount ? ' &middot; <span style="font-weight:600;">'+sigCount+' significant</span>' : ''}</div>
+            </div>
+            <div style="font-size:11px; color:#7F1D1D; padding:6px 14px; background:#FEF2F2; border-bottom:1px solid #FECACA;">
+              These ISA 240 presumed risks lost their host section when it was deleted. Click Edit on each row to re-link to an existing section before confirming the assessment.
+            </div>
+            <div style="padding:6px 0;">
+              ${unlinked.map(r => renderRiskRow(r, linksByRisk[r.id] || 0, confirmed)).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      html += eraSectionsCache.filter(s => bySection[s.id]).map(s => {
         const sectionRisks = bySection[s.id];
         const sigCount = sectionRisks.filter(r => r.is_significant).length;
         return `
@@ -7266,13 +7289,18 @@
       // Reset error
       document.getElementById('risk-modal-error').style.display = 'none';
 
-      // Section dropdown
+      // Section dropdown. Includes an "unlinked" placeholder so presumed
+      // risks whose section was deleted (section_id = NULL) render as
+      // explicitly unlinked rather than silently defaulting to the first
+      // section. The save validation still requires a real section_id
+      // before persistence, so partner must pick one before saving.
       const secSel = document.getElementById('risk-section');
-      secSel.innerHTML = eraSectionsCache.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+      secSel.innerHTML = '<option value="">— Select section —</option>' +
+        eraSectionsCache.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
 
       if (existing) {
         document.getElementById('modal-risk-title').textContent = existing.is_locked_presumed ? 'Presumed risk (read-only fields)' : 'Edit risk';
-        secSel.value = existing.section_id;
+        secSel.value = existing.section_id || '';
         document.getElementById('risk-assertion').value             = existing.assertion;
         document.getElementById('risk-description').value           = existing.risk_description;
         document.getElementById('risk-source').value                = existing.source;
@@ -7284,9 +7312,11 @@
         document.getElementById('risk-response').value              = existing.overall_response || '';
         document.getElementById('risk-btn-delete').style.display    = existing.is_locked_presumed ? 'none' : '';
 
-        // Lock presumed fields
+        // Lock presumed fields. Section stays editable on presumed risks
+        // because the partner needs to re-link them after a section delete
+        // (when section_id was SET NULL by the FK cascade).
         const locked = existing.is_locked_presumed;
-        document.getElementById('risk-section').disabled    = locked;
+        document.getElementById('risk-section').disabled    = false;
         document.getElementById('risk-assertion').disabled  = locked;
         document.getElementById('risk-description').disabled = locked;
         document.getElementById('risk-source').disabled     = locked;
@@ -7361,10 +7391,14 @@
         if (eraEditingRiskId) {
           const existing = eraRisks.find(r => r.id === eraEditingRiskId);
           if (existing && existing.is_locked_presumed) {
-            // Only response + ratings + significance editable for presumed risks; freeze locked fields.
+            // For presumed risks, only ratings + response are editable.
+            // section_id is also included so a partner can re-link a
+            // presumed risk whose host section was deleted (SET NULL by
+            // FK cascade). All other ISA-mandated fields stay frozen.
             const limited = {
+              section_id:      payload.section_id,
               inherent_rating: payload.inherent_rating,
-              control_rating: payload.control_rating,
+              control_rating:  payload.control_rating,
               combined_rating: payload.combined_rating,
               overall_response: payload.overall_response,
             };
