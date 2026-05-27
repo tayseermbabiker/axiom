@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Local Compliance — Audexon</title>
+  <title>Compliance Template — Audexon</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
@@ -83,7 +83,7 @@
       <nav class="sidebar-nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="team.html">Team</a>
-        <a href="local-compliance.html" class="active" id="nav-local-compliance">Local Compliance</a>
+        <a href="local-compliance.html" class="active" id="nav-local-compliance">Compliance Template</a>
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
@@ -94,7 +94,7 @@
     <main class="main-content">
       <!-- Pro-tier gate -->
       <div id="access-blocked" class="access-blocked" style="display:none;">
-        <h2>Local Compliance is a Pro feature</h2>
+        <h2>Compliance Template is a Pro feature</h2>
         <p>Author a custom 20th audit section &mdash; jurisdiction-specific procedures (UAE ESR, Saudi Zakat, Qatar QFC, etc.) auto-seeded into every new engagement.</p>
         <p>Your firm is currently on the Essentials plan.</p>
         <a href="../index.html#pricing" class="btn btn-primary">View Pro pricing</a>
@@ -103,7 +103,7 @@
       <!-- Admin-only gate -->
       <div id="role-blocked" class="access-blocked" style="display:none;">
         <h2>Partner-only settings</h2>
-        <p>Local Compliance templates are authored by the engagement partner. Ask your firm's admin to set this up.</p>
+        <p>Compliance templates are authored by the engagement partner. Ask your firm's admin to set this up.</p>
         <a href="dashboard.html" class="btn btn-outline">Back to Dashboard</a>
       </div>
 
@@ -111,17 +111,17 @@
       <div id="lc-content" style="display:none;">
         <div class="page-header">
           <div>
-            <h1>Local Compliance</h1>
-            <span class="text-sm text-muted">Author your firm's 20th audit section &mdash; auto-seeded into every new engagement.</span>
+            <h1>Compliance Template</h1>
+            <span class="text-sm text-muted">Firm-level template for your 20th audit section &mdash; authored once, auto-seeded into every new engagement.</span>
           </div>
         </div>
 
         <!-- Empty state: no template yet -->
         <div id="lc-empty" class="card" style="display:none;">
           <div class="card-body" style="text-align:center; padding:32px;">
-            <h2 style="margin-bottom:8px;">No Local Compliance section yet</h2>
+            <h2 style="margin-bottom:8px;">No compliance template yet</h2>
             <p class="text-sm text-muted mb-16">Enable this to add a custom 20th section to every new engagement. You'll be able to edit the section name, description, jurisdiction, and add as many regulatory procedures as your firm needs.</p>
-            <button class="btn btn-primary" onclick="enableLocalCompliance()">Enable Local Compliance</button>
+            <button class="btn btn-primary" onclick="enableLocalCompliance()">Enable compliance template</button>
           </div>
         </div>
 
