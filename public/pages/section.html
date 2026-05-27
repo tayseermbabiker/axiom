@@ -1042,6 +1042,20 @@
           profileCache[m.profiles.id] = m.profiles.full_name || m.profiles.email || 'Unknown';
         }
       });
+
+      // Solo-firm fallback (same pattern as engagement.html and completion-memo.html):
+      // when RLS or the org_members join returns an empty list, the current user
+      // is still effectively the engagement partner. Inject them so the assignee
+      // dropdown isn't empty inside the section view.
+      if (currentUser && !orgMembers.some(m => (m.profiles?.id || m.user_id) === currentUser.id)) {
+        const fallbackName = currentUser.user_metadata?.full_name || currentUser.email || 'Me';
+        orgMembers.push({
+          user_id: currentUser.id,
+          role: currentRole || 'admin',
+          profiles: { id: currentUser.id, full_name: fallbackName, email: currentUser.email },
+        });
+        profileCache[currentUser.id] = fallbackName;
+      }
     }
 
     // ---- Profile resolution ----
@@ -1267,10 +1281,25 @@
 
     async function editSectionTags() {
       if (!can('edit_section_tags')) { alert('Only partners and supervisors can edit tags.'); return; }
-      const { data: allLines } = await supabaseClient
+
+      // Use the latest (current) TB version only — if the user replaced
+      // the TB, superseded versions' lines must NOT appear here.
+      const { data: latestVersion } = await supabaseClient
+        .from('tb_versions')
+        .select('id')
+        .eq('engagement_id', engagementId)
+        .order('uploaded_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let lineQuery = supabaseClient
         .from('trial_balance_lines')
         .select('classification')
         .eq('engagement_id', engagementId);
+      if (latestVersion && latestVersion.id) {
+        lineQuery = lineQuery.eq('tb_version_id', latestVersion.id);
+      }
+      const { data: allLines } = await lineQuery;
 
       if (!allLines || allLines.length === 0) {
         alert('No trial balance uploaded yet. Upload a TB first from the engagement page.');
