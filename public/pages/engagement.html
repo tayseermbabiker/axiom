@@ -7040,6 +7040,18 @@
       document.getElementById('era-body').style.display = 'block';
       document.getElementById('era-error').style.display = 'none';
 
+      // Defensive re-seed: the 2 ISA 240 presumed fraud risks can be lost if
+      // the user deleted a section they were linked to (ON DELETE CASCADE on
+      // engagement_risks.section_id). seed_presumed_fraud_risks has
+      // IF NOT EXISTS guards so this is idempotent — no duplicates when the
+      // risks already exist, and they get restored if a section delete wiped
+      // them. Silent on error (e.g., transient RLS issues) to keep the tab
+      // loading even if reseeding fails.
+      await supabaseClient.rpc('seed_presumed_fraud_risks', {
+        p_engagement_id:   engagementId,
+        p_organization_id: currentOrg.id,
+      });
+
       const [risksRes, linksRes, assessRes, secsRes, procsRes] = await Promise.all([
         supabaseClient.from('engagement_risks').select('*').eq('engagement_id', engagementId).order('section_id').order('created_at'),
         supabaseClient.from('engagement_risk_procedure_links').select('id, risk_id, procedure_id'),
