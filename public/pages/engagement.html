@@ -2886,9 +2886,13 @@
       await Promise.all([loadTBLines(), loadFindings()]);
       updateStats();
 
-      // Initialize phase navigator — default to Execution phase, Trial Balance tab
-      renderModuleTabs('execution');
-      switchModuleTab('tb');
+      // Initialize phase navigator — role-aware default landing:
+      // - Admins (partners) land on Planning. They care about acceptance,
+      //   independence, audit planning, materiality, risk before fieldwork.
+      // - Supervisors / preparers land on Execution (Trial Balance tab) —
+      //   that's where their day-to-day work happens.
+      const defaultPhase = currentRole === 'admin' ? 'planning' : 'execution';
+      switchPhase(defaultPhase);
     }
 
     async function resolveProfileName(userId) {
