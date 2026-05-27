@@ -76,6 +76,171 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
+    /* ---- Engagement overview card (Sprint 5 redesign) ---- */
+    .eng-overview-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .overview-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .overview-progress-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+    .overview-progress-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .overview-progress-pct {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gray-900);
+      line-height: 1;
+      min-width: 64px;
+    }
+    .overview-progress-bar {
+      flex: 1;
+      min-width: 180px;
+      max-width: 340px;
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .overview-progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .overview-progress-fill.done { background: #15803D; }
+    .overview-reports {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .overview-reports-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .overview-reports-btns { display: flex; gap: 6px; }
+
+    /* Phase chips row */
+    .phase-chips-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .phase-chip {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+      width: 100%;
+      font-family: inherit;
+    }
+    .phase-chip:hover {
+      background: white;
+      border-color: var(--gray-300);
+      transform: translateY(-1px);
+    }
+    .phase-chip.active {
+      background: white;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0,71,171,0.10);
+    }
+    .phase-chip.locked {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .phase-chip.locked:hover { transform: none; background: var(--gray-50); }
+    .phase-chip.done .step-num {
+      background: #15803D;
+      color: white;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--gray-300);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .phase-chip.active .step-num { background: var(--primary); }
+    .phase-chip.locked .step-num { background: var(--gray-300); }
+    .step-text { min-width: 0; flex: 1; }
+    .step-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 2px;
+    }
+    .phase-chip.locked .step-label { color: var(--gray-500); }
+    .step-sub {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    /* Stats inline line */
+    .overview-stats-line {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid var(--gray-100);
+      font-size: 13px;
+      color: var(--gray-600);
+    }
+    .overview-stats-line .stat-num {
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+    .overview-stats-line .stat-dot {
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--gray-300);
+      display: inline-block;
+    }
+    .overview-stats-line .stat-warn { color: #C02A2A; font-weight: 600; }
+
+    @media (max-width: 720px) {
+      .phase-chips-row { grid-template-columns: 1fr; }
+      .overview-top { flex-direction: column; align-items: stretch; }
+      .overview-reports { align-items: flex-start; }
+    }
+
     /* TB read-only view */
     .tb-section-badge {
       display: inline-block;
@@ -384,8 +549,6 @@
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start;">
-          <button class="btn btn-outline btn-sm" onclick="exportReport('planning')" title="Planning Memorandum (ISA 300): acceptance, engagement letter, independence, audit strategy, materiality, risk assessment. Partner-facing.">Planning PDF</button>
-          <button class="btn btn-outline btn-sm" onclick="exportReport('completion')" title="Completion Memorandum (ISA 700): risk recap, findings, ML points, work-done summary, completion memo, trial balance. Partner-facing.">Completion PDF</button>
           <div id="eng-actions" style="display:flex; gap:8px; align-items:flex-start;"></div>
         </div>
       </div>
@@ -413,71 +576,71 @@
         <span class="text-sm" style="color:#334155; margin-left:8px;" id="eng-archived-text">File assembled and archived per ISA 230. No further changes permitted without partner reopening.</span>
       </div>
 
-      <!-- Stats -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-value" id="stat-sections">0</div>
-          <div class="stat-label">Total Sections</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-procedures">0 / 0</div>
-          <div class="stat-label">Procedures Done</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-findings">0</div>
-          <div class="stat-label">Open Findings</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-approved">0 / 0</div>
-          <div class="stat-label">Sections Approved</div>
-        </div>
-      </div>
-
       <!-- ═══════════════════════════════════════════════
-           PHASE STEPPER — Level 1 (Planning / Execution / Conclusion)
+           ENGAGEMENT OVERVIEW CARD
+           Combines overall progress + phase navigation + quick stats
+           into a single partner-glance card. Phase chips remain
+           clickable nav (call switchPhase) and keep the same IDs
+           used by switchPhase / updateStepperProgress JS handlers.
            ════════════════════════════════════════════════ -->
-      <div class="phase-stepper" id="phase-stepper">
+      <div class="eng-overview-card">
 
-        <button class="phase-step" id="phase-btn-planning"
-          onclick="switchPhase('planning')" title="Planning phase">
-          <div class="step-num" id="step-num-planning">1</div>
-          <div class="step-text">
-            <div class="step-label">Planning</div>
-            <div class="step-sub" id="step-sub-planning">Not started</div>
-          </div>
-        </button>
-
-        <span class="step-arrow">›</span>
-
-        <button class="phase-step active" id="phase-btn-execution"
-          onclick="switchPhase('execution')" title="Execution phase">
-          <div class="step-num" id="step-num-execution">2</div>
-          <div class="step-text">
-            <div class="step-label">Execution</div>
-            <div class="step-sub" id="step-sub-execution">0 of 0 sections done</div>
-          </div>
-        </button>
-
-        <span class="step-arrow">›</span>
-
-        <button class="phase-step locked" id="phase-btn-conclusion"
-          onclick="switchPhase('conclusion')" title="Complete execution first">
-          <div class="step-num" id="step-num-conclusion">3</div>
-          <div class="step-text">
-            <div class="step-label">Conclusion</div>
-            <div class="step-sub" id="step-sub-conclusion">Locked</div>
-          </div>
-        </button>
-
-        <!-- Overall progress — pushed to right -->
-        <div class="stepper-right">
+        <div class="overview-top">
           <div>
-            <div class="stepper-right-label">Overall progress</div>
-            <div class="stepper-right-pct" id="stepper-pct">0%</div>
+            <div class="overview-progress-label">Overall progress</div>
+            <div class="overview-progress-row">
+              <div class="overview-progress-pct" id="stepper-pct">0%</div>
+              <div class="overview-progress-bar">
+                <div class="overview-progress-fill" id="stepper-fill" style="width:0%;"></div>
+              </div>
+            </div>
           </div>
-          <div class="stepper-progress-wrap">
-            <div class="stepper-progress-fill" id="stepper-fill" style="width:0%;"></div>
+          <div class="overview-reports">
+            <div class="overview-reports-label">Reports</div>
+            <div class="overview-reports-btns">
+              <button class="btn btn-outline btn-sm" onclick="exportReport('planning')" title="Planning Memorandum (ISA 300): acceptance, engagement letter, independence, audit planning, materiality, risk assessment.">Planning PDF</button>
+              <button class="btn btn-outline btn-sm" onclick="exportReport('completion')" title="Completion Memorandum (ISA 700): risk recap, findings, ML points, work-done summary, completion memo, trial balance.">Completion PDF</button>
+            </div>
           </div>
+        </div>
+
+        <div class="phase-chips-row">
+          <button class="phase-chip" id="phase-btn-planning"
+            onclick="switchPhase('planning')" title="Planning phase">
+            <div class="step-num" id="step-num-planning">1</div>
+            <div class="step-text">
+              <div class="step-label">Planning</div>
+              <div class="step-sub" id="step-sub-planning">Not started</div>
+            </div>
+          </button>
+
+          <button class="phase-chip active" id="phase-btn-execution"
+            onclick="switchPhase('execution')" title="Execution phase">
+            <div class="step-num" id="step-num-execution">2</div>
+            <div class="step-text">
+              <div class="step-label">Execution</div>
+              <div class="step-sub" id="step-sub-execution">0 of 0 sections done</div>
+            </div>
+          </button>
+
+          <button class="phase-chip locked" id="phase-btn-conclusion"
+            onclick="switchPhase('conclusion')" title="Complete execution first">
+            <div class="step-num" id="step-num-conclusion">3</div>
+            <div class="step-text">
+              <div class="step-label">Conclusion</div>
+              <div class="step-sub" id="step-sub-conclusion">Locked</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="overview-stats-line" id="overview-stats-line">
+          <span><span class="stat-num" id="stat-sections">0</span> sections</span>
+          <span class="stat-dot"></span>
+          <span><span class="stat-num" id="stat-approved">0 / 0</span> approved</span>
+          <span class="stat-dot"></span>
+          <span><span class="stat-num" id="stat-procedures">0 / 0</span> procedures done</span>
+          <span class="stat-dot"></span>
+          <span id="findings-stat-wrap"><span class="stat-num" id="stat-findings">0</span> open findings</span>
         </div>
 
       </div>
@@ -3024,6 +3187,9 @@
       document.getElementById('stat-procedures').textContent = doneProcs + ' / ' + totalProcs;
       document.getElementById('stat-findings').textContent = openFindings;
       document.getElementById('stat-approved').textContent = approvedSections + ' / ' + totalSections;
+      // Highlight open findings count in red when > 0 to draw the partner's eye
+      const findingsWrap = document.getElementById('findings-stat-wrap');
+      if (findingsWrap) findingsWrap.classList.toggle('stat-warn', openFindings > 0);
       updateStepperProgress(approvedSections, totalSections);
 
       renderEngagementActions();
@@ -3470,7 +3636,10 @@
       const pctEl  = document.getElementById('stepper-pct');
       const fillEl = document.getElementById('stepper-fill');
       if (pctEl)  pctEl.textContent  = pct + '%';
-      if (fillEl) fillEl.style.width = pct + '%';
+      if (fillEl) {
+        fillEl.style.width = pct + '%';
+        fillEl.classList.toggle('done', pct === 100);
+      }
 
       // Update execution sub-label
       const execSub = document.getElementById('step-sub-execution');
