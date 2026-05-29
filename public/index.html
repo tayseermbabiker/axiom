@@ -496,9 +496,39 @@
     /* ---- PRICING ---- */
     .pricing-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 24px;
       align-items: start;
+      max-width: 840px;
+      margin: 0 auto;
+    }
+
+    .price-bands {
+      margin-top: 8px;
+      padding-top: 20px;
+      border-top: 1px solid #E5E7EB;
+    }
+    .price-bands-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6B7280;
+      margin-bottom: 10px;
+    }
+    .price-bands ul {
+      list-style: none;
+    }
+    .price-bands li {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #374151;
+      padding: 6px 0;
+    }
+    .price-bands .band-price {
+      font-weight: 700;
+      color: #0A1A2F;
     }
 
     .price-card {
@@ -876,70 +906,71 @@
       <div class="section-header section-header-center">
         <span class="section-label">Pricing</span>
         <h2 class="section-title">Simple plans that scale with your firm</h2>
-        <p class="section-subtitle">All plans include unlimited engagements and every feature. No hidden fees.</p>
+        <p class="section-subtitle">Two plans, priced by firm size &mdash; no per-user math. Unlimited engagements on every plan.</p>
       </div>
 
       <div class="pricing-grid">
-        <!-- Starter -->
+        <!-- Execution Plan (Essentials) -->
         <div class="price-card">
-          <h3>Starter</h3>
-          <p class="price-users">Up to 5 users</p>
+          <h3>Execution</h3>
+          <p class="price-users">For firms that need the execution &amp; review layer</p>
           <div class="price-amount">
+            <span class="period" style="align-self:center;">from</span>
             <span class="dollar">$</span>
             <span class="number">49</span>
             <span class="period">/month</span>
           </div>
-          <p class="price-includes">For small firms just getting started</p>
+          <p class="price-includes">The complete execution file &mdash; import, test, document, sign off.</p>
           <ul class="price-features">
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Unlimited engagements</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; classification</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> 19 audit sections &amp; procedures</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Three-level review &amp; sign-off</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Findings tracker</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> FS upload with SHA-256 integrity</li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Zero-storage security</li>
           </ul>
-          <button type="button" onclick="audexonCheckout('starter')" class="price-cta price-cta-outline">Subscribe</button>
-        </div>
-        <!-- Team -->
-        <div class="price-card popular">
-          <div class="price-badge">Most Popular</div>
-          <h3>Team</h3>
-          <p class="price-users">Up to 12 users</p>
-          <div class="price-amount">
-            <span class="dollar">$</span>
-            <span class="number">99</span>
-            <span class="period">/month</span>
+          <div class="price-bands">
+            <p class="price-bands-label">Monthly price by firm size</p>
+            <ul>
+              <li><span>1&ndash;5 staff</span><span class="band-price">$49</span></li>
+              <li><span>6&ndash;10 staff</span><span class="band-price">$99</span></li>
+              <li><span>11&ndash;20 staff</span><span class="band-price">$149</span></li>
+              <li><span>21&ndash;30 staff</span><span class="band-price">$199</span></li>
+            </ul>
           </div>
-          <p class="price-includes">For growing firms with multiple teams</p>
-          <ul class="price-features">
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Unlimited engagements</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; classification</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Three-level review &amp; sign-off</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Findings tracker</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Zero-storage security</li>
-          </ul>
-          <button type="button" onclick="audexonCheckout('team')" class="price-cta price-cta-filled">Subscribe</button>
+          <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-outline">Request Access</button>
         </div>
-        <!-- Firm -->
-        <div class="price-card">
-          <h3>Firm</h3>
-          <p class="price-users">Up to 25 users</p>
+        <!-- Full Workflow Plan (Pro) -->
+        <div class="price-card popular">
+          <div class="price-badge">Full ISA File</div>
+          <h3>Full Workflow</h3>
+          <p class="price-users">The complete ISA audit file &mdash; planning to completion</p>
           <div class="price-amount">
+            <span class="period" style="align-self:center;">from</span>
             <span class="dollar">$</span>
             <span class="number">199</span>
             <span class="period">/month</span>
           </div>
-          <p class="price-includes">For established firms at scale</p>
+          <p class="price-includes">Everything in Execution, plus the full methodology layer.</p>
           <ul class="price-features">
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Unlimited engagements</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; classification</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Three-level review &amp; sign-off</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Findings tracker</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Zero-storage security</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Everything in Execution</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Planning &amp; audit strategy</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Materiality (versioned)</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Risk assessment (ISA 315)</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Completion memo + EQR</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Local compliance section</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Inspection-ready PDF</li>
           </ul>
-          <button type="button" onclick="audexonCheckout('firm')" class="price-cta price-cta-outline">Subscribe</button>
+          <div class="price-bands">
+            <p class="price-bands-label">Monthly price by firm size</p>
+            <ul>
+              <li><span>1&ndash;5 staff</span><span class="band-price">$199</span></li>
+              <li><span>6&ndash;10 staff</span><span class="band-price">$299</span></li>
+              <li><span>11&ndash;20 staff</span><span class="band-price">$399</span></li>
+              <li><span>21&ndash;30 staff</span><span class="band-price">$499</span></li>
+            </ul>
+          </div>
+          <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-filled">Request Access</button>
         </div>
       </div>
 
