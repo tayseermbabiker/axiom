@@ -322,6 +322,7 @@
         <!-- Locked banner -->
         <div id="locked-banner" class="locked-banner" style="display:none;">
           <strong>Memo is locked.</strong> Signed by <span id="locked-signed-by"></span> on <span id="locked-signed-at"></span>. All fields are read-only.
+          <button id="btn-reopen-memo" class="btn btn-outline btn-sm" onclick="reopenMemo()" style="display:none; margin-left:12px;">Reopen Memo</button>
         </div>
 
         <!-- Tabs -->
@@ -974,6 +975,13 @@
         document.getElementById('locked-signed-by').textContent = (orgMembers.find(m => m.id === memo.signed_by) || {}).name || 'unknown';
         document.getElementById('locked-signed-at').textContent = new Date(memo.signed_at).toLocaleString();
         document.getElementById('btn-refresh-checks').style.display = 'none';
+        document.getElementById('btn-reopen-memo').style.display = currentRole === 'admin' ? '' : 'none';
+      } else {
+        // Draft (incl. after a reopen): hide the locked banner, restore the
+        // refresh button, and hide the reopen button.
+        document.getElementById('locked-banner').style.display = 'none';
+        document.getElementById('btn-refresh-checks').style.display = '';
+        document.getElementById('btn-reopen-memo').style.display = 'none';
       }
     }
 
@@ -1262,6 +1270,7 @@
       if (memo.status === 'locked') {
         btn.style.display = 'none';
       } else {
+        btn.style.display = '';
         btn.disabled = !canSign;
       }
     }
@@ -1512,6 +1521,30 @@
       if (m) memo = m;
       renderAll();
       alert('Memo signed and locked. You can now move the engagement to Completed from the Engagement page.');
+    }
+
+    async function reopenMemo() {
+      // Admin-only controlled unlock. The lock trigger only fires when
+      // signed_at goes NULL -> set, so clearing signed_at here will NOT
+      // re-lock. Returns the memo to Draft so it can be revised and re-signed.
+      if (currentRole !== 'admin') return;
+      if (!confirm(
+        'Reopen this completion memo for editing?\n\n' +
+        'It will be unlocked and returned to Draft so it can be revised. ' +
+        'The attestations stay ticked, but you must sign and lock it again afterward.'
+      )) return;
+
+      const { error } = await supabaseClient
+        .from('engagement_completion_memo')
+        .update({ status: 'draft', signed_at: null, signed_by: null })
+        .eq('id', memo.id);
+      if (error) { alert('Could not reopen memo: ' + error.message); return; }
+
+      const { data: m } = await supabaseClient
+        .from('engagement_completion_memo').select('*').eq('id', memo.id).single();
+      if (m) memo = m;
+      renderAll();
+      alert('Memo reopened. It is now in Draft and editable. Remember to sign and lock it again when done.');
     }
 
     // ---- Helpers ----
