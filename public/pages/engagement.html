@@ -1178,6 +1178,11 @@
               <label class="text-sm">Notes <span class="text-muted">(optional)</span></label>
               <textarea id="confirmation-notes" class="form-control" rows="2" placeholder="Any additional context — sent via courier, contact person, follow-up dates, etc."></textarea>
             </div>
+            <div class="form-group">
+              <label class="text-sm">Link to confirmation document <span class="text-muted">(optional)</span></label>
+              <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Save the returned confirmation in your shared drive first, then paste its link here. Audexon stores the link, not the file.</small>
+              <input type="url" id="confirmation-document-url" class="form-control" placeholder="https://drive.google.com/...">
+            </div>
             <div id="confirmation-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
           </div>
           <div class="modal-footer">
@@ -7041,8 +7046,11 @@
         const actions = isAdmin
           ? `<button class="btn btn-outline btn-sm" onclick="openConfirmationForm('${c.id}')">Edit</button>`
           : `<button class="btn btn-outline btn-sm" onclick="openConfirmationForm('${c.id}')">View</button>`;
+        const docLink = c.document_url
+          ? `<br><a href="${escHtml(c.document_url)}" target="_blank" rel="noopener" style="font-size:11px; font-weight:400; color:var(--primary);">View document ↗</a>`
+          : '';
         return `<tr>
-          <td style="font-weight:500;">${escHtml(c.counterparty)}</td>
+          <td style="font-weight:500;">${escHtml(c.counterparty)}${docLink}</td>
           <td><span style="font-size:11px; color:var(--gray-700);">${escHtml(typeLabel)}</span></td>
           <td style="font-size:12px;">${c.sent_date || '<span class="text-muted">—</span>'}</td>
           <td style="font-size:12px;">${c.returned_date || '<span class="text-muted">—</span>'}</td>
@@ -7074,10 +7082,11 @@
         document.getElementById('confirmation-result').value       = c.result || '';
         document.getElementById('confirmation-alt').value          = c.alternative_procedures || '';
         document.getElementById('confirmation-notes').value        = c.notes || '';
+        document.getElementById('confirmation-document-url').value  = c.document_url || '';
         document.getElementById('confirmation-btn-delete').style.display = isAdmin ? '' : 'none';
       } else {
         document.getElementById('modal-confirmation-title').textContent = 'Add external confirmation';
-        ['counterparty','sent','returned','alt','notes'].forEach(k => {
+        ['counterparty','sent','returned','alt','notes','document-url'].forEach(k => {
           document.getElementById('confirmation-' + k).value = '';
         });
         document.getElementById('confirmation-type').value    = '';
@@ -7089,7 +7098,7 @@
 
       ['confirmation-counterparty','confirmation-type','confirmation-section',
        'confirmation-sent','confirmation-returned','confirmation-result',
-       'confirmation-alt','confirmation-notes'
+       'confirmation-alt','confirmation-notes','confirmation-document-url'
       ].forEach(id => { document.getElementById(id).disabled = readonly; });
 
       document.getElementById('modal-confirmation').classList.add('active');
@@ -7114,11 +7123,16 @@
       const altProc      = document.getElementById('confirmation-alt').value.trim();
       const sent         = document.getElementById('confirmation-sent').value;
       const returned     = document.getElementById('confirmation-returned').value;
+      const docUrl       = document.getElementById('confirmation-document-url').value.trim();
 
       if (!counterparty) { showConfirmationError('Counterparty is required.'); return; }
       if (!type)         { showConfirmationError('Type is required.'); return; }
       if (sent && returned && returned < sent) {
         showConfirmationError('Returned date cannot be before sent date.');
+        return;
+      }
+      if (docUrl && !/^https?:\/\//i.test(docUrl)) {
+        showConfirmationError('The document link should start with http:// or https://');
         return;
       }
       // ISA 505.12 soft gate: exception or no_reply should have alternative procedures
@@ -7136,6 +7150,7 @@
         result:                 result || null,
         alternative_procedures: altProc || null,
         notes:                  document.getElementById('confirmation-notes').value.trim() || null,
+        document_url:           docUrl || null,
       };
 
       if (editingConfirmationId) {
