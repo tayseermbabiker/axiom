@@ -6,6 +6,9 @@
   <title>Section — Audexon</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
+  <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
+  <script src="../js/sentry-init.js"></script>
   <style>
     /* ---- Classification tag chips (edit tags modal + engagement) ---- */
     .class-tag {
@@ -519,6 +522,23 @@
           </div>
         </div>
 
+        <!-- 3B. Engagement-specific risks (ISA 330 — tailoring evidence) -->
+        <div class="content-section" id="sec-specific-risks">
+          <div class="section-card">
+            <div class="card-header">
+              <h2>Significant risks specific to this engagement</h2>
+              <span class="text-sm text-muted">ISA 330 — required before partner sign-off</span>
+            </div>
+            <div class="card-body">
+              <p class="text-sm text-muted" style="margin-bottom:10px;">What in THIS client's specific facts makes the standard procedures above appropriate, or what additional tailoring did you apply? One paragraph. "No engagement-specific risks beyond standard procedures" is acceptable if genuinely true.</p>
+              <div class="form-group" style="margin:0;">
+                <textarea class="form-control" id="specific-risks-text" rows="3" placeholder="e.g. Owner-managed entity with cash-intensive operations; elevated revenue cut-off testing planned. Or: Standard procedures apply — no engagement-specific risks beyond the default set."></textarea>
+              </div>
+              <button class="btn btn-primary btn-sm mt-8" id="btn-save-specific-risks" onclick="saveSpecificRisks()" style="display:none;">Save</button>
+            </div>
+          </div>
+        </div>
+
         <!-- 4. Section Conclusion -->
         <div class="content-section" id="sec-conclusion">
           <div class="section-card">
@@ -783,6 +803,81 @@
     </div>
   </div>
 
+  <!-- ISA 530 Sampling modal -->
+  <div class="modal-overlay" id="modal-sampling">
+    <div class="modal" style="max-width:680px;">
+      <div class="modal-header">
+        <h3 id="sampling-modal-title">Sampling documentation (ISA 530)</h3>
+        <button class="modal-close" onclick="closeSamplingForm()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted" style="margin-bottom:12px;" id="sampling-proc-desc"></p>
+
+        <div class="form-group">
+          <label class="text-sm">Population description (ISA 530.7)</label>
+          <textarea id="sampling-population" class="form-control" rows="2" placeholder="e.g. All revenue transactions for the year ended 31 Dec 2025 (invoices issued, excluding credit notes)."></textarea>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="text-sm">Population size (units / AED)</label>
+            <input type="number" id="sampling-pop-size" class="form-control" min="0" step="any" placeholder="e.g. 850">
+          </div>
+          <div class="form-group">
+            <label class="text-sm">Sample size</label>
+            <input type="number" id="sampling-sample-size" class="form-control" min="0" step="any" placeholder="e.g. 30">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Sampling method (ISA 530.8)</label>
+          <select id="sampling-method" class="form-control" style="max-width:280px;">
+            <option value="">— Select method —</option>
+            <option value="random">Random</option>
+            <option value="systematic">Systematic</option>
+            <option value="haphazard">Haphazard</option>
+            <option value="monetary_unit">Monetary unit (MUS)</option>
+            <option value="judgmental">Judgmental</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Selection basis</label>
+          <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">How items were picked. e.g. RANDBETWEEN in Excel; every 28th invoice starting from item 14; all items above AED 25K.</small>
+          <textarea id="sampling-selection" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Results summary (ISA 530.A21)</label>
+          <textarea id="sampling-results" class="form-control" rows="2" placeholder="e.g. All 30 items traced without exception. 2 cut-off errors identified — AED 3,400 total."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Projected misstatement <span class="text-muted">(if any, AED)</span></label>
+          <input type="number" id="sampling-projection" class="form-control" min="0" step="any" placeholder="e.g. 96400 (projected from 2 errors of AED 3,400 in sample of 30 → AED 96,400 over population of 850)">
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Conclusion (ISA 530.15)</label>
+          <textarea id="sampling-conclusion" class="form-control" rows="2" placeholder="e.g. Projected misstatement of AED 96,400 is below performance materiality of AED 150K. Sample provides sufficient appropriate evidence. No further work required."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm">Notes <span class="text-muted">(optional)</span></label>
+          <textarea id="sampling-notes" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div id="sampling-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline btn-sm" onclick="closeSamplingForm()">Cancel</button>
+        <button class="btn btn-danger btn-sm" id="sampling-btn-delete" onclick="deleteSampling()" style="display:none; margin-right:auto;">Delete</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSampling()">Save sampling</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
@@ -798,6 +893,8 @@
     let procedures = [];
     let responses = [];
     let documents = [];
+    let samplings = [];                // ISA 530 — one per procedure (UNIQUE)
+    let editingSamplingProcId = null;  // procedure_id whose sampling is being edited
     let findings = [];
     let reviewNotes = [];
     let tbLines = [];
@@ -838,8 +935,10 @@
       }
       if (can('save_conclusion')) {
         document.getElementById('btn-save-conclusion').style.display = '';
+        document.getElementById('btn-save-specific-risks').style.display = '';
       } else {
         document.getElementById('conclusion-text').disabled = true;
+        document.getElementById('specific-risks-text').disabled = true;
       }
       if (can('edit_section_tags')) {
         document.getElementById('btn-edit-tags').style.display = '';
@@ -943,6 +1042,20 @@
           profileCache[m.profiles.id] = m.profiles.full_name || m.profiles.email || 'Unknown';
         }
       });
+
+      // Solo-firm fallback (same pattern as engagement.html and completion-memo.html):
+      // when RLS or the org_members join returns an empty list, the current user
+      // is still effectively the engagement partner. Inject them so the assignee
+      // dropdown isn't empty inside the section view.
+      if (currentUser && !orgMembers.some(m => (m.profiles?.id || m.user_id) === currentUser.id)) {
+        const fallbackName = currentUser.user_metadata?.full_name || currentUser.email || 'Me';
+        orgMembers.push({
+          user_id: currentUser.id,
+          role: currentRole || 'admin',
+          profiles: { id: currentUser.id, full_name: fallbackName, email: currentUser.email },
+        });
+        profileCache[currentUser.id] = fallbackName;
+      }
     }
 
     // ---- Profile resolution ----
@@ -1168,10 +1281,25 @@
 
     async function editSectionTags() {
       if (!can('edit_section_tags')) { alert('Only partners and supervisors can edit tags.'); return; }
-      const { data: allLines } = await supabaseClient
+
+      // Use the latest (current) TB version only — if the user replaced
+      // the TB, superseded versions' lines must NOT appear here.
+      const { data: latestVersion } = await supabaseClient
+        .from('tb_versions')
+        .select('id')
+        .eq('engagement_id', engagementId)
+        .order('uploaded_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let lineQuery = supabaseClient
         .from('trial_balance_lines')
         .select('classification')
         .eq('engagement_id', engagementId);
+      if (latestVersion && latestVersion.id) {
+        lineQuery = lineQuery.eq('tb_version_id', latestVersion.id);
+      }
+      const { data: allLines } = await lineQuery;
 
       if (!allLines || allLines.length === 0) {
         alert('No trial balance uploaded yet. Upload a TB first from the engagement page.');
@@ -1279,9 +1407,17 @@
           .order('created_at');
 
         documents = [...procDocs, ...(secDocs || [])];
+
+        // ISA 530 sampling (Sprint 4) — at most one per procedure
+        const { data: sampData } = await supabaseClient
+          .from('procedure_sampling')
+          .select('*')
+          .in('procedure_id', procIds);
+        samplings = sampData || [];
       } else {
         responses = [];
         documents = [];
+        samplings = [];
       }
 
       renderProcedures();
@@ -1346,12 +1482,27 @@
                     <button class="btn btn-outline btn-sm" onclick="toggleResponseStatus('${proc.id}')">
                       Mark as ${status === 'pending' ? 'Done' : 'Pending'}
                     </button>
+                    <button class="btn btn-outline btn-sm" onclick="openSamplingForm('${proc.id}')" title="ISA 530 — document the population, method, sample size, results, and projection.">
+                      ${samplings.find(s => s.procedure_id === proc.id) ? 'Edit sampling' : '+ Sampling'}
+                    </button>
                     ${can('add_procedure') ? `
                       <button class="btn btn-outline btn-sm" onclick="editProcedure('${proc.id}')" style="margin-left:auto;">Edit</button>
                       <button class="btn btn-outline btn-sm" onclick="deleteProcedure('${proc.id}')" style="color:var(--danger); border-color:var(--danger);">Delete</button>
                     ` : ''}
                   </div>
                 ` : ''}
+
+                ${(() => {
+                  const s = samplings.find(x => x.procedure_id === proc.id);
+                  if (!s) return '';
+                  const methodLabel = s.sampling_method ? s.sampling_method.replace(/_/g, ' ') : 'not specified';
+                  const popPart = s.population_size != null ? s.population_size : '?';
+                  const sampPart = s.sample_size != null ? s.sample_size : '?';
+                  return `<div style="background:#F8FAFC; border:0.5px solid #E2E8F0; border-radius:6px; padding:8px 12px; margin-bottom:14px; font-size:12px;">
+                    <strong style="color:var(--gray-700);">ISA 530 sampling:</strong>
+                    <span style="color:var(--gray-700);">${escHtml(String(sampPart))} of ${escHtml(String(popPart))} &middot; method: ${escHtml(methodLabel)}${s.results_summary ? ' &middot; ' + escHtml(s.results_summary.length > 60 ? s.results_summary.slice(0, 60) + '…' : s.results_summary) : ''}</span>
+                  </div>`;
+                })()}
 
                 <!-- My Work Files -->
                 <div class="mb-16">
@@ -1703,6 +1854,112 @@
       applyApprovedState();
     }
 
+    // ---- ISA 530 sampling per procedure (Sprint 4 standards floor) ----
+    function openSamplingForm(procId) {
+      const proc = procedures.find(p => p.id === procId);
+      if (!proc) return;
+      editingSamplingProcId = procId;
+
+      document.getElementById('sampling-proc-desc').textContent = 'Procedure: ' + proc.description;
+      const existing = samplings.find(s => s.procedure_id === procId);
+      document.getElementById('sampling-modal-title').textContent = existing
+        ? 'Edit sampling (ISA 530)'
+        : 'Add sampling documentation (ISA 530)';
+      document.getElementById('sampling-btn-delete').style.display = existing ? '' : 'none';
+
+      document.getElementById('sampling-population').value  = existing?.population_description || '';
+      document.getElementById('sampling-pop-size').value    = existing?.population_size ?? '';
+      document.getElementById('sampling-sample-size').value = existing?.sample_size ?? '';
+      document.getElementById('sampling-method').value      = existing?.sampling_method || '';
+      document.getElementById('sampling-selection').value   = existing?.selection_basis || '';
+      document.getElementById('sampling-results').value     = existing?.results_summary || '';
+      document.getElementById('sampling-projection').value  = existing?.projection_amount ?? '';
+      document.getElementById('sampling-conclusion').value  = existing?.conclusion || '';
+      document.getElementById('sampling-notes').value       = existing?.notes || '';
+      document.getElementById('sampling-error').style.display = 'none';
+
+      document.getElementById('modal-sampling').classList.add('active');
+    }
+
+    function closeSamplingForm() {
+      document.getElementById('modal-sampling').classList.remove('active');
+      editingSamplingProcId = null;
+    }
+
+    function showSamplingError(msg) {
+      const el = document.getElementById('sampling-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function readNullableNumber(id) {
+      const v = document.getElementById(id).value;
+      if (v === '' || v == null) return null;
+      const n = Number(v);
+      return Number.isNaN(n) ? null : n;
+    }
+
+    async function saveSampling() {
+      if (!editingSamplingProcId) return;
+      const popSize  = readNullableNumber('sampling-pop-size');
+      const sampSize = readNullableNumber('sampling-sample-size');
+      if (popSize != null && sampSize != null && sampSize > popSize) {
+        showSamplingError('Sample size cannot exceed population size.');
+        return;
+      }
+
+      const payload = {
+        population_description: document.getElementById('sampling-population').value.trim() || null,
+        population_size:        popSize,
+        sample_size:            sampSize,
+        sampling_method:        document.getElementById('sampling-method').value || null,
+        selection_basis:        document.getElementById('sampling-selection').value.trim() || null,
+        results_summary:        document.getElementById('sampling-results').value.trim() || null,
+        projection_amount:      readNullableNumber('sampling-projection'),
+        conclusion:             document.getElementById('sampling-conclusion').value.trim() || null,
+        notes:                  document.getElementById('sampling-notes').value.trim() || null,
+      };
+
+      const existing = samplings.find(s => s.procedure_id === editingSamplingProcId);
+      if (existing) {
+        const { error } = await supabaseClient
+          .from('procedure_sampling')
+          .update(payload)
+          .eq('id', existing.id);
+        if (error) { showSamplingError('Update failed: ' + error.message); return; }
+        await logActivity(engagementId, 'updated_sampling', 'procedure_sampling', existing.id, { procedure_id: editingSamplingProcId });
+      } else {
+        payload.procedure_id = editingSamplingProcId;
+        payload.created_by   = currentUser.id;
+        const { data, error } = await supabaseClient
+          .from('procedure_sampling')
+          .insert(payload)
+          .select()
+          .single();
+        if (error) { showSamplingError('Save failed: ' + error.message); return; }
+        await logActivity(engagementId, 'created_sampling', 'procedure_sampling', data.id, { procedure_id: editingSamplingProcId });
+      }
+
+      closeSamplingForm();
+      await loadProcedures();
+    }
+
+    async function deleteSampling() {
+      if (!editingSamplingProcId) return;
+      const existing = samplings.find(s => s.procedure_id === editingSamplingProcId);
+      if (!existing) return;
+      if (!confirm('Delete sampling documentation for this procedure? This cannot be undone.')) return;
+
+      const { error } = await supabaseClient
+        .from('procedure_sampling')
+        .delete()
+        .eq('id', existing.id);
+      if (error) { showSamplingError('Delete failed: ' + error.message); return; }
+      await logActivity(engagementId, 'deleted_sampling', 'procedure_sampling', existing.id, { procedure_id: editingSamplingProcId });
+      closeSamplingForm();
+      await loadProcedures();
+    }
+
     function isLinkInsideSharedFolder(fileUrl) {
       if (!sharedFolderUrl) return true;
       try {
@@ -1930,6 +2187,23 @@
           if (f.criteria || f.cause || f.management_response || f.monetary_impact) {
             document.getElementById('finding-details-section').style.display = 'block';
           }
+          // Pre-load existing adjusting entry for this finding (was missing
+          // entirely — partner would see empty fields, retype them, then
+          // hit save without realising it was overwriting the same data).
+          supabaseClient
+            .from('adjusting_entries')
+            .select('*')
+            .eq('finding_id', findingId)
+            .maybeSingle()
+            .then(({ data: adj }) => {
+              if (adj) {
+                document.getElementById('adj-debit').value     = adj.debit_account  || '';
+                document.getElementById('adj-credit').value    = adj.credit_account || '';
+                document.getElementById('adj-amount').value    = adj.amount         ?? '';
+                document.getElementById('adj-narration').value = adj.narration      || '';
+                document.getElementById('adj-posted').value    = adj.is_posted ? 'true' : 'false';
+              }
+            });
         }
       }
 
@@ -2000,10 +2274,28 @@
         const narration = document.getElementById('adj-narration').value.trim();
         const isPosted = document.getElementById('adj-posted').value === 'true';
 
-        if (debit && credit && amount > 0) {
+        // Either all three required fields are present, OR all are empty
+        // (partner wants no adjusting entry). Anything in between is a
+        // user error — flag it instead of silently dropping the save.
+        const anyFilled = debit || credit || amount > 0 || narration;
+        const allRequired = debit && credit && amount > 0;
+        if (anyFilled && !allRequired) {
+          alert('Adjusting entry not saved: requires Debit account, Credit account, and Amount (> 0) all together. Either fill all three or clear all three.');
+          btn.disabled = false;
+          btn.textContent = 'Save Finding';
+          return;
+        }
+        if (allRequired) {
           // Delete existing entries for this finding, then insert new one
-          await supabaseClient.from('adjusting_entries').delete().eq('finding_id', savedId);
-          await supabaseClient.from('adjusting_entries').insert({
+          const { error: delErr } = await supabaseClient
+            .from('adjusting_entries').delete().eq('finding_id', savedId);
+          if (delErr) {
+            alert('Adjusting entry update failed (delete step): ' + delErr.message);
+            btn.disabled = false;
+            btn.textContent = 'Save Finding';
+            return;
+          }
+          const { error: insErr } = await supabaseClient.from('adjusting_entries').insert({
             finding_id: savedId,
             debit_account: debit,
             credit_account: credit,
@@ -2011,6 +2303,15 @@
             narration: narration,
             is_posted: isPosted
           });
+          if (insErr) {
+            alert('Adjusting entry save failed: ' + insErr.message);
+            btn.disabled = false;
+            btn.textContent = 'Save Finding';
+            return;
+          }
+        } else {
+          // All empty — partner cleared everything, so delete any existing entry
+          await supabaseClient.from('adjusting_entries').delete().eq('finding_id', savedId);
         }
       }
 
@@ -2042,6 +2343,22 @@
       document.getElementById('conclusion-meta').textContent = 'Written by ' + name;
 
       alert('Conclusion saved.');
+    }
+
+    // ---- Engagement-specific risks (ISA 330 tailoring evidence) ----
+    async function saveSpecificRisks() {
+      if (!can('save_conclusion')) { alert('You do not have permission to edit this section.'); return; }
+      const text = document.getElementById('specific-risks-text').value.trim();
+
+      const { error } = await supabaseClient.from('audit_sections').update({
+        engagement_specific_risks: text || null
+      }).eq('id', sectionId);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      section.engagement_specific_risks = text;
+      await logActivity(engagementId, 'saved_specific_risks', 'section', sectionId, {});
+      alert('Engagement-specific risks saved.');
     }
 
     // ---- Review Notes ----
@@ -2181,6 +2498,11 @@
         if (['ready_for_partner_review', 'in_partner_review'].includes(status)) {
           actionBtns += '<button class="btn btn-success btn-sm" onclick="partnerApprove()">Final Approve (Partner)</button>';
           actionBtns += '<button class="btn btn-returned btn-sm" onclick="returnToSupervisor()">Return to Supervisor</button>';
+        } else if (['not_started', 'in_progress', 'returned_to_preparer', 'returned_to_supervisor'].includes(status)) {
+          // Solo-firm shortcut: partner can direct-approve without
+          // routing through supervisor. Skip-the-chain button for
+          // engagements where the partner is also doing the work.
+          actionBtns += '<button class="btn btn-success btn-sm" onclick="partnerApprove()" title="Skip supervisor review and approve directly (solo-firm shortcut)">Final Approve (Partner)</button>';
         }
       }
 
@@ -2248,6 +2570,20 @@
 
     // ---- Partner gives final approval ----
     async function partnerApprove() {
+      // ISA 330 tailoring evidence: warn (soft) if engagement_specific_risks
+      // hasn't been filled. Doesn't block — partner can override if standard
+      // procedures genuinely cover everything — but flags the gap.
+      const hasSpecificRisks = section.engagement_specific_risks && section.engagement_specific_risks.trim();
+      if (!hasSpecificRisks) {
+        const proceed = await showActionModal({
+          title: 'Engagement-specific risks not documented',
+          message: 'You have not filled in "Significant risks specific to this engagement" for this section. ISA 330 expects partners to articulate client-specific risk tailoring before approval — even if it\'s just "Standard procedures apply, no engagement-specific risks beyond defaults."\n\nApprove anyway, or go back and fill it in?',
+          okLabel: 'Approve anyway',
+          okClass: 'btn-success'
+        });
+        if (!proceed) return;
+      }
+
       const ok = await showActionModal({
         title: 'Final Approval (Partner)',
         message: 'Give final sign-off on this section. This marks it as complete.',
@@ -2422,6 +2758,7 @@
     function applyApprovedState() {
       // Always render conclusion and actions
       document.getElementById('conclusion-text').value = section.conclusion || '';
+      document.getElementById('specific-risks-text').value = section.engagement_specific_risks || '';
       if (section.conclusion_by) {
         resolveProfileName(section.conclusion_by).then(name => {
           document.getElementById('conclusion-meta').textContent = 'Written by ' + name;
@@ -2446,8 +2783,10 @@
         if (can('add_finding')) document.getElementById('btn-add-finding').style.display = '';
         if (can('save_conclusion')) {
           document.getElementById('btn-save-conclusion').style.display = '';
+          document.getElementById('btn-save-specific-risks').style.display = '';
         } else {
           document.getElementById('conclusion-text').disabled = true;
+          document.getElementById('specific-risks-text').disabled = true;
         }
         if (can('add_review_comment') || can('add_preparer_response')) {
           document.getElementById('add-note-area').style.display = '';
@@ -2533,7 +2872,15 @@
       if (_actionResolve) { _actionResolve(null); _actionResolve = null; }
     }
 
-    init();
+    function disableAutofillOnAllInputs() {
+      document.querySelectorAll('input, textarea').forEach(el => {
+        el.setAttribute('autocomplete', 'off');
+        el.setAttribute('autocorrect', 'off');
+        el.setAttribute('spellcheck', 'false');
+      });
+    }
+
+    init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
   </script>
 </body>
 </html>

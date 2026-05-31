@@ -6,215 +6,294 @@
   <title>Dashboard — Audexon</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
+  <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
+  <script src="../js/sentry-init.js"></script>
   <style>
-    /* ---- Engagement cards ---- */
-    .eng-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    /* ---- Status tiles ---- */
+    .tiles-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
     }
-
-    .eng-card {
+    .tile {
       background: white;
       border: 1px solid var(--gray-200);
       border-radius: 12px;
-      padding: 24px;
+      padding: 16px 18px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
       cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      color: inherit;
-      display: block;
+      transition: all 0.18s ease;
+      position: relative;
+      overflow: hidden;
     }
-
-    .eng-card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      transform: translateY(-2px);
-      border-color: var(--gray-300);
+    .tile:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.07); }
+    .tile.active-tile { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,71,171,0.12); }
+    .tile::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--gray-300);
     }
-
-    .eng-card.completed {
-      opacity: 0.7;
-      background: var(--gray-50);
-    }
-
-    .eng-card.completed:hover {
-      opacity: 0.85;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-
-    /* Card top row */
-    .eng-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .eng-card-identity {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .eng-card-client {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--gray-900);
-      margin-bottom: 4px;
-      line-height: 1.3;
-    }
-
-    .eng-card-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .eng-card-year {
-      font-size: 13px;
-      color: var(--gray-500);
-    }
-
-    .eng-type-pill {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 20px;
+    .tile.tile-active::before     { background: #0047AB; }
+    .tile.tile-review::before     { background: #C47A00; }
+    .tile.tile-ready::before      { background: #4338CA; }
+    .tile.tile-archived::before   { background: #15803D; }
+    .tile-label {
       font-size: 11px;
       font-weight: 600;
-      text-transform: capitalize;
-      background: var(--primary-light);
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+    .tile-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--gray-900);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .tile-hint {
+      font-size: 11px;
+      color: var(--gray-500);
+      min-height: 14px;
+    }
+
+    /* ---- Tabs + search bar ---- */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .tabs {
+      display: inline-flex;
+      background: var(--gray-100);
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 0;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-600);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn:hover { color: var(--gray-900); }
+    .tab-btn.active {
+      background: white;
       color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .tab-count {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 99px;
+      background: var(--gray-200);
+      color: var(--gray-600);
+      font-weight: 600;
+    }
+    .tab-btn.active .tab-count { background: rgba(0,71,171,0.12); color: var(--primary); }
+
+    .right-controls { display: flex; align-items: center; gap: 10px; }
+    .search-wrap { position: relative; }
+    .search-wrap input {
+      width: 240px;
+      padding: 7px 12px 7px 32px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 13px;
+      background: white;
+    }
+    .search-wrap input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,71,171,0.08); }
+    .search-wrap svg {
+      position: absolute;
+      left: 10px; top: 50%;
+      transform: translateY(-50%);
+      width: 14px; height: 14px;
+      color: var(--gray-400);
     }
 
-    .eng-type-pill.review {
-      background: var(--warning-light);
-      color: var(--warning);
+    /* ---- Client group ---- */
+    .client-group { margin-bottom: 18px; }
+    .client-group-head {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 4px 4px 8px;
+    }
+    .client-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-900);
+      letter-spacing: 0.1px;
+    }
+    .client-count {
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
     }
 
-    .eng-type-pill.compilation {
-      background: var(--returned-light);
-      color: var(--returned);
-    }
-
-    .eng-card-right {
+    /* ---- Engagement card ---- */
+    .eng-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-decoration: none;
+      color: inherit;
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
+      gap: 10px;
+      position: relative;
+    }
+    .eng-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      border-color: var(--gray-300);
+    }
+    .eng-card.is-archived {
+      background: var(--gray-50);
+      opacity: 0.85;
+    }
+    .eng-card.is-archived:hover { opacity: 1; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
       gap: 8px;
-      flex-shrink: 0;
     }
-
-    /* Progress in card */
-    .eng-progress {
-      width: 160px;
+    .card-period {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-900);
     }
+    .card-yearend {
+      font-size: 11px;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+    .card-phase-chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .chip-planning   { background: rgba(0,71,171,0.10);  color: #0047AB; }
+    .chip-execution  { background: rgba(255,153,0,0.12); color: #C47A00; }
+    .chip-completed  { background: rgba(67,56,202,0.10); color: #4338CA; }
+    .chip-archived   { background: rgba(21,128,61,0.10); color: #15803D; }
 
-    .eng-progress-bar {
-      height: 6px;
+    .card-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-bar {
+      flex: 1;
+      height: 5px;
       background: var(--gray-200);
       border-radius: 3px;
       overflow: hidden;
     }
-
-    .eng-progress-fill {
+    .card-bar-fill {
       height: 100%;
-      border-radius: 3px;
-      transition: width 0.4s ease;
       background: var(--primary);
+      border-radius: 3px;
+      transition: width 0.3s;
     }
-
-    .eng-progress-fill.full {
-      background: var(--success);
-    }
-
-    .completed .eng-progress-fill {
-      background: var(--gray-400);
-    }
-
-    .eng-progress-text {
-      font-size: 12px;
-      color: var(--gray-500);
-      margin-top: 4px;
+    .card-bar-fill.done { background: #15803D; }
+    .card-pct {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-600);
+      min-width: 32px;
       text-align: right;
     }
 
-    /* Metrics strip */
-    .eng-metrics {
+    .card-meta-line {
+      font-size: 12px;
+      color: var(--gray-600);
       display: flex;
-      gap: 24px;
-      padding-top: 16px;
-      border-top: 1px solid var(--gray-100);
-    }
-
-    .eng-metric {
-      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--gray-500);
     }
-
-    .eng-metric-value {
-      font-weight: 600;
-      color: var(--gray-700);
+    .card-meta-dot {
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--gray-400);
+      display: inline-block;
     }
+    .card-meta-warn { color: #C02A2A; font-weight: 600; }
 
-    .eng-metric-icon {
-      width: 16px;
-      height: 16px;
-      stroke: var(--gray-400);
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .eng-metric.has-findings .eng-metric-value {
-      color: var(--warning);
-    }
-
-    .eng-metric.has-findings .eng-metric-icon {
-      stroke: var(--warning);
-    }
-
-    /* Card footer */
-    .eng-card-footer {
+    .card-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 12px;
-      padding-top: 12px;
+      padding-top: 8px;
       border-top: 1px solid var(--gray-100);
+      margin-top: 2px;
     }
-
-    .eng-card-created {
+    .card-open {
       font-size: 12px;
-      color: var(--gray-400);
+      font-weight: 600;
+      color: var(--primary);
     }
+    .card-delete {
+      font-size: 11px;
+      color: var(--gray-400);
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: all 0.15s;
+    }
+    .eng-card:hover .card-delete { opacity: 1; }
+    .card-delete:hover { color: #C02A2A; background: rgba(192,42,42,0.06); }
 
-    /* Empty state elevated */
+    /* Empty state */
     .empty-card {
       background: white;
       border: 2px dashed var(--gray-300);
       border-radius: 12px;
-      padding: 64px 24px;
+      padding: 56px 24px;
       text-align: center;
     }
-
     .empty-icon {
       width: 56px;
       height: 56px;
       border-radius: 14px;
-      background: var(--primary-light);
+      background: rgba(0,71,171,0.08);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 20px;
+      margin: 0 auto 18px;
     }
-
     .empty-icon svg {
       width: 28px;
       height: 28px;
@@ -224,36 +303,25 @@
       stroke-linecap: round;
       stroke-linejoin: round;
     }
+    .empty-title { font-size: 16px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+    .empty-desc { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }
 
-    .empty-title {
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--gray-700);
-      margin-bottom: 6px;
+    /* Page header overrides */
+    .page-header h1 { margin: 0; }
+    .page-header-sub {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-top: 4px;
     }
 
-    .empty-desc {
-      font-size: 14px;
-      color: var(--gray-400);
-      margin-bottom: 24px;
+    @media (max-width: 980px) {
+      .tiles-row { grid-template-columns: repeat(2, 1fr); }
     }
-
     @media (max-width: 768px) {
-      .eng-card-top {
-        flex-direction: column;
-      }
-      .eng-card-right {
-        align-items: flex-start;
-        flex-direction: row;
-        gap: 12px;
-      }
-      .eng-progress {
-        width: 100%;
-      }
-      .eng-metrics {
-        flex-wrap: wrap;
-        gap: 16px;
-      }
+      .tiles-row { grid-template-columns: 1fr; }
+      .search-wrap input { width: 100%; }
+      .right-controls { width: 100%; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -269,6 +337,7 @@
       <nav class="sidebar-nav">
         <a href="dashboard.html" class="active">Dashboard</a>
         <a href="team.html">Team</a>
+        <a href="local-compliance.html" id="nav-local-compliance" style="display:none;">Compliance Template</a>
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
@@ -280,35 +349,66 @@
     <!-- Main -->
     <main class="main-content">
       <div class="page-header">
-        <h1>Engagements</h1>
+        <div>
+          <h1>Engagements</h1>
+          <div class="page-header-sub" id="page-header-sub">Loading…</div>
+        </div>
         <div style="display:flex; gap:8px;">
           <button class="btn btn-outline" onclick="startOnboarding()" style="font-size:13px;">How it works</button>
           <button class="btn btn-primary" id="btn-new-eng-top" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
         </div>
       </div>
 
-      <!-- Engagement table -->
-      <div class="card" id="engagements-panel" style="display:none;">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Client</th>
-                <th>Year End</th>
-                <th>Status</th>
-                <th>Sections</th>
-                <th>Procedures</th>
-                <th>Findings</th>
-                <th>Progress</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="engagements-list"></tbody>
-          </table>
+      <!-- Status tiles -->
+      <div class="tiles-row" id="tiles-row" style="display:none;">
+        <div class="tile tile-active active-tile" data-filter="active" onclick="switchTab('active')">
+          <div class="tile-label">Active</div>
+          <div class="tile-value" id="tile-active-value">0</div>
+          <div class="tile-hint" id="tile-active-hint">engagements in progress</div>
+        </div>
+        <div class="tile tile-review" data-filter="review" onclick="switchTab('review')">
+          <div class="tile-label">Awaiting partner review</div>
+          <div class="tile-value" id="tile-review-value">0</div>
+          <div class="tile-hint" id="tile-review-hint">sections need your approval</div>
+        </div>
+        <div class="tile tile-ready" data-filter="completed" onclick="switchTab('completed')">
+          <div class="tile-label">Ready to archive</div>
+          <div class="tile-value" id="tile-ready-value">0</div>
+          <div class="tile-hint" id="tile-ready-hint">closed, not yet assembled</div>
+        </div>
+        <div class="tile tile-archived" data-filter="archived" onclick="switchTab('archived')">
+          <div class="tile-label">Archived YTD</div>
+          <div class="tile-value" id="tile-archived-value">0</div>
+          <div class="tile-hint" id="tile-archived-hint">files assembled this year</div>
         </div>
       </div>
 
-      <!-- Empty state -->
+      <!-- Filter bar -->
+      <div class="filter-bar" id="filter-bar" style="display:none;">
+        <div class="tabs" id="tabs">
+          <button class="tab-btn active" data-tab="active" onclick="switchTab('active')">Active <span class="tab-count" id="count-active">0</span></button>
+          <button class="tab-btn" data-tab="completed" onclick="switchTab('completed')">Closed <span class="tab-count" id="count-completed">0</span></button>
+          <button class="tab-btn" data-tab="archived" onclick="switchTab('archived')">Archived <span class="tab-count" id="count-archived">0</span></button>
+          <button class="tab-btn" data-tab="all" onclick="switchTab('all')">All <span class="tab-count" id="count-all">0</span></button>
+        </div>
+        <div class="right-controls">
+          <div class="search-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-input" placeholder="Search client..." oninput="applySearch()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Engagement cards grouped by client -->
+      <div id="client-groups" style="display:none;"></div>
+
+      <!-- No-results state (visible when filters/search return empty but data exists) -->
+      <div id="no-results" style="display:none;" class="empty-card">
+        <div class="empty-title">No engagements match this view</div>
+        <div class="empty-desc">Try a different tab or clear the search.</div>
+      </div>
+
+      <!-- True empty state (no engagements at all in the org) -->
       <div id="empty-state" style="display:none;">
         <div class="empty-card">
           <div class="empty-icon">
@@ -375,7 +475,7 @@
           </div>
           <div class="form-group">
             <label for="year-end">Year End Date</label>
-            <input type="date" id="year-end" class="form-control" required>
+            <input type="date" id="year-end" class="form-control" max="9999-12-31" required>
           </div>
           <input type="hidden" id="eng-type" value="audit">
         </div>
@@ -396,6 +496,11 @@
     let currentUser = null;
     let currentOrg = null;
     let currentRole = null;
+
+    // In-memory store for engagements + computed fields
+    let allEngagements = [];          // each row: { ...engagement, _phase, _pct, _approved, _totalSections, _openFindings, _doneProcs, _totalProcs, _reviewSections }
+    let currentTab = 'active';
+    let currentSearch = '';
 
     async function init() {
       currentUser = await requireAuth();
@@ -421,15 +526,15 @@
       if (can('create_engagement')) {
         document.getElementById('btn-new-eng-top').style.display = '';
         document.getElementById('btn-new-eng-empty').style.display = '';
-        document.getElementById('empty-msg').textContent = 'No engagements yet';
-        document.querySelector('.empty-desc').textContent = 'Create your first engagement to start your audit workflow.';
-      } else {
-        document.getElementById('empty-msg').textContent = 'No engagements yet';
-        document.querySelector('.empty-desc').textContent = 'Ask an admin to create one to get started.';
       }
 
       if (currentRole === 'admin') {
         document.getElementById('btn-manage-billing').style.display = '';
+      }
+
+      // Local Compliance nav: admin + Pro only
+      if (currentRole === 'admin' && currentOrg && currentOrg.feature_tier === 'pro') {
+        document.getElementById('nav-local-compliance').style.display = '';
       }
 
       await loadEngagements();
@@ -536,41 +641,39 @@
       document.getElementById('onboarding-overlay').style.display = 'none';
     }
 
+    /* ---- Engagement loading + render ---- */
     async function loadEngagements() {
       const { data: engagements, error } = await supabaseClient
         .from('engagements')
         .select('*, profiles:created_by(full_name, email)')
         .eq('organization_id', currentOrg.id)
-        .order('created_at', { ascending: false });
+        .order('year_end_date', { ascending: false });
 
       if (error) { console.error(error); return; }
 
-      const list = document.getElementById('engagements-list');
-      const emptyState = document.getElementById('empty-state');
-
       if (!engagements || engagements.length === 0) {
-        list.innerHTML = '';
-        document.getElementById('engagements-panel').style.display = 'none';
-        emptyState.style.display = 'block';
+        allEngagements = [];
+        document.getElementById('tiles-row').style.display = 'none';
+        document.getElementById('filter-bar').style.display = 'none';
+        document.getElementById('client-groups').style.display = 'none';
+        document.getElementById('no-results').style.display = 'none';
+        document.getElementById('empty-state').style.display = 'block';
+        document.getElementById('page-header-sub').textContent = 'No engagements yet';
         return;
       }
-
-      emptyState.style.display = 'none';
-      document.getElementById('engagements-panel').style.display = 'block';
+      document.getElementById('empty-state').style.display = 'none';
 
       const engIds = engagements.map(e => e.id);
 
-      // Fetch sections
+      // Sections (status + engagement_id used for phase + review-pending counts)
       const { data: sections } = await supabaseClient
         .from('audit_sections')
         .select('id, engagement_id, status')
         .in('engagement_id', engIds);
+      const sectionsList = sections || [];
 
-      // Fetch procedures. Note: audit_procedures has no `status` column —
-      // procedure completion lives on procedure_response.status='done'. We
-      // count total procedures from this query and 'done' counts from the
-      // response table below.
-      const sectionIds = (sections || []).map(s => s.id);
+      // Procedures + done count (procedure_responses.status='done' is the truth)
+      const sectionIds = sectionsList.map(s => s.id);
       let procedures = [];
       let doneProcedureIds = new Set();
       if (sectionIds.length > 0) {
@@ -580,11 +683,10 @@
           .in('section_id', sectionIds);
         procedures = procs || [];
 
-        // Procedures marked done = those with a procedure_response row with status='done'
         const procIds = procedures.map(p => p.id);
         if (procIds.length > 0) {
           const { data: responses } = await supabaseClient
-            .from('procedure_response')
+            .from('procedure_responses')
             .select('procedure_id')
             .eq('status', 'done')
             .in('procedure_id', procIds);
@@ -592,7 +694,7 @@
         }
       }
 
-      // Fetch findings
+      // Findings (open count per engagement)
       let findings = [];
       if (sectionIds.length > 0) {
         const { data: finds } = await supabaseClient
@@ -602,86 +704,279 @@
         findings = finds || [];
       }
 
-      // Build maps: engagement_id -> counts
-      const sectionsByEng = {};
-      const approvedByEng = {};
+      // Build lookups
       const sectionToEng = {};
-      engIds.forEach(id => { sectionsByEng[id] = 0; approvedByEng[id] = 0; });
+      sectionsList.forEach(s => { sectionToEng[s.id] = s.engagement_id; });
 
-      (sections || []).forEach(s => {
-        sectionsByEng[s.engagement_id]++;
-        if (s.status === 'approved') approvedByEng[s.engagement_id]++;
-        sectionToEng[s.id] = s.engagement_id;
+      const computed = {}; // engagement_id → counts
+      engIds.forEach(id => {
+        computed[id] = {
+          totalSections: 0,
+          approvedSections: 0,
+          reviewSections: 0,
+          totalProcs: 0,
+          doneProcs: 0,
+          openFindings: 0,
+        };
       });
 
-      // Procedures per engagement
-      const procTotalByEng = {};
-      const procDoneByEng = {};
-      engIds.forEach(id => { procTotalByEng[id] = 0; procDoneByEng[id] = 0; });
+      // Section statuses that count as "awaiting partner review"
+      const REVIEW_STATUSES = new Set([
+        'ready_for_partner_review',
+        'in_partner_review',
+      ]);
 
+      sectionsList.forEach(s => {
+        const c = computed[s.engagement_id];
+        if (!c) return;
+        c.totalSections++;
+        if (s.status === 'approved') c.approvedSections++;
+        if (REVIEW_STATUSES.has(s.status)) c.reviewSections++;
+      });
       procedures.forEach(p => {
         const engId = sectionToEng[p.section_id];
-        if (engId) {
-          procTotalByEng[engId]++;
-          if (doneProcedureIds.has(p.id)) procDoneByEng[engId]++;
-        }
+        const c = engId ? computed[engId] : null;
+        if (!c) return;
+        c.totalProcs++;
+        if (doneProcedureIds.has(p.id)) c.doneProcs++;
       });
-
-      // Open findings per engagement
-      const openFindingsByEng = {};
-      engIds.forEach(id => { openFindingsByEng[id] = 0; });
-
       findings.forEach(f => {
         const engId = sectionToEng[f.section_id];
-        if (engId && f.status === 'open') {
-          openFindingsByEng[engId]++;
-        }
+        const c = engId ? computed[engId] : null;
+        if (!c) return;
+        if (f.status === 'open') c.openFindings++;
       });
 
-      list.innerHTML = engagements.map(e => {
-        const totalSections = sectionsByEng[e.id] || 0;
-        const approved = approvedByEng[e.id] || 0;
-        const pct = totalSections > 0 ? Math.round((approved / totalSections) * 100) : 0;
-        const totalProcs = procTotalByEng[e.id] || 0;
-        const doneProcs = procDoneByEng[e.id] || 0;
-        const openFindings = openFindingsByEng[e.id] || 0;
-        const isCompleted = e.status === 'completed';
+      // Attach computed fields + phase label to each engagement
+      allEngagements = engagements.map(e => {
+        const c = computed[e.id];
+        const pct = c.totalSections > 0
+          ? Math.round((c.approvedSections / c.totalSections) * 100)
+          : 0;
+        let phase;
+        if (e.is_archived) phase = 'archived';
+        else if (e.status === 'completed') phase = 'completed';
+        else if (pct === 100) phase = 'completed';
+        else if (c.approvedSections > 0 || c.doneProcs > 0) phase = 'execution';
+        else phase = 'planning';
+        return {
+          ...e,
+          _phase: phase,
+          _pct: pct,
+          _approved: c.approvedSections,
+          _totalSections: c.totalSections,
+          _doneProcs: c.doneProcs,
+          _totalProcs: c.totalProcs,
+          _openFindings: c.openFindings,
+          _reviewSections: c.reviewSections,
+        };
+      });
 
-        const yearEnd = new Date(e.year_end_date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-        const createdDate = new Date(e.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-        const createdBy = e.profiles?.full_name || e.profiles?.email || 'Unknown';
+      renderTiles();
+      renderCurrentView();
+      document.getElementById('tiles-row').style.display = '';
+      document.getElementById('filter-bar').style.display = '';
+    }
 
-        const typePillClass = e.engagement_type === 'review' ? ' review' : e.engagement_type === 'compilation' ? ' compilation' : '';
-        const statusBadgeClass = isCompleted ? 'badge-approved' : 'badge-in-progress';
-        const statusLabel = isCompleted ? 'Completed' : 'Active';
-        const progressFillClass = pct === 100 ? ' full' : '';
-        const findingsClass = openFindings > 0 ? ' has-findings' : '';
+    function renderTiles() {
+      // Active = not archived AND not completed
+      const activeList = allEngagements.filter(e => !e.is_archived && e.status !== 'completed');
+      const reviewSectionCount = activeList.reduce((s, e) => s + (e._reviewSections || 0), 0);
+      const reviewEngagementCount = activeList.filter(e => e._reviewSections > 0).length;
+      const readyList = allEngagements.filter(e => e.status === 'completed' && !e.is_archived);
+      const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+      const archivedYtdList = allEngagements.filter(e =>
+        e.is_archived && e.archived_at && new Date(e.archived_at) >= startOfYear
+      );
 
-        return `
-          <tr onclick="window.location.href='engagement.html#${e.id}'" style="cursor:pointer;">
-            <td>
-              <div style="font-weight:600; font-size:13px;">${escHtml(e.client_name)}</div>
-              <div style="font-size:10px; color:#6B7A96;">${escHtml(createdBy)}</div>
-            </td>
-            <td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">${yearEnd}</td>
-            <td><span class="badge ${statusBadgeClass}">${statusLabel}</span></td>
-            <td style="text-align:center;">${approved}/${totalSections}</td>
-            <td style="text-align:center;">${doneProcs}/${totalProcs}</td>
-            <td style="text-align:center;">${openFindings > 0 ? '<span style="background:#FEF0F0;color:#C02A2A;padding:2px 7px;border-radius:2px;font-size:10px;font-weight:700;">' + openFindings + '</span>' : '<span style="color:#B8C3D6;">—</span>'}</td>
-            <td>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <div style="flex:1;height:3px;background:#E4E8EF;border-radius:0;overflow:hidden;">
-                  <div style="height:100%;width:${pct}%;background:${pct === 100 ? '#1A9450' : '#C47A00'};"></div>
-                </div>
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6B7A96;">${pct}%</span>
-              </div>
-            </td>
-            <td style="text-align:right;">
-              ${currentRole === 'admin' ? `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); deleteEngagement('${e.id}', '${escHtml(e.client_name)}')" style="color:#C02A2A;border-color:#F4AAAA;font-size:10px;padding:2px 6px;">Delete</button>` : ''}
-            </td>
-          </tr>
-        `;
-      }).join('');
+      document.getElementById('tile-active-value').textContent = activeList.length;
+      document.getElementById('tile-active-hint').textContent =
+        activeList.length === 1 ? 'engagement in progress' : 'engagements in progress';
+
+      document.getElementById('tile-review-value').textContent = reviewSectionCount;
+      document.getElementById('tile-review-hint').textContent = reviewSectionCount === 0
+        ? 'all clear'
+        : (reviewSectionCount + ' section' + (reviewSectionCount === 1 ? '' : 's') + ' across ' + reviewEngagementCount + ' engagement' + (reviewEngagementCount === 1 ? '' : 's'));
+
+      document.getElementById('tile-ready-value').textContent = readyList.length;
+      document.getElementById('tile-ready-hint').textContent = readyList.length === 0
+        ? 'nothing waiting'
+        : (readyList.length === 1 ? 'closed, awaiting ISA 230 archive' : 'closed, awaiting ISA 230 archive');
+
+      document.getElementById('tile-archived-value').textContent = archivedYtdList.length;
+      document.getElementById('tile-archived-hint').textContent = archivedYtdList.length === 0
+        ? 'none yet this year'
+        : 'files assembled this year';
+
+      // Tab counts
+      const archivedAll = allEngagements.filter(e => e.is_archived).length;
+      document.getElementById('count-active').textContent = activeList.length;
+      document.getElementById('count-completed').textContent = readyList.length;
+      document.getElementById('count-archived').textContent = archivedAll;
+      document.getElementById('count-all').textContent = allEngagements.length;
+
+      // Page header subtitle
+      const sub = document.getElementById('page-header-sub');
+      sub.textContent = activeList.length === 0
+        ? 'No engagements in progress'
+        : (activeList.length + ' engagement' + (activeList.length === 1 ? '' : 's') + ' in progress'
+           + (reviewSectionCount > 0 ? ' · ' + reviewSectionCount + ' section' + (reviewSectionCount === 1 ? '' : 's') + ' awaiting partner review' : ''));
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      // Tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab || (tab === 'review' && btn.dataset.tab === 'active'));
+      });
+      // Tile selected state
+      document.querySelectorAll('.tile').forEach(t => {
+        const f = t.dataset.filter;
+        t.classList.toggle('active-tile',
+          (tab === 'active' && f === 'active') ||
+          (tab === 'review' && f === 'review') ||
+          (tab === 'completed' && f === 'completed') ||
+          (tab === 'archived' && f === 'archived')
+        );
+      });
+      renderCurrentView();
+    }
+
+    function applySearch() {
+      currentSearch = (document.getElementById('search-input').value || '').trim().toLowerCase();
+      renderCurrentView();
+    }
+
+    function filterForCurrentView() {
+      let list = allEngagements;
+      if (currentTab === 'active') {
+        list = list.filter(e => !e.is_archived && e.status !== 'completed');
+      } else if (currentTab === 'review') {
+        // Review tab = active engagements with at least one section in review
+        list = list.filter(e => !e.is_archived && e.status !== 'completed' && (e._reviewSections || 0) > 0);
+      } else if (currentTab === 'completed') {
+        list = list.filter(e => e.status === 'completed' && !e.is_archived);
+      } else if (currentTab === 'archived') {
+        list = list.filter(e => e.is_archived);
+      }
+      // 'all' = no extra filter
+
+      if (currentSearch) {
+        list = list.filter(e => (e.client_name || '').toLowerCase().includes(currentSearch));
+      }
+      return list;
+    }
+
+    function renderCurrentView() {
+      const list = filterForCurrentView();
+      const container = document.getElementById('client-groups');
+      const noResults = document.getElementById('no-results');
+
+      if (list.length === 0) {
+        container.style.display = 'none';
+        noResults.style.display = 'block';
+        return;
+      }
+      noResults.style.display = 'none';
+      container.style.display = 'block';
+
+      // Group by client_name (case-insensitive, but preserve original casing in display)
+      const groups = new Map(); // key = lowercase name → { displayName, engagements: [] }
+      list.forEach(e => {
+        const key = (e.client_name || '').trim().toLowerCase();
+        if (!groups.has(key)) {
+          groups.set(key, { displayName: e.client_name, engagements: [] });
+        }
+        groups.get(key).engagements.push(e);
+      });
+
+      // Sort each group's engagements by year_end desc, then sort groups by latest year_end desc
+      const sortedGroups = Array.from(groups.values()).sort((a, b) => {
+        const latestA = Math.max(...a.engagements.map(e => new Date(e.year_end_date).getTime() || 0));
+        const latestB = Math.max(...b.engagements.map(e => new Date(e.year_end_date).getTime() || 0));
+        return latestB - latestA;
+      });
+      sortedGroups.forEach(g => {
+        g.engagements.sort((a, b) =>
+          (new Date(b.year_end_date).getTime() || 0) - (new Date(a.year_end_date).getTime() || 0)
+        );
+      });
+
+      container.innerHTML = sortedGroups.map(g => `
+        <div class="client-group">
+          <div class="client-group-head">
+            <span class="client-name">${escHtml(g.displayName)}</span>
+            <span class="client-count">${g.engagements.length} engagement${g.engagements.length === 1 ? '' : 's'}</span>
+          </div>
+          <div class="cards-row">
+            ${g.engagements.map(e => renderCard(e)).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderCard(e) {
+      const yearEnd = e.year_end_date ? new Date(e.year_end_date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+      const fyLabel = e.year_end_date ? ('FY ' + new Date(e.year_end_date).getFullYear()) : 'Engagement';
+
+      const phaseLabels = {
+        planning: 'Planning',
+        execution: 'Execution',
+        completed: 'Closed · awaiting archive',
+        archived: 'Archived',
+      };
+      const phaseClasses = {
+        planning: 'chip-planning',
+        execution: 'chip-execution',
+        completed: 'chip-completed',
+        archived: 'chip-archived',
+      };
+
+      const phaseLabel = phaseLabels[e._phase] || 'Planning';
+      const phaseClass = phaseClasses[e._phase] || 'chip-planning';
+      const archivedClass = e.is_archived ? ' is-archived' : '';
+      const pctClass = e._pct === 100 ? ' done' : '';
+
+      const detailParts = [];
+      if (e._totalSections > 0) {
+        detailParts.push(e._approved + ' / ' + e._totalSections + ' sections');
+      }
+      if (e._reviewSections > 0) {
+        detailParts.push('<span class="card-meta-warn">' + e._reviewSections + ' awaiting review</span>');
+      }
+      if (e._openFindings > 0) {
+        detailParts.push('<span class="card-meta-warn">' + e._openFindings + ' open finding' + (e._openFindings === 1 ? '' : 's') + '</span>');
+      }
+      const detailLine = detailParts.length > 0
+        ? detailParts.join('<span class="card-meta-dot"></span>')
+        : '<span style="color:var(--gray-400);">Trial balance not uploaded yet</span>';
+
+      const deleteBtn = currentRole === 'admin'
+        ? `<button class="card-delete" onclick="event.stopPropagation(); event.preventDefault(); deleteEngagement('${e.id}', ${JSON.stringify(e.client_name)})">Delete</button>`
+        : '';
+
+      const openLabel = e.is_archived ? 'View →' : 'Open →';
+
+      return `
+        <a class="eng-card${archivedClass}" href="engagement.html#${e.id}">
+          <div class="card-top">
+            <div>
+              <div class="card-period">${escHtml(fyLabel)}</div>
+              <div class="card-yearend">Year end ${escHtml(yearEnd)}</div>
+            </div>
+            <span class="card-phase-chip ${phaseClass}">${phaseLabel}</span>
+          </div>
+          <div class="card-progress">
+            <div class="card-bar"><div class="card-bar-fill${pctClass}" style="width:${e._pct}%;"></div></div>
+            <span class="card-pct">${e._pct}%</span>
+          </div>
+          <div class="card-meta-line">${detailLine}</div>
+          <div class="card-footer">
+            <span class="card-open">${openLabel}</span>
+            ${deleteBtn}
+          </div>
+        </a>
+      `;
     }
 
     function openNewEngagement() {
@@ -741,6 +1036,37 @@
         // Seeding failure is non-blocking; auditor can manually create sections.
       }
 
+      // Pro tier only: seed the firm's 20th Local Compliance section.
+      if (currentOrg && currentOrg.feature_tier === 'pro') {
+        try {
+          await supabaseClient.rpc('seed_compliance_section', {
+            p_engagement_id:   data.id,
+            p_organization_id: currentOrg.id,
+          });
+        } catch (e) {
+          console.error('seed_compliance_section failed', e);
+          alert('Note: the Local Compliance section could not be auto-created for this engagement. You can add it manually from the engagement page once it loads. (Engagement creation itself succeeded.)');
+        }
+
+        // Pre-seed Risk Assessment row + ISA 240 presumed fraud risks.
+        try {
+          await supabaseClient.rpc('seed_engagement_risk_assessment', {
+            p_engagement_id:   data.id,
+            p_organization_id: currentOrg.id,
+          });
+        } catch (e) {
+          console.error('seed_engagement_risk_assessment failed', e);
+        }
+        try {
+          await supabaseClient.rpc('seed_presumed_fraud_risks', {
+            p_engagement_id:   data.id,
+            p_organization_id: currentOrg.id,
+          });
+        } catch (e) {
+          console.error('seed_presumed_fraud_risks failed', e);
+        }
+      }
+
       closeModal('modal-new-engagement');
       document.getElementById('form-new-engagement').reset();
       btn.disabled = false;
@@ -786,7 +1112,15 @@
       }
     }
 
-    init();
+    function disableAutofillOnAllInputs() {
+      document.querySelectorAll('input, textarea').forEach(el => {
+        el.setAttribute('autocomplete', 'off');
+        el.setAttribute('autocorrect', 'off');
+        el.setAttribute('spellcheck', 'false');
+      });
+    }
+
+    init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
   </script>
 </body>
 </html>

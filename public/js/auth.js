@@ -39,7 +39,16 @@ async function requireAuth() {
 // Get current user
 async function getCurrentUser() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  return session?.user || null;
+  const user = session?.user || null;
+  // Notify Sentry so error reports include the logged-in user.
+  // Listener lives in /js/sentry-init.js — no-op if Sentry isn't initialised.
+  if (user && !window.__audexonUserBroadcast) {
+    window.__audexonUserBroadcast = true;
+    document.dispatchEvent(new CustomEvent('audexon:user-loaded', {
+      detail: { id: user.id, email: user.email },
+    }));
+  }
+  return user;
 }
 
 // Get user profile from profiles table
@@ -110,6 +119,7 @@ const PERMISSIONS = {
   edit_shared_folder:       ['admin', 'supervisor'],
   upload_tb:                ['admin', 'supervisor'],
   replace_tb:               ['admin', 'supervisor'],
+  upload_fs:                ['admin', 'supervisor'],
 
   // Sections
   create_section:           ['admin', 'supervisor'],
@@ -132,7 +142,7 @@ const PERMISSIONS = {
   // Review — three-level sign-off
   add_review_comment:       ['admin', 'supervisor'],
   add_preparer_response:    ['admin', 'supervisor', 'preparer'],
-  submit_for_review:        ['preparer'],
+  submit_for_review:        ['admin', 'supervisor', 'preparer'],
   supervisor_approve:       ['admin', 'supervisor'],
   supervisor_return:        ['admin', 'supervisor'],
   partner_approve:          ['admin'],

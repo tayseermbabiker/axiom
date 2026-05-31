@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compliance Template — Audexon</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
+  <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
+  <script src="../js/sentry-init.js"></script>
+  <style>
+    .access-blocked {
+      background: var(--warning-light);
+      border: 1px solid #FDE68A;
+      padding: 28px;
+      border-radius: 12px;
+      max-width: 600px;
+      margin: 40px auto;
+      text-align: center;
+    }
+    .access-blocked h2 { color: var(--gray-900); margin-bottom: 8px; }
+    .access-blocked p  { color: var(--gray-700); margin-bottom: 16px; }
+
+    .proc-row {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+    }
+    .proc-row.inactive { background: var(--gray-50); opacity: 0.7; }
+    .proc-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .proc-row-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    .proc-type-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .proc-type-test_of_detail { background: #dbeafe; color: #1d4ed8; }
+    .proc-type-analytical     { background: #ecfdf5; color: #047857; }
+    .proc-type-controls       { background: #fef3c7; color: #92400e; }
+    .proc-type-other          { background: var(--gray-100); color: var(--gray-600); }
+    .proc-risk-standard       { background: var(--gray-100); color: var(--gray-600); }
+    .proc-risk-compliance     { background: #ede9fe; color: #6b21a8; }
+    .proc-risk-significant    { background: #fed7aa; color: #9a3412; }
+    .proc-risk-fraud          { background: #fecaca; color: #991b1b; }
+    .proc-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .toggle-text {
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--primary);
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .toggle-text:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">Audexon</div>
+      <div class="sidebar-org">
+        <div class="sidebar-org-name" id="org-name">&mdash;</div>
+        <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="team.html">Team</a>
+        <a href="local-compliance.html" class="active" id="nav-local-compliance">Compliance Template</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="text-sm text-muted mb-16" id="user-email"></div>
+        <button onclick="signOut()">Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <!-- Pro-tier gate -->
+      <div id="access-blocked" class="access-blocked" style="display:none;">
+        <h2>Compliance Template is a Pro feature</h2>
+        <p>Author a custom 20th audit section &mdash; jurisdiction-specific procedures (UAE ESR, Saudi Zakat, Qatar QFC, etc.) auto-seeded into every new engagement.</p>
+        <p>Your firm is currently on the Essentials plan.</p>
+        <a href="../index.html#pricing" class="btn btn-primary">View Pro pricing</a>
+      </div>
+
+      <!-- Admin-only gate -->
+      <div id="role-blocked" class="access-blocked" style="display:none;">
+        <h2>Partner-only settings</h2>
+        <p>Compliance templates are authored by the engagement partner. Ask your firm's admin to set this up.</p>
+        <a href="dashboard.html" class="btn btn-outline">Back to Dashboard</a>
+      </div>
+
+      <!-- Main content -->
+      <div id="lc-content" style="display:none;">
+        <div class="page-header">
+          <div>
+            <h1>Compliance Template</h1>
+            <span class="text-sm text-muted">Firm-level template for your 20th audit section &mdash; authored once, auto-seeded into every new engagement.</span>
+          </div>
+        </div>
+
+        <!-- Empty state: no template yet -->
+        <div id="lc-empty" class="card" style="display:none;">
+          <div class="card-body" style="text-align:center; padding:32px;">
+            <h2 style="margin-bottom:8px;">No compliance template yet</h2>
+            <p class="text-sm text-muted mb-16">Enable this to add a custom 20th section to every new engagement. You'll be able to edit the section name, description, jurisdiction, and add as many regulatory procedures as your firm needs.</p>
+            <button class="btn btn-primary" onclick="enableLocalCompliance()">Enable compliance template</button>
+          </div>
+        </div>
+
+        <!-- Template settings card -->
+        <div class="card mb-24" id="lc-template-card" style="display:none;">
+          <div class="card-header">
+            <h2>Section Template</h2>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--gray-700); cursor:pointer;">
+              <input type="checkbox" id="tmpl-active" onchange="saveTemplate()">
+              Active (uncheck to skip the 20th section on new engagements)
+            </label>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="text-sm">Section Name *</label>
+              <input type="text" id="tmpl-name" class="form-control" placeholder="e.g. UAE Regulatory Compliance, Qatar QFC Requirements">
+            </div>
+            <div class="form-group">
+              <label class="text-sm">Description</label>
+              <textarea id="tmpl-description" class="form-control" rows="2" placeholder="What this section covers, when it applies, who reviews it..."></textarea>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+              <div class="form-group" style="margin:0;">
+                <label class="text-sm">Jurisdiction</label>
+                <input type="text" id="tmpl-jurisdiction" class="form-control" placeholder="e.g. UAE, Qatar, KSA">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="text-sm">Phase</label>
+                <select id="tmpl-phase" class="form-control">
+                  <option value="final">Final</option>
+                  <option value="interim">Interim</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="text-sm">Sort Order</label>
+                <input type="number" id="tmpl-sort-order" class="form-control" min="1" max="999" value="20">
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
+              <button class="btn btn-primary btn-sm" onclick="saveTemplate()">Save Template</button>
+              <span id="tmpl-save-msg" class="text-sm text-muted"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Procedures card -->
+        <div class="card" id="lc-procedures-card" style="display:none;">
+          <div class="card-header">
+            <div>
+              <h2>Procedures</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">These procedures are copied (not referenced) into each new engagement's 20th section. Edits to the master here don't affect engagements already created.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openProcModal()">+ Add Procedure</button>
+          </div>
+          <div class="card-body">
+            <div id="proc-list"></div>
+            <div class="empty-state" id="proc-empty" style="display:none;">
+              <p>No procedures yet. Add at least one before creating new engagements.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Procedure modal -->
+  <div class="modal-overlay" id="modal-proc">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 id="proc-modal-title">Add Procedure</h3>
+        <button class="modal-close" onclick="closeProcModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="text-sm">Description *</label>
+          <textarea id="proc-description" class="form-control" rows="3" placeholder="e.g. Verify ESR notification was submitted to the Federal Tax Authority within the deadline (UAE Cabinet Resolution 57 of 2020)"></textarea>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin:0;">
+            <label class="text-sm">Type</label>
+            <select id="proc-type" class="form-control">
+              <option value="test_of_detail">Test of Detail</option>
+              <option value="analytical">Analytical</option>
+              <option value="controls">Controls</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="text-sm">Risk Category</label>
+            <select id="proc-risk-category" class="form-control">
+              <option value="standard">Standard</option>
+              <option value="compliance">Compliance (ISA 250)</option>
+              <option value="significant">Significant (ISA 315.27)</option>
+              <option value="fraud">Fraud (ISA 240)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="text-sm">Sort Order</label>
+            <input type="number" id="proc-sort-order" class="form-control" min="1" max="999" value="1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Regulatory Reference</label>
+          <input type="text" id="proc-regulatory-ref" class="form-control" placeholder="e.g. Cabinet Resolution 57 of 2020, ISA 250">
+        </div>
+        <div id="proc-modal-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeProcModal()">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-proc" onclick="saveProc()">Save Procedure</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    let currentUser = null;
+    let currentOrg = null;
+    let currentRole = null;
+    let template = null;       // single row in org_local_compliance_templates
+    let procedures = [];       // rows in org_compliance_procedures
+    let editingProcId = null;  // null when adding, id when editing
+
+    async function init() {
+      currentUser = await requireAuth();
+      if (!currentUser) return;
+
+      const orgAndRole = await getUserOrgAndRole();
+      currentOrg = orgAndRole.org;
+      currentRole = orgAndRole.role;
+
+      document.getElementById('user-email').textContent = currentUser.email;
+      if (currentOrg) document.getElementById('org-name').textContent = currentOrg.name;
+      if (currentRole) {
+        const badge = document.getElementById('user-role-badge');
+        badge.textContent = currentRole;
+        badge.className = 'role-badge role-' + currentRole;
+        badge.style.display = 'inline-block';
+      }
+
+      // Pro tier gate
+      if (!currentOrg || currentOrg.feature_tier !== 'pro') {
+        document.getElementById('access-blocked').style.display = 'block';
+        return;
+      }
+
+      // Admin-only gate
+      if (currentRole !== 'admin') {
+        document.getElementById('role-blocked').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('lc-content').style.display = 'block';
+
+      await loadTemplate();
+      if (template) {
+        await loadProcedures();
+        renderTemplate();
+        renderProcedures();
+        showTemplateAndProcedures();
+      } else {
+        document.getElementById('lc-empty').style.display = 'block';
+      }
+    }
+
+    async function loadTemplate() {
+      const { data } = await supabaseClient
+        .from('org_local_compliance_templates')
+        .select('*')
+        .eq('organization_id', currentOrg.id)
+        .maybeSingle();
+      template = data || null;
+    }
+
+    async function loadProcedures() {
+      if (!template) return;
+      const { data } = await supabaseClient
+        .from('org_compliance_procedures')
+        .select('*')
+        .eq('template_id', template.id)
+        .order('sort_order', { ascending: true });
+      procedures = data || [];
+    }
+
+    function showTemplateAndProcedures() {
+      document.getElementById('lc-empty').style.display = 'none';
+      document.getElementById('lc-template-card').style.display = 'block';
+      document.getElementById('lc-procedures-card').style.display = 'block';
+    }
+
+    async function enableLocalCompliance() {
+      const { data, error } = await supabaseClient
+        .from('org_local_compliance_templates')
+        .insert({
+          organization_id: currentOrg.id,
+          name: 'Local Compliance & Regulatory',
+          sort_order: 20,
+          phase: 'final',
+          is_active: true,
+          created_by: currentUser.id,
+        })
+        .select()
+        .single();
+      if (error) { alert('Could not enable: ' + error.message); return; }
+      template = data;
+      procedures = [];
+      renderTemplate();
+      renderProcedures();
+      showTemplateAndProcedures();
+    }
+
+    function renderTemplate() {
+      document.getElementById('tmpl-active').checked = !!template.is_active;
+      document.getElementById('tmpl-name').value = template.name || '';
+      document.getElementById('tmpl-description').value = template.section_description || '';
+      document.getElementById('tmpl-jurisdiction').value = template.jurisdiction || '';
+      document.getElementById('tmpl-phase').value = template.phase || 'final';
+      document.getElementById('tmpl-sort-order').value = template.sort_order || 20;
+    }
+
+    async function saveTemplate() {
+      const msg = document.getElementById('tmpl-save-msg');
+      const name = document.getElementById('tmpl-name').value.trim();
+      if (!name) { msg.textContent = 'Name is required.'; return; }
+
+      msg.textContent = 'Saving...';
+      // updated_at is owned by the DB trigger trg_olct_set_updated_at — don't send from client.
+      const updates = {
+        is_active: document.getElementById('tmpl-active').checked,
+        name: name,
+        section_description: document.getElementById('tmpl-description').value.trim() || null,
+        jurisdiction: document.getElementById('tmpl-jurisdiction').value.trim() || null,
+        phase: document.getElementById('tmpl-phase').value,
+        sort_order: parseInt(document.getElementById('tmpl-sort-order').value, 10) || 20,
+      };
+
+      const { data, error } = await supabaseClient
+        .from('org_local_compliance_templates')
+        .update(updates)
+        .eq('id', template.id)
+        .select()
+        .single();
+      if (error) { msg.textContent = 'Save failed: ' + error.message; return; }
+
+      // Refresh local cache from server (picks up the trigger-set updated_at).
+      if (data) template = data;
+      msg.textContent = 'Saved.';
+      setTimeout(() => { msg.textContent = ''; }, 2000);
+    }
+
+    function renderProcedures() {
+      const list = document.getElementById('proc-list');
+      const empty = document.getElementById('proc-empty');
+
+      if (procedures.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      const TYPE_LABELS = {
+        test_of_detail: 'Test of Detail',
+        analytical: 'Analytical',
+        controls: 'Controls',
+        other: 'Other',
+      };
+      const RISK_LABELS = {
+        standard: 'Standard',
+        compliance: 'Compliance (ISA 250)',
+        significant: 'Significant (ISA 315.27)',
+        fraud: 'Fraud (ISA 240)',
+      };
+
+      list.innerHTML = procedures.map(p => {
+        const inactiveClass = p.is_active ? '' : ' inactive';
+        const ref = p.regulatory_ref ? `<span>${escHtml(p.regulatory_ref)}</span>` : '';
+        const toggleLabel = p.is_active ? 'Deactivate' : 'Reactivate';
+        const risk = p.risk_category || 'standard';
+        const riskBadge = risk !== 'standard'
+          ? `<span class="proc-type-badge proc-risk-${risk}">${RISK_LABELS[risk] || risk}</span>`
+          : '';
+        return `
+          <div class="proc-row${inactiveClass}">
+            <div class="proc-row-top">
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:14px; line-height:1.5; color:var(--gray-900);">${escHtml(p.description)}</div>
+                <div class="proc-row-meta" style="margin-top:6px;">
+                  <span class="proc-type-badge proc-type-${p.procedure_type}">${TYPE_LABELS[p.procedure_type] || p.procedure_type}</span>
+                  ${riskBadge}
+                  <span>#${p.sort_order}</span>
+                  ${ref}
+                </div>
+              </div>
+              <div class="proc-actions">
+                <button class="btn btn-outline btn-sm" onclick="openProcModal('${p.id}')">Edit</button>
+                <button class="toggle-text" onclick="toggleProcActive('${p.id}')">${toggleLabel}</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openProcModal(procId) {
+      editingProcId = procId || null;
+      document.getElementById('proc-modal-title').textContent = procId ? 'Edit Procedure' : 'Add Procedure';
+      document.getElementById('proc-modal-error').style.display = 'none';
+
+      if (procId) {
+        const p = procedures.find(x => x.id === procId);
+        if (!p) return;
+        document.getElementById('proc-description').value = p.description || '';
+        document.getElementById('proc-type').value = p.procedure_type || 'other';
+        document.getElementById('proc-risk-category').value = p.risk_category || 'standard';
+        document.getElementById('proc-sort-order').value = p.sort_order || 1;
+        document.getElementById('proc-regulatory-ref').value = p.regulatory_ref || '';
+      } else {
+        document.getElementById('proc-description').value = '';
+        document.getElementById('proc-type').value = 'test_of_detail';
+        document.getElementById('proc-risk-category').value = 'compliance';
+        // Default new sort to (max + 1)
+        const maxSort = procedures.reduce((m, p) => Math.max(m, p.sort_order || 0), 0);
+        document.getElementById('proc-sort-order').value = maxSort + 1;
+        document.getElementById('proc-regulatory-ref').value = '';
+      }
+      document.getElementById('modal-proc').classList.add('active');
+    }
+
+    function closeProcModal() {
+      document.getElementById('modal-proc').classList.remove('active');
+      editingProcId = null;
+    }
+
+    async function saveProc() {
+      const description = document.getElementById('proc-description').value.trim();
+      if (!description) {
+        const err = document.getElementById('proc-modal-error');
+        err.textContent = 'Description is required.';
+        err.style.display = 'block';
+        return;
+      }
+
+      // updated_at owned by DB trigger trg_ocp_set_updated_at — don't send from client.
+      const payload = {
+        description: description,
+        procedure_type: document.getElementById('proc-type').value,
+        risk_category: document.getElementById('proc-risk-category').value,
+        sort_order: parseInt(document.getElementById('proc-sort-order').value, 10) || 1,
+        regulatory_ref: document.getElementById('proc-regulatory-ref').value.trim() || null,
+      };
+
+      const btn = document.getElementById('btn-save-proc');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      if (editingProcId) {
+        const { error } = await supabaseClient
+          .from('org_compliance_procedures')
+          .update(payload)
+          .eq('id', editingProcId);
+        if (error) {
+          showProcError('Save failed: ' + error.message);
+          btn.disabled = false;
+          btn.textContent = 'Save Procedure';
+          return;
+        }
+      } else {
+        const { error } = await supabaseClient
+          .from('org_compliance_procedures')
+          .insert({
+            ...payload,
+            template_id: template.id,
+            organization_id: currentOrg.id,
+            is_active: true,
+          });
+        if (error) {
+          showProcError('Save failed: ' + error.message);
+          btn.disabled = false;
+          btn.textContent = 'Save Procedure';
+          return;
+        }
+      }
+
+      closeProcModal();
+      btn.disabled = false;
+      btn.textContent = 'Save Procedure';
+      await loadProcedures();
+      renderProcedures();
+    }
+
+    function showProcError(text) {
+      const err = document.getElementById('proc-modal-error');
+      err.textContent = text;
+      err.style.display = 'block';
+    }
+
+    async function toggleProcActive(procId) {
+      const p = procedures.find(x => x.id === procId);
+      if (!p) return;
+      const newActive = !p.is_active;
+      // updated_at owned by DB trigger.
+      const { error } = await supabaseClient
+        .from('org_compliance_procedures')
+        .update({ is_active: newActive })
+        .eq('id', procId);
+      if (error) { alert('Could not update: ' + error.message); return; }
+      p.is_active = newActive;
+      renderProcedures();
+    }
+
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+      });
+    });
+
+    init();
+  </script>
+</body>
+</html>
