@@ -8,9 +8,14 @@
 //   STRIPE_SECRET_KEY       — Stripe API key (sk_live_... or sk_test_...)
 //   SUPABASE_URL            — e.g. https://xxx.supabase.co
 //   SUPABASE_SERVICE_ROLE_KEY — service_role (bypasses RLS, server-only)
-//   STRIPE_PRICE_STARTER    — Stripe price ID for the $49 Starter plan
-//   STRIPE_PRICE_TEAM       — Stripe price ID for the $99 Team plan
-//   STRIPE_PRICE_FIRM       — Stripe price ID for the $199 Firm plan
+//   Execution plan (essentials tier):
+//   STRIPE_PRICE_STARTER      — $49  Execution Starter (<=5)
+//   STRIPE_PRICE_TEAM         — $99  Execution Team (<=12)
+//   STRIPE_PRICE_FIRM         — $199 Execution Firm (<=25)
+//   Full Workflow plan (pro tier):
+//   STRIPE_PRICE_FULL_STARTER — $199 Full Workflow Starter (<=5)
+//   STRIPE_PRICE_FULL_TEAM    — $299 Full Workflow Team (<=12)
+//   STRIPE_PRICE_FULL_FIRM    — $399 Full Workflow Firm (<=25)
 //
 // Stripe dashboard setup:
 //   Webhooks → Add endpoint
@@ -25,9 +30,14 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const TIER_BY_PRICE = {
-  [process.env.STRIPE_PRICE_STARTER]: { plan: 'starter', max_members: 5  },
-  [process.env.STRIPE_PRICE_TEAM]:    { plan: 'team',    max_members: 12 },
-  [process.env.STRIPE_PRICE_FIRM]:    { plan: 'firm',    max_members: 25 },
+  // Execution plan -> essentials feature tier (reuses the original 3 price vars)
+  [process.env.STRIPE_PRICE_STARTER]:      { plan: 'starter', max_members: 5,  feature_tier: 'essentials' },
+  [process.env.STRIPE_PRICE_TEAM]:         { plan: 'team',    max_members: 12, feature_tier: 'essentials' },
+  [process.env.STRIPE_PRICE_FIRM]:         { plan: 'firm',    max_members: 25, feature_tier: 'essentials' },
+  // Full Workflow plan -> pro feature tier (3 new price vars)
+  [process.env.STRIPE_PRICE_FULL_STARTER]: { plan: 'starter', max_members: 5,  feature_tier: 'pro' },
+  [process.env.STRIPE_PRICE_FULL_TEAM]:    { plan: 'team',    max_members: 12, feature_tier: 'pro' },
+  [process.env.STRIPE_PRICE_FULL_FIRM]:    { plan: 'firm',    max_members: 25, feature_tier: 'pro' },
 };
 
 exports.handler = async (event) => {
@@ -94,6 +104,7 @@ exports.handler = async (event) => {
         const updates = {
           plan: tier.plan,
           max_members: tier.max_members,
+          feature_tier: tier.feature_tier,
         };
         if (customerId) updates.stripe_customer_id = customerId;
         await patchOrg(orgId, updates);
@@ -114,7 +125,7 @@ exports.handler = async (event) => {
           const email = await fetchCustomerEmail(customerId);
           const orgId = await findOrgId({ email });
           if (orgId) {
-            await patchOrg(orgId, { plan: null });
+            await patchOrg(orgId, { plan: null, feature_tier: 'essentials' });
             console.log('[stripe-webhook] expired', { orgId, status });
           }
           return ok({ event: eventType, action: 'expire' });
@@ -133,7 +144,7 @@ exports.handler = async (event) => {
           return ok({ warning: 'no org' });
         }
 
-        await patchOrg(orgId, { plan: tier.plan, max_members: tier.max_members });
+        await patchOrg(orgId, { plan: tier.plan, max_members: tier.max_members, feature_tier: tier.feature_tier });
         console.log('[stripe-webhook] updated', { orgId, plan: tier.plan });
         return ok({ event: eventType, action: 'activate', orgId });
       }
