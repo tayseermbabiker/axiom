@@ -183,8 +183,13 @@
       `).join('');
     }
 
-    // Valid access codes (change these as needed)
-    const VALID_CODES = ['AUDEXON-BETA-2026', 'AUDEXON-PILOT-2026'];
+    // Access codes -> trial length + tier. Issued manually, per client.
+    // NOTE: client-side gate (visible in page source) = SOFT gate only, until
+    // the server-validated access_codes table ships. Edit here to rotate/revoke.
+    const CODE_CONFIG = {
+      'AUDEXON-VIP': { trialMonths: 3, featureTier: 'pro' },  // Sadig + Qatari partner
+      'AUDEXON-1M':  { trialMonths: 1, featureTier: 'pro' },  // standard founding clients
+    };
 
     // Create firm
     document.getElementById('form-create-firm').addEventListener('submit', async (e) => {
@@ -207,8 +212,9 @@
         return;
       }
 
-      // Validate access code
-      if (!VALID_CODES.includes(accessCode)) {
+      // Validate access code -> resolves trial length + tier
+      const codeCfg = CODE_CONFIG[accessCode];
+      if (!codeCfg) {
         const errEl = document.getElementById('code-error');
         errEl.textContent = 'Invalid access code. Contact us to get your code.';
         errEl.style.display = 'block';
@@ -218,9 +224,9 @@
       }
 
       try {
-        // Create organization with 3-month trial
+        // Create organization with trial length + tier from the access code
         const trialEnd = new Date();
-        trialEnd.setMonth(trialEnd.getMonth() + 3);
+        trialEnd.setMonth(trialEnd.getMonth() + codeCfg.trialMonths);
 
         const { data: org, error: orgErr } = await supabaseClient
           .from('organizations')
@@ -228,7 +234,8 @@
             name: firmName,
             country: country,
             created_by: currentUser.id,
-            trial_expires_at: trialEnd.toISOString()
+            trial_expires_at: trialEnd.toISOString(),
+            feature_tier: codeCfg.featureTier
           })
           .select()
           .single();
