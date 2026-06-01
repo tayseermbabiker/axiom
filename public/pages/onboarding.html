@@ -67,6 +67,12 @@
             <small style="color:var(--gray-500); font-size:11px; margin-top:4px; display:block;">Contact us to get an access code for your firm.</small>
           </div>
           <div id="code-error" class="error-msg" style="display:none;"></div>
+          <div class="form-group" style="display:flex; align-items:flex-start; gap:8px; margin-top:4px;">
+            <input type="checkbox" id="accept-terms" style="margin-top:3px; flex-shrink:0;">
+            <label for="accept-terms" style="font-size:13px; color:var(--gray-600); font-weight:400; line-height:1.5;">
+              I have read and agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.
+            </label>
+          </div>
           <div class="flex gap-8">
             <button type="button" class="btn btn-outline" onclick="showChoice()">Back</button>
             <button type="submit" class="btn btn-primary" id="btn-create-firm">Create Firm</button>
@@ -202,6 +208,15 @@
       const firmName = document.getElementById('firm-name').value.trim();
       const country = document.getElementById('firm-country').value;
       const accessCode = document.getElementById('access-code').value.trim().toUpperCase();
+
+      if (!document.getElementById('accept-terms').checked) {
+        const errEl = document.getElementById('code-error');
+        errEl.textContent = 'Please accept the Terms of Service and Privacy Policy to continue.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Firm';
+        return;
+      }
 
       if (!country) {
         const errEl = document.getElementById('code-error');
