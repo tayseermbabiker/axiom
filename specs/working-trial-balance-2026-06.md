@@ -28,7 +28,9 @@ Existing `adjusting_entries` (flat, 2-leg, finding-only) is superseded by:
   - **SUM card on Working TB tab** (engagement.html): uncorrected entries → amount + effect-on-profit (from `is_pl_affecting`), totals, vs active materiality (OM/PM/trivial from `engagement_materiality_versions`), verdict (aggregate vs OM, ISA 450.11). Loads active materiality in `loadWorkingTB`.
   - **Completion PDF** (report.html, completion report): fetches journals; renders **Adjusted Trial Balance (ISA 450)** (accounts with posted-corrected adjustments: Original/Adjustment/Audited) + **Summary of Uncorrected Misstatements** (table + OM/PM/trivial + aggregate-vs-materiality verdict). This is the "falls into completion" surfacing.
   - Note: effect-on-profit shows "—" until `account_type` is populated on TB lines (is_pl_affecting derives from it); aggregate amount vs OM works regardless. All inline JS syntax-checked.
-- ⬜ P3 lock/assembly (reviewer #8)
+- ✅ P3 file assembly window (= reviewer #8). "ISA 230 — File assembly" card in the Conclusion phase (engagement.html, `loadAssemblyStatus`): assembly clock starts at the report date = completion-memo `signed_at`, runs the **60-day** ISA 230 benchmark. Shows days-remaining / lapsed-by countdown + "assemble via Archive" prompt + MENA-agnostic retention note (5-7 yrs per local law). When archived: "assembled & locked — additions only with documented reason (Unarchive)". Builds on existing `archive_engagement`/`unarchive_engagement` (lock + reason-logged reopen) + `engagements.is_archived`. No migration (60d is the benchmark; configurability deferred). Lock is the existing manual partner Archive action — no auto-lock (ISA requires assembly *within* 60d, not a hard cutoff).
+
+## DONE — reviewer #7 (P1+P2+P3) and #8 both closed. Remaining reviewer items: #1 AML/KYC, #2 entity-overview enhance, #5b per-member hours.
 
 ## Assumptions / notes (P1)
 - Adjusted balance = original + Σposted-corrected debit − Σposted-corrected credit (TB treated debit-positive). Balance bar verifies **posted Dr = posted Cr** (true invariant, independent of TB sign convention) rather than adjusted-sum-zero.

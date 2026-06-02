@@ -2375,6 +2375,10 @@
               <p class="text-sm text-muted" style="margin-bottom:20px;">
                 Click a module below to jump straight to it. The Completion Memo covers acceptance/independence/strategy/materiality/risk recap, findings, attestations, going concern, subsequent events, opinion, and EQR — all in one ISA-aligned workpaper.
               </p>
+              <div id="assembly-status-card" style="margin-bottom:20px; padding:14px 16px; border-radius:10px; border:1px solid var(--gray-200); background:var(--gray-50);">
+                <div style="font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:6px;">ISA 230 &mdash; File assembly</div>
+                <div id="assembly-status-body" style="font-size:13px; color:var(--gray-600); line-height:1.6;">Loading&hellip;</div>
+              </div>
               <div style="display:flex; flex-direction:column; gap:8px; max-width:480px;">
                 <a href="completion-memo.html" id="conclusion-link-memo" class="planning-module-row" style="cursor:pointer; text-decoration:none; color:inherit;">
                   <span class="badge badge-in-progress">Active</span>
@@ -3858,6 +3862,7 @@
       if (tab === 'estimates') loadEstimates();
       if (tab === 'confirmations') loadConfirmations();
       if (tab === 'working-tb') loadWorkingTB();
+      if (tab === 'conclusion-home') loadAssemblyStatus();
     }
 
     // ---- Materiality Tab (versioned workpaper, ISA 320) ----
@@ -5157,6 +5162,45 @@
       }
       closeModal('modal-journal');
       await loadWorkingTB();
+    }
+
+    // ---- ISA 230 file assembly window (reviewer #8) ----
+    // The assembly clock starts at the report date (completion-memo sign-off) and runs
+    // for the ISA 230 benchmark of not more than 60 days. The file is LOCKED by the existing
+    // Archive action; this surfaces the window/countdown that should prompt that assembly.
+    async function loadAssemblyStatus() {
+      const body = document.getElementById('assembly-status-body');
+      if (!body) return;
+      const ASSEMBLY_WINDOW_DAYS = 60;
+      const retention = 'Retain the assembled file for the minimum period required by local law (commonly 5-7 years from the report date).';
+
+      if (engagement && engagement.is_archived) {
+        const when = engagement.archived_at ? new Date(engagement.archived_at).toLocaleDateString() : '';
+        body.innerHTML = '<span style="color:#15803D;">&#10003; <strong>File assembled and locked</strong>' + (when ? ' on ' + when : '') + '.</span> Post-assembly changes are additions only and must be logged with a documented reason (use <strong>Unarchive</strong> in the header). ' + retention;
+        return;
+      }
+
+      const { data: memoRows } = await supabaseClient
+        .from('engagement_completion_memo').select('signed_at, status')
+        .eq('engagement_id', engagementId).limit(1);
+      const memo = (memoRows && memoRows[0]) || null;
+
+      if (!memo || !memo.signed_at) {
+        body.innerHTML = 'The assembly clock starts when the Completion Memo is signed (the report date). ISA 230 requires the final file to be assembled <strong>within ' + ASSEMBLY_WINDOW_DAYS + ' days</strong> of the report date. Sign the memo to begin. ' + retention;
+        return;
+      }
+
+      const msDay = 86400000;
+      const reportDate = new Date(memo.signed_at);
+      const deadline = new Date(reportDate.getTime() + ASSEMBLY_WINDOW_DAYS * msDay);
+      const daysLeft = Math.ceil((deadline - new Date()) / msDay);
+      const rd = reportDate.toLocaleDateString();
+      const dl = deadline.toLocaleDateString();
+      if (daysLeft >= 0) {
+        body.innerHTML = '<strong>' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining</strong> in the assembly window. Report date ' + rd + ' &middot; assemble by <strong>' + dl + '</strong> (ISA 230 &mdash; within ' + ASSEMBLY_WINDOW_DAYS + ' days). Use <strong>Archive (ISA 230)</strong> in the header to assemble and lock the file. ' + retention;
+      } else {
+        body.innerHTML = '<span style="color:#B91C1C;">&#9888; <strong>Assembly window lapsed ' + Math.abs(daysLeft) + ' day' + (Math.abs(daysLeft) === 1 ? '' : 's') + ' ago</strong> (due ' + dl + ', report date ' + rd + ').</span> Assemble (archive) the file now &mdash; ISA 230 expects assembly within ' + ASSEMBLY_WINDOW_DAYS + ' days. ' + retention;
+      }
     }
 
     // ---- Upload TB ----
