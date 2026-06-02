@@ -373,6 +373,17 @@
       const sections = sectionsRes.data || [];
       const tbLines = tbRes.data || [];
 
+      // AML / KYC (DNFBP CDD) — for the planning memorandum.
+      let amlCdd = null, amlOwnersRpt = [];
+      {
+        const { data: amlRows } = await supabaseClient.from('engagement_aml_cdd').select('*').eq('engagement_id', engagementId).limit(1);
+        amlCdd = (amlRows && amlRows[0]) || null;
+        if (amlCdd) {
+          const { data: bos } = await supabaseClient.from('engagement_aml_beneficial_owners').select('*').eq('aml_cdd_id', amlCdd.id).order('sort_order');
+          amlOwnersRpt = bos || [];
+        }
+      }
+
       // Working TB journals (ISA 450) — adjusted TB + uncorrected misstatements summary (completion).
       let journalEntries = [], journalLines = [];
       {
@@ -577,6 +588,36 @@
             <tr><th style="width:32%;">Status</th><td>${esc(OB_LABELS[eaccActive.opening_balances_status] || eaccActive.opening_balances_status)}</td></tr>
             ${eaccActive.opening_balances_notes ? `<tr><th>Approach / notes</th><td style="white-space:pre-wrap;">${esc(eaccActive.opening_balances_notes)}</td></tr>` : ''}
           </tbody></table>`;
+        }
+      }
+
+      // AML / KYC — Client Due Diligence (DNFBP)
+      if (reportType === 'planning' && amlCdd) {
+        const RR = { low: 'Low', medium: 'Medium', high: 'High' };
+        const CL = { simplified: 'Simplified', standard: 'Standard', enhanced: 'Enhanced (EDD)' };
+        const CC = { accept: 'Accept — CDD satisfactory', accept_edd: 'Accept with enhanced due diligence', decline: 'Decline / do not proceed' };
+        const yn = (b) => b ? '&#10003;' : '&minus;';
+        html += '<h2>AML / KYC — Client Due Diligence</h2>';
+        html += '<table><tbody>';
+        html += `<tr><th style="width:32%;">Status</th><td>${amlCdd.status === 'confirmed' ? '<span class="badge b-approved">CONFIRMED</span>' : '<span class="badge b-pending">DRAFT</span>'}</td></tr>`;
+        if (amlCdd.cdd_date) html += `<tr><th>CDD date</th><td>${esc(formatDateLong(amlCdd.cdd_date) || '')}</td></tr>`;
+        html += `<tr><th>Client legal name</th><td>${esc(amlCdd.client_legal_name || '—')}</td></tr>`;
+        if (amlCdd.legal_form || amlCdd.registration_number) html += `<tr><th>Legal form / reg. no.</th><td>${esc(amlCdd.legal_form || '—')}${amlCdd.registration_number ? ' &middot; ' + esc(amlCdd.registration_number) : ''}</td></tr>`;
+        if (amlCdd.country || amlCdd.business_activity) html += `<tr><th>Country / activity</th><td>${esc(amlCdd.country || '—')}${amlCdd.business_activity ? ' &middot; ' + esc(amlCdd.business_activity) : ''}</td></tr>`;
+        html += `<tr><th>Ownership structure understood</th><td>${yn(amlCdd.ownership_structure_understood)}</td></tr>`;
+        html += `<tr><th>Screening performed</th><td>${yn(amlCdd.screening_performed)}${amlCdd.screening_date ? ' &middot; ' + esc(formatDateLong(amlCdd.screening_date) || '') : ''}${amlCdd.screening_source ? ' &middot; ' + esc(amlCdd.screening_source) : ''}</td></tr>`;
+        if (amlCdd.screening_results) html += `<tr><th>Screening results</th><td style="white-space:pre-wrap;">${esc(amlCdd.screening_results)}</td></tr>`;
+        html += `<tr><th>PEP involved</th><td>${yn(amlCdd.pep_involved)}${amlCdd.pep_notes ? ' &middot; ' + esc(amlCdd.pep_notes) : ''}</td></tr>`;
+        html += `<tr><th>AML risk rating</th><td>${esc(RR[amlCdd.risk_rating] || '—')}${amlCdd.cdd_level ? ' &middot; CDD level: ' + esc(CL[amlCdd.cdd_level] || amlCdd.cdd_level) : ''}</td></tr>`;
+        if (amlCdd.risk_rationale) html += `<tr><th>Risk rationale</th><td style="white-space:pre-wrap;">${esc(amlCdd.risk_rationale)}</td></tr>`;
+        if (amlCdd.suspicious_activity_flag) html += `<tr><th>Suspicious activity</th><td>Flagged${amlCdd.suspicious_activity_notes ? ' &middot; ' + esc(amlCdd.suspicious_activity_notes) : ''}</td></tr>`;
+        html += `<tr><th>Conclusion</th><td>${esc(CC[amlCdd.conclusion] || '—')}${amlCdd.conclusion_notes ? ' &middot; ' + esc(amlCdd.conclusion_notes) : ''}</td></tr>`;
+        html += `<tr><th>Attestation</th><td>${amlCdd.attestation_made ? ('&#10003; ' + (amlCdd.attestation_date ? esc(formatDateLong(amlCdd.attestation_date) || '') : '')) : '&minus;'}</td></tr>`;
+        html += '</tbody></table>';
+        if (amlOwnersRpt.length) {
+          html += '<h4>Beneficial owners</h4><table><thead><tr><th>Name</th><th style="text-align:right;">%</th><th>Nationality</th><th>PEP</th></tr></thead><tbody>';
+          amlOwnersRpt.forEach(o => { html += `<tr><td>${esc(o.full_name || '—')}</td><td style="text-align:right;">${o.ownership_pct != null ? esc(String(o.ownership_pct)) : '—'}</td><td>${esc(o.nationality || '—')}</td><td>${o.is_pep ? 'Yes' : 'No'}</td></tr>`; });
+          html += '</tbody></table>';
         }
       }
 

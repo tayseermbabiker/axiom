@@ -2256,6 +2256,88 @@
         </div>
       </div>
 
+      <!-- ═══ AML / KYC PANEL (DNFBP CDD — permanent file, pre-acceptance) ═══ -->
+      <div class="tab-panel" id="tab-aml-kyc">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>AML &amp; KYC</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">Client due diligence (audit firms are DNFBPs) — identity, beneficial ownership, screening, AML risk. Permanent file, completed at acceptance. Pro feature.</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span id="aml-status-badge" class="badge" style="display:none;"></span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="aml-pro-blocked" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">AML &amp; KYC is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:8px 0 12px;">DNFBP client due diligence: identity, beneficial ownership, sanctions/PEP screening, AML risk rating, and an acceptance conclusion. Available on Pro.</p>
+              <a href="../index.html#pricing" class="btn btn-primary btn-sm">View Pro pricing</a>
+            </div>
+
+            <div id="aml-readonly-msg" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; padding:12px 14px; border-radius:8px; margin-bottom:16px; font-size:13px; color:#166534;">This AML/KYC workpaper is read-only for your role — the engagement partner maintains it.</div>
+
+            <div id="aml-form-wrap" style="display:none;">
+              <p class="text-sm text-muted" style="margin:0 0 14px;">Performed at client acceptance/continuance and refreshed where the risk changes. Apply your firm's AML/CFT policy and local law; calibrate the depth to the assessed risk (simplified for low-risk, enhanced for higher-risk).</p>
+
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:8px 0 12px;">Client identification</h3>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;"><label class="text-sm">CDD performed on</label><input type="date" id="aml-cdd-date" class="form-control" max="9999-12-31"></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Client legal name</label><input type="text" id="aml-legal-name" class="form-control"></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Legal form</label><input type="text" id="aml-legal-form" class="form-control" placeholder="e.g. LLC, sole establishment, free-zone co."></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Registration / licence no.</label><input type="text" id="aml-reg-number" class="form-control"></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Country</label><input type="text" id="aml-country" class="form-control"></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Business activity</label><input type="text" id="aml-activity" class="form-control"></div>
+              </div>
+              <div class="form-group"><label class="text-sm">Registered address</label><input type="text" id="aml-address" class="form-control"></div>
+
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Beneficial ownership &amp; control</h3>
+              <label class="text-sm" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aml-ubo-understood"> Ownership and control structure understood and documented</label>
+              <div id="aml-owners" style="margin:10px 0;"></div>
+              <button type="button" class="btn btn-outline btn-sm" id="aml-add-owner-btn" onclick="addAmlOwner()">+ Add beneficial owner</button>
+              <div class="form-group" style="margin-top:10px;"><label class="text-sm">Ownership notes</label><textarea id="aml-ownership-notes" class="form-control" rows="2"></textarea></div>
+
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Screening (sanctions / PEP / adverse media)</h3>
+              <label class="text-sm" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aml-screening-performed"> Screening performed</label>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px;">
+                <div class="form-group" style="margin:0;"><label class="text-sm">Screening date</label><input type="date" id="aml-screening-date" class="form-control" max="9999-12-31"></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Source / tool</label><input type="text" id="aml-screening-source" class="form-control" placeholder="e.g. sanctions list, screening provider"></div>
+              </div>
+              <div class="form-group"><label class="text-sm">Screening results &amp; resolution</label><textarea id="aml-screening-results" class="form-control" rows="2" placeholder="Hits found and how resolved, or 'no matches'."></textarea></div>
+              <label class="text-sm" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aml-pep-involved"> A politically exposed person (PEP) is involved</label>
+              <div class="form-group" style="margin-top:10px;"><label class="text-sm">PEP notes</label><textarea id="aml-pep-notes" class="form-control" rows="2"></textarea></div>
+              <div class="form-group"><label class="text-sm">Source of funds / wealth</label><textarea id="aml-sof-notes" class="form-control" rows="2"></textarea></div>
+
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">AML risk rating</h3>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;"><label class="text-sm">Risk rating</label><select id="aml-risk-rating" class="form-control"><option value="">—</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">CDD level</label><select id="aml-cdd-level" class="form-control"><option value="">—</option><option value="simplified">Simplified (low risk)</option><option value="standard">Standard</option><option value="enhanced">Enhanced (EDD)</option></select></div>
+              </div>
+              <div class="form-group"><label class="text-sm">Risk rationale</label><textarea id="aml-risk-rationale" class="form-control" rows="2"></textarea></div>
+
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Suspicious activity</h3>
+              <label class="text-sm" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aml-sar-flag"> Suspicious activity / red flags identified</label>
+              <div class="form-group" style="margin-top:10px;"><label class="text-sm">Notes</label><textarea id="aml-sar-notes" class="form-control" rows="2"></textarea><div style="font-size:11px; color:var(--gray-500); margin-top:4px;">Report suspicious activity to the relevant national authority / FIU in line with local AML law and your firm's policy.</div></div>
+
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Conclusion</h3>
+              <div class="form-group" style="max-width:440px;"><label class="text-sm">AML acceptance conclusion</label><select id="aml-conclusion" class="form-control"><option value="">—</option><option value="accept">Accept — CDD satisfactory</option><option value="accept_edd">Accept with enhanced due diligence</option><option value="decline">Decline / do not proceed</option></select></div>
+              <div class="form-group"><label class="text-sm">Conclusion notes</label><textarea id="aml-conclusion-notes" class="form-control" rows="2"></textarea></div>
+
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Attestation</h3>
+              <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; padding:10px 14px; border:0.5px solid var(--glass-border); border-radius:8px; background:rgba(255,255,255,0.55);"><input type="checkbox" id="aml-attestation" style="margin-top:2px;"><span>I confirm client due diligence has been performed in line with the firm's AML/CFT policy and applicable local law, and the records are retained in the permanent file.</span></label>
+              <div class="form-group" style="max-width:240px; margin-top:10px;"><label class="text-sm">Attestation date</label><input type="date" id="aml-attestation-date" class="form-control" max="9999-12-31"></div>
+
+              <div id="aml-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:16px;"></div>
+              <div id="aml-save-bar" style="display:flex; gap:8px; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--gray-100);">
+                <button class="btn btn-outline btn-sm" onclick="saveAml('draft')">Save draft</button>
+                <button class="btn btn-primary btn-sm" onclick="saveAml('confirmed')">Confirm AML/KYC</button>
+                <span class="text-sm text-muted" id="aml-save-msg" style="margin-left:8px;"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ RISK ASSESSMENT PANEL (ISA 315.27 + ISA 330 + ISA 240) ═══ -->
       <div class="tab-panel" id="tab-risk-assessment">
         <div class="card">
@@ -3675,6 +3757,7 @@
       planning: [
         { label: 'Overview',           tab: 'planning-home'           },
         { label: 'Acceptance',         tab: 'engagement-acceptance'   },
+        { label: 'AML & KYC',          tab: 'aml-kyc'                 },
         { label: 'Engagement letter',  tab: 'engagement-letter'       },
         { label: 'Independence',       tab: 'engagement-independence' },
         { label: 'Audit planning',     tab: 'audit-strategy'          },
@@ -3863,6 +3946,7 @@
       if (tab === 'confirmations') loadConfirmations();
       if (tab === 'working-tb') loadWorkingTB();
       if (tab === 'conclusion-home') loadAssemblyStatus();
+      if (tab === 'aml-kyc') loadAmlKyc();
     }
 
     // ---- Materiality Tab (versioned workpaper, ISA 320) ----
@@ -5162,6 +5246,147 @@
       }
       closeModal('modal-journal');
       await loadWorkingTB();
+    }
+
+    // ---- AML / KYC (DNFBP client due diligence — reviewer #1) ----
+    let amlRow = null;
+    let amlOwners = [];
+
+    function amlIsPro() { return !!(currentOrg && currentOrg.feature_tier === 'pro'); }
+
+    async function loadAmlKyc() {
+      const blocked = document.getElementById('aml-pro-blocked');
+      const form = document.getElementById('aml-form-wrap');
+      const ro = document.getElementById('aml-readonly-msg');
+      const saveBar = document.getElementById('aml-save-bar');
+      if (!amlIsPro()) { if (blocked) blocked.style.display = 'block'; if (form) form.style.display = 'none'; return; }
+      if (blocked) blocked.style.display = 'none';
+      if (form) form.style.display = 'block';
+      const isPartner = currentRole === 'admin';
+
+      const { data: rows } = await supabaseClient.from('engagement_aml_cdd').select('*').eq('engagement_id', engagementId).limit(1);
+      amlRow = (rows && rows[0]) || null;
+      amlOwners = [];
+      if (amlRow) {
+        const { data: bos } = await supabaseClient.from('engagement_aml_beneficial_owners').select('*').eq('aml_cdd_id', amlRow.id).order('sort_order');
+        amlOwners = (bos || []).map(b => ({ full_name: b.full_name || '', ownership_pct: b.ownership_pct, nationality: b.nationality || '', is_pep: !!b.is_pep, notes: b.notes || '' }));
+      }
+      populateAmlForm();
+      renderAmlOwners();
+
+      const badge = document.getElementById('aml-status-badge');
+      if (badge) {
+        if (amlRow && amlRow.status === 'confirmed') { badge.style.display = 'inline-block'; badge.textContent = 'Confirmed'; badge.className = 'badge badge-approved'; }
+        else { badge.style.display = 'none'; }
+      }
+      if (ro) ro.style.display = isPartner ? 'none' : 'block';
+      if (saveBar) saveBar.style.display = isPartner ? 'flex' : 'none';
+      setAmlReadonly(!isPartner);
+    }
+
+    function amlSet(id, val) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.type === 'checkbox') el.checked = !!val; else el.value = (val == null ? '' : val);
+    }
+    function populateAmlForm() {
+      const r = amlRow || {};
+      amlSet('aml-cdd-date', r.cdd_date); amlSet('aml-legal-name', r.client_legal_name); amlSet('aml-legal-form', r.legal_form);
+      amlSet('aml-reg-number', r.registration_number); amlSet('aml-country', r.country); amlSet('aml-activity', r.business_activity);
+      amlSet('aml-address', r.registered_address);
+      amlSet('aml-ubo-understood', r.ownership_structure_understood); amlSet('aml-ownership-notes', r.ownership_notes);
+      amlSet('aml-screening-performed', r.screening_performed); amlSet('aml-screening-date', r.screening_date);
+      amlSet('aml-screening-source', r.screening_source); amlSet('aml-screening-results', r.screening_results);
+      amlSet('aml-pep-involved', r.pep_involved); amlSet('aml-pep-notes', r.pep_notes); amlSet('aml-sof-notes', r.source_of_funds_notes);
+      amlSet('aml-risk-rating', r.risk_rating); amlSet('aml-cdd-level', r.cdd_level); amlSet('aml-risk-rationale', r.risk_rationale);
+      amlSet('aml-sar-flag', r.suspicious_activity_flag); amlSet('aml-sar-notes', r.suspicious_activity_notes);
+      amlSet('aml-conclusion', r.conclusion); amlSet('aml-conclusion-notes', r.conclusion_notes);
+      amlSet('aml-attestation', r.attestation_made); amlSet('aml-attestation-date', r.attestation_date);
+    }
+
+    function setAmlReadonly(ro) {
+      const wrap = document.getElementById('aml-form-wrap');
+      if (!wrap) return;
+      wrap.querySelectorAll('input, textarea, select, button').forEach(el => { el.disabled = ro; });
+    }
+
+    function renderAmlOwners() {
+      const wrap = document.getElementById('aml-owners');
+      if (!wrap) return;
+      const ro = currentRole !== 'admin';
+      if (!amlOwners.length) { wrap.innerHTML = '<div style="font-size:12px; color:var(--gray-500);">No beneficial owners added.</div>'; return; }
+      wrap.innerHTML = amlOwners.map((o, i) =>
+        '<div style="display:grid; grid-template-columns:1fr 90px 1fr 72px 30px; gap:6px; margin-bottom:6px; align-items:center;">' +
+          '<input type="text" class="form-control" placeholder="Full name" value="' + escHtml(o.full_name || '') + '" oninput="onAmlOwner(' + i + ',\'full_name\',this.value)"' + (ro ? ' disabled' : '') + '>' +
+          '<input type="number" class="form-control" placeholder="%" step="0.01" value="' + (o.ownership_pct != null ? o.ownership_pct : '') + '" oninput="onAmlOwner(' + i + ',\'ownership_pct\',this.value)"' + (ro ? ' disabled' : '') + '>' +
+          '<input type="text" class="form-control" placeholder="Nationality" value="' + escHtml(o.nationality || '') + '" oninput="onAmlOwner(' + i + ',\'nationality\',this.value)"' + (ro ? ' disabled' : '') + '>' +
+          '<label class="text-sm" style="display:flex; align-items:center; gap:4px;"><input type="checkbox" ' + (o.is_pep ? 'checked' : '') + ' onchange="onAmlOwner(' + i + ',\'is_pep\',this.checked)"' + (ro ? ' disabled' : '') + '> PEP</label>' +
+          '<button type="button" class="btn btn-outline btn-sm" onclick="removeAmlOwner(' + i + ')"' + (ro ? ' disabled' : '') + '>&times;</button>' +
+        '</div>'
+      ).join('');
+    }
+    function onAmlOwner(i, f, v) { if (!amlOwners[i]) return; amlOwners[i][f] = (f === 'ownership_pct') ? (v === '' ? null : parseFloat(v)) : v; }
+    function addAmlOwner() { amlOwners.push({ full_name: '', ownership_pct: null, nationality: '', is_pep: false, notes: '' }); renderAmlOwners(); }
+    function removeAmlOwner(i) { amlOwners.splice(i, 1); renderAmlOwners(); }
+
+    function showAmlError(m) { const el = document.getElementById('aml-error'); if (el) { el.textContent = m; el.style.display = 'block'; } }
+
+    function collectAmlPayload() {
+      const g = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+      const c = (id) => { const el = document.getElementById(id); return el ? el.checked : false; };
+      return {
+        cdd_date: g('aml-cdd-date') || null, client_legal_name: g('aml-legal-name').trim() || null, legal_form: g('aml-legal-form').trim() || null,
+        registration_number: g('aml-reg-number').trim() || null, country: g('aml-country').trim() || null, business_activity: g('aml-activity').trim() || null,
+        registered_address: g('aml-address').trim() || null,
+        ownership_structure_understood: c('aml-ubo-understood'), ownership_notes: g('aml-ownership-notes').trim() || null,
+        screening_performed: c('aml-screening-performed'), screening_date: g('aml-screening-date') || null, screening_source: g('aml-screening-source').trim() || null, screening_results: g('aml-screening-results').trim() || null,
+        pep_involved: c('aml-pep-involved'), pep_notes: g('aml-pep-notes').trim() || null, source_of_funds_notes: g('aml-sof-notes').trim() || null,
+        risk_rating: g('aml-risk-rating') || null, cdd_level: g('aml-cdd-level') || null, risk_rationale: g('aml-risk-rationale').trim() || null,
+        suspicious_activity_flag: c('aml-sar-flag'), suspicious_activity_notes: g('aml-sar-notes').trim() || null,
+        conclusion: g('aml-conclusion') || null, conclusion_notes: g('aml-conclusion-notes').trim() || null,
+        attestation_made: c('aml-attestation'), attestation_date: g('aml-attestation-date') || null,
+      };
+    }
+
+    async function saveAml(targetStatus) {
+      const errEl = document.getElementById('aml-error'); if (errEl) errEl.style.display = 'none';
+      const payload = collectAmlPayload();
+      payload.status = targetStatus;
+      if (targetStatus === 'confirmed') {
+        if (!payload.client_legal_name) return showAmlError('Client legal name is required to confirm.');
+        if (!payload.risk_rating)       return showAmlError('AML risk rating is required to confirm.');
+        if (!payload.conclusion)        return showAmlError('An acceptance conclusion is required to confirm.');
+        if (!payload.attestation_made)  return showAmlError('Tick the attestation to confirm.');
+        if (!payload.attestation_date)  return showAmlError('Attestation date is required to confirm.');
+      }
+      let amlId = amlRow ? amlRow.id : null;
+      if (amlId) {
+        if (payload.attestation_made && !amlRow.attestation_by) payload.attestation_by = currentUser.id;
+        const { error } = await supabaseClient.from('engagement_aml_cdd').update(payload).eq('id', amlId);
+        if (error) return showAmlError('Save failed: ' + error.message);
+      } else {
+        payload.engagement_id = engagementId; payload.organization_id = currentOrg.id; payload.created_by = currentUser.id;
+        if (payload.attestation_made) payload.attestation_by = currentUser.id;
+        const { data, error } = await supabaseClient.from('engagement_aml_cdd').insert(payload).select('id').single();
+        if (error) return showAmlError('Save failed: ' + error.message);
+        amlId = data.id;
+      }
+      await supabaseClient.from('engagement_aml_beneficial_owners').delete().eq('aml_cdd_id', amlId);
+      const validOwners = amlOwners.filter(o => (o.full_name || '').trim());
+      if (validOwners.length) {
+        const boRows = validOwners.map((o, idx) => ({
+          aml_cdd_id: amlId, organization_id: currentOrg.id, full_name: o.full_name.trim(),
+          ownership_pct: (o.ownership_pct == null || o.ownership_pct === '') ? null : Number(o.ownership_pct),
+          nationality: (o.nationality || '').trim() || null, is_pep: !!o.is_pep, notes: (o.notes || '').trim() || null, sort_order: idx,
+        }));
+        const { error: boErr } = await supabaseClient.from('engagement_aml_beneficial_owners').insert(boRows);
+        if (boErr) return showAmlError('Saved CDD but beneficial owners failed: ' + boErr.message);
+      }
+      if (typeof logActivity === 'function') {
+        try { await logActivity(engagementId, targetStatus === 'confirmed' ? 'confirmed_aml' : 'saved_aml', 'engagement_aml_cdd', amlId, { status: targetStatus }); } catch (e) {}
+      }
+      const msg = document.getElementById('aml-save-msg'); if (msg) msg.textContent = targetStatus === 'confirmed' ? 'Confirmed.' : 'Saved.';
+      await loadAmlKyc();
     }
 
     // ---- ISA 230 file assembly window (reviewer #8) ----
