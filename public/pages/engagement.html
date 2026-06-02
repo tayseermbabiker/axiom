@@ -703,6 +703,126 @@
         </div>
       </div>
 
+      <!-- Working / Adjusted Trial Balance Tab (ISA 450 / ISA 230) -->
+      <div class="tab-panel" id="tab-working-tb">
+        <div id="wtb-pro-blocked" class="card" style="display:none; text-align:center; padding:40px 20px;">
+          <strong style="color:var(--gray-900);">Working Trial Balance is a Pro feature</strong>
+          <p class="text-sm text-muted" style="margin:8px auto 0; max-width:440px; line-height:1.6;">Pass double-entry adjustments and reclassifications (ISA 450) that roll up into an audited trial balance, with a full ISA 230 trail. Available on Pro.</p>
+        </div>
+
+        <div id="wtb-main" style="display:none;">
+          <div class="card">
+            <div class="card-header">
+              <h2>Working / Adjusted Trial Balance</h2>
+              <div style="display:flex; gap:12px; align-items:center;">
+                <label class="text-sm text-muted" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="wtb-only-adjusted" onchange="renderWorkingTB()"> Adjusted accounts only</label>
+                <button class="btn btn-primary btn-sm" id="wtb-new-btn" onclick="openJournalModal()">+ New Journal</button>
+              </div>
+            </div>
+            <div id="wtb-no-tb" style="display:none; padding:20px; color:var(--gray-500); font-size:14px;">Upload a trial balance first (<strong>Trial Balance</strong> tab) — the working TB is built on it.</div>
+            <div id="wtb-balance-bar" style="display:none; padding:8px 20px; font-size:13px; background:var(--gray-50); border-bottom:1px solid var(--gray-200);"></div>
+            <div class="table-wrap" id="wtb-grid-wrap" style="display:none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Code</th><th>Account</th><th>Section</th>
+                    <th style="text-align:right;">Original</th>
+                    <th style="text-align:right;">Dr adj</th>
+                    <th style="text-align:right;">Cr adj</th>
+                    <th style="text-align:right;">Adjusted</th>
+                  </tr>
+                </thead>
+                <tbody id="wtb-grid"></tbody>
+                <tfoot id="wtb-grid-foot"></tfoot>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" id="wtb-journals-card" style="display:none; margin-top:16px;">
+            <div class="card-header">
+              <h2>Adjustments &amp; reclassifications (ISA 450)</h2>
+              <div id="wtb-filter-chips" style="display:flex; gap:6px;"></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th><th>Narration</th><th>Type</th><th>Misstatement</th><th>Status</th>
+                    <th style="text-align:right;">Amount</th><th></th>
+                  </tr>
+                </thead>
+                <tbody id="wtb-journals"></tbody>
+              </table>
+            </div>
+            <div id="wtb-journals-empty" style="display:none; padding:16px 20px; color:var(--gray-500); font-size:14px;">No journals yet. Click <strong>+ New Journal</strong> to pass an adjustment or reclassification.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Journal entry modal (ISA 450 / ISA 230) -->
+      <div class="modal-overlay" id="modal-journal">
+        <div class="modal" style="max-width:680px;">
+          <div class="modal-header">
+            <h3 id="journal-modal-title">New journal entry</h3>
+            <button class="modal-close" onclick="closeModal('modal-journal')">&times;</button>
+          </div>
+          <div class="modal-body">
+            <label class="text-sm" style="font-weight:600;">Double entry</label>
+            <div id="journal-legs" style="margin:6px 0 4px;"></div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addJournalLeg()">+ Add line</button>
+            <div id="journal-balance" style="margin-top:8px; font-size:13px;"></div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:16px;">
+              <div class="form-group" style="margin:0;">
+                <label class="text-sm">Impact *</label>
+                <select id="journal-impact" class="form-control">
+                  <option value="adjustment">Adjustment (P&amp;L / equity)</option>
+                  <option value="reclassification">Reclassification (presentation)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="text-sm">Misstatement type</label>
+                <select id="journal-mtype" class="form-control">
+                  <option value="">—</option>
+                  <option value="factual">Factual</option>
+                  <option value="judgmental">Judgmental (estimate)</option>
+                  <option value="projected">Projected (sampling)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="text-sm">Status *</label>
+                <select id="journal-status" class="form-control">
+                  <option value="proposed">Proposed</option>
+                  <option value="corrected">Corrected (post to adjusted TB)</option>
+                  <option value="uncorrected">Uncorrected</option>
+                  <option value="trivial_excluded">Clearly trivial</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:12px;">
+              <label class="text-sm">Narration *</label>
+              <textarea id="journal-narration" class="form-control" rows="2" placeholder="e.g. To write down slow-moving inventory identified during year-end count."></textarea>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div class="form-group" style="margin:0;">
+                <label class="text-sm">Linked finding</label>
+                <select id="journal-finding" class="form-control"></select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="text-sm">Management response</label>
+                <input type="text" id="journal-mgmt" class="form-control" placeholder="e.g. Agreed / declined + note">
+              </div>
+            </div>
+            <div id="journal-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('modal-journal')">Cancel</button>
+            <button class="btn btn-primary" id="journal-save-btn" onclick="saveJournal()">Save journal</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Findings Tab -->
       <div class="tab-panel" id="tab-findings">
         <div style="margin-bottom:16px;">
@@ -3543,6 +3663,7 @@
       ],
       execution: [
         { label: 'Trial balance',      tab: 'tb'            },
+        { label: 'Working TB',         tab: 'working-tb'    },
         { label: 'Sections',           tab: 'sections'      },
         { label: 'Findings',           tab: 'findings'      },
         { label: 'Estimates',          tab: 'estimates'     },
@@ -3720,6 +3841,7 @@
       if (tab === 'risk-assessment') loadRiskAssessment();
       if (tab === 'estimates') loadEstimates();
       if (tab === 'confirmations') loadConfirmations();
+      if (tab === 'working-tb') loadWorkingTB();
     }
 
     // ---- Materiality Tab (versioned workpaper, ISA 320) ----
@@ -4626,6 +4748,329 @@
           </tr>
         `;
       }).join('');
+    }
+
+    // ---- Working / Adjusted Trial Balance (ISA 450 / ISA 230) ----
+    let wtbEntries = [];      // journal_entries for this engagement
+    let wtbLinesAll = [];     // journal_lines across those entries
+    let wtbModalLegs = [];    // [{tbLineId, debit, credit}] — working legs in the modal
+    let wtbEditId = null;
+    let wtbJournalFilter = 'all';
+
+    function wtbFmt(n) {
+      return (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function wtbIsPro() { return !!(currentOrg && currentOrg.feature_tier === 'pro'); }
+
+    async function loadWorkingTB() {
+      const blocked = document.getElementById('wtb-pro-blocked');
+      const main    = document.getElementById('wtb-main');
+      if (!wtbIsPro()) { if (blocked) blocked.style.display = 'block'; if (main) main.style.display = 'none'; return; }
+      if (blocked) blocked.style.display = 'none';
+      if (main) main.style.display = 'block';
+
+      const noTb     = document.getElementById('wtb-no-tb');
+      const gridWrap = document.getElementById('wtb-grid-wrap');
+      const balBar   = document.getElementById('wtb-balance-bar');
+      const jCard    = document.getElementById('wtb-journals-card');
+
+      if (!tbLines || tbLines.length === 0) {
+        if (noTb) noTb.style.display = 'block';
+        [gridWrap, balBar, jCard].forEach(el => { if (el) el.style.display = 'none'; });
+        return;
+      }
+      if (noTb) noTb.style.display = 'none';
+
+      const { data: entries } = await supabaseClient
+        .from('journal_entries').select('*')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: true });
+      wtbEntries = entries || [];
+
+      if (wtbEntries.length > 0) {
+        const ids = wtbEntries.map(e => e.id);
+        const { data: lines } = await supabaseClient
+          .from('journal_lines').select('*').in('journal_entry_id', ids);
+        wtbLinesAll = lines || [];
+      } else {
+        wtbLinesAll = [];
+      }
+
+      if (gridWrap) gridWrap.style.display = 'block';
+      if (jCard) jCard.style.display = 'block';
+      renderWorkingTB();
+      renderWtbJournals();
+    }
+
+    // Adjusted TB reflects only CORRECTED + posted journals (ISA 450).
+    function wtbPostedLineMap() {
+      const postedIds = new Set(
+        wtbEntries.filter(e => e.isa450_status === 'corrected' && e.is_posted_to_adjusted_tb).map(e => e.id)
+      );
+      const map = {}; // tbLineId -> {debit, credit}
+      for (const ln of wtbLinesAll) {
+        if (!postedIds.has(ln.journal_entry_id) || !ln.trial_balance_line_id) continue;
+        if (!map[ln.trial_balance_line_id]) map[ln.trial_balance_line_id] = { debit: 0, credit: 0 };
+        map[ln.trial_balance_line_id].debit  += Number(ln.debit)  || 0;
+        map[ln.trial_balance_line_id].credit += Number(ln.credit) || 0;
+      }
+      return map;
+    }
+
+    function renderWorkingTB() {
+      const grid = document.getElementById('wtb-grid');
+      const foot = document.getElementById('wtb-grid-foot');
+      const balBar = document.getElementById('wtb-balance-bar');
+      if (!grid) return;
+      const adjMap = wtbPostedLineMap();
+      const onlyAdjEl = document.getElementById('wtb-only-adjusted');
+      const onlyAdj = onlyAdjEl && onlyAdjEl.checked;
+
+      let tOrig = 0, tDr = 0, tCr = 0, tAdj = 0;
+      const rows = [];
+      for (const line of tbLines) {
+        const orig = Number(line.balance) || 0;
+        const a = adjMap[line.id] || { debit: 0, credit: 0 };
+        const adjusted = orig + a.debit - a.credit;
+        tOrig += orig; tDr += a.debit; tCr += a.credit; tAdj += adjusted;
+        const hasAdj = a.debit !== 0 || a.credit !== 0;
+        if (onlyAdj && !hasAdj) continue;
+        const secId = tbToSectionMap[line.id];
+        const sec = secId ? sections.find(s => s.id === secId) : null;
+        rows.push(
+          '<tr' + (hasAdj ? ' style="background:#F0FDF4;"' : '') + '>' +
+            '<td><strong>' + escHtml(line.account_code) + '</strong></td>' +
+            '<td>' + escHtml(line.account_name) + '</td>' +
+            '<td>' + (sec ? '<span class="tb-section-badge">' + escHtml(sec.name) + '</span>' : '<span class="tb-section-badge unassigned">—</span>') + '</td>' +
+            '<td style="text-align:right;">' + wtbFmt(orig) + '</td>' +
+            '<td style="text-align:right; color:' + (a.debit ? '#15803D' : 'var(--gray-300)') + ';">' + (a.debit ? wtbFmt(a.debit) : '—') + '</td>' +
+            '<td style="text-align:right; color:' + (a.credit ? '#B91C1C' : 'var(--gray-300)') + ';">' + (a.credit ? wtbFmt(a.credit) : '—') + '</td>' +
+            '<td style="text-align:right;"><strong>' + wtbFmt(adjusted) + '</strong></td>' +
+          '</tr>'
+        );
+      }
+      grid.innerHTML = rows.join('') || '<tr><td colspan="7" style="padding:16px; color:var(--gray-500);">No accounts to show.</td></tr>';
+      if (foot) foot.innerHTML =
+        '<tr style="border-top:2px solid var(--gray-300); font-weight:600;">' +
+          '<td colspan="3">Totals</td>' +
+          '<td style="text-align:right;">' + wtbFmt(tOrig) + '</td>' +
+          '<td style="text-align:right;">' + wtbFmt(tDr) + '</td>' +
+          '<td style="text-align:right;">' + wtbFmt(tCr) + '</td>' +
+          '<td style="text-align:right;">' + wtbFmt(tAdj) + '</td>' +
+        '</tr>';
+      if (balBar) {
+        // The real invariant is that posted adjustments themselves balance (Dr = Cr),
+        // independent of the original TB's sign convention.
+        const balanced = Math.abs(tDr - tCr) < 0.005;
+        balBar.style.display = 'block';
+        balBar.innerHTML = balanced
+          ? '<span style="color:#15803D;">&#10003; Posted adjustments balance — debits ' + wtbFmt(tDr) + ' = credits ' + wtbFmt(tCr) + '.</span>'
+          : '<span style="color:#B91C1C;">&#9888; Posted adjustments out of balance — Dr ' + wtbFmt(tDr) + ' vs Cr ' + wtbFmt(tCr) + '.</span>';
+      }
+    }
+
+    const WTB_STATUS_BADGE = {
+      proposed:         '<span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:10px;font-size:11px;">Proposed</span>',
+      corrected:        '<span style="background:#DCFCE7;color:#16A34A;padding:2px 8px;border-radius:10px;font-size:11px;">Corrected</span>',
+      uncorrected:      '<span style="background:#FEE2E2;color:#B91C1C;padding:2px 8px;border-radius:10px;font-size:11px;">Uncorrected</span>',
+      trivial_excluded: '<span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:10px;font-size:11px;">Trivial</span>',
+    };
+
+    function renderWtbJournals() {
+      const tbody = document.getElementById('wtb-journals');
+      const empty = document.getElementById('wtb-journals-empty');
+      const chips = document.getElementById('wtb-filter-chips');
+      if (!tbody) return;
+      if (chips) {
+        const opts = [['all','All'],['adjustment','Adjustments'],['reclassification','Reclass'],['uncorrected','Uncorrected']];
+        chips.innerHTML = opts.map(o =>
+          '<button class="btn btn-sm ' + (wtbJournalFilter === o[0] ? 'btn-primary' : 'btn-outline') + '" onclick="wtbSetFilter(\'' + o[0] + '\')">' + o[1] + '</button>'
+        ).join('');
+      }
+      let list = wtbEntries.slice();
+      if (wtbJournalFilter === 'adjustment')        list = list.filter(e => e.impact_type === 'adjustment');
+      else if (wtbJournalFilter === 'reclassification') list = list.filter(e => e.impact_type === 'reclassification');
+      else if (wtbJournalFilter === 'uncorrected')  list = list.filter(e => e.isa450_status === 'uncorrected');
+
+      if (list.length === 0) { tbody.innerHTML = ''; if (empty) empty.style.display = 'block'; return; }
+      if (empty) empty.style.display = 'none';
+
+      tbody.innerHTML = list.map((e, i) => {
+        const legs = wtbLinesAll.filter(l => l.journal_entry_id === e.id);
+        const amt = legs.reduce((s, l) => s + (Number(l.debit) || 0), 0);
+        return '<tr>' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td>' + escHtml(e.description || '—') + '</td>' +
+          '<td>' + (e.impact_type === 'reclassification' ? 'Reclass' : 'Adjustment') + '</td>' +
+          '<td>' + (e.misstatement_type ? escHtml(e.misstatement_type) : '—') + '</td>' +
+          '<td>' + (WTB_STATUS_BADGE[e.isa450_status] || escHtml(e.isa450_status || '')) + '</td>' +
+          '<td style="text-align:right;">' + wtbFmt(amt) + '</td>' +
+          '<td style="text-align:right; white-space:nowrap;"><button class="btn btn-outline btn-sm" onclick="openJournalModal(\'' + e.id + '\')">Edit</button></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function wtbSetFilter(v) { wtbJournalFilter = v; renderWtbJournals(); }
+
+    function wtbBlankLeg() { return { tbLineId: '', debit: 0, credit: 0 }; }
+
+    function openJournalModal(entryId) {
+      if (!wtbIsPro()) return;
+      wtbEditId = entryId || null;
+      const titleEl = document.getElementById('journal-modal-title');
+      const errEl = document.getElementById('journal-error');
+      if (errEl) errEl.style.display = 'none';
+
+      const fSel = document.getElementById('journal-finding');
+      if (fSel) {
+        fSel.innerHTML = '<option value="">— none —</option>' +
+          findings.map(f => '<option value="' + f.id + '">' + escHtml((f.title || 'Finding').slice(0, 60)) + '</option>').join('');
+      }
+
+      if (wtbEditId) {
+        const e = wtbEntries.find(x => x.id === wtbEditId);
+        const legs = wtbLinesAll.filter(l => l.journal_entry_id === wtbEditId).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        if (titleEl) titleEl.textContent = 'Edit journal entry';
+        document.getElementById('journal-impact').value    = e.impact_type || 'adjustment';
+        document.getElementById('journal-mtype').value      = e.misstatement_type || '';
+        document.getElementById('journal-status').value     = e.isa450_status || 'proposed';
+        document.getElementById('journal-narration').value  = e.description || '';
+        document.getElementById('journal-mgmt').value       = e.management_response || '';
+        if (fSel) fSel.value = e.linked_finding_id || '';
+        wtbModalLegs = legs.length
+          ? legs.map(l => ({ tbLineId: l.trial_balance_line_id || '', debit: Number(l.debit) || 0, credit: Number(l.credit) || 0 }))
+          : [wtbBlankLeg(), wtbBlankLeg()];
+      } else {
+        if (titleEl) titleEl.textContent = 'New journal entry';
+        document.getElementById('journal-impact').value    = 'adjustment';
+        document.getElementById('journal-mtype').value      = '';
+        document.getElementById('journal-status').value     = 'proposed';
+        document.getElementById('journal-narration').value  = '';
+        document.getElementById('journal-mgmt').value       = '';
+        if (fSel) fSel.value = '';
+        wtbModalLegs = [wtbBlankLeg(), wtbBlankLeg()];
+      }
+      renderJournalLegs();
+      document.getElementById('modal-journal').classList.add('active');
+    }
+
+    function renderJournalLegs() {
+      const wrap = document.getElementById('journal-legs');
+      if (!wrap) return;
+      const acctOpts = tbLines.map(l => '<option value="' + l.id + '">' + escHtml(l.account_code) + ' — ' + escHtml((l.account_name || '').slice(0, 40)) + '</option>').join('');
+      wrap.innerHTML = wtbModalLegs.map((leg, i) =>
+        '<div style="display:grid; grid-template-columns:1fr 110px 110px 30px; gap:6px; margin-bottom:6px; align-items:center;">' +
+          '<select class="form-control" onchange="onLegField(' + i + ',\'tbLineId\',this.value)"><option value="">— account —</option>' + acctOpts + '</select>' +
+          '<input type="number" class="form-control" step="0.01" placeholder="Debit" value="' + (leg.debit || '') + '" oninput="onLegField(' + i + ',\'debit\',this.value)">' +
+          '<input type="number" class="form-control" step="0.01" placeholder="Credit" value="' + (leg.credit || '') + '" oninput="onLegField(' + i + ',\'credit\',this.value)">' +
+          '<button type="button" class="btn btn-outline btn-sm" onclick="removeJournalLeg(' + i + ')"' + (wtbModalLegs.length <= 2 ? ' disabled' : '') + '>&times;</button>' +
+        '</div>'
+      ).join('');
+      wtbModalLegs.forEach((leg, i) => {
+        const sel = wrap.children[i] && wrap.children[i].querySelector('select');
+        if (sel) sel.value = leg.tbLineId || '';
+      });
+      updateJournalBalance();
+    }
+
+    function onLegField(i, field, val) {
+      if (!wtbModalLegs[i]) return;
+      if (field === 'tbLineId') wtbModalLegs[i].tbLineId = val;
+      else wtbModalLegs[i][field] = parseFloat(val) || 0;
+      updateJournalBalance();
+    }
+    function addJournalLeg() { wtbModalLegs.push(wtbBlankLeg()); renderJournalLegs(); }
+    function removeJournalLeg(i) { if (wtbModalLegs.length > 2) { wtbModalLegs.splice(i, 1); renderJournalLegs(); } }
+
+    function updateJournalBalance() {
+      const el = document.getElementById('journal-balance');
+      const btn = document.getElementById('journal-save-btn');
+      if (!el) return;
+      const dr = wtbModalLegs.reduce((s, l) => s + (Number(l.debit) || 0), 0);
+      const cr = wtbModalLegs.reduce((s, l) => s + (Number(l.credit) || 0), 0);
+      const bothSide = wtbModalLegs.some(l => (Number(l.debit) || 0) > 0 && (Number(l.credit) || 0) > 0);
+      const balanced = Math.abs(dr - cr) < 0.005 && dr > 0 && !bothSide;
+      let msg = 'Debits <strong>' + wtbFmt(dr) + '</strong> &nbsp; Credits <strong>' + wtbFmt(cr) + '</strong> &nbsp; ';
+      if (bothSide) msg += '<span style="color:#B91C1C;">&#9888; each line is a debit OR a credit, not both</span>';
+      else if (balanced) msg += '<span style="color:#15803D;">&#10003; balanced</span>';
+      else msg += '<span style="color:#B91C1C;">&#9888; debits must equal credits</span>';
+      el.innerHTML = msg;
+      if (btn) btn.disabled = !balanced;
+    }
+
+    async function saveJournal() {
+      const errEl = document.getElementById('journal-error');
+      const showErr = (m) => { if (errEl) { errEl.textContent = m; errEl.style.display = 'block'; } };
+      if (errEl) errEl.style.display = 'none';
+
+      const impact    = document.getElementById('journal-impact').value;
+      const mtype     = document.getElementById('journal-mtype').value || null;
+      const status    = document.getElementById('journal-status').value;
+      const narration = document.getElementById('journal-narration').value.trim();
+      const findingId = document.getElementById('journal-finding').value || null;
+      const mgmt      = document.getElementById('journal-mgmt').value.trim() || null;
+
+      const legs = wtbModalLegs.filter(l => l.tbLineId && ((Number(l.debit) || 0) > 0 || (Number(l.credit) || 0) > 0));
+      if (legs.length < 2) return showErr('Add at least two account lines (a debit and a credit).');
+      for (const l of legs) {
+        if ((Number(l.debit) || 0) > 0 && (Number(l.credit) || 0) > 0) return showErr('Each line is either a debit or a credit, not both.');
+      }
+      const dr = legs.reduce((s, l) => s + (Number(l.debit) || 0), 0);
+      const cr = legs.reduce((s, l) => s + (Number(l.credit) || 0), 0);
+      if (Math.abs(dr - cr) >= 0.005 || dr <= 0) return showErr('Debits must equal credits (and be non-zero).');
+      if (!narration) return showErr('Narration is required (ISA 230).');
+
+      const posted = status === 'corrected';
+      const entryPayload = {
+        engagement_id: engagementId,
+        organization_id: currentOrg.id,
+        tb_version_id: currentTbVersion ? currentTbVersion.id : null,
+        description: narration,
+        linked_finding_id: findingId,
+        impact_type: impact,
+        misstatement_type: mtype,
+        isa450_status: status,
+        management_response: mgmt,
+        is_posted_to_adjusted_tb: posted,
+      };
+
+      let entryId = wtbEditId;
+      if (wtbEditId) {
+        const { error } = await supabaseClient.from('journal_entries').update(entryPayload).eq('id', wtbEditId);
+        if (error) return showErr('Could not save: ' + error.message);
+        await supabaseClient.from('journal_lines').delete().eq('journal_entry_id', wtbEditId);
+      } else {
+        entryPayload.prepared_by = currentUser.id;
+        entryPayload.created_by  = currentUser.id;
+        const { data, error } = await supabaseClient.from('journal_entries').insert(entryPayload).select('id').single();
+        if (error) return showErr('Could not save: ' + error.message);
+        entryId = data.id;
+      }
+
+      const linePayload = legs.map((l, idx) => {
+        const tbl = tbLines.find(t => t.id === l.tbLineId);
+        const at = tbl ? tbl.account_type : null;
+        return {
+          journal_entry_id: entryId,
+          organization_id: currentOrg.id,
+          trial_balance_line_id: l.tbLineId,
+          account_code: tbl ? tbl.account_code : null,
+          account_name: tbl ? tbl.account_name : null,
+          account_section_id: tbToSectionMap[l.tbLineId] || null,
+          debit: Number(l.debit) || 0,
+          credit: Number(l.credit) || 0,
+          is_pl_affecting: at ? (at === 'income' || at === 'expense') : null,
+          sort_order: idx,
+        };
+      });
+      const { error: lerr } = await supabaseClient.from('journal_lines').insert(linePayload);
+      if (lerr) return showErr('Saved the header but the lines failed: ' + lerr.message);
+
+      if (typeof logActivity === 'function') {
+        try { await logActivity(engagementId, wtbEditId ? 'updated_journal' : 'created_journal', 'journal_entry', entryId, { impact_type: impact, status: status }); } catch (e) {}
+      }
+      closeModal('modal-journal');
+      await loadWorkingTB();
     }
 
     // ---- Upload TB ----

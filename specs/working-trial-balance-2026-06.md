@@ -20,10 +20,17 @@ Existing `adjusting_entries` (flat, 2-leg, finding-only) is superseded by:
 - **P3:** file assembly lock/reopen window (= reviewer #8): is_locked + reopen_reason/by/at, additions-only after assembly, activity-log diffs.
 
 ## Status
-- ⬜ P1 schema migration
-- ⬜ P1 Screen A / B / C
-- ⬜ P2 SUM
-- ⬜ P3 lock/assembly
+- ✅ P1 schema migration (applied to prod, committed `45ba2c6`)
+- ✅ P1 Screen A — Central Working TB grid (Original | Dr adj | Cr adj | Adjusted, totals, balance bar, "adjusted only" toggle, journals list + filter chips). Placed as a **tab in the Execution phase** right after Trial Balance (NOT Conclusion — that phase is locked until execution completes, but journals are passed during fieldwork). Pro-gated in UI.
+- ✅ P1 Screen C — Journal modal: dynamic multi-leg double entry, **Dr=Cr save-guard** (+ "each line is debit XOR credit"), impact_type / misstatement_type / isa450_status, narration, linked finding, management response. Posts to adjusted TB when status=corrected.
+- ⬜ P1 Screen B — in-section Original/Adj/Adjusted strip + "journals initiated here" (next)
+- ⬜ P2 SUM (Summary of Uncorrected Misstatements vs materiality)
+- ⬜ P3 lock/assembly (reviewer #8)
+
+## Assumptions / notes (P1)
+- Adjusted balance = original + Σposted-corrected debit − Σposted-corrected credit (TB treated debit-positive). Balance bar verifies **posted Dr = posted Cr** (true invariant, independent of TB sign convention) rather than adjusted-sum-zero.
+- Journal legs pick accounts from the uploaded TB (account-precise rollup). "New/off-TB account" support deferred.
+- Section tag on a leg derived from existing `tbToSectionMap` (classification match); `trial_balance_lines.section_id` reserved for the more robust mapping later.
 
 ## Notes
 - Build prod-direct + test with founder org (staging Supabase can't receive the migration via the prod-scoped MCP; prod has ~0 real WTB data anyway).
