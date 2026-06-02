@@ -273,4 +273,7 @@ Perplexity confirmed the existing 11 procedures are lean/proportionate (its fina
 - ENHANCED disclosure procedure to include **IAS 1.122/136-137 significant-judgments** disclosure on close-call GC conclusions.
 GC now 12 procedures. Applied directly to audit-templates.js (staging).
 
-### Pending verification: Related Parties, Journal Entry Testing, Provisions & EoSB, Prepayments & Other Receivables, Cost of Sales.
+### Related Parties — ✅ verified strong, NO change needed
+Perplexity's final set mirrored the current 10 exactly; every suggested "add" (group-package reconciliation, KMP per IAS 24.9/24.17, parent/ultimate controller 24.13, RP-support-for-GC) is already present. No edit.
+
+### Pending verification: Journal Entry Testing, Provisions & EoSB, Prepayments & Other Receivables, Cost of Sales.
