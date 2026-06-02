@@ -373,6 +373,18 @@
       const sections = sectionsRes.data || [];
       const tbLines = tbRes.data || [];
 
+      // Working TB journals (ISA 450) — adjusted TB + uncorrected misstatements summary (completion).
+      let journalEntries = [], journalLines = [];
+      {
+        const { data: jes } = await supabaseClient.from('journal_entries').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: true });
+        journalEntries = jes || [];
+        if (journalEntries.length) {
+          const jids = journalEntries.map(e => e.id);
+          const { data: jls } = await supabaseClient.from('journal_lines').select('*').in('journal_entry_id', jids);
+          journalLines = jls || [];
+        }
+      }
+
       const profiles = {};
       (profilesRes.data || []).forEach(m => {
         if (m.profiles) {
@@ -1598,6 +1610,57 @@
             : `&#10007; <strong>Trial balance is OUT OF BALANCE.</strong> Debits ${totalDebits.toLocaleString(undefined, { minimumFractionDigits: 2 })} &ne; Credits ${totalCredits.toLocaleString(undefined, { minimumFractionDigits: 2 })} (diff ${Math.abs(totalDebits - totalCredits).toLocaleString(undefined, { minimumFractionDigits: 2 })})`
           }
         </div>`;
+      }
+
+      // ===== 5b. ADJUSTED TB + UNCORRECTED MISSTATEMENTS (ISA 450) =====
+      {
+        const f = (n) => (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+        const postedIds = new Set(journalEntries.filter(e => e.isa450_status === 'corrected' && e.is_posted_to_adjusted_tb).map(e => e.id));
+        const adjByLine = {};
+        journalLines.forEach(l => {
+          if (!postedIds.has(l.journal_entry_id) || !l.trial_balance_line_id) return;
+          adjByLine[l.trial_balance_line_id] = (adjByLine[l.trial_balance_line_id] || 0) + (parseFloat(l.debit) || 0) - (parseFloat(l.credit) || 0);
+        });
+        const adjustedLines = tbLines.filter(l => adjByLine[l.id]);
+        if (adjustedLines.length) {
+          html += '<h2>Adjusted Trial Balance (ISA 450)</h2>';
+          html += '<p style="font-size:12px; color:#5b7186;">Accounts affected by posted (corrected) audit adjustments. Original balances are unchanged; adjustments roll up to the audited figures.</p>';
+          html += '<table><thead><tr><th>Code</th><th>Account</th><th style="text-align:right;">Original</th><th style="text-align:right;">Adjustment</th><th style="text-align:right;">Audited</th></tr></thead><tbody>';
+          adjustedLines.forEach(l => {
+            const orig = parseFloat(l.balance) || 0; const net = adjByLine[l.id] || 0;
+            html += `<tr><td>${esc(l.account_code)}</td><td>${esc(l.account_name)}</td><td style="text-align:right;">${f(orig)}</td><td style="text-align:right;">${f(net)}</td><td style="text-align:right; font-weight:600;">${f(orig + net)}</td></tr>`;
+          });
+          html += '</tbody></table>';
+        }
+
+        const uncs = journalEntries.filter(e => e.isa450_status === 'uncorrected');
+        html += '<h2>Summary of Uncorrected Misstatements (ISA 450)</h2>';
+        const om = matActive ? (parseFloat(matActive.overall_materiality) || 0) : 0;
+        if (matActive) {
+          const pm = parseFloat(matActive.performance_materiality_amount) || 0;
+          const triv = parseFloat(matActive.trivial_amount) || 0;
+          html += `<p style="font-size:12px; color:#5b7186;">Overall materiality ${f(om)} &middot; Performance materiality ${f(pm)} &middot; Clearly-trivial ${f(triv)}</p>`;
+        }
+        if (!uncs.length) {
+          html += '<p class="no-data">No uncorrected misstatements — all identified misstatements are corrected or clearly trivial.</p>';
+        } else {
+          let totAmt = 0, totPl = 0;
+          html += '<table><thead><tr><th>#</th><th>Narration</th><th>Type</th><th>Misstatement</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Effect on profit</th></tr></thead><tbody>';
+          uncs.forEach((e, i) => {
+            const legs = journalLines.filter(l => l.journal_entry_id === e.id);
+            const amt = legs.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0);
+            let pl = 0, plKnown = false;
+            legs.forEach(l => { if (l.is_pl_affecting === true) { pl += (parseFloat(l.credit) || 0) - (parseFloat(l.debit) || 0); plKnown = true; } });
+            totAmt += amt; totPl += pl;
+            html += `<tr><td>${i + 1}</td><td>${esc(e.description || '—')}</td><td>${e.impact_type === 'reclassification' ? 'Reclass' : 'Adjustment'}</td><td>${e.misstatement_type ? esc(e.misstatement_type) : '—'}</td><td style="text-align:right;">${f(amt)}</td><td style="text-align:right;">${plKnown ? f(pl) : '—'}</td></tr>`;
+          });
+          html += `<tr style="background:#F5F7FA; font-weight:700; border-top:2px solid #CBD2DF;"><td colspan="4">TOTAL UNCORRECTED</td><td style="text-align:right;">${f(totAmt)}</td><td style="text-align:right;">${f(totPl)}</td></tr>`;
+          html += '</tbody></table>';
+          if (matActive && om > 0) {
+            const below = totAmt < om; const pct = (totAmt / om * 100).toFixed(1);
+            html += `<div style="margin-top:10px; padding:10px 14px; border-radius:6px; font-size:12px; ${below ? 'background:#EDFAF3; color:#065F46; border-left:3px solid #065F46;' : 'background:#FEF0F0; color:#991B1B; border-left:3px solid #991B1B;'}">${below ? '&#10003;' : '&#10007;'} Aggregate uncorrected ${f(totAmt)} = ${pct}% of overall materiality${below ? ' (below materiality).' : ' — EXCEEDS overall materiality; evaluate the effect on the opinion (ISA 450.11).'}</div>`;
+          }
+        }
       }
       } // end if (reportType === 'completion') — wraps ML + CM + TB
 

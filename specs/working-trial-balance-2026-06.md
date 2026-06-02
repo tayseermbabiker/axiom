@@ -24,7 +24,10 @@ Existing `adjusting_entries` (flat, 2-leg, finding-only) is superseded by:
 - ✅ P1 Screen A — Central Working TB grid (Original | Dr adj | Cr adj | Adjusted, totals, balance bar, "adjusted only" toggle, journals list + filter chips). Placed as a **tab in the Execution phase** right after Trial Balance (NOT Conclusion — that phase is locked until execution completes, but journals are passed during fieldwork). Pro-gated in UI.
 - ✅ P1 Screen C — Journal modal: dynamic multi-leg double entry, **Dr=Cr save-guard** (+ "each line is debit XOR credit"), impact_type / misstatement_type / isa450_status, narration, linked finding, management response. Posts to adjusted TB when status=corrected.
 - ✅ P1 Screen B — in `section.html`: "Adjustments (this section)" card with Original/Net adj/Adjusted strip for the section's accounts + "Journals initiated in this section" list + "+ Propose adjustment" modal (pre-tags `source_section_id`; account picker spans the whole engagement TB so contra legs in other sections work). Pro-gated, hidden when section approved. Inline JS syntax-checked.
-- ⬜ P2 SUM (Summary of Uncorrected Misstatements vs materiality) + **completion surfacing**: render adjusted TB read-only in Conclusion phase + Completion PDF (the "falls into completion" piece — capture in execution, conclude/evaluate at completion)
+- ✅ P2 SUM + completion surfacing.
+  - **SUM card on Working TB tab** (engagement.html): uncorrected entries → amount + effect-on-profit (from `is_pl_affecting`), totals, vs active materiality (OM/PM/trivial from `engagement_materiality_versions`), verdict (aggregate vs OM, ISA 450.11). Loads active materiality in `loadWorkingTB`.
+  - **Completion PDF** (report.html, completion report): fetches journals; renders **Adjusted Trial Balance (ISA 450)** (accounts with posted-corrected adjustments: Original/Adjustment/Audited) + **Summary of Uncorrected Misstatements** (table + OM/PM/trivial + aggregate-vs-materiality verdict). This is the "falls into completion" surfacing.
+  - Note: effect-on-profit shows "—" until `account_type` is populated on TB lines (is_pl_affecting derives from it); aggregate amount vs OM works regardless. All inline JS syntax-checked.
 - ⬜ P3 lock/assembly (reviewer #8)
 
 ## Assumptions / notes (P1)
