@@ -1410,17 +1410,17 @@
 
               <!-- Section: reporting considerations (ISA 700 planning-side anticipation) -->
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Reporting considerations (ISA 700)</h3>
-              <p class="text-sm text-muted" style="margin-bottom:8px;">Anticipated reporting at the planning stage. Documented now so any modification risk surfaces early, not at completion.</p>
+              <p class="text-sm text-muted" style="margin-bottom:8px;">Internal planning assumption only &mdash; this is <strong>not</strong> a term of the engagement letter. The letter states solely the objective (to express an opinion on the financial statements). Captured here so any modification risk surfaces early, not at completion.</p>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                 <div class="form-group" style="margin:0;">
-                  <label class="text-sm">Expected report type</label>
+                  <label class="text-sm">Anticipated report type <span class="text-muted">(planning assumption &mdash; not stated in the letter)</span></label>
                   <select id="el-expected-report-type" class="form-control" onchange="markElDirty()">
                     <option value="">-- Not yet determined --</option>
-                    <option value="unmodified">Unmodified opinion (expected)</option>
-                    <option value="qualified">Qualified — modification anticipated</option>
-                    <option value="adverse">Adverse — major issue anticipated</option>
-                    <option value="disclaimer">Disclaimer of opinion</option>
-                    <option value="unknown">Unknown — to be assessed</option>
+                    <option value="unmodified">No modification anticipated</option>
+                    <option value="qualified">Possible qualification — modification risk</option>
+                    <option value="adverse">Possible adverse — major issue risk</option>
+                    <option value="disclaimer">Possible disclaimer — scope-limitation risk</option>
+                    <option value="unknown">To be assessed</option>
                   </select>
                 </div>
                 <div class="form-group" style="margin:0;">
@@ -1547,6 +1547,23 @@
               <div class="form-group" id="ei-fee-safeguards-wrap" style="display:none;">
                 <label class="text-sm">Safeguards (required when fee dependence &gt; 15%)</label>
                 <textarea id="ei-fee-safeguards" class="form-control" rows="2" placeholder="e.g. EQCR review, external consultation, partner rotation policy, disclosure to TCWG"></textarea>
+              </div>
+
+              <!-- Prior-year fees (IESBA — overdue fees = self-interest threat) -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Prior-year fees settled? <span class="text-muted" style="font-weight:400;">(IESBA R410 — overdue fees are a self-interest threat)</span></label>
+                  <select id="ei-prior-fees-status" class="form-control" onchange="document.getElementById('ei-prior-fees-note-wrap').style.display = this.value==='outstanding' ? 'block' : 'none';">
+                    <option value="">— Not yet considered —</option>
+                    <option value="settled">Settled — prior-year fees fully collected before this year's report</option>
+                    <option value="na_first_year">N/A — first-year engagement (no prior-year fees)</option>
+                    <option value="outstanding">Outstanding — prior-year fees not fully settled</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" id="ei-prior-fees-note-wrap" style="display:none;">
+                <label class="text-sm">Overdue-fee threat &amp; safeguard</label>
+                <textarea id="ei-prior-fees-note" class="form-control" rows="2" placeholder="Significant overdue fees can act like a loan to the client (IESBA R410.13 / Section 511). Document the amount/age, the threat evaluation, and the safeguard applied (e.g. require payment before the report is issued, additional reviewer not on the engagement, or consider re-appointment)."></textarea>
               </div>
 
               <!-- Section 3: Partner rotation / long association -->
@@ -1791,16 +1808,16 @@
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Opening balances (ISA 510)</h3>
               <div class="form-group">
                 <label class="text-sm">Status</label>
-                <select id="eacc-opening-balances-status" class="form-control" style="max-width:420px;" onchange="onEaccOpeningBalancesChange()">
+                <select id="eacc-opening-balances-status" class="form-control" style="max-width:480px;" onchange="onEaccOpeningBalancesChange()">
                   <option value="">— Not yet considered —</option>
-                  <option value="na_continuance">N/A — continuance engagement (prior period audited; opening balances are our prior closing)</option>
-                  <option value="verified">Verified — first-year engagement, ISA 510 procedures performed</option>
+                  <option value="na_continuance">Continuance engagement — prior period audited by us; opening balances are our prior closing</option>
+                  <option value="verified">Initial (first-year) engagement — ISA 510 approach planned; opening balances to be verified in fieldwork</option>
                 </select>
               </div>
               <div class="form-group" id="eacc-opening-balances-notes-wrap" style="display:none;">
-                <label class="text-sm">Notes / approach</label>
-                <textarea id="eacc-opening-balances-notes" class="form-control" rows="2" placeholder="For 'verified': describe the approach (predecessor inquiry / alternative procedures / re-audit) and conclusion. For 'N/A': leave blank or note any changes vs prior period."></textarea>
-                <div style="font-size:11px; color:var(--gray-500); margin-top:4px;">ISA 510.A1-A7 — partner documents how comfort was obtained over opening balances in first-year audits.</div>
+                <label class="text-sm">Planned ISA 510 approach</label>
+                <textarea id="eacc-opening-balances-notes" class="form-control" rows="2" placeholder="For an initial engagement: document the planned ISA 510 approach (predecessor inquiry / alternative procedures / re-audit). The verification itself is performed and concluded during fieldwork. For continuance: leave blank or note any changes vs prior period."></textarea>
+                <div style="font-size:11px; color:var(--gray-500); margin-top:4px;">ISA 510.A1-A7 — at planning the partner documents the planned approach; opening-balance verification is performed during fieldwork (execution).</div>
               </div>
 
               <!-- Section: partner attestation -->
@@ -5752,6 +5769,9 @@
       document.getElementById('ei-fee-pct').value               = e.fee_pct_of_firm_total ?? '';
       document.getElementById('ei-fee-band').value              = e.fee_dependence_band || '';
       document.getElementById('ei-fee-safeguards').value        = e.fee_dependence_safeguards || '';
+      document.getElementById('ei-prior-fees-status').value     = e.prior_year_fees_status || '';
+      document.getElementById('ei-prior-fees-note').value       = e.prior_year_fees_note || '';
+      document.getElementById('ei-prior-fees-note-wrap').style.display = (e.prior_year_fees_status === 'outstanding') ? 'block' : 'none';
       document.getElementById('ei-partner-tenure').value        = e.partner_tenure_years ?? '';
       document.getElementById('ei-partner-rotation-required').checked = !!e.partner_rotation_required;
       document.getElementById('ei-rotation-action').value       = e.partner_rotation_action || '';
@@ -5942,6 +5962,8 @@
         fee_pct_of_firm_total:        feePctVal === '' ? null : parseFloat(feePctVal),
         fee_dependence_band:          document.getElementById('ei-fee-band').value || null,
         fee_dependence_safeguards:    document.getElementById('ei-fee-safeguards').value.trim() || null,
+        prior_year_fees_status:       document.getElementById('ei-prior-fees-status').value || null,
+        prior_year_fees_note:         document.getElementById('ei-prior-fees-note').value.trim() || null,
         partner_tenure_years:         tenureVal === '' ? null : parseInt(tenureVal, 10),
         partner_rotation_required:    document.getElementById('ei-partner-rotation-required').checked,
         partner_rotation_action:      document.getElementById('ei-rotation-action').value.trim() || null,
@@ -6374,7 +6396,7 @@
           return;
         }
         if (payload.opening_balances_status === 'verified' && !payload.opening_balances_notes) {
-          showEaccError('Opening balances marked as verified — describe the ISA 510 approach in the notes field.');
+          showEaccError('Initial engagement — document the planned ISA 510 approach for opening balances in the notes field.');
           return;
         }
         if (payload.partner_attestation_made && !payload.partner_attestation_date) {

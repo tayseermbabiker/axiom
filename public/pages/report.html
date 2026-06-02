@@ -557,8 +557,8 @@
         // ISA 510 — opening balances
         if (eaccActive.opening_balances_status) {
           const OB_LABELS = {
-            verified: 'Verified (first-year — ISA 510 procedures performed)',
-            na_continuance: 'N/A (continuance — prior period audited, opening balances are prior closing)',
+            verified: 'Initial (first-year) engagement — ISA 510 approach planned; verified in fieldwork',
+            na_continuance: 'Continuance — prior period audited by us, opening balances are prior closing',
           };
           html += `<h4>Opening balances (ISA 510)</h4>`;
           html += `<table><tbody>
@@ -595,16 +595,16 @@
         // Reporting considerations (ISA 700 planning-side — 2-AI gap-closure item)
         if (elActive.expected_report_type || elActive.modification_risk_notes || elActive.report_delivery_target_date) {
           const REPORT_TYPE_LABELS = {
-            unmodified: 'Unmodified opinion (expected)',
-            qualified:  'Qualified — modification anticipated',
-            adverse:    'Adverse — major issue anticipated',
-            disclaimer: 'Disclaimer of opinion',
-            unknown:    'Unknown — to be assessed'
+            unmodified: 'No modification anticipated',
+            qualified:  'Possible qualification — modification risk',
+            adverse:    'Possible adverse — major issue risk',
+            disclaimer: 'Possible disclaimer — scope-limitation risk',
+            unknown:    'To be assessed'
           };
           const typeLabel = REPORT_TYPE_LABELS[elActive.expected_report_type] || elActive.expected_report_type || '—';
-          html += `<h4>Reporting considerations (ISA 700)</h4>`;
+          html += `<h4>Reporting considerations (ISA 700) <span style="font-weight:400;font-size:11px;color:#888;">— internal planning assumption, not a term of the letter</span></h4>`;
           html += `<table><tbody>
-            <tr><th style="width:32%;">Expected report type</th><td>${esc(typeLabel)}</td></tr>
+            <tr><th style="width:32%;">Anticipated report type</th><td>${esc(typeLabel)}</td></tr>
             ${elActive.report_delivery_target_date ? `<tr><th>Report delivery target</th><td>${formatDateLong(elActive.report_delivery_target_date) || '—'}</td></tr>` : ''}
             ${elActive.modification_risk_notes ? `<tr><th>Modification risk notes</th><td>${esc(elActive.modification_risk_notes)}</td></tr>` : ''}
           </tbody></table>`;
@@ -623,6 +623,8 @@
           <tr><th>Partner attestation</th><td>${eiActive.partner_attestation_made ? '&#10003; ' + (formatDateLong(eiActive.partner_attestation_date) || '') : '&minus;'}</td></tr>
           <tr><th>Fee % of firm total</th><td>${eiActive.fee_pct_of_firm_total != null ? eiActive.fee_pct_of_firm_total + '%' : '—'} ${eiActive.fee_dependence_band ? '<span class="badge b-' + (eiActive.fee_dependence_band === 'high' ? 'high' : 'medium') + '">' + eiActive.fee_dependence_band.toUpperCase() + '</span>' : ''}</td></tr>
           ${eiActive.fee_dependence_safeguards ? `<tr><th>Fee dependence safeguards</th><td>${esc(eiActive.fee_dependence_safeguards)}</td></tr>` : ''}
+          ${eiActive.prior_year_fees_status ? `<tr><th>Prior-year fees</th><td>${esc({settled:'Settled before this year’s report', outstanding:'Outstanding — not fully settled', na_first_year:'N/A — first-year engagement'}[eiActive.prior_year_fees_status] || eiActive.prior_year_fees_status)}${eiActive.prior_year_fees_status === 'outstanding' ? ' <span class="badge b-high">THREAT</span>' : ''}</td></tr>` : ''}
+          ${eiActive.prior_year_fees_note ? `<tr><th>Overdue-fee threat &amp; safeguard</th><td>${esc(eiActive.prior_year_fees_note)}</td></tr>` : ''}
           <tr><th>Partner tenure (years)</th><td>${eiActive.partner_tenure_years != null ? eiActive.partner_tenure_years : '—'} ${eiActive.partner_rotation_required ? '<span class="badge b-medium">ROTATION DUE</span>' : ''}</td></tr>
           ${eiActive.partner_rotation_action ? `<tr><th>Rotation action</th><td>${esc(eiActive.partner_rotation_action)}</td></tr>` : ''}
           <tr><th>Non-audit services</th><td>${eiActive.no_nas_provided ? 'No NAS provided' : (eiNas.length + ' service(s) recorded')}</td></tr>
