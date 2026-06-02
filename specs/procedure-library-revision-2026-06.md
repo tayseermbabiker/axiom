@@ -261,3 +261,16 @@ Note: procedure 9 (facts after report date) is conditional → only when trigger
 ---
 
 ## ALL 12 LOCKED ✅ — ready to batch into public/js/audit-templates.js (forward-only; new engagements only).
+
+---
+
+## Deep-section verification pass (2026-06-02)
+Benchmarking the 6 "already strong" sections too, to be thorough (the partner's GC feedback prompted it).
+
+### Going Concern — ✅ verified strong + 2 small additions
+Perplexity confirmed the existing 11 procedures are lean/proportionate (its final set mirrored the current one). Two genuine additions applied:
+- NEW procedure: where GC relies on **related-party/shareholder/parent financial support** (common in owner-managed SMEs), obtain + evaluate the support (letter of financial support), assess the supporter's ability/intent/enforceability, and disclose (ISA 570/550, IAS 24). Real gap — added.
+- ENHANCED disclosure procedure to include **IAS 1.122/136-137 significant-judgments** disclosure on close-call GC conclusions.
+GC now 12 procedures. Applied directly to audit-templates.js (staging).
+
+### Pending verification: Related Parties, Journal Entry Testing, Provisions & EoSB, Prepayments & Other Receivables, Cost of Sales.
