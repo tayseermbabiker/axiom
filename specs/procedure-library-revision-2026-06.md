@@ -279,4 +279,7 @@ Perplexity's final set mirrored the current 10 exactly; every suggested "add" (g
 ### Provisions & EoSB — ✅ verified + 3 enhancements
 Two genuine gaps added: (1) current vs non-current classification of provisions/EoSB (IAS 1); (2) IAS 37/IAS 1 disclosure test incl. provision reconciliation (opening + additions − utilisations = closing). Plus tightened the EoSB recalc to per-employee + IAS 19 flag for material/long-service. Now 12 procedures. Applied to audit-templates.js (staging).
 
-### Pending verification: Journal Entry Testing, Prepayments & Other Receivables, Cost of Sales.
+### Prepayments & Other Receivables — ✅ verified + 2 gaps added
+Added: (1) search for unrecorded prepayments/other receivables (completeness); (2) disclosure test (IAS 1 nature/amounts/classification/impairment; IFRS 7 if material). Now 12 procedures. Applied to audit-templates.js (staging).
+
+### Pending verification: Journal Entry Testing, Cost of Sales.

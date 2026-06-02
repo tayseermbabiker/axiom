@@ -57,6 +57,8 @@ const PROCEDURE_TEMPLATES = {
     { description: 'Verify classification between current and non-current based on expected recovery period per IAS 1', type: 'test_of_detail' },
     { description: 'Perform analytical review of prepayment balance vs prior period and known contracted commitments', type: 'analytical' },
     { description: 'Review post year-end utilization — confirm prepayments are consumed against valid services or written off if expired', type: 'test_of_detail' },
+    { description: 'Search for unrecorded prepayments/other receivables: review post-year-end invoices, contracts, and payments for amounts that should have been recorded at year-end (completeness)', type: 'test_of_detail' },
+    { description: 'Test disclosure per IAS 1: nature of prepayments and other receivables, amounts, current/non-current classification, and any impairment; apply IFRS 7 where financial receivables are material', type: 'test_of_detail' },
     { description: 'Obtain management representation on existence, recoverability, and classification of other receivables', type: 'other' },
   ],
   'Inventory': [
