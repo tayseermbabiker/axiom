@@ -170,6 +170,8 @@ const PROCEDURE_TEMPLATES = {
     { description: 'Perform monthly analytical review of COS-to-revenue ratio; investigate unusual fluctuations indicating cut-off or recording errors', type: 'analytical' },
     { description: 'For top suppliers by value, obtain supplier confirmation or perform supplier statement reconciliation as alternative procedure', type: 'test_of_detail' },
     { description: 'For foreign-currency purchases, verify exchange rate applied at transaction date per IAS 21', type: 'test_of_detail' },
+    { description: 'Reconcile cost of sales to inventory movements (opening inventory + purchases − closing inventory = COS) and search for unrecorded COS via post-year-end GRNs/invoices (completeness)', type: 'test_of_detail' },
+    { description: 'Test classification and disclosure: COS components (materials, labour, production overheads), inventory write-downs/NRV adjustments recognized within COS (tie to the Inventory section, do not re-test NRV here), costing policy, and expense classification per IAS 2 / IAS 1', type: 'test_of_detail' },
   ],
   'Payroll & HR': [
     { description: 'Test a sample of payroll calculations: recalculate gross pay (contracts/approved rates), statutory + voluntary deductions, employer contributions, net pay; agree to payslips and bank payments (and any statutory wage-protection system, where applicable in the jurisdiction) (IAS 19, ISA 500)', type: 'test_of_detail' },

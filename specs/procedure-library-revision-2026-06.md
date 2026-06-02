@@ -282,4 +282,7 @@ Two genuine gaps added: (1) current vs non-current classification of provisions/
 ### Prepayments & Other Receivables — ✅ verified + 2 gaps added
 Added: (1) search for unrecorded prepayments/other receivables (completeness); (2) disclosure test (IAS 1 nature/amounts/classification/impairment; IFRS 7 if material). Now 12 procedures. Applied to audit-templates.js (staging).
 
-### Pending verification: Journal Entry Testing, Cost of Sales.
+### Cost of Sales — ✅ verified + 2 gaps added
+Added: (1) COS-to-inventory reconciliation (opening + purchases − closing = COS) + unrecorded-COS search (completeness); (2) classification & disclosure (COS components, write-downs recognized in COS [cross-ref Inventory, no re-test], costing policy, expense classification — IAS 2 / IAS 1). Now 12 procedures. Applied to audit-templates.js (staging).
+
+### Pending verification: Journal Entry Testing.
