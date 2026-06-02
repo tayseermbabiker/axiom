@@ -117,14 +117,16 @@ const PROCEDURE_TEMPLATES = {
   ],
   'Provisions & End-of-Service Benefits': [
     { description: 'Obtain HR schedule of all employees as at year-end; reconcile headcount and basic salaries to payroll records', type: 'test_of_detail' },
-    { description: 'Recalculate end-of-service benefit accrual per applicable labour law and entity\'s defined benefit policy; agree calculation methodology to local statute and accounting policy', type: 'test_of_detail' },
+    { description: 'Recalculate end-of-service benefit accrual per applicable labour law and entity\'s defined benefit policy; agree calculation methodology to local statute and accounting policy; recompute for a sample of employees (years of service × salary base × applicable rate). Where the EoSB obligation is material or long-service, consider IAS 19 measurement (actuarial valuation, or a proportionate simplified method for smaller entities)', type: 'test_of_detail' },
     { description: 'Verify the basis used for end-of-service benefits aligns with the legal definition in the applicable jurisdiction (typically basic wage only, excluding allowances)', type: 'test_of_detail' },
     { description: 'Test a sample of joiners and leavers during the period — verify accrual additions and final settlement payouts to settlement records and bank transfers', type: 'test_of_detail' },
     { description: 'Send confirmation requests to entity legal counsel for pending litigation, claims, and assessments at and after year-end', type: 'test_of_detail' },
     { description: 'Evaluate management classification of contingent items under IAS 37 (probable / possible / remote) and corresponding recognition vs disclosure treatment', type: 'other' },
     { description: 'For warranty, restructuring, or onerous contract provisions, test reasonableness of management estimate against historical experience and contractual terms', type: 'test_of_detail' },
     { description: 'Review board minutes, signed contracts, and post-year-end correspondence for undisclosed claims, guarantees, indemnities, or commitments', type: 'test_of_detail' },
-    { description: 'Perform analytical review of EoSB movement (opening + accrual − payments = closing); investigate unusual variances', type: 'analytical' },
+    { description: 'Perform analytical review of EoSB movement (opening + accrual − payments = closing); investigate unusual variances and reconcile to payroll expense', type: 'analytical' },
+    { description: 'Test current vs non-current classification of provisions and EoSB per IAS 1 (amounts expected to be settled within 12 months vs beyond)', type: 'test_of_detail' },
+    { description: 'Test disclosure per IAS 37 / IAS 1: nature of each provision, timing of expected outflows, uncertainties, and amounts, plus the provision reconciliation (opening + additions/charges − utilisations/payments ± remeasurement = closing)', type: 'test_of_detail' },
     { description: 'Obtain written management representation on completeness of provisions, contingent liabilities, and commitments disclosed', type: 'other' },
   ],
   'Equity & Share Capital': [
