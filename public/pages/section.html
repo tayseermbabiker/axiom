@@ -522,6 +522,66 @@
           </div>
         </div>
 
+        <!-- 3A. Adjustments (this section) — Working TB (ISA 450) -->
+        <div class="content-section" id="sec-adjustments">
+          <div class="section-card">
+            <div class="card-header">
+              <h2>Adjustments (this section)</h2>
+              <button class="btn btn-primary btn-sm" id="btn-propose-adj" onclick="openSecJournalModal()" style="display:none;">+ Propose adjustment</button>
+            </div>
+            <div class="card-body">
+              <div id="sec-adj-pro-note" style="display:none; color:var(--gray-500); font-size:13px;">The working trial balance is a Pro feature.</div>
+              <div id="sec-adj-wrap" style="display:none;">
+                <p class="text-sm text-muted" style="margin:0 0 10px;">Original balances stay intact. Adjustments you pass here roll up into the consolidated audited TB (Working TB tab). A journal's contra leg may sit in another section — it still balances centrally.</p>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Code</th><th>Account</th><th style="text-align:right;">Original</th><th style="text-align:right;">Net adj</th><th style="text-align:right;">Adjusted</th></tr></thead>
+                    <tbody id="sec-adj-table"></tbody>
+                  </table>
+                </div>
+                <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:18px 0 8px;">Journals initiated in this section</h3>
+                <div id="sec-adj-journals"></div>
+                <div id="sec-adj-journals-empty" style="color:var(--gray-500); font-size:13px;">No journals initiated here yet.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Journal entry modal — section (ISA 450 / 230) -->
+        <div class="modal-overlay" id="modal-journal-sec">
+          <div class="modal" style="max-width:680px;">
+            <div class="modal-header">
+              <h3 id="journal-sec-modal-title">Propose adjustment</h3>
+              <button class="modal-close" onclick="closeModal('modal-journal-sec')">&times;</button>
+            </div>
+            <div class="modal-body">
+              <label class="text-sm" style="font-weight:600;">Double entry</label>
+              <div id="journal-sec-legs" style="margin:6px 0 4px;"></div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addSecLeg()">+ Add line</button>
+              <div id="journal-sec-balance" style="margin-top:8px; font-size:13px;"></div>
+              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:16px;">
+                <div class="form-group" style="margin:0;"><label class="text-sm">Impact *</label>
+                  <select id="journal-sec-impact" class="form-control"><option value="adjustment">Adjustment (P&amp;L / equity)</option><option value="reclassification">Reclassification (presentation)</option></select></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Misstatement type</label>
+                  <select id="journal-sec-mtype" class="form-control"><option value="">—</option><option value="factual">Factual</option><option value="judgmental">Judgmental (estimate)</option><option value="projected">Projected (sampling)</option></select></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Status *</label>
+                  <select id="journal-sec-status" class="form-control"><option value="proposed">Proposed</option><option value="corrected">Corrected (post to adjusted TB)</option><option value="uncorrected">Uncorrected</option><option value="trivial_excluded">Clearly trivial</option></select></div>
+              </div>
+              <div class="form-group" style="margin-top:12px;"><label class="text-sm">Narration *</label>
+                <textarea id="journal-sec-narration" class="form-control" rows="2" placeholder="e.g. To write down slow-moving inventory identified during testing."></textarea></div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="form-group" style="margin:0;"><label class="text-sm">Linked finding</label><select id="journal-sec-finding" class="form-control"></select></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Management response</label><input type="text" id="journal-sec-mgmt" class="form-control" placeholder="e.g. Agreed / declined + note"></div>
+              </div>
+              <div id="journal-sec-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-outline" onclick="closeModal('modal-journal-sec')">Cancel</button>
+              <button class="btn btn-primary" id="journal-sec-save-btn" onclick="saveSecJournal()">Save journal</button>
+            </div>
+          </div>
+        </div>
+
         <!-- 3B. Engagement-specific risks (ISA 330 — tailoring evidence) -->
         <div class="content-section" id="sec-specific-risks">
           <div class="section-card">
@@ -964,6 +1024,8 @@
         loadFindings(),
         loadReviewNotes()
       ]);
+
+      await loadSectionWorkingTB();
 
       applyApprovedState();
 
@@ -2818,6 +2880,226 @@
     }
 
     // ---- Utilities ----
+    // ---- Working TB — this section (ISA 450 / ISA 230) ----
+    let secAllTb = [];      // all engagement TB lines (modal account picker — contra leg may be off-section)
+    let secEntries = [];    // journal_entries (engagement)
+    let secJLines = [];     // journal_lines
+    let secModalLegs = [];
+    let secEditId = null;
+
+    function secFmt(n) { return (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function secIsPro() { return !!(currentOrg && currentOrg.feature_tier === 'pro'); }
+
+    async function loadSectionWorkingTB() {
+      const card = document.getElementById('sec-adjustments');
+      if (!card) return;
+      const proNote = document.getElementById('sec-adj-pro-note');
+      const wrap = document.getElementById('sec-adj-wrap');
+      const proposeBtn = document.getElementById('btn-propose-adj');
+      if (!secIsPro()) {
+        if (proNote) proNote.style.display = 'block';
+        if (wrap) wrap.style.display = 'none';
+        if (proposeBtn) proposeBtn.style.display = 'none';
+        return;
+      }
+      if (proNote) proNote.style.display = 'none';
+      if (wrap) wrap.style.display = 'block';
+      if (proposeBtn && !isApproved) proposeBtn.style.display = 'inline-flex';
+
+      let q = supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code');
+      if (section.tb_version_id) q = q.eq('tb_version_id', section.tb_version_id);
+      const { data: allTb } = await q;
+      secAllTb = allTb || [];
+
+      const { data: entries } = await supabaseClient.from('journal_entries').select('*')
+        .eq('engagement_id', engagementId).order('created_at', { ascending: true });
+      secEntries = entries || [];
+      if (secEntries.length) {
+        const ids = secEntries.map(e => e.id);
+        const { data: lines } = await supabaseClient.from('journal_lines').select('*').in('journal_entry_id', ids);
+        secJLines = lines || [];
+      } else { secJLines = []; }
+
+      renderSecAdj();
+    }
+
+    function secAdjPostedMap() {
+      const postedIds = new Set(secEntries.filter(e => e.isa450_status === 'corrected' && e.is_posted_to_adjusted_tb).map(e => e.id));
+      const map = {};
+      for (const ln of secJLines) {
+        if (!postedIds.has(ln.journal_entry_id) || !ln.trial_balance_line_id) continue;
+        if (!map[ln.trial_balance_line_id]) map[ln.trial_balance_line_id] = 0;
+        map[ln.trial_balance_line_id] += (Number(ln.debit) || 0) - (Number(ln.credit) || 0);
+      }
+      return map;
+    }
+
+    const SEC_STATUS_BADGE = {
+      proposed: '#FEF3C7|#92400E|Proposed', corrected: '#DCFCE7|#16A34A|Corrected',
+      uncorrected: '#FEE2E2|#B91C1C|Uncorrected', trivial_excluded: '#F1F5F9|#475569|Trivial'
+    };
+    function secBadge(st) {
+      const v = SEC_STATUS_BADGE[st]; if (!v) return escHtml(st || '');
+      const p = v.split('|');
+      return '<span style="background:' + p[0] + ';color:' + p[1] + ';padding:2px 8px;border-radius:10px;font-size:11px;">' + p[2] + '</span>';
+    }
+
+    function renderSecAdj() {
+      const tbody = document.getElementById('sec-adj-table');
+      const adjMap = secAdjPostedMap();
+      if (tbody) {
+        if (!tbLines.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="padding:14px; color:var(--gray-500);">No TB accounts mapped to this section yet.</td></tr>';
+        } else {
+          tbody.innerHTML = tbLines.map(line => {
+            const orig = Number(line.balance) || 0;
+            const net = adjMap[line.id] || 0;
+            const adj = orig + net;
+            return '<tr' + (net !== 0 ? ' style="background:#F0FDF4;"' : '') + '>' +
+              '<td><strong>' + escHtml(line.account_code) + '</strong></td>' +
+              '<td>' + escHtml(line.account_name) + '</td>' +
+              '<td style="text-align:right;">' + secFmt(orig) + '</td>' +
+              '<td style="text-align:right; color:' + (net ? (net > 0 ? '#15803D' : '#B91C1C') : 'var(--gray-300)') + ';">' + (net ? secFmt(net) : '—') + '</td>' +
+              '<td style="text-align:right;"><strong>' + secFmt(adj) + '</strong></td>' +
+            '</tr>';
+          }).join('');
+        }
+      }
+      const jWrap = document.getElementById('sec-adj-journals');
+      const jEmpty = document.getElementById('sec-adj-journals-empty');
+      const here = secEntries.filter(e => e.source_section_id === sectionId);
+      if (jWrap) {
+        if (!here.length) { jWrap.innerHTML = ''; if (jEmpty) jEmpty.style.display = 'block'; }
+        else {
+          if (jEmpty) jEmpty.style.display = 'none';
+          jWrap.innerHTML = here.map(e => {
+            const legs = secJLines.filter(l => l.journal_entry_id === e.id);
+            const amt = legs.reduce((s, l) => s + (Number(l.debit) || 0), 0);
+            return '<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--gray-100);">' +
+              '<div style="flex:1;"><div style="font-size:13px;">' + escHtml(e.description || '—') + '</div>' +
+              '<div style="font-size:11px; color:var(--gray-500);">' + (e.impact_type === 'reclassification' ? 'Reclass' : 'Adjustment') + ' &middot; ' + secFmt(amt) + '</div></div>' +
+              secBadge(e.isa450_status) +
+              (isApproved ? '' : ' <button class="btn btn-outline btn-sm" onclick="openSecJournalModal(\'' + e.id + '\')">Edit</button>') +
+            '</div>';
+          }).join('');
+        }
+      }
+    }
+
+    function secBlankLeg() { return { tbLineId: '', debit: 0, credit: 0 }; }
+
+    function openSecJournalModal(entryId) {
+      if (!secIsPro()) return;
+      secEditId = entryId || null;
+      const err = document.getElementById('journal-sec-error'); if (err) err.style.display = 'none';
+      const fSel = document.getElementById('journal-sec-finding');
+      if (fSel) fSel.innerHTML = '<option value="">— none —</option>' + findings.map(f => '<option value="' + f.id + '">' + escHtml((f.title || 'Finding').slice(0, 60)) + '</option>').join('');
+      if (secEditId) {
+        const e = secEntries.find(x => x.id === secEditId);
+        const legs = secJLines.filter(l => l.journal_entry_id === secEditId).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        document.getElementById('journal-sec-modal-title').textContent = 'Edit journal entry';
+        document.getElementById('journal-sec-impact').value = e.impact_type || 'adjustment';
+        document.getElementById('journal-sec-mtype').value = e.misstatement_type || '';
+        document.getElementById('journal-sec-status').value = e.isa450_status || 'proposed';
+        document.getElementById('journal-sec-narration').value = e.description || '';
+        document.getElementById('journal-sec-mgmt').value = e.management_response || '';
+        if (fSel) fSel.value = e.linked_finding_id || '';
+        secModalLegs = legs.length ? legs.map(l => ({ tbLineId: l.trial_balance_line_id || '', debit: Number(l.debit) || 0, credit: Number(l.credit) || 0 })) : [secBlankLeg(), secBlankLeg()];
+      } else {
+        document.getElementById('journal-sec-modal-title').textContent = 'Propose adjustment';
+        document.getElementById('journal-sec-impact').value = 'adjustment';
+        document.getElementById('journal-sec-mtype').value = '';
+        document.getElementById('journal-sec-status').value = 'proposed';
+        document.getElementById('journal-sec-narration').value = '';
+        document.getElementById('journal-sec-mgmt').value = '';
+        if (fSel) fSel.value = '';
+        secModalLegs = [secBlankLeg(), secBlankLeg()];
+      }
+      renderSecLegs();
+      document.getElementById('modal-journal-sec').classList.add('active');
+    }
+
+    function renderSecLegs() {
+      const wrap = document.getElementById('journal-sec-legs'); if (!wrap) return;
+      const opts = secAllTb.map(l => '<option value="' + l.id + '">' + escHtml(l.account_code) + ' — ' + escHtml((l.account_name || '').slice(0, 40)) + '</option>').join('');
+      wrap.innerHTML = secModalLegs.map((leg, i) =>
+        '<div style="display:grid; grid-template-columns:1fr 110px 110px 30px; gap:6px; margin-bottom:6px; align-items:center;">' +
+          '<select class="form-control" onchange="onSecLegField(' + i + ',\'tbLineId\',this.value)"><option value="">— account —</option>' + opts + '</select>' +
+          '<input type="number" class="form-control" step="0.01" placeholder="Debit" value="' + (leg.debit || '') + '" oninput="onSecLegField(' + i + ',\'debit\',this.value)">' +
+          '<input type="number" class="form-control" step="0.01" placeholder="Credit" value="' + (leg.credit || '') + '" oninput="onSecLegField(' + i + ',\'credit\',this.value)">' +
+          '<button type="button" class="btn btn-outline btn-sm" onclick="removeSecLeg(' + i + ')"' + (secModalLegs.length <= 2 ? ' disabled' : '') + '>&times;</button>' +
+        '</div>'
+      ).join('');
+      secModalLegs.forEach((leg, i) => { const s = wrap.children[i] && wrap.children[i].querySelector('select'); if (s) s.value = leg.tbLineId || ''; });
+      updateSecBalance();
+    }
+    function onSecLegField(i, f, v) { if (!secModalLegs[i]) return; if (f === 'tbLineId') secModalLegs[i].tbLineId = v; else secModalLegs[i][f] = parseFloat(v) || 0; updateSecBalance(); }
+    function addSecLeg() { secModalLegs.push(secBlankLeg()); renderSecLegs(); }
+    function removeSecLeg(i) { if (secModalLegs.length > 2) { secModalLegs.splice(i, 1); renderSecLegs(); } }
+
+    function updateSecBalance() {
+      const el = document.getElementById('journal-sec-balance'); const btn = document.getElementById('journal-sec-save-btn'); if (!el) return;
+      const dr = secModalLegs.reduce((s, l) => s + (Number(l.debit) || 0), 0);
+      const cr = secModalLegs.reduce((s, l) => s + (Number(l.credit) || 0), 0);
+      const both = secModalLegs.some(l => (Number(l.debit) || 0) > 0 && (Number(l.credit) || 0) > 0);
+      const ok = Math.abs(dr - cr) < 0.005 && dr > 0 && !both;
+      let m = 'Debits <strong>' + secFmt(dr) + '</strong> &nbsp; Credits <strong>' + secFmt(cr) + '</strong> &nbsp; ';
+      m += both ? '<span style="color:#B91C1C;">&#9888; each line is a debit OR a credit</span>' : (ok ? '<span style="color:#15803D;">&#10003; balanced</span>' : '<span style="color:#B91C1C;">&#9888; debits must equal credits</span>');
+      el.innerHTML = m; if (btn) btn.disabled = !ok;
+    }
+
+    async function saveSecJournal() {
+      const err = document.getElementById('journal-sec-error');
+      const showErr = (m) => { if (err) { err.textContent = m; err.style.display = 'block'; } }; if (err) err.style.display = 'none';
+      const impact = document.getElementById('journal-sec-impact').value;
+      const mtype = document.getElementById('journal-sec-mtype').value || null;
+      const status = document.getElementById('journal-sec-status').value;
+      const narration = document.getElementById('journal-sec-narration').value.trim();
+      const findingId = document.getElementById('journal-sec-finding').value || null;
+      const mgmt = document.getElementById('journal-sec-mgmt').value.trim() || null;
+      const legs = secModalLegs.filter(l => l.tbLineId && ((Number(l.debit) || 0) > 0 || (Number(l.credit) || 0) > 0));
+      if (legs.length < 2) return showErr('Add at least two account lines (a debit and a credit).');
+      for (const l of legs) { if ((Number(l.debit) || 0) > 0 && (Number(l.credit) || 0) > 0) return showErr('Each line is either a debit or a credit, not both.'); }
+      const dr = legs.reduce((s, l) => s + (Number(l.debit) || 0), 0);
+      const cr = legs.reduce((s, l) => s + (Number(l.credit) || 0), 0);
+      if (Math.abs(dr - cr) >= 0.005 || dr <= 0) return showErr('Debits must equal credits (and be non-zero).');
+      if (!narration) return showErr('Narration is required (ISA 230).');
+      const posted = status === 'corrected';
+      const payload = {
+        engagement_id: engagementId, organization_id: currentOrg.id, tb_version_id: section.tb_version_id || null,
+        description: narration, source_section_id: sectionId, linked_finding_id: findingId,
+        impact_type: impact, misstatement_type: mtype, isa450_status: status, management_response: mgmt,
+        is_posted_to_adjusted_tb: posted,
+      };
+      let entryId = secEditId;
+      if (secEditId) {
+        const { error } = await supabaseClient.from('journal_entries').update(payload).eq('id', secEditId);
+        if (error) return showErr('Could not save: ' + error.message);
+        await supabaseClient.from('journal_lines').delete().eq('journal_entry_id', secEditId);
+      } else {
+        payload.prepared_by = currentUser.id; payload.created_by = currentUser.id;
+        const { data, error } = await supabaseClient.from('journal_entries').insert(payload).select('id').single();
+        if (error) return showErr('Could not save: ' + error.message);
+        entryId = data.id;
+      }
+      const linePayload = legs.map((l, idx) => {
+        const tbl = secAllTb.find(t => t.id === l.tbLineId); const at = tbl ? tbl.account_type : null;
+        return {
+          journal_entry_id: entryId, organization_id: currentOrg.id, trial_balance_line_id: l.tbLineId,
+          account_code: tbl ? tbl.account_code : null, account_name: tbl ? tbl.account_name : null,
+          account_section_id: null, debit: Number(l.debit) || 0, credit: Number(l.credit) || 0,
+          is_pl_affecting: at ? (at === 'income' || at === 'expense') : null, sort_order: idx,
+        };
+      });
+      const { error: lerr } = await supabaseClient.from('journal_lines').insert(linePayload);
+      if (lerr) return showErr('Saved the header but the lines failed: ' + lerr.message);
+      if (typeof logActivity === 'function') {
+        try { await logActivity(engagementId, secEditId ? 'updated_journal' : 'created_journal', 'journal_entry', entryId, { source_section: sectionId, status: status }); } catch (e) {}
+      }
+      closeModal('modal-journal-sec');
+      await loadSectionWorkingTB();
+    }
+
     function closeModal(id) {
       document.getElementById(id).classList.remove('active');
     }

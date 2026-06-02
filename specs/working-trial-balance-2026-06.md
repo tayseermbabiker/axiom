@@ -23,8 +23,8 @@ Existing `adjusting_entries` (flat, 2-leg, finding-only) is superseded by:
 - ✅ P1 schema migration (applied to prod, committed `45ba2c6`)
 - ✅ P1 Screen A — Central Working TB grid (Original | Dr adj | Cr adj | Adjusted, totals, balance bar, "adjusted only" toggle, journals list + filter chips). Placed as a **tab in the Execution phase** right after Trial Balance (NOT Conclusion — that phase is locked until execution completes, but journals are passed during fieldwork). Pro-gated in UI.
 - ✅ P1 Screen C — Journal modal: dynamic multi-leg double entry, **Dr=Cr save-guard** (+ "each line is debit XOR credit"), impact_type / misstatement_type / isa450_status, narration, linked finding, management response. Posts to adjusted TB when status=corrected.
-- ⬜ P1 Screen B — in-section Original/Adj/Adjusted strip + "journals initiated here" (next)
-- ⬜ P2 SUM (Summary of Uncorrected Misstatements vs materiality)
+- ✅ P1 Screen B — in `section.html`: "Adjustments (this section)" card with Original/Net adj/Adjusted strip for the section's accounts + "Journals initiated in this section" list + "+ Propose adjustment" modal (pre-tags `source_section_id`; account picker spans the whole engagement TB so contra legs in other sections work). Pro-gated, hidden when section approved. Inline JS syntax-checked.
+- ⬜ P2 SUM (Summary of Uncorrected Misstatements vs materiality) + **completion surfacing**: render adjusted TB read-only in Conclusion phase + Completion PDF (the "falls into completion" piece — capture in execution, conclude/evaluate at completion)
 - ⬜ P3 lock/assembly (reviewer #8)
 
 ## Assumptions / notes (P1)
