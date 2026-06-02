@@ -285,4 +285,13 @@ Added: (1) search for unrecorded prepayments/other receivables (completeness); (
 ### Cost of Sales — ✅ verified + 2 gaps added
 Added: (1) COS-to-inventory reconciliation (opening + purchases − closing = COS) + unrecorded-COS search (completeness); (2) classification & disclosure (COS components, write-downs recognized in COS [cross-ref Inventory, no re-test], costing policy, expense classification — IAS 2 / IAS 1). Now 12 procedures. Applied to audit-templates.js (staging).
 
-### Pending verification: Journal Entry Testing.
+### Journal Entry Testing — ✅ verified strong, NO change needed
+Perplexity's final 12 mirrored the current 12; every suggested "add" (manual/unusual entries, reversing-entry manipulation check, fraud-risk update, access-rights testing) is already present. No edit.
+
+---
+
+## ✅✅ ALL 19 SECTIONS COMPLETE
+- 12 thin sections: fully rewritten to ISA/IFAC standard.
+- 6 deep sections verified: Going Concern (+2), Provisions & EoSB (+3), Prepayments (+2), Cost of Sales (+2), Related Parties (0), Journal Entry Testing (0).
+- 1 utility section (Out of Scope / Below Materiality): adequate, not benchmarked.
+All on `staging`. Forward-only (new engagements). Merge staging→main to deploy to prod.
