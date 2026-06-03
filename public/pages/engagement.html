@@ -2350,6 +2350,69 @@
         </div>
       </div>
 
+      <!-- ═══ PBC REQUESTS PANEL (ISA 300/500/230 — client document tracker) ═══ -->
+      <div class="tab-panel" id="tab-pbc">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>PBC — Prepared-By-Client requests</h2>
+              <p class="text-sm text-muted" style="margin:4px 0 0;">Track client-provided documents (ISA 500 IPTE). Plan at acceptance, chase through fieldwork. Pro feature.</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn btn-outline btn-sm" id="pbc-seed-btn" style="display:none;" onclick="seedPbc()">Add standard checklist</button>
+              <button class="btn btn-primary btn-sm" id="pbc-add-btn" style="display:none;" onclick="openPbcModal()">+ Add item</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="pbc-pro-blocked" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; padding:20px; border-radius:10px; text-align:center;">
+              <strong style="color:var(--gray-900);">PBC tracker is a Pro feature</strong>
+              <p class="text-sm text-muted" style="margin:8px 0 12px;">Plan and track client-provided documents with status, due dates, evidence links, and IPTE checks. Available on Pro.</p>
+              <a href="../index.html#pricing" class="btn btn-primary btn-sm">View Pro pricing</a>
+            </div>
+            <div id="pbc-main" style="display:none;">
+              <div id="pbc-stats" style="font-size:13px; color:var(--gray-600); margin-bottom:12px;"></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Item</th><th>Area</th><th>Priority</th><th>Due</th><th>Status</th><th>Evidence</th><th></th></tr></thead>
+                  <tbody id="pbc-table"></tbody>
+                </table>
+              </div>
+              <div id="pbc-empty" style="display:none; padding:16px 20px; color:var(--gray-500); font-size:14px;">No PBC items yet. Click <strong>Add standard checklist</strong> to seed common requests, or <strong>+ Add item</strong>.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PBC item modal -->
+      <div class="modal-overlay" id="modal-pbc">
+        <div class="modal" style="max-width:640px;">
+          <div class="modal-header"><h3 id="pbc-modal-title">Add PBC item</h3><button class="modal-close" onclick="closeModal('modal-pbc')">&times;</button></div>
+          <div class="modal-body">
+            <div class="form-group"><label class="text-sm">Item / document *</label><input type="text" id="pbc-description" class="form-control" placeholder="e.g. AR ageing at year-end"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div class="form-group" style="margin:0;"><label class="text-sm">Audit area</label><input type="text" id="pbc-area" class="form-control" placeholder="e.g. Receivables"></div>
+              <div class="form-group" style="margin:0;"><label class="text-sm">Section (optional)</label><select id="pbc-section" class="form-control"></select></div>
+              <div class="form-group" style="margin:0;"><label class="text-sm">Requested from</label><input type="text" id="pbc-requested-from" class="form-control" placeholder="Client contact"></div>
+              <div class="form-group" style="margin:0;"><label class="text-sm">Responsible (our team)</label><input type="text" id="pbc-responsible" class="form-control"></div>
+              <div class="form-group" style="margin:0;"><label class="text-sm">Requested date</label><input type="date" id="pbc-requested-date" class="form-control" max="9999-12-31"></div>
+              <div class="form-group" style="margin:0;"><label class="text-sm">Due date</label><input type="date" id="pbc-due-date" class="form-control" max="9999-12-31"></div>
+              <div class="form-group" style="margin:0;"><label class="text-sm">Status</label><select id="pbc-status" class="form-control"><option value="outstanding">Outstanding</option><option value="requested">Requested</option><option value="received">Received</option><option value="under_review">Under review</option><option value="accepted">Accepted</option><option value="waived">Waived</option></select></div>
+              <div class="form-group" style="margin:0;"><label class="text-sm">Priority</label><select id="pbc-priority" class="form-control"><option value="">—</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+              <div class="form-group" style="margin:0;"><label class="text-sm">Received date</label><input type="date" id="pbc-received-date" class="form-control" max="9999-12-31"></div>
+              <div class="form-group" style="margin:0;"><label class="text-sm">Evidence link</label><input type="url" id="pbc-evidence" class="form-control" placeholder="Drive / OneDrive link"></div>
+            </div>
+            <label class="text-sm" style="display:flex; align-items:center; gap:8px; margin-top:8px;"><input type="checkbox" id="pbc-ipte"> IPTE accuracy &amp; completeness considered (ISA 500)</label>
+            <div class="form-group" style="margin-top:10px;"><label class="text-sm">Notes</label><textarea id="pbc-notes" class="form-control" rows="2"></textarea></div>
+            <div id="pbc-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline" id="pbc-delete-btn" style="display:none; margin-right:auto; color:#dc2626; border-color:#dc2626;" onclick="deletePbcItem()">Delete</button>
+            <button class="btn btn-outline" onclick="closeModal('modal-pbc')">Cancel</button>
+            <button class="btn btn-primary" onclick="savePbcItem()">Save</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ RISK ASSESSMENT PANEL (ISA 315.27 + ISA 330 + ISA 240) ═══ -->
       <div class="tab-panel" id="tab-risk-assessment">
         <div class="card">
@@ -3775,6 +3838,7 @@
         { label: 'Audit planning',     tab: 'audit-strategy'          },
         { label: 'Materiality',        tab: 'materiality'             },
         { label: 'Risk assessment',    tab: 'risk-assessment'         },
+        { label: 'PBC requests',       tab: 'pbc'                     },
       ],
       execution: [
         { label: 'Trial balance',      tab: 'tb'            },
@@ -3783,6 +3847,7 @@
         { label: 'Findings',           tab: 'findings'      },
         { label: 'Estimates',          tab: 'estimates'     },
         { label: 'Confirmations',      tab: 'confirmations' },
+        { label: 'PBC requests',       tab: 'pbc'           },
         { label: 'Financial statements', tab: 'fs'          },
         { label: 'Activity log',       tab: 'activity'      },
       ],
@@ -3959,6 +4024,7 @@
       if (tab === 'working-tb') loadWorkingTB();
       if (tab === 'conclusion-home') loadAssemblyStatus();
       if (tab === 'aml-kyc') loadAmlKyc();
+      if (tab === 'pbc') loadPbc();
     }
 
     // ---- Materiality Tab (versioned workpaper, ISA 320) ----
@@ -5446,6 +5512,176 @@
       }
       const msg = document.getElementById('aml-save-msg'); if (msg) msg.textContent = targetStatus === 'confirmed' ? 'Confirmed.' : 'Saved.';
       await loadAmlKyc();
+    }
+
+    // ---- PBC — Prepared-By-Client request tracker (ISA 300/500/230) ----
+    let pbcItems = [];
+    let pbcEditId = null;
+
+    const PBC_TEMPLATE = [
+      ['General', 'Final trial balance (year-end)', 'high'],
+      ['General', 'General ledger / detailed transactions', 'medium'],
+      ['General', 'Lead schedules by account', 'medium'],
+      ['General', 'Prior-year audited financial statements', 'medium'],
+      ['Cash & Bank', 'Bank statements — all accounts (year-end)', 'high'],
+      ['Cash & Bank', 'Bank reconciliations (year-end)', 'high'],
+      ['Receivables', 'Accounts receivable ageing (year-end)', 'high'],
+      ['Inventory', 'Inventory listing / count sheets', 'high'],
+      ['PPE', 'Fixed asset register (additions & disposals)', 'medium'],
+      ['Payables', 'Accounts payable ageing + supplier statements', 'medium'],
+      ['Revenue', 'Sales listing / cut-off support', 'high'],
+      ['Payroll', 'Payroll summary + end-of-service computation', 'medium'],
+      ['Tax', 'Tax computations / filings', 'low'],
+      ['Provisions', 'Provisions & accruals schedule', 'medium'],
+      ['Equity / Legal', 'Board minutes & legal / confirmation letters', 'medium'],
+      ['Related parties', 'Related-party listing & transactions', 'high'],
+    ];
+    const PBC_STATUS_LABEL = { outstanding: 'Outstanding', requested: 'Requested', received: 'Received', under_review: 'Under review', accepted: 'Accepted', waived: 'Waived' };
+
+    function pbcIsPro() { return !!(currentOrg && currentOrg.feature_tier === 'pro'); }
+
+    async function loadPbc() {
+      const blocked = document.getElementById('pbc-pro-blocked');
+      const main = document.getElementById('pbc-main');
+      const addBtn = document.getElementById('pbc-add-btn');
+      const seedBtn = document.getElementById('pbc-seed-btn');
+      if (!pbcIsPro()) { if (blocked) blocked.style.display = 'block'; if (main) main.style.display = 'none'; if (addBtn) addBtn.style.display = 'none'; if (seedBtn) seedBtn.style.display = 'none'; return; }
+      if (blocked) blocked.style.display = 'none';
+      if (main) main.style.display = 'block';
+      if (addBtn) addBtn.style.display = 'inline-flex';
+
+      const { data } = await supabaseClient.from('engagement_pbc_items').select('*')
+        .eq('engagement_id', engagementId).order('sort_order').order('created_at');
+      pbcItems = data || [];
+      if (seedBtn) seedBtn.style.display = pbcItems.length ? 'none' : 'inline-flex';
+      renderPbc();
+    }
+
+    function pbcPriorityBadge(p) {
+      if (!p) return '—';
+      const c = { high: '#FEE2E2|#B91C1C', medium: '#FEF3C7|#92400E', low: '#F1F5F9|#475569' }[p].split('|');
+      return '<span style="background:' + c[0] + ';color:' + c[1] + ';padding:1px 7px;border-radius:10px;font-size:11px;text-transform:capitalize;">' + p + '</span>';
+    }
+
+    function renderPbc() {
+      const tbody = document.getElementById('pbc-table');
+      const empty = document.getElementById('pbc-empty');
+      const stats = document.getElementById('pbc-stats');
+      if (!tbody) return;
+      if (!pbcItems.length) { tbody.innerHTML = ''; if (empty) empty.style.display = 'block'; if (stats) stats.innerHTML = ''; return; }
+      if (empty) empty.style.display = 'none';
+
+      const open = pbcItems.filter(i => i.status === 'outstanding' || i.status === 'requested').length;
+      const got  = pbcItems.filter(i => i.status === 'received' || i.status === 'under_review' || i.status === 'accepted').length;
+      if (stats) stats.innerHTML = '<strong>' + pbcItems.length + '</strong> items &middot; <span style="color:#B91C1C;">' + open + ' outstanding</span> &middot; <span style="color:#15803D;">' + got + ' received</span>';
+
+      tbody.innerHTML = pbcItems.map(i => {
+        const overdue = i.due_date && (i.status === 'outstanding' || i.status === 'requested') && new Date(i.due_date) < new Date();
+        const statusSel = '<select onchange="updatePbcStatus(\'' + i.id + '\',this.value)" style="font-size:12px; padding:3px 6px; border-radius:6px; border:1px solid var(--gray-200);">' +
+          Object.keys(PBC_STATUS_LABEL).map(s => '<option value="' + s + '"' + (i.status === s ? ' selected' : '') + '>' + PBC_STATUS_LABEL[s] + '</option>').join('') + '</select>';
+        return '<tr>' +
+          '<td>' + escHtml(i.description || '') + (i.ipte_checked ? ' <span title="IPTE accuracy & completeness considered (ISA 500)" style="color:#15803D;">&#10003;</span>' : '') + '</td>' +
+          '<td>' + escHtml(i.audit_area || '—') + '</td>' +
+          '<td>' + pbcPriorityBadge(i.priority) + '</td>' +
+          '<td' + (overdue ? ' style="color:#B91C1C; font-weight:600;"' : '') + '>' + (i.due_date ? new Date(i.due_date).toLocaleDateString() : '—') + '</td>' +
+          '<td>' + statusSel + '</td>' +
+          '<td>' + (i.evidence_url ? '<a href="' + escHtml(i.evidence_url) + '" target="_blank" rel="noopener" style="color:var(--primary); font-size:12px;">Open</a>' : '—') + '</td>' +
+          '<td style="text-align:right;"><button class="btn btn-outline btn-sm" onclick="openPbcModal(\'' + i.id + '\')">Edit</button></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    async function updatePbcStatus(id, status) {
+      const patch = { status };
+      if ((status === 'received' || status === 'accepted')) {
+        const item = pbcItems.find(x => x.id === id);
+        if (item && !item.received_date) patch.received_date = new Date().toISOString().slice(0, 10);
+      }
+      const { error } = await supabaseClient.from('engagement_pbc_items').update(patch).eq('id', id);
+      if (error) { alert('Could not update status: ' + error.message); return; }
+      await loadPbc();
+    }
+
+    function openPbcModal(id) {
+      if (!pbcIsPro()) return;
+      pbcEditId = id || null;
+      const err = document.getElementById('pbc-error'); if (err) err.style.display = 'none';
+      const secSel = document.getElementById('pbc-section');
+      if (secSel) secSel.innerHTML = '<option value="">— none —</option>' + sections.map(s => '<option value="' + s.id + '">' + escHtml(s.name) + '</option>').join('');
+      const delBtn = document.getElementById('pbc-delete-btn');
+      const set = (k, v) => { const el = document.getElementById(k); if (el) { if (el.type === 'checkbox') el.checked = !!v; else el.value = (v == null ? '' : v); } };
+      const item = id ? pbcItems.find(x => x.id === id) : null;
+      document.getElementById('pbc-modal-title').textContent = id ? 'Edit PBC item' : 'Add PBC item';
+      if (delBtn) delBtn.style.display = id ? 'inline-flex' : 'none';
+      set('pbc-description', item ? item.description : '');
+      set('pbc-area', item ? item.audit_area : '');
+      set('pbc-section', item ? item.section_id : '');
+      set('pbc-requested-from', item ? item.requested_from : '');
+      set('pbc-responsible', item ? item.responsible : '');
+      set('pbc-requested-date', item ? item.requested_date : '');
+      set('pbc-due-date', item ? item.due_date : '');
+      set('pbc-status', item ? item.status : 'outstanding');
+      set('pbc-priority', item ? item.priority : '');
+      set('pbc-received-date', item ? item.received_date : '');
+      set('pbc-evidence', item ? item.evidence_url : '');
+      set('pbc-ipte', item ? item.ipte_checked : false);
+      set('pbc-notes', item ? item.notes : '');
+      document.getElementById('modal-pbc').classList.add('active');
+    }
+
+    async function savePbcItem() {
+      const err = document.getElementById('pbc-error');
+      const showErr = (m) => { if (err) { err.textContent = m; err.style.display = 'block'; } };
+      const g = (k) => { const el = document.getElementById(k); return el ? el.value : ''; };
+      const c = (k) => { const el = document.getElementById(k); return el ? el.checked : false; };
+      const description = g('pbc-description').trim();
+      if (!description) return showErr('Item / document is required.');
+      const payload = {
+        description,
+        audit_area: g('pbc-area').trim() || null,
+        section_id: g('pbc-section') || null,
+        requested_from: g('pbc-requested-from').trim() || null,
+        responsible: g('pbc-responsible').trim() || null,
+        requested_date: g('pbc-requested-date') || null,
+        due_date: g('pbc-due-date') || null,
+        status: g('pbc-status') || 'outstanding',
+        priority: g('pbc-priority') || null,
+        received_date: g('pbc-received-date') || null,
+        evidence_url: g('pbc-evidence').trim() || null,
+        ipte_checked: c('pbc-ipte'),
+        notes: g('pbc-notes').trim() || null,
+      };
+      if (pbcEditId) {
+        const { error } = await supabaseClient.from('engagement_pbc_items').update(payload).eq('id', pbcEditId);
+        if (error) return showErr('Save failed: ' + error.message);
+      } else {
+        payload.engagement_id = engagementId; payload.organization_id = currentOrg.id; payload.created_by = currentUser.id;
+        payload.sort_order = pbcItems.length;
+        const { error } = await supabaseClient.from('engagement_pbc_items').insert(payload);
+        if (error) return showErr('Save failed: ' + error.message);
+      }
+      closeModal('modal-pbc');
+      await loadPbc();
+    }
+
+    async function deletePbcItem() {
+      if (!pbcEditId) return;
+      const { error } = await supabaseClient.from('engagement_pbc_items').delete().eq('id', pbcEditId);
+      if (error) { document.getElementById('pbc-error').textContent = 'Delete failed: ' + error.message; document.getElementById('pbc-error').style.display = 'block'; return; }
+      closeModal('modal-pbc');
+      await loadPbc();
+    }
+
+    async function seedPbc() {
+      if (!pbcIsPro()) return;
+      const rows = PBC_TEMPLATE.map((t, idx) => ({
+        engagement_id: engagementId, organization_id: currentOrg.id, created_by: currentUser.id,
+        audit_area: t[0], description: t[1], priority: t[2], status: 'outstanding', sort_order: idx,
+      }));
+      const { error } = await supabaseClient.from('engagement_pbc_items').insert(rows);
+      if (error) { alert('Could not seed checklist: ' + error.message); return; }
+      if (typeof logActivity === 'function') { try { await logActivity(engagementId, 'seeded_pbc', 'engagement_pbc_items', engagementId, { count: rows.length }); } catch (e) {} }
+      await loadPbc();
     }
 
     // ---- ISA 230 file assembly window (reviewer #8) ----
