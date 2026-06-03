@@ -3497,6 +3497,18 @@
         tbLines = data || [];
       }
 
+      // Defensive de-dup: a TB re-imported / replaced more than once can leave
+      // several rows per account_code (across versions, or appended into one).
+      // Collapse to one row per code (keep the first) so the grid, account
+      // pickers and the adjusted-TB math aren't multiplied.
+      const _seenTbCodes = new Set();
+      tbLines = tbLines.filter(l => {
+        const k = l.account_code || ('__id_' + l.id);
+        if (_seenTbCodes.has(k)) return false;
+        _seenTbCodes.add(k);
+        return true;
+      });
+
       buildClassificationMap();
       renderTB();
     }
@@ -5121,12 +5133,16 @@
       const postedIds = new Set(
         wtbEntries.filter(e => e.isa450_status === 'corrected' && e.is_posted_to_adjusted_tb).map(e => e.id)
       );
-      const map = {}; // tbLineId -> {debit, credit}
+      // Key by account_code (not the internal line id) so an adjustment still
+      // posts after the TB is re-imported into a new version / de-duped row.
+      const map = {}; // account_code -> {debit, credit}
       for (const ln of wtbLinesAll) {
-        if (!postedIds.has(ln.journal_entry_id) || !ln.trial_balance_line_id) continue;
-        if (!map[ln.trial_balance_line_id]) map[ln.trial_balance_line_id] = { debit: 0, credit: 0 };
-        map[ln.trial_balance_line_id].debit  += Number(ln.debit)  || 0;
-        map[ln.trial_balance_line_id].credit += Number(ln.credit) || 0;
+        if (!postedIds.has(ln.journal_entry_id)) continue;
+        const key = ln.account_code;
+        if (!key) continue;
+        if (!map[key]) map[key] = { debit: 0, credit: 0 };
+        map[key].debit  += Number(ln.debit)  || 0;
+        map[key].credit += Number(ln.credit) || 0;
       }
       return map;
     }
@@ -5144,7 +5160,7 @@
       const rows = [];
       for (const line of tbLines) {
         const orig = Number(line.balance) || 0;
-        const a = adjMap[line.id] || { debit: 0, credit: 0 };
+        const a = adjMap[line.account_code] || { debit: 0, credit: 0 };
         const adjusted = orig + a.debit - a.credit;
         tOrig += orig; tDr += a.debit; tCr += a.credit; tAdj += adjusted;
         const hasAdj = a.debit !== 0 || a.credit !== 0;
