@@ -725,7 +725,7 @@
               <table>
                 <thead>
                   <tr>
-                    <th>Code</th><th>Account</th><th>Section</th>
+                    <th>Code</th><th>Account</th><th>Section</th><th>Type</th>
                     <th style="text-align:right;">Original</th>
                     <th style="text-align:right;">Dr adj</th>
                     <th style="text-align:right;">Cr adj</th>
@@ -5071,6 +5071,7 @@
             '<td><strong>' + escHtml(line.account_code) + '</strong></td>' +
             '<td>' + escHtml(line.account_name) + '</td>' +
             '<td>' + (sec ? '<span class="tb-section-badge">' + escHtml(sec.name) + '</span>' : '<span class="tb-section-badge unassigned">—</span>') + '</td>' +
+            '<td>' + wtbTypeSelect(line) + '</td>' +
             '<td style="text-align:right;">' + wtbFmt(orig) + '</td>' +
             '<td style="text-align:right; color:' + (a.debit ? '#15803D' : 'var(--gray-300)') + ';">' + (a.debit ? wtbFmt(a.debit) : '—') + '</td>' +
             '<td style="text-align:right; color:' + (a.credit ? '#B91C1C' : 'var(--gray-300)') + ';">' + (a.credit ? wtbFmt(a.credit) : '—') + '</td>' +
@@ -5078,10 +5079,10 @@
           '</tr>'
         );
       }
-      grid.innerHTML = rows.join('') || '<tr><td colspan="7" style="padding:16px; color:var(--gray-500);">No accounts to show.</td></tr>';
+      grid.innerHTML = rows.join('') || '<tr><td colspan="8" style="padding:16px; color:var(--gray-500);">No accounts to show.</td></tr>';
       if (foot) foot.innerHTML =
         '<tr style="border-top:2px solid var(--gray-300); font-weight:600;">' +
-          '<td colspan="3">Totals</td>' +
+          '<td colspan="4">Totals</td>' +
           '<td style="text-align:right;">' + wtbFmt(tOrig) + '</td>' +
           '<td style="text-align:right;">' + wtbFmt(tDr) + '</td>' +
           '<td style="text-align:right;">' + wtbFmt(tCr) + '</td>' +
@@ -5096,6 +5097,22 @@
           ? '<span style="color:#15803D;">&#10003; Posted adjustments balance — debits ' + wtbFmt(tDr) + ' = credits ' + wtbFmt(tCr) + '.</span>'
           : '<span style="color:#B91C1C;">&#9888; Posted adjustments out of balance — Dr ' + wtbFmt(tDr) + ' vs Cr ' + wtbFmt(tCr) + '.</span>';
       }
+    }
+
+    // Inline account-type tagger (asset/liability/equity/income/expense) — lights up the SUM's
+    // effect-on-profit (income/expense = P&L). Tag once; SUM recomputes from the TB line's type.
+    function wtbTypeSelect(line) {
+      const types = ['asset', 'liability', 'equity', 'income', 'expense'];
+      return '<select onchange="updateAccountType(\'' + line.id + '\',this.value)" style="font-size:11px; padding:2px 4px; border:1px solid var(--gray-200); border-radius:4px; max-width:98px;">' +
+        '<option value="">— type —</option>' +
+        types.map(t => '<option value="' + t + '"' + (line.account_type === t ? ' selected' : '') + '>' + t.charAt(0).toUpperCase() + t.slice(1) + '</option>').join('') +
+        '</select>';
+    }
+    async function updateAccountType(lineId, type) {
+      const { error } = await supabaseClient.from('trial_balance_lines').update({ account_type: type || null }).eq('id', lineId);
+      if (error) { alert('Could not set account type: ' + error.message); return; }
+      const tl = tbLines.find(t => t.id === lineId); if (tl) tl.account_type = type || null;
+      renderWtbSum();
     }
 
     const WTB_STATUS_BADGE = {
@@ -5175,7 +5192,11 @@
         const legs = wtbLinesAll.filter(l => l.journal_entry_id === e.id);
         const amt = legs.reduce((s, l) => s + (Number(l.debit) || 0), 0);
         let pl = 0, plKnown = false;
-        legs.forEach(l => { if (l.is_pl_affecting === true) { pl += (Number(l.credit) || 0) - (Number(l.debit) || 0); plKnown = true; } });
+        legs.forEach(l => {
+          const tbl = tbLines.find(t => t.id === l.trial_balance_line_id);
+          const at = tbl ? tbl.account_type : null;
+          if (at === 'income' || at === 'expense') { pl += (Number(l.credit) || 0) - (Number(l.debit) || 0); plKnown = true; }
+        });
         totAmt += amt; totPl += pl;
         return '<tr>' +
           '<td>' + (i + 1) + '</td>' +

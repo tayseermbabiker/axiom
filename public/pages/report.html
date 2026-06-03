@@ -1736,7 +1736,11 @@
             const legs = journalLines.filter(l => l.journal_entry_id === e.id);
             const amt = legs.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0);
             let pl = 0, plKnown = false;
-            legs.forEach(l => { if (l.is_pl_affecting === true) { pl += (parseFloat(l.credit) || 0) - (parseFloat(l.debit) || 0); plKnown = true; } });
+            legs.forEach(l => {
+              const tbl = tbLines.find(t => t.id === l.trial_balance_line_id);
+              const at = tbl ? tbl.account_type : null;
+              if (at === 'income' || at === 'expense') { pl += (parseFloat(l.credit) || 0) - (parseFloat(l.debit) || 0); plKnown = true; }
+            });
             totAmt += amt; totPl += pl;
             html += `<tr><td>${i + 1}</td><td>${esc(e.description || '—')}</td><td>${e.impact_type === 'reclassification' ? 'Reclass' : 'Adjustment'}</td><td>${e.misstatement_type ? esc(e.misstatement_type) : '—'}</td><td style="text-align:right;">${f(amt)}</td><td style="text-align:right;">${plKnown ? f(pl) : '—'}</td></tr>`;
           });
