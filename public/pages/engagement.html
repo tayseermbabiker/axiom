@@ -2283,6 +2283,13 @@
               </div>
               <p class="text-sm text-muted" style="margin:0 0 14px;">Performed at client acceptance/continuance and refreshed where the risk changes. Apply your firm's AML/CFT policy and local law; calibrate the depth to the assessed risk (simplified for low-risk, enhanced for higher-risk).</p>
 
+              <div id="aml-continuance-bar" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:14px;">
+                <div class="form-group" style="margin:0; min-width:240px;"><label class="text-sm">Engagement basis</label>
+                  <select id="aml-cdd-basis" class="form-control" onchange="onAmlBasisChange()"><option value="">—</option><option value="initial">Initial engagement</option><option value="continuance">Continuance (recurring client)</option></select></div>
+                <button type="button" class="btn btn-outline btn-sm" id="aml-carry-btn" style="display:none;" onclick="carryForwardAml()">Carry forward last CDD</button>
+              </div>
+              <label class="text-sm" id="aml-nochange-wrap" style="display:none; align-items:center; gap:8px; margin-bottom:14px;"><input type="checkbox" id="aml-no-changes"> Continuance — I reviewed the carried-forward identity &amp; ownership and confirm no changes since the prior CDD (screening &amp; risk still refreshed below)</label>
+
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:8px 0 12px;">Client identification</h3>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                 <div class="form-group" style="margin:0;"><label class="text-sm">CDD performed on</label><input type="date" id="aml-cdd-date" class="form-control" max="9999-12-31"></div>
@@ -2292,24 +2299,30 @@
                 <div class="form-group" style="margin:0;"><label class="text-sm">Country</label><input type="text" id="aml-country" class="form-control"></div>
                 <div class="form-group" style="margin:0;"><label class="text-sm">Business activity</label><input type="text" id="aml-activity" class="form-control"></div>
               </div>
-              <div class="form-group"><label class="text-sm">Registered address</label><input type="text" id="aml-address" class="form-control"></div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;"><label class="text-sm">Registered address</label><input type="text" id="aml-address" class="form-control"></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Trade licence / registration doc — link</label><input type="url" id="aml-license-link" class="form-control" placeholder="Paste the Drive / OneDrive link"></div>
+              </div>
 
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Beneficial ownership &amp; control</h3>
               <label class="text-sm" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aml-ubo-understood"> Ownership and control structure understood and documented</label>
               <div id="aml-owners" style="margin:10px 0;"></div>
               <button type="button" class="btn btn-outline btn-sm" id="aml-add-owner-btn" onclick="addAmlOwner()">+ Add beneficial owner</button>
-              <div class="form-group" style="margin-top:10px;"><label class="text-sm">Ownership notes</label><textarea id="aml-ownership-notes" class="form-control" rows="2"></textarea></div>
+              <label class="text-sm" style="display:flex; align-items:center; gap:8px; margin-top:12px;"><input type="checkbox" id="aml-high-risk-juris"> A high-risk jurisdiction is involved (ownership, operations, or geography)</label>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px;">
+                <div class="form-group" style="margin:0;"><label class="text-sm">Ownership notes</label><textarea id="aml-ownership-notes" class="form-control" rows="2"></textarea></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Ownership evidence — link</label><input type="url" id="aml-ownership-link" class="form-control" placeholder="Paste the Drive / OneDrive link"></div>
+              </div>
 
-              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Screening (sanctions / PEP / adverse media)</h3>
-              <label class="text-sm" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aml-screening-performed"> Screening performed</label>
+              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Sanctions / PEP screening</h3>
+              <label class="text-sm" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aml-screening-performed"> Screening performed (sanctions / PEP / adverse media)</label>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px;">
                 <div class="form-group" style="margin:0;"><label class="text-sm">Screening date</label><input type="date" id="aml-screening-date" class="form-control" max="9999-12-31"></div>
-                <div class="form-group" style="margin:0;"><label class="text-sm">Source / tool</label><input type="text" id="aml-screening-source" class="form-control" placeholder="e.g. sanctions list, screening provider"></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Tool / source</label><input type="text" id="aml-screening-source" class="form-control" placeholder="e.g. Dow Jones, Refinitiv, public lists, local FIU"></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Result</label><select id="aml-screening-result" class="form-control"><option value="">—</option><option value="clear">Clear — no matches</option><option value="hit_false_positive">Hit — false positive (resolved)</option><option value="hit_true_match">Hit — true match (EDD applied)</option></select></div>
+                <div class="form-group" style="margin:0;"><label class="text-sm">Screening evidence — link</label><input type="url" id="aml-screening-link" class="form-control" placeholder="Paste the Drive / OneDrive link"></div>
               </div>
-              <div class="form-group"><label class="text-sm">Screening results &amp; resolution</label><textarea id="aml-screening-results" class="form-control" rows="2" placeholder="Hits found and how resolved, or 'no matches'."></textarea></div>
-              <label class="text-sm" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aml-pep-involved"> A politically exposed person (PEP) is involved</label>
-              <div class="form-group" style="margin-top:10px;"><label class="text-sm">PEP notes</label><textarea id="aml-pep-notes" class="form-control" rows="2"></textarea></div>
-              <div class="form-group"><label class="text-sm">Source of funds / wealth</label><textarea id="aml-sof-notes" class="form-control" rows="2"></textarea></div>
+              <div class="form-group"><label class="text-sm">Reviewer comments</label><textarea id="aml-screening-results" class="form-control" rows="2" placeholder="Optional — how any hit was resolved."></textarea></div>
 
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">AML risk rating</h3>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -2317,10 +2330,6 @@
                 <div class="form-group" style="margin:0;"><label class="text-sm">CDD level</label><select id="aml-cdd-level" class="form-control"><option value="">—</option><option value="simplified">Simplified (low risk)</option><option value="standard">Standard</option><option value="enhanced">Enhanced (EDD)</option></select></div>
               </div>
               <div class="form-group"><label class="text-sm">Risk rationale</label><textarea id="aml-risk-rationale" class="form-control" rows="2"></textarea></div>
-
-              <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Suspicious activity</h3>
-              <label class="text-sm" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aml-sar-flag"> Suspicious activity / red flags identified</label>
-              <div class="form-group" style="margin-top:10px;"><label class="text-sm">Notes</label><textarea id="aml-sar-notes" class="form-control" rows="2"></textarea><div style="font-size:11px; color:var(--gray-500); margin-top:4px;">Report suspicious activity to the relevant national authority / FIU in line with local AML law and your firm's policy.</div></div>
 
               <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px;">Conclusion</h3>
               <div class="form-group" style="max-width:440px;"><label class="text-sm">AML acceptance conclusion</label><select id="aml-conclusion" class="form-control"><option value="">—</option><option value="accept">Accept — CDD satisfactory</option><option value="accept_edd">Accept with enhanced due diligence</option><option value="decline">Decline / do not proceed</option></select></div>
@@ -5254,6 +5263,7 @@
     // ---- AML / KYC (DNFBP client due diligence — reviewer #1) ----
     let amlRow = null;
     let amlOwners = [];
+    let amlCarriedFrom = null;   // id of the prior CDD this one was carried forward from
 
     function amlIsPro() { return !!(currentOrg && currentOrg.feature_tier === 'pro'); }
 
@@ -5300,11 +5310,52 @@
       amlSet('aml-ubo-understood', r.ownership_structure_understood); amlSet('aml-ownership-notes', r.ownership_notes);
       amlSet('aml-screening-performed', r.screening_performed); amlSet('aml-screening-date', r.screening_date);
       amlSet('aml-screening-source', r.screening_source); amlSet('aml-screening-results', r.screening_results);
-      amlSet('aml-pep-involved', r.pep_involved); amlSet('aml-pep-notes', r.pep_notes); amlSet('aml-sof-notes', r.source_of_funds_notes);
       amlSet('aml-risk-rating', r.risk_rating); amlSet('aml-cdd-level', r.cdd_level); amlSet('aml-risk-rationale', r.risk_rationale);
-      amlSet('aml-sar-flag', r.suspicious_activity_flag); amlSet('aml-sar-notes', r.suspicious_activity_notes);
       amlSet('aml-conclusion', r.conclusion); amlSet('aml-conclusion-notes', r.conclusion_notes);
       amlSet('aml-attestation', r.attestation_made); amlSet('aml-attestation-date', r.attestation_date);
+      // v2 fields
+      amlSet('aml-cdd-basis', r.cdd_basis); amlSet('aml-no-changes', r.no_changes_confirmed);
+      amlSet('aml-license-link', r.license_evidence_url); amlSet('aml-ownership-link', r.ownership_evidence_url);
+      amlSet('aml-high-risk-juris', r.high_risk_jurisdiction);
+      amlSet('aml-screening-result', r.screening_result); amlSet('aml-screening-link', r.screening_evidence_url);
+      amlCarriedFrom = r.carried_forward_from || null;
+      onAmlBasisChange();
+    }
+
+    function onAmlBasisChange() {
+      const basisEl = document.getElementById('aml-cdd-basis');
+      const cont = basisEl && basisEl.value === 'continuance';
+      const carryBtn = document.getElementById('aml-carry-btn');
+      const noChangeWrap = document.getElementById('aml-nochange-wrap');
+      if (carryBtn) carryBtn.style.display = (cont && currentRole === 'admin') ? 'inline-flex' : 'none';
+      if (noChangeWrap) noChangeWrap.style.display = cont ? 'flex' : 'none';
+    }
+
+    // Continuance: copy identity + beneficial owners from this client's most recent CDD.
+    // Carries forward the permanent-file data; the auditor still re-screens + re-attests.
+    async function carryForwardAml() {
+      if (!engagement || !engagement.client_name) { showAmlError('No client name on this engagement to match a prior CDD.'); return; }
+      const { data: priorEngs } = await supabaseClient.from('engagements')
+        .select('id').eq('organization_id', currentOrg.id).eq('client_name', engagement.client_name).neq('id', engagementId);
+      const ids = (priorEngs || []).map(e => e.id);
+      if (!ids.length) { showAmlError('No prior engagement for this client to carry forward from.'); return; }
+      const { data: priors } = await supabaseClient.from('engagement_aml_cdd')
+        .select('*').in('engagement_id', ids).order('created_at', { ascending: false });
+      const prior = (priors || []).find(p => p.status === 'confirmed') || (priors || [])[0];
+      if (!prior) { showAmlError('No prior CDD found for this client.'); return; }
+
+      amlSet('aml-legal-name', prior.client_legal_name); amlSet('aml-legal-form', prior.legal_form); amlSet('aml-reg-number', prior.registration_number);
+      amlSet('aml-country', prior.country); amlSet('aml-activity', prior.business_activity); amlSet('aml-address', prior.registered_address);
+      amlSet('aml-license-link', prior.license_evidence_url); amlSet('aml-ownership-link', prior.ownership_evidence_url);
+      amlSet('aml-high-risk-juris', prior.high_risk_jurisdiction); amlSet('aml-ubo-understood', prior.ownership_structure_understood);
+      amlSet('aml-ownership-notes', prior.ownership_notes);
+
+      const { data: bos } = await supabaseClient.from('engagement_aml_beneficial_owners').select('*').eq('aml_cdd_id', prior.id).order('sort_order');
+      amlOwners = (bos || []).map(b => ({ full_name: b.full_name || '', ownership_pct: b.ownership_pct, nationality: b.nationality || '', is_pep: !!b.is_pep, notes: b.notes || '' }));
+      renderAmlOwners();
+      amlCarriedFrom = prior.id;
+      const msg = document.getElementById('aml-save-msg');
+      if (msg) msg.textContent = 'Carried forward from prior CDD — review identity & owners, tick "no changes", then re-screen and re-attest.';
     }
 
     function setAmlReadonly(ro) {
@@ -5343,11 +5394,16 @@
         registered_address: g('aml-address').trim() || null,
         ownership_structure_understood: c('aml-ubo-understood'), ownership_notes: g('aml-ownership-notes').trim() || null,
         screening_performed: c('aml-screening-performed'), screening_date: g('aml-screening-date') || null, screening_source: g('aml-screening-source').trim() || null, screening_results: g('aml-screening-results').trim() || null,
-        pep_involved: c('aml-pep-involved'), pep_notes: g('aml-pep-notes').trim() || null, source_of_funds_notes: g('aml-sof-notes').trim() || null,
         risk_rating: g('aml-risk-rating') || null, cdd_level: g('aml-cdd-level') || null, risk_rationale: g('aml-risk-rationale').trim() || null,
-        suspicious_activity_flag: c('aml-sar-flag'), suspicious_activity_notes: g('aml-sar-notes').trim() || null,
         conclusion: g('aml-conclusion') || null, conclusion_notes: g('aml-conclusion-notes').trim() || null,
         attestation_made: c('aml-attestation'), attestation_date: g('aml-attestation-date') || null,
+        cdd_basis: g('aml-cdd-basis') || null, no_changes_confirmed: c('aml-no-changes'),
+        high_risk_jurisdiction: c('aml-high-risk-juris'),
+        screening_result: g('aml-screening-result') || null,
+        screening_evidence_url: g('aml-screening-link').trim() || null,
+        license_evidence_url: g('aml-license-link').trim() || null,
+        ownership_evidence_url: g('aml-ownership-link').trim() || null,
+        carried_forward_from: amlCarriedFrom,
       };
     }
 
