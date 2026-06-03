@@ -386,7 +386,7 @@
 
       <!-- Status tiles -->
       <div class="tiles-row" id="tiles-row" style="display:none;">
-        <div class="tile tile-active active-tile" data-filter="active" onclick="switchTab('active')">
+        <div class="tile tile-active" data-filter="active" onclick="switchTab('active')">
           <div class="tile-label">Active</div>
           <div class="tile-value" id="tile-active-value">0</div>
           <div class="tile-hint" id="tile-active-hint">engagements in progress</div>
@@ -409,18 +409,13 @@
       </div>
 
       <!-- Filter bar -->
-      <div class="filter-bar" id="filter-bar" style="display:none;">
-        <div class="tabs" id="tabs">
-          <button class="tab-btn active" data-tab="active" onclick="switchTab('active')">Active <span class="tab-count" id="count-active">0</span></button>
-          <button class="tab-btn" data-tab="completed" onclick="switchTab('completed')">Closed <span class="tab-count" id="count-completed">0</span></button>
-          <button class="tab-btn" data-tab="archived" onclick="switchTab('archived')">Archived <span class="tab-count" id="count-archived">0</span></button>
-          <button class="tab-btn" data-tab="all" onclick="switchTab('all')">All <span class="tab-count" id="count-all">0</span></button>
-        </div>
+      <div class="filter-bar" id="filter-bar" style="display:none; justify-content:flex-end;">
         <div class="right-controls">
           <div class="search-wrap">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="search-input" placeholder="Search client..." oninput="applySearch()">
           </div>
+          <select id="year-filter" onchange="applyYearFilter()" title="Filter by year" style="padding:7px 30px 7px 12px; border:1px solid var(--gray-300); border-radius:8px; font-size:13px; background:white; cursor:pointer; color:var(--gray-800);"></select>
         </div>
       </div>
 
@@ -524,9 +519,9 @@
 
     // In-memory store for engagements + computed fields
     let allEngagements = [];          // each row: { ...engagement, _phase, _pct, _approved, _totalSections, _openFindings, _doneProcs, _totalProcs, _reviewSections }
-    let currentTab = 'active';
+    let currentTab = 'all';   // tiles act as the status filter; default shows everything
     let currentSearch = '';
-    let currentFY = 'all';   // fiscal-year filter (default set to latest FY on load)
+    let currentFY = 'all';    // year filter (next to search); 'all' = every year
 
     async function init() {
       currentUser = await requireAuth();
@@ -798,6 +793,7 @@
         };
       });
 
+      populateYearFilter();
       renderTiles();
       renderCurrentView();
       document.getElementById('tiles-row').style.display = '';
@@ -806,18 +802,16 @@
 
     function engFY(e) { return e.year_end_date ? new Date(e.year_end_date).getFullYear() : null; }
 
-    function populateFYFilter() {
-      const sel = document.getElementById('fy-filter');
+    function populateYearFilter() {
+      const sel = document.getElementById('year-filter');
       if (!sel) return;
       const years = Array.from(new Set(allEngagements.map(engFY).filter(Boolean))).sort((a, b) => b - a);
-      // Default (auto-filter) to the most recent fiscal year present, the first time.
-      if (currentFY === 'all' && years.length) currentFY = years[0];
-      sel.innerHTML = years.map(y => '<option value="' + y + '"' + (String(currentFY) === String(y) ? ' selected' : '') + '>FY ' + y + '</option>').join('')
-        + '<option value="all"' + (currentFY === 'all' ? ' selected' : '') + '>All years</option>';
+      sel.innerHTML = '<option value="all"' + (currentFY === 'all' ? ' selected' : '') + '>All years</option>'
+        + years.map(y => '<option value="' + y + '"' + (String(currentFY) === String(y) ? ' selected' : '') + '>' + y + '</option>').join('');
     }
 
-    function applyFY() {
-      currentFY = document.getElementById('fy-filter').value;
+    function applyYearFilter() {
+      currentFY = document.getElementById('year-filter').value;
       renderCurrentView();
     }
 
@@ -851,13 +845,6 @@
         ? 'none yet this year'
         : 'files assembled this year';
 
-      // Tab counts
-      const archivedAll = allEngagements.filter(e => e.is_archived).length;
-      document.getElementById('count-active').textContent = activeList.length;
-      document.getElementById('count-completed').textContent = readyList.length;
-      document.getElementById('count-archived').textContent = archivedAll;
-      document.getElementById('count-all').textContent = allEngagements.length;
-
       // Page header subtitle
       const sub = document.getElementById('page-header-sub');
       sub.textContent = activeList.length === 0
@@ -867,11 +854,9 @@
     }
 
     function switchTab(tab) {
+      // Clicking the already-selected status tile clears the filter (back to all).
+      if (tab !== 'all' && tab === currentTab) tab = 'all';
       currentTab = tab;
-      // Tab buttons
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab || (tab === 'review' && btn.dataset.tab === 'active'));
-      });
       // Tile selected state
       document.querySelectorAll('.tile').forEach(t => {
         const f = t.dataset.filter;
@@ -903,6 +888,10 @@
         list = list.filter(e => e.is_archived);
       }
       // 'all' = no extra filter
+
+      if (currentFY && currentFY !== 'all') {
+        list = list.filter(e => String(engFY(e)) === String(currentFY));
+      }
 
       if (currentSearch) {
         list = list.filter(e => (e.client_name || '').toLowerCase().includes(currentSearch));
