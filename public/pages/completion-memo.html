@@ -24,29 +24,37 @@
 
     /* Tabs — !important defends against any global .tabs override
        (was hidden by a stale display:none in style.css until 2026-05-22) */
+    /* Matches the engagement-page module tab bar: filled brand-blue strip, white active pill. */
     .tabs {
       display: flex !important;
-      gap: 0;
-      border-bottom: 2px solid var(--gray-200);
+      gap: 4px;
+      flex-wrap: wrap;
+      background: var(--primary);
+      border-radius: 10px;
+      padding: 6px;
       margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,71,171,0.18);
     }
     .tab-btn {
-      padding: 10px 20px;
-      font-size: 14px;
+      padding: 8px 16px;
+      font-size: 12.5px;
       font-weight: 500;
-      color: var(--gray-500);
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
+      color: rgba(255,255,255,0.82);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 999px;
       cursor: pointer;
       transition: all 0.15s;
     }
-    .tab-btn:hover { color: var(--gray-700); }
+    .tab-btn:hover { color: #ffffff; background: rgba(255,255,255,0.16); }
     .tab-btn.active {
       color: var(--primary);
-      border-bottom-color: var(--primary);
+      background: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     }
+    .tab-btn .text-muted { color: rgba(255,255,255,0.7) !important; }
+    .tab-btn.active .text-muted { color: var(--gray-500) !important; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
