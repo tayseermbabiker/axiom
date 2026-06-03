@@ -2539,12 +2539,8 @@
       <div class="tab-panel" id="tab-conclusion-home">
         <div class="card">
           <div class="card-header">
-            <h2>Conclusion &amp; Reporting</h2>
+            <h2>File assembly (ISA 230)</h2>
             <div style="display:flex; gap:8px;">
-              <!-- Completion memo button moved here from page header -->
-              <a id="btn-completion-memo" class="btn btn-primary btn-sm" style="display:none;"
-                title="Open the Engagement Completion Memorandum (Pro)">Completion Memo</a>
-              <!-- Completion PDF removed here — already available in the top Reports bar -->
               <button class="btn btn-outline btn-sm" id="btn-review-close-conclusion" style="display:none;">
                 Review &amp; close
               </button>
@@ -2565,19 +2561,10 @@
               </div>
             </div>
             <div id="conclusion-modules" style="display:none;">
-              <p class="text-sm text-muted" style="margin-bottom:20px;">
-                Click a module below to jump straight to it. The Completion Memo covers acceptance/independence/strategy/materiality/risk recap, findings, attestations, going concern, subsequent events, opinion, and EQR — all in one ISA-aligned workpaper.
-              </p>
-              <div id="assembly-status-card" style="margin-bottom:20px; padding:14px 16px; border-radius:10px; border:1px solid var(--gray-200); background:var(--gray-50);">
+              <p class="text-sm text-muted" style="margin-bottom:16px;">After the auditor's report is signed in the Completion Memo, ISA 230 gives an assembly window (benchmark: not more than 60 days) to finalise the audit file — after which it's archived and locked (additions only, with a documented reason).</p>
+              <div id="assembly-status-card" style="padding:14px 16px; border-radius:10px; border:1px solid var(--gray-200); background:var(--gray-50);">
                 <div style="font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:6px;">ISA 230 &mdash; File assembly</div>
                 <div id="assembly-status-body" style="font-size:13px; color:var(--gray-600); line-height:1.6;">Loading&hellip;</div>
-              </div>
-              <div style="display:flex; flex-direction:column; gap:8px; max-width:480px;">
-                <a href="completion-memo.html" id="conclusion-link-memo" class="planning-module-row" style="cursor:pointer; text-decoration:none; color:inherit;">
-                  <span class="badge badge-in-progress">Active</span>
-                  <span style="font-size:13px; font-weight:500; margin-left:10px;">Completion Memo</span>
-                  <span class="text-sm text-muted" style="margin-left:auto;">ISA 220 · 450 · 560 · 570 · 580 · 700</span>
-                </a>
               </div>
             </div>
           </div>

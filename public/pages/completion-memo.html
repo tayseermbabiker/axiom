@@ -1606,6 +1606,13 @@
       if (btn) btn.classList.add('active');
       const panel = document.getElementById('tab-' + name);
       if (panel) panel.classList.add('active');
+
+      // When embedded, the sign-off bar only belongs on the finalisation tabs
+      // (Rollup summary + Attestations), not floating under every data-entry tab.
+      if (cmEmbed) {
+        const sb = document.querySelector('.signoff-bar');
+        if (sb) sb.style.display = (name === 'rollup' || name === 'attestations') ? 'flex' : 'none';
+      }
     }
 
     function humaniseKey(key) {
