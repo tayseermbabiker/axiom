@@ -3222,10 +3222,10 @@
         document.querySelectorAll('.role-admin-supervisor').forEach(el => el.style.display = '');
       }
 
-      await loadEngagement();
+      // Engagement + org members are independent — fetch them concurrently. Both finish
+      // before sections render, so the inline assignee dropdowns and read-only state stay correct.
+      await Promise.all([loadEngagement(), loadOrgMembers()]);
       initMateriality();
-      // Load org members first so the section cards can render the inline assignee dropdown
-      await loadOrgMembers();
       await loadSections();
       await Promise.all([loadTBLines(), loadFindings()]);
       updateStats();
