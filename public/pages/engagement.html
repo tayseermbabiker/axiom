@@ -143,6 +143,9 @@
       letter-spacing: 0.6px;
     }
     .overview-reports-btns { display: flex; gap: 6px; }
+    .reports-menu-item { display:block; width:100%; text-align:left; padding:10px 14px; background:none; border:0; font-size:13px; font-weight:600; color:var(--gray-700); cursor:pointer; }
+    .reports-menu-item span { display:block; font-size:11px; font-weight:400; color:var(--gray-400); margin-top:2px; }
+    .reports-menu-item:hover { background:var(--gray-50); }
 
     /* Phase chips row */
     .phase-chips-row {
@@ -549,18 +552,27 @@
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start;">
+          <div class="reports-dropdown" style="position:relative;">
+            <button class="btn btn-outline btn-sm" onclick="toggleReportsMenu(event)" style="display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Reports
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div id="reports-menu" style="display:none; position:absolute; right:0; top:calc(100% + 4px); background:#fff; border:1px solid var(--gray-200); border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,0.12); min-width:210px; z-index:40; overflow:hidden;">
+              <button class="reports-menu-item" onclick="exportReport('planning'); closeReportsMenu();">Planning PDF<span>ISA 300 — planning memorandum</span></button>
+              <button class="reports-menu-item" onclick="exportReport('completion'); closeReportsMenu();" style="border-top:1px solid var(--gray-100);">Completion PDF<span>ISA 700 — completion memorandum</span></button>
+            </div>
+          </div>
           <div id="eng-actions" style="display:flex; gap:8px; align-items:flex-start;"></div>
         </div>
       </div>
 
       <!-- Missing folder banner -->
-      <div id="folder-reminder-banner" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:14px 18px; margin-bottom:16px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span style="font-size:14px; color:#92400E;"><strong>No shared drive linked.</strong> Your team needs a Google Drive or OneDrive folder to store audit files.</span>
-          </div>
-          <button class="btn btn-sm" onclick="editSharedFolder()" style="background:#D97706; color:white; border:none; white-space:nowrap;">Add Folder Now</button>
+      <div id="folder-reminder-banner" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:10px 16px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span style="font-size:13px; color:#92400E;">No shared drive linked — audit files need a Google Drive or OneDrive folder.</span>
+          <a href="#" onclick="event.preventDefault(); editSharedFolder();" style="font-size:13px; color:#92400E; font-weight:600; text-decoration:underline; margin-left:auto; white-space:nowrap;">Add folder</a>
         </div>
       </div>
 
@@ -593,13 +605,6 @@
               <div class="overview-progress-bar">
                 <div class="overview-progress-fill" id="stepper-fill" style="width:0%;"></div>
               </div>
-            </div>
-          </div>
-          <div class="overview-reports">
-            <div class="overview-reports-label">Reports</div>
-            <div class="overview-reports-btns">
-              <button class="btn btn-outline btn-sm" onclick="exportReport('planning')" title="Planning Memorandum (ISA 300): acceptance, engagement letter, independence, audit planning, materiality, risk assessment.">Planning PDF</button>
-              <button class="btn btn-outline btn-sm" onclick="exportReport('completion')" title="Completion Memorandum (ISA 700): risk recap, findings, ML points, work-done summary, completion memo, trial balance.">Completion PDF</button>
             </div>
           </div>
         </div>
@@ -9147,6 +9152,19 @@
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) overlay.classList.remove('active');
       });
+    });
+
+    function toggleReportsMenu(ev) {
+      if (ev) ev.stopPropagation();
+      const m = document.getElementById('reports-menu');
+      if (m) m.style.display = m.style.display === 'block' ? 'none' : 'block';
+    }
+    function closeReportsMenu() {
+      const m = document.getElementById('reports-menu');
+      if (m) m.style.display = 'none';
+    }
+    document.addEventListener('click', function (e) {
+      if (!(e.target.closest && e.target.closest('.reports-dropdown'))) closeReportsMenu();
     });
 
     function escHtml(str) {
