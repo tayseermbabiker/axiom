@@ -221,15 +221,16 @@
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
       padding-top: 14px;
       border-top: 1px solid var(--gray-100);
-      font-size: 13px;
-      color: var(--gray-600);
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #334155;
     }
     .overview-stats-line .stat-num {
-      font-weight: 600;
-      color: var(--gray-800);
+      font-weight: 700;
+      color: #0F172A;
     }
     .overview-stats-line .stat-dot {
       width: 3px; height: 3px;
@@ -2561,10 +2562,10 @@
               </div>
             </div>
             <div id="conclusion-modules" style="display:none;">
-              <p class="text-sm text-muted" style="margin-bottom:16px;">After the auditor's report is signed in the Completion Memo, ISA 230 gives an assembly window (benchmark: not more than 60 days) to finalise the audit file — after which it's archived and locked (additions only, with a documented reason).</p>
-              <div id="assembly-status-card" style="padding:14px 16px; border-radius:10px; border:1px solid var(--gray-200); background:var(--gray-50);">
-                <div style="font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:6px;">ISA 230 &mdash; File assembly</div>
-                <div id="assembly-status-body" style="font-size:13px; color:var(--gray-600); line-height:1.6;">Loading&hellip;</div>
+              <p class="text-muted" style="margin-bottom:18px; font-size:15px; line-height:1.7;">After the auditor's report is signed in the Completion Memo, ISA 230 gives an assembly window (benchmark: not more than 60 days) to finalise the audit file — after which it's archived and locked (additions only, with a documented reason).</p>
+              <div id="assembly-status-card" style="padding:18px 20px; border-radius:10px; border:1px solid var(--gray-200); background:var(--gray-50);">
+                <div style="font-size:15px; font-weight:700; color:var(--gray-700); margin-bottom:10px;">ISA 230 &mdash; File assembly</div>
+                <div id="assembly-status-body" style="font-size:14px; color:var(--gray-600); line-height:1.7;">Loading&hellip;</div>
               </div>
             </div>
           </div>
@@ -5840,10 +5841,10 @@
       if (engagement && engagement.is_archived) {
         const when = engagement.archived_at ? new Date(engagement.archived_at).toLocaleDateString() : '';
         body.innerHTML =
-          '<div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:#15803D; margin-bottom:8px;">🔒 File assembled &amp; locked' + (when ? ' on ' + when : '') + '</div>' +
-          '<p style="margin:0 0 6px; font-size:13px; color:var(--gray-600); line-height:1.6;">Per ISA 230 the file is now read-only. Documentation can only be <strong>added</strong> with a documented reason (ISA 230.16); nothing can be deleted (ISA 230.15).</p>' +
-          '<p style="margin:0; font-size:12px; color:var(--gray-500); line-height:1.6;">' + retention + '</p>' +
-          (isAdmin ? '<div style="margin-top:12px;"><button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="unarchiveEngagement()">Reopen file (post-assembly change)</button></div>' : '');
+          '<div style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700; color:#15803D; margin-bottom:10px;">🔒 File assembled &amp; locked' + (when ? ' on ' + when : '') + '</div>' +
+          '<p style="margin:0 0 8px; font-size:14px; color:var(--gray-600); line-height:1.7;">Per ISA 230 the file is now read-only. Documentation can only be <strong>added</strong> with a documented reason (ISA 230.16); nothing can be deleted (ISA 230.15).</p>' +
+          '<p style="margin:0; font-size:13px; color:var(--gray-500); line-height:1.7;">' + retention + '</p>' +
+          (isAdmin ? '<div style="margin-top:14px;"><button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="unarchiveEngagement()">Reopen file (post-assembly change)</button></div>' : '');
         return;
       }
 
@@ -5856,7 +5857,7 @@
       // ── State 1: report not yet signed → no window yet ──
       if (!memo || !memo.signed_at) {
         body.innerHTML =
-          '<p style="margin:0 0 10px; font-size:13px; color:var(--gray-600); line-height:1.6;"><strong>Step 1 first.</strong> Sign &amp; lock the completion memo to set the report date. ISA 230 then gives you up to <strong>' + ASSEMBLY_WINDOW_DAYS + ' days</strong> to assemble &amp; lock the final file.</p>' +
+          '<p style="margin:0 0 12px; font-size:14px; color:var(--gray-600); line-height:1.7;"><strong>Step 1 first.</strong> Sign &amp; lock the completion memo to set the report date. ISA 230 then gives you up to <strong>' + ASSEMBLY_WINDOW_DAYS + ' days</strong> to assemble &amp; lock the final file.</p>' +
           (isAdmin ? '<button class="btn btn-outline btn-sm" onclick="switchModuleTab(\'cm-rollup\')">Go to completion memo &rarr;</button>' : '');
         return;
       }
