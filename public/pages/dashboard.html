@@ -945,7 +945,7 @@
       const phaseClass = phaseClasses[e._phase] || 'chip-planning';
       const findings = e._openFindings || 0;
       const del = currentRole === 'admin'
-        ? `<button class="tbl-del" onclick="event.stopPropagation(); event.preventDefault(); deleteEngagement('${e.id}', ${JSON.stringify(e.client_name)})">Delete</button>`
+        ? `<button class="tbl-del" onclick="event.stopPropagation(); event.preventDefault(); deleteEngagement('${e.id}')">Delete</button>`
         : '';
       return `
         <tr class="${e.is_archived ? 'row-archived' : ''}" onclick="window.location.href='engagement.html#${e.id}'">
@@ -969,7 +969,9 @@
       document.getElementById(id).classList.remove('active');
     }
 
-    async function deleteEngagement(engId, clientName) {
+    async function deleteEngagement(engId) {
+      const eng = allEngagements.find(e => e.id === engId);
+      const clientName = (eng && eng.client_name) || 'this engagement';
       if (!confirm('Delete engagement "' + clientName + '"?\n\nThis will permanently delete all sections, procedures, findings, review notes, and documents.\n\nThis cannot be undone.')) return;
 
       const { error } = await supabaseClient.from('engagements').delete().eq('id', engId);
