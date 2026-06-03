@@ -1363,6 +1363,14 @@ tbody tr:hover { background: var(--gray-50) !important; }
   margin: 6px 0 18px;
   box-shadow: 0 2px 8px rgba(0,71,171,0.18);
 }
+/* Before JS renders the tabs the container is empty — keep the blue strip hidden
+   so the bar doesn't flash in colour-first then text-after on a slow load. */
+.module-nav:empty {
+  background: transparent;
+  box-shadow: none;
+  padding: 0 !important;
+  margin: 0;
+}
 
 .module-tab {
   display: flex;
