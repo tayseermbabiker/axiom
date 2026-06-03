@@ -314,6 +314,31 @@
       margin-top: 4px;
     }
 
+    /* ---- Engagements data table (redesign matching the partner mockup) ---- */
+    .grid-table-container { background:#fff; border:1px solid var(--gray-200); border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+    .data-grid { width:100%; border-collapse:collapse; font-size:13.5px; }
+    .data-grid th { text-align:left; color:var(--gray-500); padding:11px 16px; font-weight:600; text-transform:uppercase; font-size:10.5px; letter-spacing:0.5px; border-bottom:1px solid var(--gray-200); background:var(--gray-50); white-space:nowrap; }
+    .data-grid td { padding:11px 16px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
+    .data-grid tbody tr { cursor:pointer; transition:background 0.12s; }
+    .data-grid tbody tr:hover { background:var(--gray-50); }
+    .data-grid tbody tr:last-child td { border-bottom:0; }
+    .data-grid tbody tr.row-archived { opacity:0.72; }
+    .cell-client { display:flex; align-items:center; gap:10px; }
+    .client-avatar { width:30px; height:30px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; text-transform:uppercase; }
+    .client-cell-name { font-weight:600; color:var(--gray-900); }
+    .status-badge { display:inline-block; padding:4px 10px; border-radius:99px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; white-space:nowrap; }
+    .tbl-progress { display:flex; align-items:center; gap:8px; min-width:130px; }
+    .tbl-bar { flex:1; height:6px; background:var(--gray-200); border-radius:3px; overflow:hidden; }
+    .tbl-bar-fill { height:100%; background:var(--primary); border-radius:3px; }
+    .tbl-bar-fill.done { background:#15803D; }
+    .tbl-pct { font-size:12px; color:var(--gray-600); min-width:34px; }
+    .find-badge { display:inline-block; min-width:20px; text-align:center; padding:2px 7px; border-radius:99px; background:#FEE2E2; color:#B91C1C; font-size:11px; font-weight:700; }
+    .find-zero { color:var(--gray-400); }
+    .tbl-actions { text-align:right; white-space:nowrap; }
+    .tbl-open { color:var(--primary); font-weight:600; font-size:12.5px; text-decoration:none; }
+    .tbl-del { background:transparent; border:0; color:var(--gray-400); cursor:pointer; font-size:12px; padding:4px 6px; border-radius:6px; margin-left:6px; }
+    .tbl-del:hover { color:#C02A2A; background:rgba(192,42,42,0.06); }
+
     @media (max-width: 980px) {
       .tiles-row { grid-template-columns: repeat(2, 1fr); }
     }
@@ -353,9 +378,13 @@
           <h1>Engagements</h1>
           <div class="page-header-sub" id="page-header-sub">Loading…</div>
         </div>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <button class="btn btn-outline" onclick="startOnboarding()" style="font-size:13px;">How it works</button>
           <button class="btn btn-primary" id="btn-new-eng-top" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
+          <div style="display:flex; align-items:center; gap:8px; margin-left:6px;">
+            <span style="font-size:13px; font-weight:600; color:var(--gray-700); white-space:nowrap;">Current view:</span>
+            <select id="fy-filter" onchange="applyFY()" style="padding:7px 30px 7px 12px; border:1px solid var(--gray-300); border-radius:8px; font-size:13px; background:white; cursor:pointer; font-weight:600; color:var(--gray-800);"></select>
+          </div>
         </div>
       </div>
 
@@ -501,6 +530,7 @@
     let allEngagements = [];          // each row: { ...engagement, _phase, _pct, _approved, _totalSections, _openFindings, _doneProcs, _totalProcs, _reviewSections }
     let currentTab = 'active';
     let currentSearch = '';
+    let currentFY = 'all';   // fiscal-year filter (default set to latest FY on load)
 
     async function init() {
       currentUser = await requireAuth();
@@ -772,10 +802,28 @@
         };
       });
 
+      populateFYFilter();
       renderTiles();
       renderCurrentView();
       document.getElementById('tiles-row').style.display = '';
       document.getElementById('filter-bar').style.display = '';
+    }
+
+    function engFY(e) { return e.year_end_date ? new Date(e.year_end_date).getFullYear() : null; }
+
+    function populateFYFilter() {
+      const sel = document.getElementById('fy-filter');
+      if (!sel) return;
+      const years = Array.from(new Set(allEngagements.map(engFY).filter(Boolean))).sort((a, b) => b - a);
+      // Default (auto-filter) to the most recent fiscal year present, the first time.
+      if (currentFY === 'all' && years.length) currentFY = years[0];
+      sel.innerHTML = years.map(y => '<option value="' + y + '"' + (String(currentFY) === String(y) ? ' selected' : '') + '>FY ' + y + '</option>').join('')
+        + '<option value="all"' + (currentFY === 'all' ? ' selected' : '') + '>All years</option>';
+    }
+
+    function applyFY() {
+      currentFY = document.getElementById('fy-filter').value;
+      renderCurrentView();
     }
 
     function renderTiles() {
@@ -861,6 +909,10 @@
       }
       // 'all' = no extra filter
 
+      if (currentFY && currentFY !== 'all') {
+        list = list.filter(e => String(engFY(e)) === String(currentFY));
+      }
+
       if (currentSearch) {
         list = list.filter(e => (e.client_name || '').toLowerCase().includes(currentSearch));
       }
@@ -880,103 +932,51 @@
       noResults.style.display = 'none';
       container.style.display = 'block';
 
-      // Group by client_name (case-insensitive, but preserve original casing in display)
-      const groups = new Map(); // key = lowercase name → { displayName, engagements: [] }
-      list.forEach(e => {
-        const key = (e.client_name || '').trim().toLowerCase();
-        if (!groups.has(key)) {
-          groups.set(key, { displayName: e.client_name, engagements: [] });
-        }
-        groups.get(key).engagements.push(e);
-      });
+      list.sort((a, b) => (new Date(b.year_end_date).getTime() || 0) - (new Date(a.year_end_date).getTime() || 0));
 
-      // Sort each group's engagements by year_end desc, then sort groups by latest year_end desc
-      const sortedGroups = Array.from(groups.values()).sort((a, b) => {
-        const latestA = Math.max(...a.engagements.map(e => new Date(e.year_end_date).getTime() || 0));
-        const latestB = Math.max(...b.engagements.map(e => new Date(e.year_end_date).getTime() || 0));
-        return latestB - latestA;
-      });
-      sortedGroups.forEach(g => {
-        g.engagements.sort((a, b) =>
-          (new Date(b.year_end_date).getTime() || 0) - (new Date(a.year_end_date).getTime() || 0)
-        );
-      });
-
-      container.innerHTML = sortedGroups.map(g => `
-        <div class="client-group">
-          <div class="client-group-head">
-            <span class="client-name">${escHtml(g.displayName)}</span>
-            <span class="client-count">${g.engagements.length} engagement${g.engagements.length === 1 ? '' : 's'}</span>
-          </div>
-          <div class="cards-row">
-            ${g.engagements.map(e => renderCard(e)).join('')}
-          </div>
-        </div>
-      `).join('');
+      container.innerHTML = `
+        <div class="grid-table-container">
+          <table class="data-grid">
+            <thead><tr>
+              <th>Client</th><th>Engagement / Year</th><th>Status</th><th>Progress</th><th>Findings</th><th>Deadline</th><th class="tbl-actions">Actions</th>
+            </tr></thead>
+            <tbody>${list.map(renderRow).join('')}</tbody>
+          </table>
+        </div>`;
     }
 
-    function renderCard(e) {
-      const yearEnd = e.year_end_date ? new Date(e.year_end_date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-      const fyLabel = e.year_end_date ? ('FY ' + new Date(e.year_end_date).getFullYear()) : 'Engagement';
+    const AVATAR_COLORS = ['#0047AB', '#15803D', '#C47A00', '#4338CA', '#B91C1C', '#0E7490', '#7C3AED', '#BE185D'];
+    function avatarColor(name) {
+      let h = 0; const s = name || '?';
+      for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
+      return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+    }
+    function clientInitials(name) {
+      const p = (name || '?').trim().split(/\s+/);
+      return ((p[0] || '')[0] || '?') + ((p[1] || '')[0] || '');
+    }
 
-      const phaseLabels = {
-        planning: 'Planning',
-        execution: 'Execution',
-        completed: 'Closed · awaiting archive',
-        archived: 'Archived',
-      };
-      const phaseClasses = {
-        planning: 'chip-planning',
-        execution: 'chip-execution',
-        completed: 'chip-completed',
-        archived: 'chip-archived',
-      };
-
+    function renderRow(e) {
+      const fyYear = engFY(e) || '';
+      const deadline = e.year_end_date ? new Date(e.year_end_date + 'T00:00:00').toLocaleDateString('en-GB') : '—';
+      const phaseLabels = { planning: 'Planning', execution: 'Execution', completed: 'Closed', archived: 'Archived' };
+      const phaseClasses = { planning: 'chip-planning', execution: 'chip-execution', completed: 'chip-completed', archived: 'chip-archived' };
       const phaseLabel = phaseLabels[e._phase] || 'Planning';
       const phaseClass = phaseClasses[e._phase] || 'chip-planning';
-      const archivedClass = e.is_archived ? ' is-archived' : '';
-      const pctClass = e._pct === 100 ? ' done' : '';
-
-      const detailParts = [];
-      if (e._totalSections > 0) {
-        detailParts.push(e._approved + ' / ' + e._totalSections + ' sections');
-      }
-      if (e._reviewSections > 0) {
-        detailParts.push('<span class="card-meta-warn">' + e._reviewSections + ' awaiting review</span>');
-      }
-      if (e._openFindings > 0) {
-        detailParts.push('<span class="card-meta-warn">' + e._openFindings + ' open finding' + (e._openFindings === 1 ? '' : 's') + '</span>');
-      }
-      const detailLine = detailParts.length > 0
-        ? detailParts.join('<span class="card-meta-dot"></span>')
-        : '<span style="color:var(--gray-400);">Trial balance not uploaded yet</span>';
-
-      const deleteBtn = currentRole === 'admin'
-        ? `<button class="card-delete" onclick="event.stopPropagation(); event.preventDefault(); deleteEngagement('${e.id}', ${JSON.stringify(e.client_name)})">Delete</button>`
+      const findings = e._openFindings || 0;
+      const del = currentRole === 'admin'
+        ? `<button class="tbl-del" onclick="event.stopPropagation(); event.preventDefault(); deleteEngagement('${e.id}', ${JSON.stringify(e.client_name)})">Delete</button>`
         : '';
-
-      const openLabel = e.is_archived ? 'View →' : 'Open →';
-
       return `
-        <a class="eng-card${archivedClass}" href="engagement.html#${e.id}">
-          <div class="card-top">
-            <div>
-              <div class="card-period">${escHtml(fyLabel)}</div>
-              <div class="card-yearend">Year end ${escHtml(yearEnd)}</div>
-            </div>
-            <span class="card-phase-chip ${phaseClass}">${phaseLabel}</span>
-          </div>
-          <div class="card-progress">
-            <div class="card-bar"><div class="card-bar-fill${pctClass}" style="width:${e._pct}%;"></div></div>
-            <span class="card-pct">${e._pct}%</span>
-          </div>
-          <div class="card-meta-line">${detailLine}</div>
-          <div class="card-footer">
-            <span class="card-open">${openLabel}</span>
-            ${deleteBtn}
-          </div>
-        </a>
-      `;
+        <tr class="${e.is_archived ? 'row-archived' : ''}" onclick="window.location.href='engagement.html#${e.id}'">
+          <td><div class="cell-client"><div class="client-avatar" style="background:${avatarColor(e.client_name)};">${escHtml(clientInitials(e.client_name))}</div><span class="client-cell-name">${escHtml(e.client_name || '—')}</span></div></td>
+          <td>${escHtml(e.client_name || '')} / FY ${fyYear}</td>
+          <td><span class="status-badge ${phaseClass}">${phaseLabel}</span></td>
+          <td><div class="tbl-progress"><div class="tbl-bar"><div class="tbl-bar-fill${e._pct === 100 ? ' done' : ''}" style="width:${e._pct}%;"></div></div><span class="tbl-pct">${e._pct}%</span></div></td>
+          <td>${findings > 0 ? '<span class="find-badge">' + findings + '</span>' : '<span class="find-zero">0</span>'}</td>
+          <td>${deadline}</td>
+          <td class="tbl-actions" onclick="event.stopPropagation();"><a class="tbl-open" href="engagement.html#${e.id}">${e.is_archived ? 'View' : 'Open'} &rarr;</a>${del}</td>
+        </tr>`;
     }
 
     function openNewEngagement() {
