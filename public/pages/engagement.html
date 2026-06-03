@@ -8470,9 +8470,10 @@
       eraProcsModalRiskId = riskId;
       const risk = eraRisks.find(r => r.id === riskId);
       if (!risk) return;
-      const section = eraSectionsCache.find(s => s.id === risk.section_id);
+      const section = eraSectionsCache.find(s => s.id === risk.section_id)
+        || sections.find(s => s.id === risk.section_id);
       document.getElementById('risk-procs-context').textContent =
-        `Section: ${section ? section.name : '(unknown)'} · Risk: ${risk.risk_description.slice(0,80)}${risk.risk_description.length>80?'...':''}`;
+        `Section: ${section ? section.name : 'engagement-level (pervasive risk)'} · Risk: ${risk.risk_description.slice(0,80)}${risk.risk_description.length>80?'...':''}`;
       const sectionProcs = eraProceduresCache.filter(p => p.section_id === risk.section_id);
       const linkedProcIds = new Set(eraLinks.filter(l => l.risk_id === riskId).map(l => l.procedure_id));
       const listEl = document.getElementById('risk-procs-list');
