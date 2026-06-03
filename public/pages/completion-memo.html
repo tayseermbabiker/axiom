@@ -63,6 +63,15 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
+    /* Embedded inside the engagement Conclusion phase (?embed=1): strip the app chrome and
+       the in-page tab bar — the parent engagement page drives tab switching via postMessage. */
+    .cm-embed .sidebar,
+    .cm-embed .page-header,
+    .cm-embed .tabs { display: none !important; }
+    .cm-embed .main-content { padding: 8px 2px !important; }
+    .cm-embed .app-layout { display: block; }
+    .cm-embed body, body.cm-embed { background: transparent; }
+
     /* Rollup grid */
     .rollup-grid {
       display: grid;
@@ -636,6 +645,7 @@
     let attestations = [];
     let orgMembers = [];
     let misstatementRows = [];
+    let cmEmbed = false;   // true when rendered inside the engagement Conclusion phase (?embed=1)
 
     function escHtml(s) {
       if (s == null) return '';
@@ -646,6 +656,9 @@
 
     // ---- Init ----
     async function init() {
+      cmEmbed = new URLSearchParams(window.location.search).get('embed') === '1';
+      if (cmEmbed) document.body.classList.add('cm-embed');
+
       currentUser = await requireAuth();
       if (!currentUser) return;
 
@@ -687,6 +700,24 @@
       renderAll();
 
       document.getElementById('memo-content').style.display = 'block';
+
+      if (cmEmbed) setupEmbedBridge();
+    }
+
+    // When embedded, talk to the parent engagement page: receive tab switches, report height.
+    function setupEmbedBridge() {
+      const postHeight = () => {
+        try { parent.postMessage({ type: 'cmHeight', height: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) }, '*'); } catch (_) {}
+      };
+      window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'cmSwitchTab' && e.data.section) {
+          switchTab(e.data.section);
+          setTimeout(postHeight, 40);
+        }
+      });
+      if (window.ResizeObserver) { try { new ResizeObserver(postHeight).observe(document.body); } catch (_) {} }
+      window.addEventListener('resize', postHeight);
+      setTimeout(() => { postHeight(); try { parent.postMessage({ type: 'cmReady' }, '*'); } catch (_) {} }, 60);
     }
 
     async function loadEngagement() {
@@ -743,6 +774,12 @@
 
       // Only admin can create the memo
       if (currentRole !== 'admin') {
+        if (cmEmbed) {
+          document.getElementById('memo-content').innerHTML =
+            '<div style="padding:24px; color:var(--gray-600); font-size:14px;">The completion memo has not been created yet. Ask the engagement partner to open the Conclusion phase first.</div>';
+          document.getElementById('memo-content').style.display = 'block';
+          return;
+        }
         alert('A completion memo has not been created yet. Ask the engagement partner to open this page first.');
         window.location.href = 'engagement.html#' + engagementId;
         return;

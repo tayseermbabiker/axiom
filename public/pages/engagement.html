@@ -2531,6 +2531,11 @@
       </div>
 
       <!-- ═══ CONCLUSION PHASE PANEL ═══ -->
+      <!-- Completion Memo embedded inline (all 6 cm-* conclusion tabs drive this one frame) -->
+      <div class="tab-panel" id="tab-conclusion-memo">
+        <iframe id="conclusion-memo-frame" title="Completion Memo" style="width:100%; min-height:640px; border:0; display:block; background:transparent;"></iframe>
+      </div>
+
       <div class="tab-panel" id="tab-conclusion-home">
         <div class="card">
           <div class="card-header">
@@ -3891,7 +3896,13 @@
         { label: 'Activity log',       tab: 'activity'      },
       ],
       conclusion: [
-        { label: 'Overview', tab: 'conclusion-home' },
+        { label: 'Completion rollup', tab: 'cm-rollup'       },
+        { label: 'Attestations',      tab: 'cm-attestations' },
+        { label: 'Narrative',         tab: 'cm-narrative'    },
+        { label: 'Reps & comms',      tab: 'cm-reps'         },
+        { label: 'Opinion',           tab: 'cm-opinion'      },
+        { label: 'EQR',               tab: 'cm-eqr'          },
+        { label: 'File assembly',     tab: 'conclusion-home' },
       ],
     };
 
@@ -4054,10 +4065,49 @@
        ══════════════════════════════════════════════════════════════ */
 
     // ---- Tab Switching ----
+    // ---- Embedded Completion Memo bridge (Conclusion phase) ----
+    let _memoFrameLoaded = false;
+    let _memoFrameReady = false;
+    let _pendingMemoSection = null;
+
+    function ensureMemoFrame() {
+      const f = document.getElementById('conclusion-memo-frame');
+      if (!f || _memoFrameLoaded) return;
+      _memoFrameLoaded = true;
+      f.src = 'completion-memo.html?embed=1#' + engagementId;
+    }
+    function postToMemoFrame(section) {
+      _pendingMemoSection = section;
+      const f = document.getElementById('conclusion-memo-frame');
+      if (_memoFrameReady && f && f.contentWindow) {
+        f.contentWindow.postMessage({ type: 'cmSwitchTab', section: section }, '*');
+      }
+    }
+    window.addEventListener('message', function (e) {
+      if (!e.data) return;
+      if (e.data.type === 'cmReady') {
+        _memoFrameReady = true;
+        if (_pendingMemoSection) postToMemoFrame(_pendingMemoSection);
+      } else if (e.data.type === 'cmHeight' && e.data.height) {
+        const f = document.getElementById('conclusion-memo-frame');
+        if (f) f.style.height = (Number(e.data.height) + 24) + 'px';
+      }
+    });
+
     function switchTab(tab) {
       // Active state for the module-tab nav is handled by renderModuleTabs().
       // Here we only swap which tab-panel is visible.
       document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+      // Completion-memo sub-tabs (cm-rollup, cm-attestations, …) all share one embedded
+      // frame; selecting one shows the frame and tells it which section to display.
+      if (tab.indexOf('cm-') === 0) {
+        const memoPanel = document.getElementById('tab-conclusion-memo');
+        if (memoPanel) memoPanel.classList.add('active');
+        ensureMemoFrame();
+        postToMemoFrame(tab.slice(3));
+        return;
+      }
 
       const panel = document.getElementById('tab-' + tab);
       if (panel) panel.classList.add('active');
