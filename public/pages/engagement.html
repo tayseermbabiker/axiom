@@ -2190,6 +2190,35 @@
               <p class="text-sm text-muted" style="margin-bottom:8px;">Captures the ISA 315 understanding inside this workpaper (no separate file). IFAC SME ISA Guide endorses integration over per-ISA workpapers.</p>
 
               <div class="form-group">
+                <label class="text-sm">Nature of business &amp; operations (ISA 315.19(a))</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">What the entity does and how it makes money — products/services, key markets, customers/suppliers.</small>
+                <textarea id="eas-entity-business-model" class="form-control" rows="2" placeholder="e.g. Wholesale distributor of building materials; ~80% of revenue from 5 contractor clients; imports from abroad, sells on 60-day credit."></textarea>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Ownership &amp; governance (ISA 315.19(a))</label>
+                  <textarea id="eas-entity-ownership" class="form-control" rows="2" placeholder="e.g. Owner-managed; sole shareholder is also MD; no board; family-run."></textarea>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Locations / branches / components</label>
+                  <textarea id="eas-entity-locations" class="form-control" rows="2" placeholder="e.g. Head office + 2 branches; 1 warehouse; no foreign components."></textarea>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">IT environment &amp; key systems (ISA 315.19(a))</label>
+                  <textarea id="eas-entity-it" class="form-control" rows="2" placeholder="e.g. QuickBooks Online for accounting; manual stock control in Excel; no integrated ERP."></textarea>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Objectives, strategies &amp; business risks (ISA 315.19(a))</label>
+                  <textarea id="eas-entity-objectives" class="form-control" rows="2" placeholder="e.g. Expanding into a new market; margin pressure from imports; reliance on a few large customers."></textarea>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="text-sm">Measures used to assess financial performance (ISA 315.19(c))</label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Internal / external KPIs management watches — may indicate pressure that creates risk.</small>
+                <textarea id="eas-entity-performance" class="form-control" rows="2" placeholder="e.g. Monthly gross margin %, days-sales-outstanding, cash vs bank covenant; owner reviews monthly management accounts."></textarea>
+              </div>
+
+              <div class="form-group">
                 <label class="text-sm">Industry and external environment (ISA 315.19(a))</label>
                 <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Industry/regulatory changes affecting this client's risk profile this year. One short paragraph is enough.</small>
                 <textarea id="eas-industry-environment" class="form-control" rows="2" placeholder="e.g. UAE Corporate Tax Year 1 implementation; sector slowdown in retail; new VAT inspection focus on related-party transactions."></textarea>
@@ -7685,6 +7714,12 @@
       // ISA 315 — Understanding the entity (Sprint 4)
       document.getElementById('eas-industry-environment').value    = r.industry_external_environment       || '';
       document.getElementById('eas-significant-changes').value     = r.significant_changes_from_prior_year || '';
+      document.getElementById('eas-entity-business-model').value = r.entity_business_model        || '';
+      document.getElementById('eas-entity-ownership').value      = r.entity_ownership_governance  || '';
+      document.getElementById('eas-entity-locations').value      = r.entity_locations             || '';
+      document.getElementById('eas-entity-it').value             = r.entity_it_environment        || '';
+      document.getElementById('eas-entity-objectives').value     = r.entity_objectives_strategies || '';
+      document.getElementById('eas-entity-performance').value    = r.entity_performance_measures  || '';
       document.getElementById('eas-isa315-inquiry').checked        = !!r.isa_315_inquiry_performed;
       document.getElementById('eas-isa315-analytical').checked     = !!r.isa_315_analytical_performed;
       document.getElementById('eas-isa315-observation').checked    = !!r.isa_315_observation_inspection_performed;
@@ -7809,6 +7844,12 @@
         // ISA 315 — Understanding the entity
         industry_external_environment:           document.getElementById('eas-industry-environment').value.trim() || null,
         significant_changes_from_prior_year:     document.getElementById('eas-significant-changes').value.trim()  || null,
+        entity_business_model:        document.getElementById('eas-entity-business-model').value.trim() || null,
+        entity_ownership_governance:  document.getElementById('eas-entity-ownership').value.trim()      || null,
+        entity_locations:             document.getElementById('eas-entity-locations').value.trim()      || null,
+        entity_it_environment:        document.getElementById('eas-entity-it').value.trim()             || null,
+        entity_objectives_strategies: document.getElementById('eas-entity-objectives').value.trim()     || null,
+        entity_performance_measures:  document.getElementById('eas-entity-performance').value.trim()    || null,
         isa_315_inquiry_performed:               document.getElementById('eas-isa315-inquiry').checked,
         isa_315_analytical_performed:            document.getElementById('eas-isa315-analytical').checked,
         isa_315_observation_inspection_performed: document.getElementById('eas-isa315-observation').checked,
