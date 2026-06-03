@@ -201,6 +201,7 @@
       flex-shrink: 0;
     }
     .phase-chip.active .step-num { background: var(--primary); }
+    .phase-chip.active.done .step-num { background: #15803D; }  /* a completed phase stays green even when open */
     .phase-chip.locked .step-num { background: var(--gray-300); }
     .step-text { min-width: 0; flex: 1; }
     .step-label {
@@ -3890,6 +3891,34 @@
     let currentPhase = 'execution';
     let currentModuleTab = 'tb';
 
+    // Phase chip colours reflect ACTUAL completion (green = done), independent of which
+    // phase is currently open. Planning is done once execution has started (any section
+    // approved) or execution is complete; execution is done when all sections are approved;
+    // conclusion is done when the file is closed/archived.
+    function refreshPhaseChips() {
+      const approvedEl = document.getElementById('stat-approved');
+      let a = 0, t = 0;
+      if (approvedEl) { const parts = approvedEl.textContent.split('/'); a = parseInt(parts[0]) || 0; t = parseInt(parts[1]) || 0; }
+      const execComplete = t > 0 && a >= t;
+      const concDone = !!(typeof engagement !== 'undefined' && engagement && (engagement.is_archived || engagement.status === 'completed'));
+      const doneMap = { planning: (a > 0 || execComplete), execution: execComplete, conclusion: concDone };
+      const numMap = { planning: '1', execution: '2', conclusion: '3' };
+      ['planning', 'execution', 'conclusion'].forEach(p => {
+        const btn = document.getElementById('phase-btn-' + p);
+        if (!btn) return;
+        btn.classList.remove('active', 'done', 'locked');
+        if (p === currentPhase) btn.classList.add('active');
+        const numEl = btn.querySelector('.step-num');
+        if (doneMap[p]) {
+          btn.classList.add('done');
+          if (numEl) numEl.textContent = '✓';
+        } else {
+          if (p === 'conclusion' && currentPhase !== 'conclusion' && !execComplete) btn.classList.add('locked');
+          if (numEl) numEl.textContent = numMap[p];
+        }
+      });
+    }
+
     function switchPhase(phase) {
       // Prevent navigating to locked conclusion unless execution is complete
       if (phase === 'conclusion') {
@@ -3919,28 +3948,8 @@
       }
       const execComplete = execTotal > 0 && execApproved >= execTotal;
 
-      // Update stepper button states
-      ['planning', 'execution', 'conclusion'].forEach(p => {
-        const btn = document.getElementById('phase-btn-' + p);
-        if (!btn) return;
-        btn.classList.remove('active', 'done', 'locked');
-        if (p === phase) {
-          btn.classList.add('active');
-        } else if (p === 'planning' && phase !== 'planning') {
-          btn.classList.add('done');
-          const numEl = btn.querySelector('.step-num');
-          if (numEl) numEl.textContent = '✓';
-        } else if (p === 'conclusion' && !execComplete) {
-          // Only lock conclusion when execution is not actually complete
-          btn.classList.add('locked');
-        }
-      });
-
-      // Step numbers
-      const execNum = document.getElementById('step-num-execution');
-      if (execNum) execNum.textContent = phase === 'conclusion' ? '✓' : '2';
-      const planNum = document.getElementById('step-num-planning');
-      if (planNum) planNum.textContent = phase === 'planning' ? '1' : '✓';
+      // Phase chip colours are completion-based (green = done), not navigation-based.
+      refreshPhaseChips();
 
       // Step sub-labels — keep them honest as state changes
       const planSub = document.getElementById('step-sub-planning');
@@ -4030,6 +4039,8 @@
           modules.style.display    = 'none';
         }
       }
+
+      refreshPhaseChips();
     }
     /* ══════════════════════════════════════════════════════════════
        END PHASE NAVIGATOR
