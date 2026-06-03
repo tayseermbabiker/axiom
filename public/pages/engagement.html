@@ -2637,18 +2637,18 @@
   <div class="modal-overlay" id="modal-closure">
     <div class="modal" style="max-width:600px;">
       <div class="modal-header">
-        <h3>Approve &amp; Close Engagement — Acknowledge Open Findings</h3>
+        <h3>Before assembly — acknowledge open findings</h3>
         <button class="modal-close" onclick="closeModal('modal-closure')">&times;</button>
       </div>
       <div class="modal-body">
         <p style="font-size:13px; color:var(--gray-600); margin-bottom:12px;">
-          The following findings are still open. Per ISA 450 and ISA 265, you must categorize each finding before closing the engagement file. This acknowledgment will be documented in the audit file.
+          The following findings are still open. Per ISA 450 and ISA 265, you must categorize each finding before the audit file is assembled and locked. This acknowledgment will be documented in the audit file.
         </p>
         <div id="closure-findings-list"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('modal-closure')">Cancel</button>
-        <button class="btn btn-success" id="btn-confirm-closure" onclick="confirmClosure()">Approve &amp; Close</button>
+        <button class="btn btn-success" id="btn-confirm-closure" onclick="confirmClosure()">Categorize &amp; continue</button>
       </div>
     </div>
   </div>
@@ -3581,11 +3581,11 @@
         document.querySelectorAll('.role-admin-supervisor').forEach(el => el.style.display = 'none');
 
         if (currentRole === 'admin') {
-          // Reopen + Archive options. Archive requires memo locked (RPC enforces);
-          // we surface the button unconditionally and let the RPC error guide the partner.
+          // Legacy state: engagement marked completed but file not yet assembled.
+          // Reopen, or finish the single assemble-&-lock flow (memo-lock gate enforced by the RPC).
           container.innerHTML =
             '<button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="reopenEngagement()">Reopen Engagement</button>' +
-            '<button class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="archiveEngagement()" title="ISA 230 file assembly — requires completion memo to be locked first">Archive (ISA 230)</button>';
+            '<button class="btn btn-success btn-sm" style="margin-left:8px;" onclick="assembleAndLockFile()" title="ISA 230 file assembly — requires the completion memo to be locked first">Assemble &amp; lock file</button>';
         } else {
           container.innerHTML = '';
         }
@@ -3609,11 +3609,11 @@
           const label = 'Review &amp; close · ' + unapprovedFinal + ' section' + (unapprovedFinal !== 1 ? 's' : '') + ' pending';
           container.innerHTML = '<button class="btn btn-outline btn-sm" onclick="openBlockersModal()">' + label + '</button>';
         } else {
-          // All final sections approved — button proceeds to final close (open findings still need categorization)
-          const label = openFindings > 0
-            ? 'Approve & Close Engagement (' + openFindings + ' open finding' + (openFindings !== 1 ? 's' : '') + ')'
-            : 'Approve & Close Engagement';
-          container.innerHTML = '<button class="btn btn-success btn-sm" onclick="closeEngagement()">' + label + '</button>';
+          // All final sections approved. Closing/locking the file now lives in a single
+          // place — Conclusion → File assembly (ISA 230) — so there is no separate
+          // "Approve & Close" step (it duplicated the file-assembly date). This button
+          // just takes the partner there; the actual gate + lock happen on that tab.
+          container.innerHTML = '<button class="btn btn-success btn-sm" onclick="goToFileAssembly()">Go to file assembly &rarr;</button>';
         }
       } else {
         container.innerHTML = '';
@@ -3656,27 +3656,30 @@
       document.getElementById('modal-blockers').classList.add('active');
     }
 
-    async function closeEngagement() {
-      if (currentRole !== 'admin') { alert('Only partners can close engagements.'); return; }
+    // Single entry point from the top bar → Conclusion → File assembly (ISA 230).
+    // Replaces the old "Approve & Close" button so there is exactly one home for
+    // closing/locking the audit file.
+    function goToFileAssembly() {
+      if (typeof switchPhase === 'function') switchPhase('conclusion');
+      switchModuleTab('conclusion-home');
+    }
+
+    // ── Milestone B: assemble & lock the final audit file (ISA 230) ──
+    // The ONLY close action now. It folds in the old open-findings categorization
+    // gate, then locks the file via archive_engagement. The completion memo must
+    // already be signed & locked (Milestone A = report date) — the RPC enforces this.
+    let _assembleAfterClosure = false;
+    async function assembleAndLockFile() {
+      if (currentRole !== 'admin') { alert('Only partners can assemble and lock the audit file.'); return; }
 
       const openFindings = findings.filter(f => f.status === 'open');
-
       if (openFindings.length > 0) {
-        // Show categorization modal for open findings
+        // Force final disposition of open findings before the file is sealed.
+        _assembleAfterClosure = true;
         openClosureModal(openFindings);
         return;
       }
-
-      // No open findings — simple close
-      const ok = await showActionModal({
-        title: 'Approve & Close Engagement',
-        message: 'Sign off and close this engagement?\n\nAs the engagement partner, this is your final approval. All sections will become read-only. This marks the final file assembly date per ISA 230.\n\nYou can reopen it later with a documented reason if needed.',
-        okLabel: 'Approve & Close',
-        okClass: 'btn-success'
-      });
-      if (!ok) return;
-
-      await performClose();
+      await performAssemble();
     }
 
     function openClosureModal(openFindings) {
@@ -3718,37 +3721,66 @@
 
       const btn = document.getElementById('btn-confirm-closure');
       btn.disabled = true;
-      btn.textContent = 'Closing...';
+      btn.textContent = 'Saving...';
 
       // Update each finding with its close category
       for (const u of updates) {
         await supabaseClient.from('findings').update({ close_category: u.close_category }).eq('id', u.id);
       }
 
-      await performClose();
-
-      btn.disabled = false;
-      btn.textContent = 'Approve & Close';
       document.getElementById('modal-closure').classList.remove('active');
+      btn.disabled = false;
+      btn.textContent = 'Categorize & continue';
+
+      // Findings are now categorized → continue to assemble & lock the file.
+      if (_assembleAfterClosure) {
+        _assembleAfterClosure = false;
+        await performAssemble();
+      }
     }
 
-    async function performClose() {
+    // Locks the audit file (Milestone B). Archive is the gated/failable step
+    // (archive_engagement requires the completion memo to be locked first), so it
+    // runs before we mark the engagement completed for dashboards/banners.
+    async function performAssemble() {
+      const ok = await showActionModal({
+        title: 'Assemble & lock the audit file',
+        message: 'Assemble and lock the final audit file per ISA 230?\n\nThis records the file assembly date and makes the engagement read-only. After this point documentation can only be ADDED — with a documented reason (ISA 230.16) — and nothing can be deleted (ISA 230.15).\n\nThe completion memo must already be signed & locked (the report date).',
+        okLabel: 'Assemble & Lock',
+        okClass: 'btn-success'
+      });
+      if (!ok) return;
+
+      const { error } = await supabaseClient.rpc('archive_engagement', {
+        p_engagement_id:   engagementId,
+        p_organization_id: currentOrg.id,
+      });
+      if (error) {
+        alert('Could not assemble & lock the file: ' + error.message +
+              '\n\nMake sure the completion memo is signed & locked first (Conclusion → Completion rollup).');
+        return;
+      }
+
+      // Mark completed (with closure metadata) now that the file is sealed.
       const now = new Date().toISOString();
-      const { error } = await supabaseClient.from('engagements')
+      await supabaseClient.from('engagements')
         .update({ status: 'completed', closed_by: currentUser.id, closed_at: now })
         .eq('id', engagementId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      // Re-fetch to pick up is_archived / archived_at / archived_by + status.
+      const { data: refreshed } = await supabaseClient
+        .from('engagements').select('*').eq('id', engagementId).single();
+      if (refreshed) engagement = refreshed;
 
-      engagement.status = 'completed';
       const openCount = findings.filter(f => f.status === 'open').length;
-      await logActivity(engagementId, 'closed_engagement', 'engagement', engagementId, {
+      await logActivity(engagementId, 'archived_engagement', 'engagement', engagementId, {
         client_name: engagement.client_name,
         sections_count: sections.length,
         open_findings_acknowledged: openCount
       });
 
       renderEngagementActions();
+      loadAssemblyStatus();
     }
 
     async function reopenEngagement() {
@@ -5800,36 +5832,62 @@
     async function loadAssemblyStatus() {
       const body = document.getElementById('assembly-status-body');
       if (!body) return;
+      const isAdmin = currentRole === 'admin';
       const ASSEMBLY_WINDOW_DAYS = 60;
-      const retention = 'Retain the assembled file for the minimum period required by local law (commonly 5-7 years from the report date).';
+      const retention = 'Retain the assembled file for the minimum period required by local law (commonly 5–7 years from the report date — 7 years in much of the MENA region).';
 
+      // ── State 3: already assembled & locked ──
       if (engagement && engagement.is_archived) {
         const when = engagement.archived_at ? new Date(engagement.archived_at).toLocaleDateString() : '';
-        body.innerHTML = '<span style="color:#15803D;">&#10003; <strong>File assembled and locked</strong>' + (when ? ' on ' + when : '') + '.</span> Post-assembly changes are additions only and must be logged with a documented reason (use <strong>Unarchive</strong> in the header). ' + retention;
+        body.innerHTML =
+          '<div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:#15803D; margin-bottom:8px;">🔒 File assembled &amp; locked' + (when ? ' on ' + when : '') + '</div>' +
+          '<p style="margin:0 0 6px; font-size:13px; color:var(--gray-600); line-height:1.6;">Per ISA 230 the file is now read-only. Documentation can only be <strong>added</strong> with a documented reason (ISA 230.16); nothing can be deleted (ISA 230.15).</p>' +
+          '<p style="margin:0; font-size:12px; color:var(--gray-500); line-height:1.6;">' + retention + '</p>' +
+          (isAdmin ? '<div style="margin-top:12px;"><button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="unarchiveEngagement()">Reopen file (post-assembly change)</button></div>' : '');
         return;
       }
 
+      // Report date = completion memo signed_at. Needed to know whether the window has started.
       const { data: memoRows } = await supabaseClient
         .from('engagement_completion_memo').select('signed_at, status')
         .eq('engagement_id', engagementId).limit(1);
       const memo = (memoRows && memoRows[0]) || null;
 
+      // ── State 1: report not yet signed → no window yet ──
       if (!memo || !memo.signed_at) {
-        body.innerHTML = 'The assembly clock starts when the Completion Memo is signed (the report date). ISA 230 requires the final file to be assembled <strong>within ' + ASSEMBLY_WINDOW_DAYS + ' days</strong> of the report date. Sign the memo to begin. ' + retention;
+        body.innerHTML =
+          '<p style="margin:0 0 10px; font-size:13px; color:var(--gray-600); line-height:1.6;"><strong>Step 1 first.</strong> Sign &amp; lock the completion memo to set the report date. ISA 230 then gives you up to <strong>' + ASSEMBLY_WINDOW_DAYS + ' days</strong> to assemble &amp; lock the final file.</p>' +
+          (isAdmin ? '<button class="btn btn-outline btn-sm" onclick="switchModuleTab(\'cm-rollup\')">Go to completion memo &rarr;</button>' : '');
         return;
       }
 
+      // ── State 2: report signed, file not yet assembled → countdown + action ──
       const msDay = 86400000;
       const reportDate = new Date(memo.signed_at);
       const deadline = new Date(reportDate.getTime() + ASSEMBLY_WINDOW_DAYS * msDay);
       const daysLeft = Math.ceil((deadline - new Date()) / msDay);
       const rd = reportDate.toLocaleDateString();
       const dl = deadline.toLocaleDateString();
+
+      let countdown;
       if (daysLeft >= 0) {
-        body.innerHTML = '<strong>' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining</strong> in the assembly window. Report date ' + rd + ' &middot; assemble by <strong>' + dl + '</strong> (ISA 230 &mdash; within ' + ASSEMBLY_WINDOW_DAYS + ' days). Use <strong>Archive (ISA 230)</strong> in the header to assemble and lock the file. ' + retention;
+        const amber = daysLeft <= 14;
+        countdown =
+          '<div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:' + (amber ? '#B45309' : '#0a2540') + '; margin-bottom:6px;">' +
+          (amber ? '⚠️ ' : '') + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left to assemble the file</div>' +
+          '<p style="margin:0 0 8px; font-size:12px; color:var(--gray-500);">Report date ' + rd + ' · assemble by <strong>' + dl + '</strong> (ISA 230 — within ' + ASSEMBLY_WINDOW_DAYS + ' days).</p>';
       } else {
-        body.innerHTML = '<span style="color:#B91C1C;">&#9888; <strong>Assembly window lapsed ' + Math.abs(daysLeft) + ' day' + (Math.abs(daysLeft) === 1 ? '' : 's') + ' ago</strong> (due ' + dl + ', report date ' + rd + ').</span> Assemble (archive) the file now &mdash; ISA 230 expects assembly within ' + ASSEMBLY_WINDOW_DAYS + ' days. ' + retention;
+        countdown =
+          '<div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:#B91C1C; margin-bottom:6px;">⚠️ Assembly window lapsed ' + Math.abs(daysLeft) + ' day' + (Math.abs(daysLeft) === 1 ? '' : 's') + ' ago</div>' +
+          '<p style="margin:0 0 8px; font-size:12px; color:var(--gray-500);">Due ' + dl + ' · report date ' + rd + '. Assemble &amp; lock the file now.</p>';
       }
+
+      body.innerHTML =
+        countdown +
+        '<p style="margin:0 0 12px; font-size:12px; color:var(--gray-500); line-height:1.6;">' + retention + '</p>' +
+        (isAdmin
+          ? '<button class="btn btn-success btn-sm" onclick="assembleAndLockFile()">Assemble &amp; lock file</button>'
+          : '<p style="margin:0; font-size:12px; color:var(--gray-400);">Only the engagement partner can assemble and lock the file.</p>');
     }
 
     // ---- Upload TB ----
