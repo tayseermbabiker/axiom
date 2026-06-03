@@ -597,18 +597,6 @@
            ════════════════════════════════════════════════ -->
       <div class="eng-overview-card">
 
-        <div class="overview-top">
-          <div>
-            <div class="overview-progress-label">Overall progress</div>
-            <div class="overview-progress-row">
-              <div class="overview-progress-pct" id="stepper-pct">0%</div>
-              <div class="overview-progress-bar">
-                <div class="overview-progress-fill" id="stepper-fill" style="width:0%;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="phase-chips-row">
           <button class="phase-chip" id="phase-btn-planning"
             onclick="switchPhase('planning')" title="Planning phase">
@@ -639,6 +627,8 @@
         </div>
 
         <div class="overview-stats-line" id="overview-stats-line">
+          <span><span class="stat-num" id="stat-pct">0%</span> complete</span>
+          <span class="stat-dot"></span>
           <span><span class="stat-num" id="stat-sections">0</span> sections</span>
           <span class="stat-dot"></span>
           <span><span class="stat-num" id="stat-approved">0 / 0</span> approved</span>
@@ -3995,6 +3985,8 @@
       const pct = totalCount > 0 ? Math.round((approvedCount / totalCount) * 100) : 0;
       const pctEl  = document.getElementById('stepper-pct');
       const fillEl = document.getElementById('stepper-fill');
+      const statPct = document.getElementById('stat-pct');
+      if (statPct) statPct.textContent = pct + '%';
       if (pctEl)  pctEl.textContent  = pct + '%';
       if (fillEl) {
         fillEl.style.width = pct + '%';
