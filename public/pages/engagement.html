@@ -2112,7 +2112,15 @@
               <div class="form-group" style="margin-top:16px; max-width:240px;">
                 <label class="text-sm">Budgeted hours</label>
                 <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:4px;">Engagement-wide planning estimate. Independent of EQR.</small>
-                <input type="number" id="eas-budget-hours" class="form-control" min="0" step="1">
+                <input type="number" id="eas-budget-hours" class="form-control" min="0" step="1" oninput="updateBudgetTotal()">
+              </div>
+
+              <div class="form-group" style="margin-top:16px;">
+                <label class="text-sm">Budget by team member <span class="text-muted" style="font-weight:400;">(optional — for costing)</span></label>
+                <small style="color:var(--gray-500); font-size:11px; display:block; margin-bottom:6px;">ISA 300 requires allocating work to the team; this hours-per-member (and optional rate) breakdown supports costing. The total reconciles to the engagement budget above.</small>
+                <div id="eas-budget-rows"></div>
+                <button type="button" class="btn btn-outline btn-sm" id="eas-budget-add-btn" onclick="addBudgetRow()">+ Add team member</button>
+                <div id="eas-budget-total" style="font-size:12px; color:var(--gray-600); margin-top:8px;"></div>
               </div>
 
               <!-- Section D: ISA-specific planning narratives (gap items from 2-AI synthesis) -->
@@ -7661,6 +7669,7 @@
       document.getElementById('eas-eqr-required').checked   = !!r.eqr_required;
       document.getElementById('eas-eqr-reviewer').value     = r.eqr_reviewer_name                || '';
       document.getElementById('eas-budget-hours').value     = r.budgeted_hours                   || '';
+      loadBudgetRows();
       document.getElementById('eas-att-strategy').checked   = !!r.isa_300_strategy_documented;
       document.getElementById('eas-att-resources').checked  = !!r.isa_300_resources_assessed;
       document.getElementById('eas-att-team').checked       = !!r.isa_300_team_briefed;
@@ -7809,6 +7818,64 @@
       };
     }
 
+    // ---- Per-member budgeted hours (reviewer #5b) ----
+    let budgetRows = [];
+    const BUDGET_GRADES = ['partner', 'manager', 'senior', 'junior', 'other'];
+
+    function renderBudgetRows() {
+      const wrap = document.getElementById('eas-budget-rows');
+      if (!wrap) return;
+      const ro = currentRole !== 'admin';
+      const addBtn = document.getElementById('eas-budget-add-btn');
+      if (addBtn) addBtn.disabled = ro;
+      wrap.innerHTML = budgetRows.map((r, i) =>
+        '<div style="display:grid; grid-template-columns:1.4fr 1fr 80px 90px 30px; gap:6px; margin-bottom:6px; align-items:center;">' +
+          '<input type="text" class="form-control" placeholder="Team member" value="' + escHtml(r.member_name || '') + '" oninput="onBudgetField(' + i + ',\'member_name\',this.value)"' + (ro ? ' disabled' : '') + '>' +
+          '<select class="form-control" onchange="onBudgetField(' + i + ',\'grade\',this.value)"' + (ro ? ' disabled' : '') + '><option value="">Grade</option>' + BUDGET_GRADES.map(g => '<option value="' + g + '"' + (r.grade === g ? ' selected' : '') + '>' + g.charAt(0).toUpperCase() + g.slice(1) + '</option>').join('') + '</select>' +
+          '<input type="number" class="form-control" placeholder="Hrs" step="0.5" value="' + (r.budgeted_hours != null ? r.budgeted_hours : '') + '" oninput="onBudgetField(' + i + ',\'budgeted_hours\',this.value)"' + (ro ? ' disabled' : '') + '>' +
+          '<input type="number" class="form-control" placeholder="Rate" step="1" value="' + (r.hourly_rate != null ? r.hourly_rate : '') + '" oninput="onBudgetField(' + i + ',\'hourly_rate\',this.value)"' + (ro ? ' disabled' : '') + '>' +
+          '<button type="button" class="btn btn-outline btn-sm" onclick="removeBudgetRow(' + i + ')"' + (ro ? ' disabled' : '') + '>&times;</button>' +
+        '</div>'
+      ).join('');
+      updateBudgetTotal();
+    }
+    function onBudgetField(i, f, v) {
+      if (!budgetRows[i]) return;
+      budgetRows[i][f] = (f === 'budgeted_hours' || f === 'hourly_rate') ? (v === '' ? null : parseFloat(v)) : v;
+      if (f !== 'member_name') updateBudgetTotal();
+    }
+    function addBudgetRow() { budgetRows.push({ member_name: '', grade: '', budgeted_hours: null, hourly_rate: null }); renderBudgetRows(); }
+    function removeBudgetRow(i) { budgetRows.splice(i, 1); renderBudgetRows(); }
+    function updateBudgetTotal() {
+      const el = document.getElementById('eas-budget-total'); if (!el) return;
+      const th = budgetRows.reduce((s, r) => s + (Number(r.budgeted_hours) || 0), 0);
+      const tc = budgetRows.reduce((s, r) => s + ((Number(r.budgeted_hours) || 0) * (Number(r.hourly_rate) || 0)), 0);
+      const lumpEl = document.getElementById('eas-budget-hours');
+      const lump = lumpEl ? (Number(lumpEl.value) || 0) : 0;
+      let msg = 'Total: <strong>' + th + ' hrs</strong>';
+      if (tc > 0) msg += ' &middot; cost <strong>' + tc.toLocaleString(undefined, { minimumFractionDigits: 2 }) + '</strong>';
+      if (lump > 0) msg += (Math.abs(th - lump) < 0.01 ? ' &middot; <span style="color:#15803D;">matches engagement budget</span>' : ' &middot; <span style="color:#B45309;">vs ' + lump + ' hrs engagement budget</span>');
+      el.innerHTML = msg;
+    }
+    async function persistBudgetHours() {
+      await supabaseClient.from('engagement_budget_hours').delete().eq('engagement_id', engagementId);
+      const valid = budgetRows.filter(r => (r.member_name || '').trim() || r.budgeted_hours != null);
+      if (!valid.length) return;
+      const rows = valid.map((r, idx) => ({
+        engagement_id: engagementId, organization_id: currentOrg.id,
+        member_name: (r.member_name || '').trim() || null, grade: r.grade || null,
+        budgeted_hours: (r.budgeted_hours == null || r.budgeted_hours === '') ? null : Number(r.budgeted_hours),
+        hourly_rate: (r.hourly_rate == null || r.hourly_rate === '') ? null : Number(r.hourly_rate),
+        sort_order: idx,
+      }));
+      await supabaseClient.from('engagement_budget_hours').insert(rows);
+    }
+    async function loadBudgetRows() {
+      const { data: bh } = await supabaseClient.from('engagement_budget_hours').select('*').eq('engagement_id', engagementId).order('sort_order');
+      budgetRows = (bh || []).map(x => ({ member_name: x.member_name || '', grade: x.grade || '', budgeted_hours: x.budgeted_hours, hourly_rate: x.hourly_rate }));
+      renderBudgetRows();
+    }
+
     async function saveAuditStrategy(targetStatus) {
       if (!easActive) { showEasError('No active strategy row.'); return; }
       document.getElementById('eas-error').style.display = 'none';
@@ -7839,6 +7906,9 @@
           .update(form)
           .eq('id', easActive.id);
         if (updErr) throw new Error('Save failed: ' + updErr.message);
+
+        // Persist the per-member budget breakdown (reviewer #5b)
+        await persistBudgetHours();
 
         // Step 2: if approving, call the RPC (stamps approved_by/at + status, with DB-level CHECK)
         if (targetStatus === 'approved') {
