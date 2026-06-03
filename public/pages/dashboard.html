@@ -363,6 +363,7 @@
         <a href="dashboard.html" class="active">Dashboard</a>
         <a href="team.html">Team</a>
         <a href="local-compliance.html" id="nav-local-compliance" style="display:none;">Compliance Template</a>
+        <a href="#" onclick="event.preventDefault(); startOnboarding();">How it works</a>
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
@@ -378,13 +379,8 @@
           <h1>Engagements</h1>
           <div class="page-header-sub" id="page-header-sub">Loading…</div>
         </div>
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <button class="btn btn-outline" onclick="startOnboarding()" style="font-size:13px;">How it works</button>
+        <div style="display:flex; gap:8px; align-items:center;">
           <button class="btn btn-primary" id="btn-new-eng-top" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
-          <div style="display:flex; align-items:center; gap:8px; margin-left:6px;">
-            <span style="font-size:13px; font-weight:600; color:var(--gray-700); white-space:nowrap;">Current view:</span>
-            <select id="fy-filter" onchange="applyFY()" style="padding:7px 30px 7px 12px; border:1px solid var(--gray-300); border-radius:8px; font-size:13px; background:white; cursor:pointer; font-weight:600; color:var(--gray-800);"></select>
-          </div>
         </div>
       </div>
 
@@ -802,7 +798,6 @@
         };
       });
 
-      populateFYFilter();
       renderTiles();
       renderCurrentView();
       document.getElementById('tiles-row').style.display = '';
@@ -909,10 +904,6 @@
       }
       // 'all' = no extra filter
 
-      if (currentFY && currentFY !== 'all') {
-        list = list.filter(e => String(engFY(e)) === String(currentFY));
-      }
-
       if (currentSearch) {
         list = list.filter(e => (e.client_name || '').toLowerCase().includes(currentSearch));
       }
@@ -938,7 +929,7 @@
         <div class="grid-table-container">
           <table class="data-grid">
             <thead><tr>
-              <th>Client</th><th>Engagement / Year</th><th>Status</th><th>Progress</th><th>Findings</th><th>Deadline</th><th class="tbl-actions">Actions</th>
+              <th>Client</th><th>Year</th><th>Status</th><th>Progress</th><th>Findings</th><th>Deadline</th><th class="tbl-actions">Actions</th>
             </tr></thead>
             <tbody>${list.map(renderRow).join('')}</tbody>
           </table>
@@ -970,7 +961,7 @@
       return `
         <tr class="${e.is_archived ? 'row-archived' : ''}" onclick="window.location.href='engagement.html#${e.id}'">
           <td><div class="cell-client"><div class="client-avatar" style="background:${avatarColor(e.client_name)};">${escHtml(clientInitials(e.client_name))}</div><span class="client-cell-name">${escHtml(e.client_name || '—')}</span></div></td>
-          <td>${escHtml(e.client_name || '')} / FY ${fyYear}</td>
+          <td>${fyYear || '—'}</td>
           <td><span class="status-badge ${phaseClass}">${phaseLabel}</span></td>
           <td><div class="tbl-progress"><div class="tbl-bar"><div class="tbl-bar-fill${e._pct === 100 ? ' done' : ''}" style="width:${e._pct}%;"></div></div><span class="tbl-pct">${e._pct}%</span></div></td>
           <td>${findings > 0 ? '<span class="find-badge">' + findings + '</span>' : '<span class="find-zero">0</span>'}</td>
