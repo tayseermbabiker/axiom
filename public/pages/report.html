@@ -384,6 +384,15 @@
         }
       }
 
+      // PBC requests + per-member budget — for the planning memorandum.
+      let pbcRpt = [], budgetRpt = [];
+      {
+        const { data: pbc } = await supabaseClient.from('engagement_pbc_items').select('*').eq('engagement_id', engagementId).order('sort_order');
+        pbcRpt = pbc || [];
+        const { data: bh } = await supabaseClient.from('engagement_budget_hours').select('*').eq('engagement_id', engagementId).order('sort_order');
+        budgetRpt = bh || [];
+      }
+
       // Working TB journals (ISA 450) — adjusted TB + uncorrected misstatements summary (completion).
       let journalEntries = [], journalLines = [];
       {
@@ -596,18 +605,22 @@
         const RR = { low: 'Low', medium: 'Medium', high: 'High' };
         const CL = { simplified: 'Simplified', standard: 'Standard', enhanced: 'Enhanced (EDD)' };
         const CC = { accept: 'Accept — CDD satisfactory', accept_edd: 'Accept with enhanced due diligence', decline: 'Decline / do not proceed' };
+        const SR = { clear: 'Clear — no matches', hit_false_positive: 'Hit — false positive', hit_true_match: 'Hit — true match (EDD)' };
         const yn = (b) => b ? '&#10003;' : '&minus;';
         html += '<h2>AML / KYC — Client Due Diligence</h2>';
         html += '<table><tbody>';
         html += `<tr><th style="width:32%;">Status</th><td>${amlCdd.status === 'confirmed' ? '<span class="badge b-approved">CONFIRMED</span>' : '<span class="badge b-pending">DRAFT</span>'}</td></tr>`;
         if (amlCdd.cdd_date) html += `<tr><th>CDD date</th><td>${esc(formatDateLong(amlCdd.cdd_date) || '')}</td></tr>`;
+        if (amlCdd.cdd_basis) html += `<tr><th>Engagement basis</th><td>${amlCdd.cdd_basis === 'continuance' ? 'Continuance (recurring client)' : 'Initial engagement'}${amlCdd.no_changes_confirmed ? ' &middot; no changes to identity/ownership confirmed' : ''}</td></tr>`;
         html += `<tr><th>Client legal name</th><td>${esc(amlCdd.client_legal_name || '—')}</td></tr>`;
         if (amlCdd.legal_form || amlCdd.registration_number) html += `<tr><th>Legal form / reg. no.</th><td>${esc(amlCdd.legal_form || '—')}${amlCdd.registration_number ? ' &middot; ' + esc(amlCdd.registration_number) : ''}</td></tr>`;
         if (amlCdd.country || amlCdd.business_activity) html += `<tr><th>Country / activity</th><td>${esc(amlCdd.country || '—')}${amlCdd.business_activity ? ' &middot; ' + esc(amlCdd.business_activity) : ''}</td></tr>`;
-        html += `<tr><th>Ownership structure understood</th><td>${yn(amlCdd.ownership_structure_understood)}</td></tr>`;
+        if (amlCdd.license_evidence_url) html += `<tr><th>Trade licence — evidence</th><td><a href="${esc(amlCdd.license_evidence_url)}">link</a></td></tr>`;
+        html += `<tr><th>Ownership structure understood</th><td>${yn(amlCdd.ownership_structure_understood)}${amlCdd.high_risk_jurisdiction ? ' &middot; <span style="color:#991B1B;">high-risk jurisdiction involved</span>' : ''}${amlCdd.ownership_evidence_url ? ' &middot; <a href="' + esc(amlCdd.ownership_evidence_url) + '">evidence</a>' : ''}</td></tr>`;
         html += `<tr><th>Screening performed</th><td>${yn(amlCdd.screening_performed)}${amlCdd.screening_date ? ' &middot; ' + esc(formatDateLong(amlCdd.screening_date) || '') : ''}${amlCdd.screening_source ? ' &middot; ' + esc(amlCdd.screening_source) : ''}</td></tr>`;
-        if (amlCdd.screening_results) html += `<tr><th>Screening results</th><td style="white-space:pre-wrap;">${esc(amlCdd.screening_results)}</td></tr>`;
-        html += `<tr><th>PEP involved</th><td>${yn(amlCdd.pep_involved)}${amlCdd.pep_notes ? ' &middot; ' + esc(amlCdd.pep_notes) : ''}</td></tr>`;
+        if (amlCdd.screening_result) html += `<tr><th>Screening result</th><td>${esc(SR[amlCdd.screening_result] || amlCdd.screening_result)}${amlCdd.screening_evidence_url ? ' &middot; <a href="' + esc(amlCdd.screening_evidence_url) + '">evidence</a>' : ''}</td></tr>`;
+        if (amlCdd.screening_results) html += `<tr><th>Reviewer comments</th><td style="white-space:pre-wrap;">${esc(amlCdd.screening_results)}</td></tr>`;
+        if (amlCdd.pep_involved) html += `<tr><th>PEP involved</th><td>&#10003;${amlCdd.pep_notes ? ' &middot; ' + esc(amlCdd.pep_notes) : ''}</td></tr>`;
         html += `<tr><th>AML risk rating</th><td>${esc(RR[amlCdd.risk_rating] || '—')}${amlCdd.cdd_level ? ' &middot; CDD level: ' + esc(CL[amlCdd.cdd_level] || amlCdd.cdd_level) : ''}</td></tr>`;
         if (amlCdd.risk_rationale) html += `<tr><th>Risk rationale</th><td style="white-space:pre-wrap;">${esc(amlCdd.risk_rationale)}</td></tr>`;
         if (amlCdd.suspicious_activity_flag) html += `<tr><th>Suspicious activity</th><td>Flagged${amlCdd.suspicious_activity_notes ? ' &middot; ' + esc(amlCdd.suspicious_activity_notes) : ''}</td></tr>`;
@@ -762,6 +775,19 @@
           if (easActive.budgeted_hours)       html += `<tr><th>Budgeted hours</th><td>${easActive.budgeted_hours}</td></tr>`;
           html += '</tbody></table>';
         }
+        // Per-member budget breakdown (reviewer #5b)
+        if (budgetRpt.length) {
+          let th = 0, tc = 0;
+          html += '<h4>Budget by team member</h4>';
+          html += '<table><thead><tr><th>Team member</th><th>Grade</th><th style="text-align:right;">Hours</th><th style="text-align:right;">Rate</th><th style="text-align:right;">Cost</th></tr></thead><tbody>';
+          budgetRpt.forEach(b => {
+            const hrs = Number(b.budgeted_hours) || 0; const rate = Number(b.hourly_rate) || 0; const cost = hrs * rate;
+            th += hrs; tc += cost;
+            html += `<tr><td>${esc(b.member_name || '—')}</td><td>${esc(b.grade || '—')}</td><td style="text-align:right;">${hrs || '—'}</td><td style="text-align:right;">${rate ? rate.toLocaleString() : '—'}</td><td style="text-align:right;">${cost ? cost.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</td></tr>`;
+          });
+          html += `<tr style="background:#F5F7FA; font-weight:700;"><td colspan="2">Total</td><td style="text-align:right;">${th}</td><td></td><td style="text-align:right;">${tc ? tc.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</td></tr>`;
+          html += '</tbody></table>';
+        }
         // ISA-specific planning narratives (gap-closure items from 2-AI synthesis)
         html += narrSection('Internal controls overview (ISA 315.12-26)',         easActive.internal_controls_overview);
         html += narrSection('Planning analytics (ISA 315.6)',                     easActive.planning_analytics_note);
@@ -769,6 +795,12 @@
         html += narrSection('Subsequent events — planning approach (ISA 560)',    easActive.subsequent_events_planning_note);
 
         // ISA 315 — Understanding the entity (Sprint 4 standards floor)
+        html += narrSection('Nature of business & operations (ISA 315.19(a))',    easActive.entity_business_model);
+        html += narrSection('Ownership & governance (ISA 315.19(a))',             easActive.entity_ownership_governance);
+        html += narrSection('Locations / branches / components',                  easActive.entity_locations);
+        html += narrSection('IT environment & key systems (ISA 315.19(a))',       easActive.entity_it_environment);
+        html += narrSection('Objectives, strategies & business risks (ISA 315.19(a))', easActive.entity_objectives_strategies);
+        html += narrSection('Measures to assess financial performance (ISA 315.19(c))', easActive.entity_performance_measures);
         html += narrSection('Industry & external environment (ISA 315.19(a))',    easActive.industry_external_environment);
         html += narrSection('Significant changes since prior period (ISA 315.A47)', easActive.significant_changes_from_prior_year);
         // ISA 260 + ISA 250 polish (Perplexity 2026-05-24)
@@ -796,6 +828,19 @@
           if (easActive.fraud_team_discussion_attendees) html += `<tr><th>Attendees</th><td>${esc(easActive.fraud_team_discussion_attendees)}</td></tr>`;
           html += '</tbody></table>';
         }
+      }
+
+      // PBC — Prepared-By-Client requests (ISA 300/500 IPTE)
+      if (reportType === 'planning' && pbcRpt.length) {
+        const PBC_ST = { outstanding: 'Outstanding', requested: 'Requested', received: 'Received', under_review: 'Under review', accepted: 'Accepted', waived: 'Waived' };
+        const open = pbcRpt.filter(i => i.status === 'outstanding' || i.status === 'requested').length;
+        html += '<h2>PBC — Prepared-By-Client requests</h2>';
+        html += `<p style="font-size:12px; color:#5b7186;">${pbcRpt.length} items &middot; ${open} outstanding. Client-provided information (ISA 500 IPTE).</p>`;
+        html += '<table><thead><tr><th>Item</th><th>Area</th><th>Priority</th><th>Due</th><th>Status</th><th>Received</th><th>IPTE</th></tr></thead><tbody>';
+        pbcRpt.forEach(i => {
+          html += `<tr><td>${esc(i.description || '—')}</td><td>${esc(i.audit_area || '—')}</td><td>${esc(i.priority || '—')}</td><td>${i.due_date ? esc(formatDateLong(i.due_date) || '') : '—'}</td><td>${esc(PBC_ST[i.status] || i.status || '—')}</td><td>${i.received_date ? esc(formatDateLong(i.received_date) || '') : '—'}</td><td style="text-align:center;">${i.ipte_checked ? '&#10003;' : '&minus;'}</td></tr>`;
+        });
+        html += '</tbody></table>';
       }
 
       // ===== 2. MATERIALITY (ISA 320) — versioned workpaper =====
