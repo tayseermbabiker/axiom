@@ -200,6 +200,7 @@
   <div class="print-bar">
     <select id="report-type-select" onchange="changeReportType()" style="padding:8px 12px; font-size:14px; border-radius:6px; border:1px solid #d1d5db;">
       <option value="planning">Planning Memorandum (ISA 300)</option>
+      <option value="execution">Audit File (ISA 230)</option>
       <option value="completion">Completion Memorandum (ISA 700)</option>
     </select>
     <button class="btn-print" onclick="window.print()">Save as PDF</button>
@@ -214,7 +215,14 @@
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const engagementId = urlParams.get('id');
-    const reportType   = (urlParams.get('type') === 'completion') ? 'completion' : 'planning';
+    const _rawType     = urlParams.get('type');
+    const reportType   = (_rawType === 'completion' || _rawType === 'execution') ? _rawType : 'planning';
+    const isExec       = reportType === 'execution';      // Execution / Audit File (full section workpapers)
+    const isCompletion = reportType === 'completion';
+    // Findings, misstatement schedule, ML points and TB summary are shared by the
+    // Completion memo AND the Audit File. The completion memo body + ISA 540/505/530
+    // recaps stay completion-only; the full section workpapers are execution-only.
+    const showFindingsTbMl = isCompletion || isExec;
     if (!engagementId) { document.body.innerHTML = '<p>No engagement ID.</p>'; }
 
     function changeReportType() {
@@ -485,7 +493,9 @@
       const firmName = (org.name || 'Audexon').toUpperCase();
       const docTypeLabel = reportType === 'planning'
         ? 'PLANNING MEMORANDUM (ISA 300)'
-        : 'COMPLETION MEMORANDUM (ISA 700)';
+        : isExec
+          ? 'AUDIT FILE (ISA 230)'
+          : 'COMPLETION MEMORANDUM (ISA 700)';
       const yearEndLong  = eng.year_end_date ? formatDateLong(eng.year_end_date) : null;
       const generatedLong = formatDateLong(new Date().toISOString());
 
@@ -514,6 +524,35 @@
           <div class="cover-stat">
             <div class="lbl">Overall materiality</div>
             <div class="val">${materialityLabel}</div>
+          </div>
+        `;
+      } else if (isExec) {
+        // Audit File cover — fieldwork facts, not the partner opinion.
+        const mlCount = filtFindings.filter(f => f.is_management_letter_point).length;
+        coverStatsHtml = `
+          <div class="cover-stat">
+            <div class="lbl">Sections</div>
+            <div class="val">${filtSections.length}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Procedures done</div>
+            <div class="val">${doneP} / ${totalP}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Sections approved</div>
+            <div class="val ${approvedS === filtSections.length && filtSections.length > 0 ? 'ok' : ''}">${approvedS} / ${filtSections.length}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Open findings</div>
+            <div class="val ${openF > 0 ? 'alert' : 'ok'}">${openF}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">Adj. entries posted</div>
+            <div class="val">${adjustingEntries.filter(a => a.is_posted).length} / ${adjustingEntries.length}</div>
+          </div>
+          <div class="cover-stat">
+            <div class="lbl">ML points</div>
+            <div class="val">${mlCount}</div>
           </div>
         `;
       } else {
@@ -1105,8 +1144,8 @@
         </tbody></table>`;
       }
 
-      // ===== 3. FINDINGS & MISSTATEMENTS SUMMARY (completion report only) =====
-      if (reportType === 'completion') {
+      // ===== 3. FINDINGS & MISSTATEMENTS SUMMARY (completion + audit file) =====
+      if (showFindingsTbMl) {
       html += '<h2>Summary of Findings</h2>';
       if (filtFindings.length === 0) {
         html += '<p class="no-data">No findings recorded.</p>';
@@ -1387,11 +1426,17 @@
         }
       }
 
-      // Detail-dump section-workpapers loop removed (was 130+ lines of execution noise).
-      // The block below is the old loop body, gated to always-false so it never renders.
-      // Kept temporarily as reference; safe to delete after pilot review.
-      if (false) {
-        const orderedSections = [];
+      // ===== SECTION WORKPAPERS — full detail (Audit File / execution report only) =====
+      // The partner-facing Completion memo shows only the high-level "Work-done
+      // summary" above. The Audit File (execution) report is the team's full
+      // execution evidence: per-section sign-offs, conclusion, procedures & work
+      // performed, documents, finding details, and review notes.
+      if (isExec) {
+        html += '<h2>Section Workpapers</h2>';
+        html += '<p style="font-size:11px; color:#6E6E73; margin-bottom:12px;">Full execution evidence per section: sign-offs, conclusion, procedures &amp; work performed, documents referenced, findings, and review notes.</p>';
+        const interimSections = filtSections.filter(s => s.phase === 'interim');
+        const finalSections   = filtSections.filter(s => s.phase !== 'interim');
+        const orderedSections = [...interimSections, ...finalSections];
         let currentPhase = '';
         for (const s of orderedSections) {
         const phase = s.phase || 'final';
@@ -1414,7 +1459,7 @@
 
         html += `<div class="wp-section">`;
         html += `<div class="wp-header">
-          <div class="wp-title">${esc(s.name)} ${phase === 'interim' ? '<span class="badge b-interim">Interim</span>' : ''} <span class="badge b-${s.status === 'approved' ? 'approved' : 'pending'}">${s.status.replace(/_/g, ' ')}</span></div>
+          <div class="wp-title">${esc(s.name)} ${phase === 'interim' ? '<span class="badge b-interim">Interim</span>' : ''} <span class="badge b-${s.status === 'approved' ? 'approved' : 'pending'}">${(s.status || 'not started').replace(/_/g, ' ')}</span></div>
           <div class="wp-meta">Assigned: ${esc(assignee)} | Supervisor: ${esc(supName)} (${supApproved}) | Partner: ${esc(partName2)} (${partApproved})</div>
         </div>`;
 
@@ -1434,7 +1479,7 @@
             const status = resp?.status || 'pending';
             html += `<tr>
               <td>${esc(p.description)}</td>
-              <td>${esc(p.procedure_type.replace(/_/g, ' '))}</td>
+              <td>${esc((p.procedure_type || 'other').replace(/_/g, ' '))}</td>
               <td>${resp?.response ? esc(resp.response) : '<span style="color:#dc2626;font-style:italic;">Not recorded</span>'}</td>
               <td><span class="badge b-${status}">${status}</span></td>
             </tr>`;
@@ -1514,10 +1559,12 @@
 
         html += '</div>'; // wp-section
         }
-      } // end if (false) — dead detail-dump block, kept for reference only
+      } // end if (isExec) — Section Workpapers full detail
 
-      // ===== 4. MANAGEMENT LETTER POINTS (completion report only) =====
-      if (reportType === 'completion') {
+      // ===== 4. MANAGEMENT LETTER POINTS + (completion memo) + TRIAL BALANCE =====
+      // ML points and TB summary are shared by completion + audit file; the
+      // completion memorandum body itself stays completion-only (see `isCompletion` below).
+      if (showFindingsTbMl) {
       const mlFindings = filtFindings.filter(f => f.is_management_letter_point);
       html += '<h2>Management Letter Points</h2>';
       if (mlFindings.length === 0) {
@@ -1531,8 +1578,8 @@
         html += '</tbody></table>';
       }
 
-      // ===== 4B. COMPLETION MEMO (ISA 220 / ISA 700) =====
-      if (cm) {
+      // ===== 4B. COMPLETION MEMO (ISA 220 / ISA 700) — completion report only =====
+      if (cm && isCompletion) {
         html += '<h2>Engagement Completion Memorandum</h2>';
         const cmStatus = cm.status === 'locked' ? 'b-approved' : (cm.status === 'complete' ? 'b-reported' : 'b-pending');
         const cmStatusLabel = cm.status === 'locked' ? 'LOCKED &amp; SIGNED' : cm.status.toUpperCase();
@@ -1755,7 +1802,7 @@
       } // end if (reportType === 'completion') — wraps ML + CM + TB
 
       document.getElementById('report-content').innerHTML = html;
-      const reportLabel = reportType === 'planning' ? 'Planning Memorandum' : 'Completion Memorandum';
+      const reportLabel = reportType === 'planning' ? 'Planning Memorandum' : isExec ? 'Audit File' : 'Completion Memorandum';
       document.title = eng.client_name + ' — ' + reportLabel + ' — Audexon';
     }
 
