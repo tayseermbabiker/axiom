@@ -3413,38 +3413,47 @@
     }
 
     async function loadSections() {
-      const { data: secs } = await supabaseClient
-        .from('audit_sections')
-        .select('*')
-        .eq('engagement_id', engagementId)
-        .order('sort_order', { ascending: true });
-
-      sections = secs || [];
-
-      // Build classification-to-section map (dynamic, no junction table)
-      buildClassificationMap();
-
-      // Load procedures for all sections
-      if (sections.length > 0) {
-        const secIds = sections.map(s => s.id);
-        const { data: procs } = await supabaseClient
-          .from('audit_procedures')
-          .select('*')
-          .in('section_id', secIds);
-
-        procedures = procs || [];
-
-        if (procedures.length > 0) {
-          const procIds = procedures.map(p => p.id);
-          const { data: resps } = await supabaseClient
-            .from('procedure_responses')
-            .select('*')
-            .in('procedure_id', procIds);
-
-          procedureResponses = resps || [];
+      // Fetch sections + their procedures + responses in ONE nested PostgREST request
+      // (RLS is applied per table) instead of 3 sequential round-trips. If embedding
+      // isn't available (FK not exposed), fall back to the original chained queries.
+      procedures = [];
+      procedureResponses = [];
+      try {
+        const res = await supabaseClient
+          .from('audit_sections')
+          .select('*, audit_procedures(*, procedure_responses(*))')
+          .eq('engagement_id', engagementId)
+          .order('sort_order', { ascending: true });
+        if (res.error) throw res.error;
+        sections = res.data || [];
+        sections.forEach(s => {
+          (s.audit_procedures || []).forEach(p => {
+            procedures.push(p);
+            (p.procedure_responses || []).forEach(r => procedureResponses.push(r));
+          });
+        });
+      } catch (e) {
+        // Fallback — the proven 3-query path.
+        const r1 = await supabaseClient
+          .from('audit_sections').select('*')
+          .eq('engagement_id', engagementId).order('sort_order', { ascending: true });
+        sections = r1.data || [];
+        procedures = [];
+        procedureResponses = [];
+        if (sections.length > 0) {
+          const secIds = sections.map(s => s.id);
+          const r2 = await supabaseClient.from('audit_procedures').select('*').in('section_id', secIds);
+          procedures = r2.data || [];
+          if (procedures.length > 0) {
+            const procIds = procedures.map(p => p.id);
+            const r3 = await supabaseClient.from('procedure_responses').select('*').in('procedure_id', procIds);
+            procedureResponses = r3.data || [];
+          }
         }
       }
 
+      // Build classification-to-section map (dynamic, no junction table)
+      buildClassificationMap();
       renderSections();
     }
 
