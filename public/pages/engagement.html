@@ -2524,6 +2524,30 @@
                 <p class="text-sm text-muted" style="margin-bottom:12px;">No risks identified yet. The ISA 240 presumed fraud risks (revenue recognition + management override) should have been auto-seeded when this engagement was created. If they're missing, click "+ Add risk" to start.</p>
               </div>
 
+              <!-- ═══ Controls & reliance (ISA 315 D&I / ISA 330 / ISA 500) ═══ -->
+              <!-- Anti-bloat: substantive-only default needs ZERO control rows. -->
+              <div id="era-controls-section" style="margin-top:28px; border-top:1px solid var(--gray-200); padding-top:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:12px;">
+                  <div>
+                    <h3 style="font-size:13px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin:0;">Controls &amp; reliance</h3>
+                    <p class="text-sm text-muted" style="margin:4px 0 0; max-width:560px;">ISA 315 — design &amp; implementation of controls relevant to the audit, and the rely-vs-substantive decision. Most SME audits are substantive-only: <strong>no control rows are required</strong> — just tick the controls D&amp;I attestation at confirmation.</p>
+                  </div>
+                  <button class="btn btn-outline btn-sm" id="era-ctrl-btn-add" onclick="openControlModal()" type="button" style="white-space:nowrap;">+ Add a relevant control</button>
+                </div>
+
+                <!-- Substantive-only default note (shown when no control rows) -->
+                <div id="era-ctrl-default" style="display:none; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:12px 14px; font-size:13px; color:#166534;">
+                  <strong>No reliance on controls — substantive approach throughout.</strong>
+                  <div style="font-size:12px; color:#15803D; margin-top:3px;">The default for substantive-led audits. Recorded by the controls D&amp;I attestation at confirmation. Add a control above only where you evaluated a specific relevant control (significant-risk controls, journal-entry controls, or any control you plan to rely on).</div>
+                </div>
+
+                <!-- Significant-risk-without-control soft warning -->
+                <div id="era-ctrl-sig-warn" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:10px 14px; font-size:12px; color:#854D0E; margin-top:10px;"></div>
+
+                <!-- Controls register -->
+                <div id="era-ctrl-register" style="margin-top:10px;"></div>
+              </div>
+
               <!-- Error banner -->
               <div id="era-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:16px;"></div>
 
@@ -3048,7 +3072,7 @@
         <button class="modal-close" onclick="closeModal('modal-risk-confirm')">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="text-sm text-muted" style="margin:0 0 12px;">Tick all four attestations to confirm. The DB enforces this — confirmation will be rejected if any significant risk lacks a linked procedure.</p>
+        <p class="text-sm text-muted" style="margin:0 0 12px;">Tick all five attestations to confirm. The DB enforces this — confirmation will be rejected if any significant risk lacks a linked procedure.</p>
 
         <div id="risk-confirm-orphan-warn" style="display:none; background:#FEF2F2; border:1px solid #FECACA; padding:10px 14px; border-radius:6px; margin-bottom:14px; font-size:13px; color:#991B1B;"></div>
 
@@ -3080,6 +3104,10 @@
             <input type="checkbox" id="risk-att-responses" onchange="updateRiskConfirmBtn()" style="margin-top:3px;">
             <span>Every significant risk has at least one linked responsive procedure (ISA 330.21).</span>
           </label>
+          <label class="text-sm" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="risk-att-controls" onchange="updateRiskConfirmBtn()" style="margin-top:3px;">
+            <span>I have evaluated the design &amp; implementation of controls relevant to the audit and documented the reliance decision; where no reliance is taken, a substantive approach applies throughout (ISA 315).</span>
+          </label>
         </div>
 
         <div id="risk-confirm-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:12px;"></div>
@@ -3109,6 +3137,102 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('modal-risk-rebut')">Cancel</button>
         <button class="btn btn-primary" id="risk-rebut-btn" onclick="confirmRebutRevenue()">Rebut &amp; approve</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Assessment: Control D&I / reliance modal (ISA 315 D&I / ISA 500) -->
+  <div class="modal-overlay" id="modal-control-edit">
+    <div class="modal" style="max-width:620px;">
+      <div class="modal-header">
+        <h3 id="modal-control-title">Add relevant control</h3>
+        <button class="modal-close" onclick="closeModal('modal-control-edit')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted" style="margin:0 0 14px;">Document only controls <strong>relevant to the audit</strong> — controls over significant risks, journal-entry controls, or any control you plan to rely on. You do not log every control.</p>
+
+        <div class="form-group">
+          <label class="text-sm">Control reference / name *</label>
+          <input type="text" id="control-ref" class="form-control" placeholder="e.g. Sales credit-note approval">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="text-sm">Process / cycle</label>
+            <input type="text" id="control-cycle" class="form-control" placeholder="e.g. Revenue">
+          </div>
+          <div class="form-group">
+            <label class="text-sm">Control type</label>
+            <select id="control-type" class="form-control">
+              <option value="manual">Manual</option>
+              <option value="automated">Automated</option>
+              <option value="itgc">IT general control (ITGC)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Related assertion(s)</label>
+          <input type="text" id="control-assertions" class="form-control" placeholder="e.g. occurrence, cut-off">
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Addresses risk (optional)</label>
+          <select id="control-risk" class="form-control"></select>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="text-sm">Design conclusion</label>
+            <select id="control-design" class="form-control">
+              <option value="">— Select —</option>
+              <option value="effective">Effective</option>
+              <option value="deficient">Deficient</option>
+              <option value="not_applicable">Not applicable</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="text-sm">Implementation</label>
+            <select id="control-impl" class="form-control">
+              <option value="">— Select —</option>
+              <option value="implemented">Implemented</option>
+              <option value="not_implemented">Not implemented</option>
+            </select>
+          </div>
+        </div>
+        <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:10px;">
+          <input type="checkbox" id="control-walkthrough" onchange="onControlWalkthroughChange()">
+          <span>Walkthrough performed</span>
+        </label>
+        <div class="form-group" id="control-walkthrough-ref-wrap" style="display:none;">
+          <label class="text-sm">Walkthrough reference</label>
+          <input type="text" id="control-walkthrough-ref" class="form-control" placeholder="e.g. WP ref / file note">
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Reliance decision</label>
+          <select id="control-reliance" class="form-control" onchange="onControlRelianceChange()">
+            <option value="no_reliance">No reliance — substantive only</option>
+            <option value="rely">Rely on controls</option>
+            <option value="combined">Combined (rely + substantive)</option>
+          </select>
+        </div>
+        <div id="control-reliance-warn" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:12px; color:#991B1B; margin-bottom:10px;">
+          <strong>Control reliance selected.</strong> The operating-effectiveness testing module is not yet available — you must document your sampling methodology and tests-of-controls workpapers and attach them manually (FS / evidence upload). Selecting reliance does <strong>not</strong> automatically reduce the extent of substantive testing.
+        </div>
+        <label class="text-sm" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:10px;">
+          <input type="checkbox" id="control-ipte" onchange="onControlIpteChange()">
+          <span>Relies on information produced by the entity (IPTE — ISA 500)</span>
+        </label>
+        <div class="form-group" id="control-ipte-note-wrap" style="display:none;">
+          <label class="text-sm">IPTE accuracy &amp; completeness assessment</label>
+          <textarea id="control-ipte-note" class="form-control" rows="2" placeholder="How the accuracy & completeness of the entity-produced information was assessed (ISA 500.9)."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="text-sm">Notes</label>
+          <textarea id="control-notes" class="form-control" rows="2"></textarea>
+        </div>
+        <div id="control-modal-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="control-btn-delete" onclick="deleteControlFromModal()" style="margin-right:auto; display:none;">Delete</button>
+        <button class="btn btn-outline" onclick="closeModal('modal-control-edit')">Cancel</button>
+        <button class="btn btn-primary" id="control-btn-save" onclick="saveControlFromModal()">Save control</button>
       </div>
     </div>
   </div>
@@ -8587,7 +8711,9 @@
     let eraAssessment       = null;
     let eraSectionsCache    = [];      // engagement sections [{id, name}]
     let eraProceduresCache  = [];      // engagement procedures [{id, section_id, description}]
+    let eraControls         = [];      // engagement_controls rows
     let eraEditingRiskId    = null;
+    let eraEditingControlId = null;
     let eraProcsModalRiskId = null;
     let eraRebutRiskId      = null;
 
@@ -8617,22 +8743,25 @@
         p_organization_id: currentOrg.id,
       });
 
-      const [risksRes, linksRes, assessRes, secsRes, procsRes] = await Promise.all([
+      const [risksRes, linksRes, assessRes, secsRes, procsRes, controlsRes] = await Promise.all([
         supabaseClient.from('engagement_risks').select('*').eq('engagement_id', engagementId).order('section_id').order('created_at'),
         supabaseClient.from('engagement_risk_procedure_links').select('id, risk_id, procedure_id'),
         supabaseClient.from('engagement_risk_assessment').select('*').eq('engagement_id', engagementId).maybeSingle(),
         supabaseClient.from('audit_sections').select('id, name, sort_order').eq('engagement_id', engagementId).order('sort_order', { nullsFirst: false }).order('name'),
         supabaseClient.from('audit_procedures').select('id, section_id, description').order('sort_order', { nullsFirst: false }),
+        supabaseClient.from('engagement_controls').select('*').eq('engagement_id', engagementId).order('created_at'),
       ]);
 
-      if (risksRes.error)  { showEraError('Could not load risks: ' + risksRes.error.message); return; }
-      if (linksRes.error)  { showEraError('Could not load links: ' + linksRes.error.message); return; }
-      if (assessRes.error) { showEraError('Could not load assessment: ' + assessRes.error.message); return; }
+      if (risksRes.error)    { showEraError('Could not load risks: ' + risksRes.error.message); return; }
+      if (linksRes.error)    { showEraError('Could not load links: ' + linksRes.error.message); return; }
+      if (assessRes.error)   { showEraError('Could not load assessment: ' + assessRes.error.message); return; }
+      if (controlsRes.error) { showEraError('Could not load controls: ' + controlsRes.error.message); return; }
 
       eraRisks           = risksRes.data || [];
       eraLinks           = linksRes.data || [];
       eraAssessment      = assessRes.data || null;
       eraSectionsCache   = secsRes.data || [];
+      eraControls        = controlsRes.data || [];
       const allProcs     = procsRes.data || [];
       const engSectionIds = new Set(eraSectionsCache.map(s => s.id));
       eraProceduresCache = allProcs.filter(p => engSectionIds.has(p.section_id));
@@ -8674,10 +8803,213 @@
 
       // Editing controls: disable Add when confirmed
       document.getElementById('era-btn-add').disabled = confirmed;
+      document.getElementById('era-ctrl-btn-add').disabled = confirmed;
 
       renderRiskCounters();
       renderRiskRegister();
       renderRiskPivot();
+      renderControlsSection();
+    }
+
+    // ---- Controls & reliance (ISA 315 D&I / ISA 330 / ISA 500) ----
+    const CONTROL_TYPE_LABEL   = { manual: 'Manual', automated: 'Automated', itgc: 'ITGC' };
+    const CONTROL_DESIGN_LABEL = { effective: 'Design effective', deficient: 'Design deficient', not_applicable: 'Design N/A' };
+    const CONTROL_IMPL_LABEL   = { implemented: 'Implemented', not_implemented: 'Not implemented' };
+    const CONTROL_RELY_LABEL   = { no_reliance: 'No reliance', rely: 'Rely', combined: 'Combined' };
+
+    function renderControlsSection() {
+      const confirmed = eraAssessment && eraAssessment.status === 'confirmed';
+      const wrap      = document.getElementById('era-ctrl-register');
+      const defaultEl = document.getElementById('era-ctrl-default');
+      const sigWarn   = document.getElementById('era-ctrl-sig-warn');
+
+      // Substantive-only default note when there are no control rows.
+      defaultEl.style.display = eraControls.length ? 'none' : 'block';
+
+      // Soft warning: significant risks with no linked control documented.
+      const controlledRiskIds = new Set(eraControls.filter(c => c.risk_id).map(c => c.risk_id));
+      const sigWithoutControl = eraRisks.filter(r => r.is_significant && !controlledRiskIds.has(r.id));
+      if (eraControls.length && sigWithoutControl.length) {
+        sigWarn.innerHTML = '<strong>' + sigWithoutControl.length + ' significant risk(s)</strong> have no control linked here. That is fine if your response is fully substantive — ISA 315 only requires control D&amp;I where controls are relevant to the audit.';
+        sigWarn.style.display = 'block';
+      } else {
+        sigWarn.style.display = 'none';
+      }
+
+      if (!eraControls.length) { wrap.innerHTML = ''; return; }
+
+      wrap.innerHTML =
+        '<table style="border-collapse:collapse; width:100%; font-size:12px;">' +
+        '<thead><tr style="text-align:left; color:var(--gray-500);">' +
+          '<th style="padding:6px 8px; border-bottom:1px solid var(--gray-200);">Control</th>' +
+          '<th style="padding:6px 8px; border-bottom:1px solid var(--gray-200);">Type</th>' +
+          '<th style="padding:6px 8px; border-bottom:1px solid var(--gray-200);">D&amp;I conclusion</th>' +
+          '<th style="padding:6px 8px; border-bottom:1px solid var(--gray-200);">Reliance</th>' +
+          '<th style="padding:6px 8px; border-bottom:1px solid var(--gray-200);">Risk</th>' +
+          '<th style="padding:6px 8px; border-bottom:1px solid var(--gray-200);"></th>' +
+        '</tr></thead><tbody>' +
+        eraControls.map(c => {
+          const risk = c.risk_id ? eraRisks.find(r => r.id === c.risk_id) : null;
+          const riskLabel = risk
+            ? escHtml(risk.risk_description.slice(0, 40)) + (risk.risk_description.length > 40 ? '…' : '')
+            : (c.risk_id ? '<span style="color:#991B1B;">risk deleted</span>' : '<span style="color:var(--gray-400);">—</span>');
+          const di = [c.design_conclusion ? CONTROL_DESIGN_LABEL[c.design_conclusion] : null,
+                      c.implementation ? CONTROL_IMPL_LABEL[c.implementation] : null]
+                     .filter(Boolean).join(' · ') || '<span style="color:var(--gray-400);">not concluded</span>';
+          const relyColor = c.reliance_decision === 'no_reliance' ? 'var(--gray-500)' : '#A16207';
+          const relyBg    = c.reliance_decision === 'no_reliance' ? 'var(--gray-100)' : '#FEF9C3';
+          return '<tr>' +
+            '<td style="padding:6px 8px; border-bottom:0.5px solid var(--gray-100);"><strong>' + escHtml(c.control_ref) + '</strong>' +
+              (c.process_cycle ? '<div style="color:var(--gray-500);">' + escHtml(c.process_cycle) + (c.assertions ? ' · ' + escHtml(c.assertions) : '') + '</div>' : '') +
+              (c.ipte_relied ? '<div style="color:#854D0E; font-size:11px;">IPTE (ISA 500)</div>' : '') + '</td>' +
+            '<td style="padding:6px 8px; border-bottom:0.5px solid var(--gray-100);">' + (CONTROL_TYPE_LABEL[c.control_type] || c.control_type) + '</td>' +
+            '<td style="padding:6px 8px; border-bottom:0.5px solid var(--gray-100);">' + di + '</td>' +
+            '<td style="padding:6px 8px; border-bottom:0.5px solid var(--gray-100);"><span style="background:' + relyBg + '; color:' + relyColor + '; padding:2px 7px; border-radius:10px; font-weight:600; white-space:nowrap;">' + CONTROL_RELY_LABEL[c.reliance_decision] + '</span></td>' +
+            '<td style="padding:6px 8px; border-bottom:0.5px solid var(--gray-100);">' + riskLabel + '</td>' +
+            '<td style="padding:6px 8px; border-bottom:0.5px solid var(--gray-100); text-align:right;">' +
+              (confirmed ? '' : '<button class="btn btn-outline btn-sm" onclick="openControlModal(\'' + c.id + '\')" type="button">Edit</button>') + '</td>' +
+          '</tr>';
+        }).join('') +
+        '</tbody></table>';
+    }
+
+    function showControlModalError(msg) {
+      const el = document.getElementById('control-modal-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function onControlWalkthroughChange() {
+      document.getElementById('control-walkthrough-ref-wrap').style.display =
+        document.getElementById('control-walkthrough').checked ? 'block' : 'none';
+    }
+
+    function onControlRelianceChange() {
+      const v = document.getElementById('control-reliance').value;
+      document.getElementById('control-reliance-warn').style.display = (v === 'no_reliance') ? 'none' : 'block';
+    }
+
+    function onControlIpteChange() {
+      document.getElementById('control-ipte-note-wrap').style.display =
+        document.getElementById('control-ipte').checked ? 'block' : 'none';
+    }
+
+    function openControlModal(controlId) {
+      eraEditingControlId = controlId || null;
+      const existing = controlId ? eraControls.find(c => c.id === controlId) : null;
+      document.getElementById('control-modal-error').style.display = 'none';
+
+      // Risk dropdown (optional link)
+      const riskSel = document.getElementById('control-risk');
+      riskSel.innerHTML = '<option value="">— Not tied to a specific risk —</option>' +
+        eraRisks.map(r => {
+          const sec = eraSectionsCache.find(s => s.id === r.section_id);
+          const label = (sec ? sec.name + ': ' : '') + r.risk_description.slice(0, 60) + (r.risk_description.length > 60 ? '…' : '');
+          return '<option value="' + r.id + '">' + escHtml(label) + '</option>';
+        }).join('');
+
+      const set = (id, val) => { document.getElementById(id).value = val; };
+      if (existing) {
+        document.getElementById('modal-control-title').textContent = 'Edit control';
+        set('control-ref', existing.control_ref || '');
+        set('control-cycle', existing.process_cycle || '');
+        set('control-type', existing.control_type || 'manual');
+        set('control-assertions', existing.assertions || '');
+        riskSel.value = existing.risk_id || '';
+        set('control-design', existing.design_conclusion || '');
+        set('control-impl', existing.implementation || '');
+        document.getElementById('control-walkthrough').checked = !!existing.walkthrough_performed;
+        set('control-walkthrough-ref', existing.walkthrough_ref || '');
+        set('control-reliance', existing.reliance_decision || 'no_reliance');
+        document.getElementById('control-ipte').checked = !!existing.ipte_relied;
+        set('control-ipte-note', existing.ipte_assessment_note || '');
+        set('control-notes', existing.notes || '');
+        document.getElementById('control-btn-delete').style.display = '';
+      } else {
+        document.getElementById('modal-control-title').textContent = 'Add relevant control';
+        set('control-ref', '');
+        set('control-cycle', '');
+        set('control-type', 'manual');
+        set('control-assertions', '');
+        riskSel.value = '';
+        set('control-design', '');
+        set('control-impl', '');
+        document.getElementById('control-walkthrough').checked = false;
+        set('control-walkthrough-ref', '');
+        set('control-reliance', 'no_reliance');
+        document.getElementById('control-ipte').checked = false;
+        set('control-ipte-note', '');
+        set('control-notes', '');
+        document.getElementById('control-btn-delete').style.display = 'none';
+      }
+      onControlWalkthroughChange();
+      onControlRelianceChange();
+      onControlIpteChange();
+      document.getElementById('modal-control-edit').classList.add('active');
+    }
+
+    async function saveControlFromModal() {
+      const errEl = document.getElementById('control-modal-error');
+      errEl.style.display = 'none';
+
+      const payload = {
+        control_ref:          document.getElementById('control-ref').value.trim(),
+        process_cycle:        document.getElementById('control-cycle').value.trim() || null,
+        control_type:         document.getElementById('control-type').value,
+        assertions:           document.getElementById('control-assertions').value.trim() || null,
+        risk_id:              document.getElementById('control-risk').value || null,
+        design_conclusion:    document.getElementById('control-design').value || null,
+        implementation:       document.getElementById('control-impl').value || null,
+        walkthrough_performed: document.getElementById('control-walkthrough').checked,
+        walkthrough_ref:      document.getElementById('control-walkthrough-ref').value.trim() || null,
+        reliance_decision:    document.getElementById('control-reliance').value,
+        ipte_relied:          document.getElementById('control-ipte').checked,
+        ipte_assessment_note: document.getElementById('control-ipte-note').value.trim() || null,
+        notes:                document.getElementById('control-notes').value.trim() || null,
+      };
+
+      if (!payload.control_ref) { showControlModalError('Control reference / name is required.'); return; }
+      if (payload.ipte_relied && !payload.ipte_assessment_note) { showControlModalError('Describe how the IPTE accuracy & completeness was assessed (ISA 500).'); return; }
+
+      const btn = document.getElementById('control-btn-save');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        if (eraEditingControlId) {
+          const { error } = await supabaseClient.from('engagement_controls').update(payload).eq('id', eraEditingControlId);
+          if (error) throw error;
+          await logActivity(engagementId, 'updated_control', 'engagement_control', eraEditingControlId, {});
+        } else {
+          const { data, error } = await supabaseClient.from('engagement_controls')
+            .insert({ ...payload, engagement_id: engagementId, organization_id: currentOrg.id, created_by: currentUser.id })
+            .select().single();
+          if (error) throw error;
+          await logActivity(engagementId, 'added_control', 'engagement_control', data.id, {});
+        }
+        closeModal('modal-control-edit');
+        await loadRiskAssessment();
+      } catch (err) {
+        showControlModalError('Save failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save control';
+      }
+    }
+
+    async function deleteControlFromModal() {
+      if (!eraEditingControlId) return;
+      const ok = await showActionModal({
+        title: 'Delete control?',
+        message: 'This removes the documented control D&I evaluation. This cannot be undone.',
+        okLabel: 'Delete',
+        okClass: 'btn-primary'
+      });
+      if (!ok) return;
+      const { error } = await supabaseClient.from('engagement_controls').delete().eq('id', eraEditingControlId);
+      if (error) { showControlModalError('Delete failed: ' + error.message); return; }
+      await logActivity(engagementId, 'deleted_control', 'engagement_control', eraEditingControlId, {});
+      closeModal('modal-control-edit');
+      await loadRiskAssessment();
     }
 
     function renderRiskCounters() {
@@ -9127,7 +9459,7 @@
 
     function confirmRiskAssessment() {
       // Reset attestations
-      ['risk-att-assertions','risk-att-significant','risk-att-standback','risk-att-responses'].forEach(id => {
+      ['risk-att-assertions','risk-att-significant','risk-att-standback','risk-att-responses','risk-att-controls'].forEach(id => {
         document.getElementById(id).checked = false;
       });
       document.getElementById('risk-confirm-error').style.display = 'none';
@@ -9174,7 +9506,7 @@
     }
 
     function updateRiskConfirmBtn() {
-      const all = ['risk-att-assertions','risk-att-significant','risk-att-standback','risk-att-responses']
+      const all = ['risk-att-assertions','risk-att-significant','risk-att-standback','risk-att-responses','risk-att-controls']
         .every(id => document.getElementById(id).checked);
       document.getElementById('risk-confirm-btn').disabled = !all;
     }
@@ -9194,6 +9526,7 @@
             isa_315_28_significant_risks_identified:  true,
             isa_315_stand_back_completed:             true,
             isa_330_responses_linked:                 true,
+            isa_315_controls_di_concluded:            true,
           })
           .eq('engagement_id', engagementId);
         if (updErr) throw updErr;

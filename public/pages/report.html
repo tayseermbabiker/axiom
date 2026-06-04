@@ -323,7 +323,7 @@
         sectionsRes, tbRes, profilesRes,
         eaccRes, elRes, eiRes, eiThreatsRes, eiNasRes,
         easRes,
-        risksRes, riskLinksRes, riskAssessRes,
+        risksRes, riskLinksRes, riskAssessRes, controlsRes,
         cmRes, cmAttestRes,
         matVersRes, matItemsRes,
         estimatesRes, confirmationsRes, samplingsRes
@@ -340,6 +340,7 @@
         supabaseClient.from('engagement_risks').select('*').eq('engagement_id', engagementId).order('section_id').order('created_at'),
         supabaseClient.from('engagement_risk_procedure_links').select('id, risk_id, procedure_id'),
         supabaseClient.from('engagement_risk_assessment').select('*').eq('engagement_id', engagementId).maybeSingle(),
+        supabaseClient.from('engagement_controls').select('*').eq('engagement_id', engagementId).order('created_at'),
         supabaseClient.from('engagement_completion_memo').select('*').eq('engagement_id', engagementId).maybeSingle(),
         supabaseClient.from('completion_attestations').select('*'),
         supabaseClient.from('engagement_materiality_versions').select('*').eq('engagement_id', engagementId).order('created_at', { ascending: true }),
@@ -361,6 +362,7 @@
       const risks      = risksRes.data || [];
       const riskLinks  = riskLinksRes.data || [];
       const riskAssess = riskAssessRes.data || null;
+      const controls   = controlsRes.data || [];
       const cm         = cmRes.data || null;
       const cmAttests  = cm ? (cmAttestRes.data || []).filter(a => a.engagement_completion_memo_id === cm.id) : [];
       const estimates     = estimatesRes.data || [];
@@ -1116,6 +1118,40 @@
           html += '</table>';
         });
 
+        // Controls & reliance (ISA 315 D&I / ISA 330 / ISA 500)
+        html += '<h3>Controls &amp; reliance (ISA 315 D&amp;I)</h3>';
+        if (!controls.length) {
+          html += '<p style="font-size:11px; color:#374151; margin:4px 0 14px;">No reliance on controls &mdash; substantive approach throughout. The design &amp; implementation of controls relevant to the audit was considered; no controls were identified for reliance, so a fully substantive response was planned (ISA 315 / ISA 330).</p>';
+        } else {
+          const CTRL_TYPE = { manual:'Manual', automated:'Automated', itgc:'ITGC' };
+          const CTRL_DSGN = { effective:'Design effective', deficient:'Design deficient', not_applicable:'Design N/A' };
+          const CTRL_IMPL = { implemented:'Implemented', not_implemented:'Not implemented' };
+          const CTRL_RELY = { no_reliance:'No reliance', rely:'Rely', combined:'Combined' };
+          html += '<table style="font-size:10px;"><thead><tr><th>Control</th><th>Type</th><th>D&amp;I conclusion</th><th>Reliance</th><th>Addresses risk</th></tr></thead><tbody>';
+          controls.forEach(c => {
+            const risk = c.risk_id ? risks.find(r => r.id === c.risk_id) : null;
+            const riskLabel = risk
+              ? esc(risk.risk_description.slice(0,60)) + (risk.risk_description.length > 60 ? '&hellip;' : '')
+              : (c.risk_id ? '<span style="color:#991B1B;">risk deleted</span>' : '&minus;');
+            const di = [c.design_conclusion ? CTRL_DSGN[c.design_conclusion] : null,
+                        c.implementation ? CTRL_IMPL[c.implementation] : null].filter(Boolean).join(' &middot; ') || '&minus;';
+            const relyCell = c.reliance_decision === 'no_reliance'
+              ? CTRL_RELY[c.reliance_decision]
+              : '<strong style="color:#A16207;">' + CTRL_RELY[c.reliance_decision] + '</strong>';
+            html += `<tr>
+              <td>${esc(c.control_ref)}${c.process_cycle ? '<div style="color:#6b7280;">' + esc(c.process_cycle) + (c.assertions ? ' &middot; ' + esc(c.assertions) : '') + '</div>' : ''}${c.ipte_relied ? '<div style="color:#854D0E; font-size:9px;">IPTE assessed (ISA 500)</div>' : ''}</td>
+              <td>${CTRL_TYPE[c.control_type] || esc(c.control_type)}</td>
+              <td>${di}</td>
+              <td style="text-align:center;">${relyCell}</td>
+              <td>${riskLabel}</td>
+            </tr>`;
+          });
+          html += '</tbody></table>';
+          if (controls.some(c => c.reliance_decision !== 'no_reliance')) {
+            html += '<p style="font-size:10px; color:#854D0E; margin:4px 0 14px;">Where reliance is taken, operating-effectiveness tests of controls (ISA 330.8) and the sampling methodology are documented separately in the file evidence.</p>';
+          }
+        }
+
         // Attestations summary
         if (riskAssess) {
           html += '<h4>Risk assessment attestations</h4>';
@@ -1124,6 +1160,7 @@
           html += `<tr><td>Significant risks identified per professional judgement (ISA 315.28)</td><td style="text-align:center;">${riskAssess.isa_315_28_significant_risks_identified ? '&#10003;' : '&minus;'}</td></tr>`;
           html += `<tr><td>Stand-back consideration of unflagged CoTABDs (ISA 315.A114)</td><td style="text-align:center;">${riskAssess.isa_315_stand_back_completed ? '&#10003;' : '&minus;'}</td></tr>`;
           html += `<tr><td>All significant risks linked to responsive procedures (ISA 330.21)</td><td style="text-align:center;">${riskAssess.isa_330_responses_linked ? '&#10003;' : '&minus;'}</td></tr>`;
+          html += `<tr><td>Controls D&amp;I evaluated and reliance decision documented (ISA 315)</td><td style="text-align:center;">${riskAssess.isa_315_controls_di_concluded ? '&#10003;' : '&minus;'}</td></tr>`;
           html += '</tbody></table>';
         }
       }
