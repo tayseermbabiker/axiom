@@ -1502,37 +1502,10 @@
     };
     const ASSERTION_ORDER = ['existence','occurrence','completeness','accuracy','valuation','cutoff','classification','rights_obligations','presentation','fs_level'];
 
+    // Assertions are fixed, methodology-assigned tags (read-only) — preparers
+    // execute the test, they don't classify it. Seeded from PROCEDURE_ASSERTIONS.
     function assertionReadonlyChips(arr) {
       return (arr || []).map(a => '<span class="assertion-chip">' + escHtml(ASSERTION_LABEL[a] || a) + '</span>').join('');
-    }
-    function assertionEditorChips(proc) {
-      const selected = new Set(proc.assertions || []);
-      return ASSERTION_ORDER.map(a => {
-        const on = selected.has(a);
-        return '<span class="assertion-chip" role="button" tabindex="0" style="cursor:pointer;' +
-          (on ? '' : 'background:transparent;color:var(--gray-400);border:1px solid var(--gray-300);') +
-          '" onclick="toggleAssertion(\'' + proc.id + '\',\'' + a + '\')">' + escHtml(ASSERTION_LABEL[a]) + '</span>';
-      }).join('');
-    }
-    function renderAssertionEditorBlock(proc) {
-      if (isLockedForCurrentUser() || !can('add_procedure')) return '';
-      return '<div class="form-group"><label>Assertions tested (ISA 315) — click to toggle</label>' +
-        '<div class="procedure-assertions" id="assert-edit-' + proc.id + '">' + assertionEditorChips(proc) + '</div></div>';
-    }
-    async function toggleAssertion(procId, code) {
-      if (isLockedForCurrentUser() || !can('add_procedure')) return;
-      const proc = procedures.find(p => p.id === procId);
-      if (!proc) return;
-      const set = new Set(proc.assertions || []);
-      if (set.has(code)) set.delete(code); else set.add(code);
-      const next = ASSERTION_ORDER.filter(a => set.has(a));  // keep canonical order
-      const { error } = await supabaseClient.from('audit_procedures').update({ assertions: next }).eq('id', procId);
-      if (error) { alert('Could not update assertions: ' + error.message); return; }
-      proc.assertions = next;
-      const h = document.getElementById('header-assert-' + procId);
-      if (h) h.innerHTML = assertionReadonlyChips(next);
-      const e = document.getElementById('assert-edit-' + procId);
-      if (e) e.innerHTML = assertionEditorChips(proc);
     }
 
     function renderProcedures() {
@@ -1566,21 +1539,12 @@
                 </div>
               </div>
               <div class="procedure-header-right" onclick="event.stopPropagation();">
-                ${!isLockedForCurrentUser() && can('add_procedure')
-                  ? `<select class="form-control" style="width:auto;padding:2px 6px;font-size:11px;border-radius:4px;" onchange="updateProcType('${proc.id}', this.value)">
-                      <option value="test_of_detail" ${proc.procedure_type === 'test_of_detail' ? 'selected' : ''}>Test of Details</option>
-                      <option value="analytical" ${proc.procedure_type === 'analytical' ? 'selected' : ''}>Substantive Analytical</option>
-                      <option value="controls" ${proc.procedure_type === 'controls' ? 'selected' : ''}>Test of Controls</option>
-                      <option value="other" ${proc.procedure_type === 'other' ? 'selected' : ''}>Risk Assessment / Admin</option>
-                    </select>`
-                  : `<span class="badge-type badge-type-${proc.procedure_type}">${typeLabel}</span>`
-                }
+                <span class="badge-type badge-type-${proc.procedure_type}">${typeLabel}</span>
                 <span class="badge badge-${status}">${status}</span>
               </div>
             </div>
             <div class="procedure-body" id="body-${proc.id}">
               <div style="padding-top:12px;">
-                ${renderAssertionEditorBlock(proc)}
                 <!-- What you did -->
                 <div class="form-group">
                   <label>What you did</label>
