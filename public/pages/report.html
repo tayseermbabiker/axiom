@@ -306,6 +306,10 @@
       return `<span class="chip ${cls}">${label}</span>`;
     }
 
+    // ISA-precise labels for the procedures table (type + ISA 315 assertions)
+    const PROC_TYPE_LABEL = { test_of_detail:'Test of Details', analytical:'Substantive Analytical', controls:'Test of Controls', other:'Risk Assessment / Admin' };
+    const ASSERTION_LABEL = { existence:'Existence', occurrence:'Occurrence', completeness:'Completeness', accuracy:'Accuracy', valuation:'Valuation & Allocation', cutoff:'Cut-off', classification:'Classification', rights_obligations:'Rights & Obligations', presentation:'Presentation & Disclosure', fs_level:'FS-level / Pervasive' };
+
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '/pages/login.html'; return; }
@@ -1514,9 +1518,10 @@
           for (const p of secProcs) {
             const resp = responses.find(r => r.procedure_id === p.id);
             const status = resp?.status || 'pending';
+            const asserts = (p.assertions || []).map(a => ASSERTION_LABEL[a] || a).join(', ');
             html += `<tr>
-              <td>${esc(p.description)}</td>
-              <td>${esc((p.procedure_type || 'other').replace(/_/g, ' '))}</td>
+              <td>${esc(p.description)}${asserts ? '<div style="font-size:9px;color:#6b7280;margin-top:3px;">Assertions: ' + esc(asserts) + '</div>' : ''}</td>
+              <td>${esc(PROC_TYPE_LABEL[p.procedure_type] || (p.procedure_type || 'other').replace(/_/g, ' '))}</td>
               <td>${resp?.response ? esc(resp.response) : '<span style="color:#dc2626;font-style:italic;">Not recorded</span>'}</td>
               <td><span class="badge b-${status}">${status}</span></td>
             </tr>`;

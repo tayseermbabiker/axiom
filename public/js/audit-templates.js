@@ -275,6 +275,114 @@ const PROCEDURE_TEMPLATES = {
   ],
 };
 
+// Per-procedure ISA 315 (A190) assertion tags, parallel to PROCEDURE_TEMPLATES
+// (same order/count per section). Kept separate so the carefully-worded
+// procedure descriptions are never touched by a categorisation change.
+// Codes: existence, occurrence, completeness, accuracy, valuation, cutoff,
+// classification, rights_obligations, presentation, fs_level (FS-level/pervasive).
+// 3-AI verified 2026-06-04 (Perplexity + Gemini ISA conformance + Copilot schema).
+// See specs/procedure-assertion-tagging-2026-06.md. An empty [] = process/
+// scoping/conclusion step with no assertion-level mapping (ISA-acceptable).
+const PROCEDURE_ASSERTIONS = {
+  'Cash & Bank': [
+    ['existence','rights_obligations','completeness'], ['existence','accuracy'], ['cutoff','existence'],
+    ['cutoff'], ['cutoff'], ['rights_obligations','classification','presentation'], ['valuation'],
+    ['classification','presentation'], ['classification','presentation'], ['presentation','completeness'],
+    ['occurrence','accuracy'], ['accuracy','completeness'],
+  ],
+  'Accounts Receivable': [
+    ['existence','rights_obligations','accuracy'], ['completeness','accuracy'], ['existence','valuation'],
+    ['valuation'], ['cutoff'], ['classification','valuation'], ['existence','rights_obligations','accuracy'],
+    ['valuation'], ['presentation'], ['occurrence','accuracy'], ['accuracy','completeness'],
+  ],
+  'Prepayments & Other Receivables': [
+    ['completeness','existence'], ['existence','accuracy','rights_obligations'], ['valuation','accuracy','cutoff'],
+    ['existence','rights_obligations'], ['existence','rights_obligations'], ['valuation'], ['classification'],
+    ['accuracy','completeness'], ['valuation','existence'], ['completeness'], ['presentation'],
+    ['existence','valuation','classification'],
+  ],
+  'Inventory': [
+    ['existence','completeness'], ['existence','completeness','accuracy'], ['valuation','accuracy'], ['valuation'],
+    ['valuation','accuracy'], ['valuation','accuracy'], ['valuation'], ['cutoff','rights_obligations'],
+    ['rights_obligations','existence'], ['presentation','classification'], ['accuracy','completeness'], ['completeness'],
+  ],
+  'PPE / Fixed Assets': [
+    ['occurrence','accuracy','valuation','rights_obligations'], ['occurrence','accuracy','cutoff'], ['valuation','accuracy'],
+    ['existence'], ['completeness','classification'], ['valuation'], ['rights_obligations'], ['valuation'],
+    ['existence','valuation','classification'], ['existence','valuation'], ['presentation','classification'],
+    ['accuracy','completeness'],
+  ],
+  'Accounts Payable': [
+    ['completeness'], ['existence','completeness','accuracy'], ['existence','completeness'], ['cutoff'],
+    ['completeness','valuation'], ['classification','valuation'], ['presentation','rights_obligations'], ['valuation'],
+    ['classification','presentation'], ['occurrence','completeness','accuracy'], ['accuracy','completeness'],
+    ['completeness','accuracy'],
+  ],
+  'Loans & Borrowings': [
+    ['existence','completeness','rights_obligations'], ['existence','accuracy'], ['accuracy','valuation'],
+    ['classification','presentation'], ['classification'], ['presentation','rights_obligations'],
+    ['rights_obligations','presentation'], ['valuation'], ['presentation'], ['accuracy'], ['completeness'],
+  ],
+  'Provisions & End-of-Service Benefits': [
+    ['completeness','accuracy'], ['valuation','accuracy','completeness'], ['accuracy','valuation'],
+    ['occurrence','accuracy','cutoff'], ['completeness','existence'], ['classification','presentation'],
+    ['valuation','completeness'], ['completeness','presentation'], ['accuracy','completeness'], ['classification'],
+    ['presentation'], ['completeness','presentation'],
+  ],
+  'Equity & Share Capital': [
+    ['existence','accuracy','rights_obligations'], ['occurrence','accuracy','cutoff'], ['classification','presentation'],
+    ['occurrence','accuracy','classification'], ['accuracy','completeness'], ['accuracy','completeness'],
+    ['accuracy','completeness'], ['completeness'], ['presentation'], ['accuracy','presentation'], ['accuracy','completeness'],
+  ],
+  'Revenue': [
+    ['occurrence','accuracy','cutoff'], ['cutoff'], ['occurrence','cutoff'], ['occurrence'], ['completeness'],
+    ['completeness','valuation','cutoff'], ['accuracy','valuation'], ['accuracy'], ['occurrence','presentation'],
+    ['accuracy','completeness'], ['presentation'], ['occurrence','accuracy'],
+  ],
+  'Cost of Sales': [
+    ['accuracy','completeness'], ['cutoff'], ['occurrence','accuracy'], ['valuation','accuracy'], ['valuation','accuracy'],
+    ['valuation','accuracy'], ['occurrence','accuracy'], ['accuracy','completeness'], ['occurrence','accuracy'],
+    ['accuracy','valuation'], ['completeness'], ['classification','presentation'],
+  ],
+  'Payroll & HR': [
+    ['accuracy','occurrence'], ['completeness','accuracy'], ['occurrence','cutoff'], ['occurrence'],
+    ['accuracy','completeness'], ['accuracy','completeness'], ['completeness','cutoff','valuation'], ['presentation','accuracy'],
+    ['classification'], ['occurrence','accuracy'], ['accuracy','completeness'], ['presentation'],
+  ],
+  'Operating Expenses': [
+    ['occurrence','accuracy'], ['completeness'], ['cutoff'], ['accuracy','valuation','completeness'],
+    ['classification','occurrence'], ['occurrence','presentation'], ['classification'], ['occurrence'],
+    ['occurrence','accuracy'], ['accuracy','completeness'], ['presentation'],
+  ],
+  'Tax': [
+    ['accuracy','valuation','completeness'], ['valuation','accuracy'], ['accuracy','presentation'], ['accuracy','completeness'],
+    ['completeness','rights_obligations'], ['existence','accuracy'], ['completeness','valuation'], ['accuracy','completeness'],
+    ['classification','presentation'], ['accuracy'], ['completeness'],
+  ],
+  'Related Parties': [
+    [], ['completeness'], ['completeness'], ['occurrence','accuracy','rights_obligations'],
+    ['existence','valuation','rights_obligations'], ['completeness','classification'], ['completeness'], ['presentation'],
+    ['completeness','presentation'], [],
+  ],
+  'Subsequent Events': [
+    ['completeness','cutoff'], ['completeness'], ['completeness','cutoff'], ['completeness','cutoff'],
+    ['valuation','completeness'], ['classification','presentation','cutoff'], [], ['completeness','presentation'], [], [],
+  ],
+  'Going Concern': [
+    ['fs_level'], ['fs_level'], ['fs_level'], ['fs_level'], ['fs_level','valuation'], ['fs_level','classification'],
+    ['fs_level','presentation'], ['fs_level','cutoff'], ['fs_level'], ['presentation','fs_level'], [],
+    ['fs_level','presentation'], ['fs_level','accuracy'],
+  ],
+  'Journal Entry Testing': [
+    [], ['completeness','accuracy'], ['completeness'], ['occurrence','cutoff','accuracy'], ['occurrence','accuracy'],
+    ['occurrence','accuracy'], ['classification','accuracy'], ['occurrence','classification'], ['occurrence','accuracy'],
+    ['occurrence','cutoff'], ['occurrence','accuracy'], [],
+  ],
+  'Out of Scope / Below Materiality': [
+    [], ['completeness'], [], [],
+  ],
+};
+
 // BS-then-P&L order — used by seedSectionsForEngagement to give every new
 // engagement a predictable layout. Never alphabetical.
 const SECTION_SEED_ORDER = [
@@ -346,11 +454,13 @@ async function seedSectionsForEngagement(supabaseClient, engagementId, createdBy
   for (const sec of (created || [])) {
     const tmpl = PROCEDURE_TEMPLATES[sec.name];
     if (!tmpl) continue;
+    const assertMap = PROCEDURE_ASSERTIONS[sec.name] || [];
     tmpl.forEach((p, i) => {
       proceduresToInsert.push({
         section_id: sec.id,
         description: p.description,
         procedure_type: p.type,
+        assertions: assertMap[i] || [],
         sort_order: i + 1,
       });
     });
