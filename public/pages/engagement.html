@@ -3534,6 +3534,7 @@
       // Fetch sections + their procedures + responses in ONE nested PostgREST request
       // (RLS is applied per table) instead of 3 sequential round-trips. If embedding
       // isn't available (FK not exposed), fall back to the original chained queries.
+      eraLoaded = false;  // section list changed → invalidate the risk-assessment tab cache
       procedures = [];
       procedureResponses = [];
       try {
@@ -4276,7 +4277,7 @@
       if (tab === 'engagement-independence') loadIndependenceWorkpaper();
       if (tab === 'engagement-acceptance') loadEngagementAcceptance();
       if (tab === 'audit-strategy') loadAuditStrategy();
-      if (tab === 'risk-assessment') loadRiskAssessment();
+      if (tab === 'risk-assessment') { if (eraLoaded) renderRiskAssessment(); else loadRiskAssessment(); }
       if (tab === 'estimates') loadEstimates();
       if (tab === 'confirmations') loadConfirmations();
       if (tab === 'working-tb') loadWorkingTB();
@@ -8714,6 +8715,7 @@
     let eraSectionsCache    = [];      // engagement sections [{id, name}]
     let eraProceduresCache  = [];      // engagement procedures [{id, section_id, description}]
     let eraControls         = [];      // engagement_controls rows
+    let eraLoaded           = false;   // true once the risk tab has fetched; re-opens render from cache (invalidated by loadSections)
     let eraEditingRiskId    = null;
     let eraEditingControlId = null;
     let eraProcsModalRiskId = null;
@@ -8768,6 +8770,7 @@
       const engSectionIds = new Set(eraSectionsCache.map(s => s.id));
       eraProceduresCache = allProcs.filter(p => engSectionIds.has(p.section_id));
 
+      eraLoaded = true;  // cache primed; subsequent tab opens render from memory
       renderRiskAssessment();
     }
 
@@ -8980,16 +8983,20 @@
         if (eraEditingControlId) {
           const { error } = await supabaseClient.from('engagement_controls').update(payload).eq('id', eraEditingControlId);
           if (error) throw error;
+          // In-place: patch the cached row instead of re-fetching the whole tab.
+          const idx = eraControls.findIndex(c => c.id === eraEditingControlId);
+          if (idx >= 0) eraControls[idx] = { ...eraControls[idx], ...payload };
           await logActivity(engagementId, 'updated_control', 'engagement_control', eraEditingControlId, {});
         } else {
           const { data, error } = await supabaseClient.from('engagement_controls')
             .insert({ ...payload, engagement_id: engagementId, organization_id: currentOrg.id, created_by: currentUser.id })
             .select().single();
           if (error) throw error;
+          eraControls.push(data);  // in-place add
           await logActivity(engagementId, 'added_control', 'engagement_control', data.id, {});
         }
         closeModal('modal-control-edit');
-        await loadRiskAssessment();
+        renderControlsSection();  // re-render only the controls block, no re-fetch
       } catch (err) {
         showControlModalError('Save failed: ' + err.message);
       } finally {
@@ -9009,9 +9016,10 @@
       if (!ok) return;
       const { error } = await supabaseClient.from('engagement_controls').delete().eq('id', eraEditingControlId);
       if (error) { showControlModalError('Delete failed: ' + error.message); return; }
+      eraControls = eraControls.filter(c => c.id !== eraEditingControlId);  // in-place remove
       await logActivity(engagementId, 'deleted_control', 'engagement_control', eraEditingControlId, {});
       closeModal('modal-control-edit');
-      await loadRiskAssessment();
+      renderControlsSection();  // re-render only the controls block, no re-fetch
     }
 
     function renderRiskCounters() {
