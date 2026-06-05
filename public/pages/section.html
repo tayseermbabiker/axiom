@@ -1243,6 +1243,22 @@
       document.getElementById('progress-label').textContent = doneProcs + ' of ' + totalProcs + ' procedures done (' + pct + '%)';
     }
 
+    // The TB version a section reads: its pinned version if set, else the
+    // CURRENT (latest) uploaded version. NEVER "all versions" — that sums every
+    // superseded upload and shows each account once per upload (the 100x bug).
+    let _secCurrentTbVersionId = '__unset';
+    async function getSectionTbVersionId() {
+      if (section && section.tb_version_id) return section.tb_version_id;
+      if (_secCurrentTbVersionId !== '__unset') return _secCurrentTbVersionId;
+      const { data: latest } = await supabaseClient
+        .from('tb_versions').select('id')
+        .eq('engagement_id', engagementId)
+        .order('uploaded_at', { ascending: false })
+        .limit(1).maybeSingle();
+      _secCurrentTbVersionId = latest ? latest.id : null;
+      return _secCurrentTbVersionId;
+    }
+
     // ---- TB Lines (matched by classification_tags) ----
     async function loadTBLines() {
       const tags = section.classification_tags || [];
@@ -1265,7 +1281,7 @@
         return;
       }
 
-      // Load TB lines from section's linked version (or all if no version set)
+      // Load TB lines scoped to the section's TB version (pinned, else current).
       let query = supabaseClient
         .from('trial_balance_lines')
         .select('*')
@@ -1273,9 +1289,8 @@
         .in('classification', tags)
         .order('account_code');
 
-      if (section.tb_version_id) {
-        query = query.eq('tb_version_id', section.tb_version_id);
-      }
+      const vid = await getSectionTbVersionId();
+      if (vid) query = query.eq('tb_version_id', vid);
 
       const { data: lines } = await query;
 
@@ -2920,7 +2935,8 @@
       if (proposeBtn && !isApproved) proposeBtn.style.display = 'inline-flex';
 
       let q = supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code');
-      if (section.tb_version_id) q = q.eq('tb_version_id', section.tb_version_id);
+      const vid = await getSectionTbVersionId();
+      if (vid) q = q.eq('tb_version_id', vid);
       const { data: allTb } = await q;
       secAllTb = allTb || [];
 

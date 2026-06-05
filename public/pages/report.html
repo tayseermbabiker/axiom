@@ -385,7 +385,14 @@
       const matAllItems = matItemsRes.data || [];
 
       const sections = sectionsRes.data || [];
-      const tbLines = tbRes.data || [];
+
+      // Scope TB to the CURRENT (latest) uploaded version only — superseded
+      // versions must never be summed (they'd show each account once per upload).
+      const { data: _tbVers } = await supabaseClient.from('tb_versions')
+        .select('id').eq('engagement_id', engagementId)
+        .order('uploaded_at', { ascending: false }).limit(1).maybeSingle();
+      let tbLines = tbRes.data || [];
+      if (_tbVers && _tbVers.id) tbLines = tbLines.filter(l => l.tb_version_id === _tbVers.id);
 
       // AML / KYC (DNFBP CDD) — for the planning memorandum.
       let amlCdd = null, amlOwnersRpt = [];
