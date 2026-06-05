@@ -772,36 +772,10 @@
           <label for="finding-ml-flag" style="margin:0; font-weight:500;">Include in Management Letter</label>
         </div>
 
-        <!-- Adjusting entry panel (shown when type = misstatement) -->
+        <!-- Misstatement → quantify once, as a journal (single source, ISA 450) -->
         <div id="adjusting-entry-panel" style="display:none; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:14px; margin-bottom:12px;">
-          <label style="font-weight:600; font-size:13px; display:block; margin-bottom:8px;">Adjusting Entry</label>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <div class="form-group" style="margin:0;">
-              <label style="font-size:12px;">Debit Account</label>
-              <input type="text" class="form-control" id="adj-debit" placeholder="e.g. Accounts Receivable">
-            </div>
-            <div class="form-group" style="margin:0;">
-              <label style="font-size:12px;">Credit Account</label>
-              <input type="text" class="form-control" id="adj-credit" placeholder="e.g. Revenue">
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
-            <div class="form-group" style="margin:0;">
-              <label style="font-size:12px;">Amount</label>
-              <input type="number" class="form-control" id="adj-amount" placeholder="0.00" step="0.01">
-            </div>
-            <div class="form-group" style="margin:0;">
-              <label style="font-size:12px;">Posted by client?</label>
-              <select class="form-control" id="adj-posted">
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group" style="margin:8px 0 0;">
-            <label style="font-size:12px;">Narration</label>
-            <input type="text" class="form-control" id="adj-narration" placeholder="Description of the adjustment">
-          </div>
+          <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Adjusting journal (ISA 450)</label>
+          <p class="text-sm text-muted" style="margin:0;">Record this misstatement's adjusting entry (Dr/Cr, amount, corrected vs uncorrected, reclassification) <strong>once</strong> as a journal via <strong>&ldquo;+ Propose adjustment&rdquo;</strong> in the section's Adjustments area below. The misstatement schedule, working TB, and completion memo all read from that single journal &mdash; no need to re-enter it here.</p>
         </div>
 
         <!-- ISA 265 details (collapsible) -->
@@ -2248,11 +2222,6 @@
       document.getElementById('finding-modal-title').textContent = 'Add Finding';
       document.getElementById('adjusting-entry-panel').style.display = 'none';
       document.getElementById('finding-details-section').style.display = 'none';
-      document.getElementById('adj-debit').value = '';
-      document.getElementById('adj-credit').value = '';
-      document.getElementById('adj-amount').value = '';
-      document.getElementById('adj-narration').value = '';
-      document.getElementById('adj-posted').value = 'false';
 
       if (findingId) {
         const f = findings.find(x => x.id === findingId);
@@ -2277,23 +2246,6 @@
           if (f.criteria || f.cause || f.management_response || f.monetary_impact) {
             document.getElementById('finding-details-section').style.display = 'block';
           }
-          // Pre-load existing adjusting entry for this finding (was missing
-          // entirely — partner would see empty fields, retype them, then
-          // hit save without realising it was overwriting the same data).
-          supabaseClient
-            .from('adjusting_entries')
-            .select('*')
-            .eq('finding_id', findingId)
-            .maybeSingle()
-            .then(({ data: adj }) => {
-              if (adj) {
-                document.getElementById('adj-debit').value     = adj.debit_account  || '';
-                document.getElementById('adj-credit').value    = adj.credit_account || '';
-                document.getElementById('adj-amount').value    = adj.amount         ?? '';
-                document.getElementById('adj-narration').value = adj.narration      || '';
-                document.getElementById('adj-posted').value    = adj.is_posted ? 'true' : 'false';
-              }
-            });
         }
       }
 
@@ -2356,54 +2308,9 @@
         await logActivity(engagementId, 'added_finding', 'finding', data.id, { title, severity, finding_type: findingType });
       }
 
-      // Save adjusting entry if misstatement
-      if (findingType === 'misstatement') {
-        const debit = document.getElementById('adj-debit').value.trim();
-        const credit = document.getElementById('adj-credit').value.trim();
-        const amount = parseFloat(document.getElementById('adj-amount').value) || 0;
-        const narration = document.getElementById('adj-narration').value.trim();
-        const isPosted = document.getElementById('adj-posted').value === 'true';
-
-        // Either all three required fields are present, OR all are empty
-        // (partner wants no adjusting entry). Anything in between is a
-        // user error — flag it instead of silently dropping the save.
-        const anyFilled = debit || credit || amount > 0 || narration;
-        const allRequired = debit && credit && amount > 0;
-        if (anyFilled && !allRequired) {
-          alert('Adjusting entry not saved: requires Debit account, Credit account, and Amount (> 0) all together. Either fill all three or clear all three.');
-          btn.disabled = false;
-          btn.textContent = 'Save Finding';
-          return;
-        }
-        if (allRequired) {
-          // Delete existing entries for this finding, then insert new one
-          const { error: delErr } = await supabaseClient
-            .from('adjusting_entries').delete().eq('finding_id', savedId);
-          if (delErr) {
-            alert('Adjusting entry update failed (delete step): ' + delErr.message);
-            btn.disabled = false;
-            btn.textContent = 'Save Finding';
-            return;
-          }
-          const { error: insErr } = await supabaseClient.from('adjusting_entries').insert({
-            finding_id: savedId,
-            debit_account: debit,
-            credit_account: credit,
-            amount: amount,
-            narration: narration,
-            is_posted: isPosted
-          });
-          if (insErr) {
-            alert('Adjusting entry save failed: ' + insErr.message);
-            btn.disabled = false;
-            btn.textContent = 'Save Finding';
-            return;
-          }
-        } else {
-          // All empty — partner cleared everything, so delete any existing entry
-          await supabaseClient.from('adjusting_entries').delete().eq('finding_id', savedId);
-        }
-      }
+      // T2: the misstatement's adjustment is NOT entered here anymore — it's a
+      // journal (single source). saveFinding writes the narrative only; the
+      // auditor quantifies via "+ Propose adjustment" (journal_entries).
 
       btn.disabled = false;
       btn.textContent = 'Save Finding';

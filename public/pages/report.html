@@ -561,7 +561,7 @@
           </div>
           <div class="cover-stat">
             <div class="lbl">Adj. entries posted</div>
-            <div class="val">${adjustingEntries.filter(a => a.is_posted).length} / ${adjustingEntries.length}</div>
+            <div class="val">${journalEntries.filter(e => e.isa450_status === 'corrected').length} / ${journalEntries.length}</div>
           </div>
           <div class="cover-stat">
             <div class="lbl">ML points</div>
@@ -581,7 +581,7 @@
           </div>
           <div class="cover-stat">
             <div class="lbl">Adj. entries posted</div>
-            <div class="val">${adjustingEntries.filter(a => a.is_posted).length} / ${adjustingEntries.length}</div>
+            <div class="val">${journalEntries.filter(e => e.isa450_status === 'corrected').length} / ${journalEntries.length}</div>
           </div>
           <div class="cover-stat">
             <div class="lbl">Sections approved</div>
@@ -1209,9 +1209,9 @@
         html += '<table><thead><tr><th>Finding Title</th><th>Section</th><th>Type</th><th>ISA Ref</th><th>Severity</th><th>Status</th><th>ML</th><th>Adj.</th><th>Adj. Entry Status</th></tr></thead><tbody>';
         html += filtFindings.map(f => {
           const secName = sections.find(s => s.id === f.section_id)?.name || '—';
-          const fAdj = adjustingEntries.filter(a => a.finding_id === f.id);
+          const fAdj = journalEntries.filter(e => e.linked_finding_id === f.id);
           const hasAdj = fAdj.length > 0;
-          const adjStatus = hasAdj ? (fAdj.every(a => a.is_posted) ? 'Posted' : 'Not Posted') : '';
+          const adjStatus = hasAdj ? (fAdj.every(e => e.isa450_status === 'corrected') ? 'Posted' : 'Not Posted') : '';
           const isaRef = f.isa_reference || ISA_REF_BY_TYPE[f.finding_type] || '—';
           return `<tr>
             <td>${esc(f.title)}</td>
@@ -1233,17 +1233,17 @@
       //   corrected       — has at least one POSTED adjusting entry (booked)
       //   clearly_trivial — close_category = unadjusted_immaterial (ISA 450.5)
       //   uncorrected     — everything else: identified, not booked, not trivial
-      const misstatementFindings = filtFindings.filter(f => f.finding_type === 'misstatement');
-      if (misstatementFindings.length > 0) {
-        const classified = misstatementFindings.map(f => {
-          const ajes = adjustingEntries.filter(a => a.finding_id === f.id);
-          const hasPosted = ajes.some(a => a.is_posted);
-          const isTrivial = f.close_category === 'unadjusted_immaterial';
-          let cls;
-          if (hasPosted) cls = 'corrected';
-          else if (isTrivial) cls = 'clearly_trivial';
-          else cls = 'uncorrected';
-          return { f, ajes, cls };
+      // Single source: journal_entries (+ journal_lines). isa450_status drives the group.
+      const _linesByEntry = {};
+      journalLines.forEach(l => { (_linesByEntry[l.journal_entry_id] = _linesByEntry[l.journal_entry_id] || []).push(l); });
+      const _findingById = {};
+      findings.forEach(f => { _findingById[f.id] = f; });
+      if (journalEntries.length > 0) {
+        const STATUS_GROUP = { corrected:'corrected', uncorrected:'uncorrected', proposed:'uncorrected', trivial_excluded:'clearly_trivial' };
+        const classified = journalEntries.map(je => {
+          const legs = _linesByEntry[je.id] || [];
+          const magnitude = legs.reduce((s, l) => s + (Number(l.debit) || 0), 0); // sum of debit legs = entry magnitude
+          return { je, legs, magnitude, cls: STATUS_GROUP[je.isa450_status] || 'uncorrected' };
         });
         const groups = {
           corrected:       classified.filter(r => r.cls === 'corrected'),
@@ -1251,14 +1251,14 @@
           clearly_trivial: classified.filter(r => r.cls === 'clearly_trivial'),
         };
         const groupMeta = {
-          corrected:       { label: 'Corrected misstatements',       hint: 'Management posted adjusting entries — already reflected in the financial statements.' },
+          corrected:       { label: 'Corrected misstatements',       hint: 'Management posted the adjusting journal — already reflected in the financial statements.' },
           uncorrected:     { label: 'Uncorrected misstatements',     hint: 'Identified misstatements not posted by management — accumulate against materiality per ISA 450.11.' },
           clearly_trivial: { label: 'Clearly trivial misstatements', hint: 'Below the clearly-trivial threshold — not accumulated per ISA 450.5.' },
         };
         const sums = { corrected: 0, uncorrected: 0, clearly_trivial: 0 };
 
         html += '<h3>Misstatement Schedule (ISA 450)</h3>';
-        html += '<p style="font-size:11px; color:#6E6E73; margin-bottom:12px;">Line-by-line view of every misstatement identified during the audit, grouped per ISA 450.5 (clearly trivial) and ISA 450.11 (corrected vs uncorrected).</p>';
+        html += '<p style="font-size:11px; color:#6E6E73; margin-bottom:12px;">Every misstatement identified during the audit (source: working-TB journals), grouped per ISA 450.5 (clearly trivial) and ISA 450.11 (corrected vs uncorrected).</p>';
 
         ['corrected', 'uncorrected', 'clearly_trivial'].forEach(key => {
           const rows = groups[key];
@@ -1266,42 +1266,30 @@
           const m = groupMeta[key];
           html += `<h4 style="margin-top:14px;">${m.label} (${rows.length})</h4>`;
           html += `<p style="font-size:10px; color:#6E6E73; margin-bottom:6px;">${m.hint}</p>`;
-          html += '<table><thead><tr><th>Finding</th><th>Section</th><th>Impact</th><th>Adjusting Entry</th><th>Posted?</th></tr></thead><tbody>';
+          html += '<table><thead><tr><th>Misstatement</th><th>Section</th><th>Type</th><th>Impact</th><th>Journal (Dr/Cr)</th></tr></thead><tbody>';
           rows.forEach(r => {
-            const secName = sections.find(s => s.id === r.f.section_id)?.name || '—';
-            // Impact: prefer explicit finding.monetary_impact, else fall
-            // back to sum of |AJE amounts| (same logic as completion-memo
-            // rollup) so the schedule doesn't report 0 when only the AJE
-            // amount was entered.
-            const findingAmt = Number(r.f.monetary_impact) || 0;
-            const ajeAmt = r.ajes.reduce((s, a) => s + Math.abs(Number(a.amount) || 0), 0);
-            const amt = findingAmt || ajeAmt;
-            sums[key] += Math.abs(amt);
-            let aeCell;
-            if (r.ajes.length === 0) {
-              aeCell = '—';
-            } else {
-              aeCell = r.ajes.map(a =>
-                `Dr ${esc(a.debit_account)} / Cr ${esc(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-              ).join('<br>');
-            }
-            let postedCell;
-            if (r.ajes.length === 0)                       postedCell = '—';
-            else if (r.ajes.every(a => a.is_posted))       postedCell = '<span style="color:#065F46; font-weight:600;">POSTED</span>';
-            else if (r.ajes.some(a => a.is_posted))        postedCell = '<span style="color:#92400E; font-weight:600;">PARTIAL</span>';
-            else                                            postedCell = '<span style="color:#92400E; font-weight:600;">NOT POSTED</span>';
+            const linkedF = r.je.linked_finding_id ? _findingById[r.je.linked_finding_id] : null;
+            const secId = r.je.source_section_id || (linkedF ? linkedF.section_id : null);
+            const secName = sections.find(s => s.id === secId)?.name || '—';
+            const title = r.je.description || (linkedF ? linkedF.title : null) || 'Adjustment';
+            sums[key] += r.magnitude;
+            const typeLabel = r.je.impact_type === 'reclassification' ? 'Reclassification' : 'Adjustment';
+            const jeCell = r.legs.length ? r.legs.map(l => {
+              const isDr = (Number(l.debit) || 0) > 0;
+              return (isDr ? 'Dr ' : 'Cr ') + esc(l.account_name || l.account_code || '—') + ' — ' + Number(isDr ? l.debit : l.credit).toLocaleString(undefined, { minimumFractionDigits: 2 });
+            }).join('<br>') : '—';
             html += `<tr>
-              <td>${esc(r.f.title)}</td>
+              <td>${esc(title)}</td>
               <td>${esc(secName)}</td>
-              <td style="text-align:right;">${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-              <td>${aeCell}</td>
-              <td>${postedCell}</td>
+              <td>${typeLabel}</td>
+              <td style="text-align:right;">${r.magnitude.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td>${jeCell}</td>
             </tr>`;
           });
           html += `<tr style="font-weight:700; border-top:2px solid #d1d5db;">
-            <td colspan="2">${m.label} (Σ)</td>
+            <td colspan="3">${m.label} (Σ)</td>
             <td style="text-align:right;">${sums[key].toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <td></td><td></td>
+            <td></td>
           </tr>`;
           html += '</tbody></table>';
         });
@@ -1555,7 +1543,7 @@
         if (secFindings.length > 0) {
           html += '<h4>Finding Details</h4>';
           for (const f of secFindings) {
-            const adjEntries = adjustingEntries.filter(a => a.finding_id === f.id);
+            const adjEntries = journalEntries.filter(e => e.linked_finding_id === f.id);
             const sevColor = f.severity === 'high' ? '#991B1B' : f.severity === 'medium' ? '#92400E' : '#4B5563';
             const statusColor = f.status === 'open' ? '#92400E' : f.status === 'resolved' ? '#065F46' : '#1E40AF';
 
@@ -1576,11 +1564,15 @@
             else footerParts.push('No Management Letter point for this finding.');
 
             if (adjEntries.length > 0) {
-              for (const a of adjEntries) {
+              for (const e of adjEntries) {
+                const legs = journalLines.filter(l => l.journal_entry_id === e.id);
+                const mag = legs.reduce((s, l) => s + (Number(l.debit) || 0), 0);
+                const drcr = legs.map(l => ((Number(l.debit) || 0) > 0 ? 'Dr ' : 'Cr ') + esc(l.account_name || l.account_code || '—')).join(' / ') || '—';
+                const posted = e.isa450_status === 'corrected';
                 html += `<div style="border:1px solid #FDE68A; background:#FFFBEB; border-radius:4px; padding:8px 12px; margin-top:8px; font-size:11px;">
-                  <strong>Adjusting Entry:</strong> Dr ${esc(a.debit_account)} / Cr ${esc(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  ${a.narration ? ' (' + esc(a.narration) + ')' : ''}
-                  <span style="color:${a.is_posted ? '#065F46' : '#92400E'}; font-weight:600; margin-left:8px;">${a.is_posted ? 'POSTED' : 'NOT POSTED'}</span>
+                  <strong>Adjusting journal:</strong> ${drcr} — ${mag.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  ${e.description ? ' (' + esc(e.description) + ')' : ''}
+                  <span style="color:${posted ? '#065F46' : '#92400E'}; font-weight:600; margin-left:8px;">${posted ? 'POSTED' : 'NOT POSTED'}</span>
                 </div>`;
               }
             } else {

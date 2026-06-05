@@ -822,51 +822,62 @@
     }
 
     // ISA 450 line-by-line misstatement schedule.
-    // Pure query on existing tables (findings.finding_type='misstatement'
-    // joined to adjusting_entries) — no new schema. Classification per
-    // ISA 450.5 (clearly trivial) and 450.11 (corrected vs uncorrected).
+    // SINGLE SOURCE: journal_entries (+ journal_lines). The misstatement IS the
+    // journal; the linked finding (if any) supplies narrative title/effect.
+    // isa450_status drives the group (ISA 450.5 trivial / 450.11 corrected vs
+    // uncorrected). Shaped to match the existing renderer (pseudo adjusting entry).
     async function loadMisstatementSchedule() {
       misstatementRows = [];
       const { data: secs } = await supabaseClient
-        .from('audit_sections')
-        .select('id, name')
-        .eq('engagement_id', engagementId);
-      const sections = secs || [];
-      const secIds = sections.map(s => s.id);
-      const secById = Object.fromEntries(sections.map(s => [s.id, s.name]));
-      if (secIds.length === 0) return;
+        .from('audit_sections').select('id, name').eq('engagement_id', engagementId);
+      const secById = Object.fromEntries((secs || []).map(s => [s.id, s.name]));
 
-      const { data: findings } = await supabaseClient
-        .from('findings')
-        .select('id, section_id, title, condition, effect, monetary_impact, close_category, status, management_response, severity, is_management_letter_point')
-        .in('section_id', secIds)
-        .eq('finding_type', 'misstatement');
-      const fs = findings || [];
-      if (fs.length === 0) return;
+      const { data: jes } = await supabaseClient
+        .from('journal_entries')
+        .select('id, description, source_section_id, linked_finding_id, impact_type, isa450_status, is_posted_to_adjusted_tb')
+        .eq('engagement_id', engagementId)
+        .order('created_at', { ascending: true });
+      const entries = jes || [];
+      if (entries.length === 0) return;
 
-      const fIds = fs.map(f => f.id);
-      const { data: aes } = await supabaseClient
-        .from('adjusting_entries')
-        .select('id, finding_id, debit_account, credit_account, amount, narration, is_posted')
-        .in('finding_id', fIds);
-      const aesByFinding = {};
-      (aes || []).forEach(a => {
-        (aesByFinding[a.finding_id] = aesByFinding[a.finding_id] || []).push(a);
-      });
+      const jeIds = entries.map(e => e.id);
+      const { data: jls } = await supabaseClient
+        .from('journal_lines').select('*').in('journal_entry_id', jeIds);
+      const linesByEntry = {};
+      (jls || []).forEach(l => { (linesByEntry[l.journal_entry_id] = linesByEntry[l.journal_entry_id] || []).push(l); });
 
-      misstatementRows = fs.map(f => {
-        const ajes = aesByFinding[f.id] || [];
-        const hasPosted = ajes.some(a => a.is_posted);
-        const isTrivial = f.close_category === 'unadjusted_immaterial';
-        let classification;
-        if (hasPosted) classification = 'corrected';
-        else if (isTrivial) classification = 'clearly_trivial';
-        else classification = 'uncorrected';
+      const fIds = entries.map(e => e.linked_finding_id).filter(Boolean);
+      const fById = {};
+      if (fIds.length) {
+        const { data: fs } = await supabaseClient
+          .from('findings').select('id, section_id, title, effect, monetary_impact').in('id', fIds);
+        (fs || []).forEach(f => { fById[f.id] = f; });
+      }
+
+      const STATUS_GROUP = { corrected:'corrected', uncorrected:'uncorrected', proposed:'uncorrected', trivial_excluded:'clearly_trivial' };
+
+      misstatementRows = entries.map(je => {
+        const legs = linesByEntry[je.id] || [];
+        const magnitude = legs.reduce((s, l) => s + (Number(l.debit) || 0), 0); // sum of debit legs = entry magnitude
+        const drs = legs.filter(l => (Number(l.debit)  || 0) > 0).map(l => l.account_name || l.account_code || '—');
+        const crs = legs.filter(l => (Number(l.credit) || 0) > 0).map(l => l.account_name || l.account_code || '—');
+        const linkedF = je.linked_finding_id ? fById[je.linked_finding_id] : null;
+        const secId = je.source_section_id || (linkedF ? linkedF.section_id : null);
+        const posted = je.isa450_status === 'corrected';
         return {
-          finding: f,
-          section_name: secById[f.section_id] || '—',
-          adjusting_entries: ajes,
-          classification,
+          finding: {
+            title: je.description || (linkedF ? linkedF.title : null) || (je.impact_type === 'reclassification' ? 'Reclassification' : 'Adjustment'),
+            effect: linkedF ? linkedF.effect : '',
+            monetary_impact: magnitude,
+          },
+          section_name: secById[secId] || '—',
+          adjusting_entries: legs.length ? [{
+            debit_account:  drs.join(' + ') || '—',
+            credit_account: crs.join(' + ') || '—',
+            amount: magnitude,
+            is_posted: posted,
+          }] : [],
+          classification: STATUS_GROUP[je.isa450_status] || 'uncorrected',
         };
       });
     }
