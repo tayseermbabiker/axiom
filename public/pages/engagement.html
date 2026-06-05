@@ -4742,7 +4742,13 @@
           const opts = members.map(m =>
             `<option value="${m.uid}"${m.uid === sec.assigned_to ? ' selected' : ''}>${escHtml(m.name)}</option>`
           ).join('');
-          assigneeControl = `<span class="sec-card-assignee-wrap" onclick="event.stopPropagation(); event.preventDefault();" style="display:inline-flex;"><select class="sec-card-assignee-select" title="Reassign section" onchange="reassignSection('${sec.id}', this.value, '${sec.assigned_to || ''}')" onclick="event.stopPropagation();" style="font-size:11px; padding:2px 6px; max-width:140px; border-radius:6px; border:1px solid var(--gray-200); background:#fff; color:var(--gray-700); cursor:pointer;"><option value=""${!sec.assigned_to ? ' selected' : ''}>— Unassigned —</option>${opts}</select></span>`;
+          const curName = assignedName || 'Unassigned';
+          // Locked by default: a read-only chip you can't change by a stray click.
+          // The pencil reveals the dropdown (deliberate edit); a confirm follows.
+          assigneeControl = `<span class="sec-card-assignee-wrap" onclick="event.stopPropagation(); event.preventDefault();" style="display:inline-flex; align-items:center;">`
+            + `<span class="sec-card-assignee-display" id="assignee-disp-${sec.id}" title="Assigned to ${escHtml(curName)} — click to reassign" onclick="event.stopPropagation(); editAssignee('${sec.id}')" style="display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:2px 8px; border-radius:6px; border:1px solid var(--gray-200); background:#fff; color:${assignedName ? 'var(--gray-700)' : 'var(--gray-400)'}; cursor:pointer; max-width:150px;"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(curName)}</span><span style="color:var(--gray-400); font-size:12px;">&#9998;</span></span>`
+            + `<select class="sec-card-assignee-select" id="assignee-select-${sec.id}" title="Reassign section" onchange="reassignSection('${sec.id}', this.value, '${sec.assigned_to || ''}')" onblur="cancelEditAssignee('${sec.id}')" onclick="event.stopPropagation();" style="display:none; font-size:11px; padding:2px 6px; max-width:150px; border-radius:6px; border:1px solid var(--primary); background:#fff; color:var(--gray-700); cursor:pointer;"><option value=""${!sec.assigned_to ? ' selected' : ''}>— Unassigned —</option>${opts}</select>`
+            + `</span>`;
         } else {
           assigneeControl = `<div class="sec-card-avatar${assignedName ? '' : ' unassigned'}" title="${assignedName || 'Unassigned'}">${initials}</div>`;
         }
@@ -4887,6 +4893,25 @@
       if (rerender) renderSections();
     }
 
+    // Assignee is locked to a display chip; the pencil reveals the dropdown.
+    function editAssignee(sectionId) {
+      const disp = document.getElementById('assignee-disp-' + sectionId);
+      const sel  = document.getElementById('assignee-select-' + sectionId);
+      if (!disp || !sel) return;
+      disp.style.display = 'none';
+      sel.style.display = 'inline-flex';
+      sel.focus();
+    }
+    function cancelEditAssignee(sectionId) {
+      // Opened the dropdown but didn't pick (blur) → re-lock the display.
+      // Delay so a real selection's onchange (which re-renders) wins the race.
+      setTimeout(() => {
+        const disp = document.getElementById('assignee-disp-' + sectionId);
+        const sel  = document.getElementById('assignee-select-' + sectionId);
+        if (disp && sel) { sel.style.display = 'none'; disp.style.display = 'inline-flex'; }
+      }, 150);
+    }
+
     async function reassignSection(sectionId, newUserId, prevUserId) {
       if (!can('reassign_section')) {
         alert('Only partners and supervisors can reassign sections.');
@@ -4894,7 +4919,18 @@
       }
       const newAssignee = newUserId || null;
       const prev = prevUserId || null;
-      if (newAssignee === prev) return;
+      if (newAssignee === prev) { renderSections(); return; }
+
+      // Deliberate-change guard: confirm before reassigning (prevents accidents).
+      const sec0 = sections.find(s => s.id === sectionId);
+      const newName = newAssignee ? (profileCache[newAssignee] || 'this user') : 'Unassigned';
+      const ok = await showActionModal({
+        title: 'Reassign section?',
+        message: 'Reassign "' + (sec0 ? sec0.name : 'this section') + '" to ' + newName + '?',
+        okLabel: 'Reassign',
+        okClass: 'btn-primary'
+      });
+      if (!ok) { renderSections(); return; }  // re-render re-locks the chip + restores prior value
 
       const { error } = await supabaseClient
         .from('audit_sections')
