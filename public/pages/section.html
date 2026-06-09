@@ -331,6 +331,9 @@
       z-index: 10;
     }
 
+    /* The shared confirm modal must sit above any other modal it's triggered from. */
+    #modal-action { z-index: 9999 !important; }
+
     .actions-bar {
       display: flex;
       align-items: center;
@@ -2187,10 +2190,8 @@
       // Guard against accidental status changes (a stray click could silently
       // resolve an open finding and let it slip past the completion gate).
       const f0 = findings.find(x => x.id === findingId);
-      if (!confirm('Set "' + (f0 ? f0.title : 'this finding') + '" to "' + newStatus.replace(/_/g, ' ') + '"?')) {
-        renderFindings();  // cancelled — restore the dropdown to the current status
-        return;
-      }
+      const okStatus = await showActionModal({ title: 'Change finding status?', message: 'Set "' + (f0 ? f0.title : 'this finding') + '" to "' + newStatus.replace(/_/g, ' ') + '"?', okLabel: 'Change status', okClass: 'btn-primary' });
+      if (!okStatus) { renderFindings(); return; }  // cancelled — restore the dropdown
       const { error } = await supabaseClient.from('findings')
         .update({ status: newStatus })
         .eq('id', findingId);
@@ -2284,10 +2285,10 @@
       const n = (linked || []).length;
 
       let msg = 'Delete the finding "' + (f ? f.title : '') + '"?';
-      if (n > 0) msg += '\n\nIt has ' + n + ' linked adjustment(s) in the working TB — these will ALSO be deleted (removing their effect on the adjusted TB and the misstatement schedule).';
-      if (f && f.is_management_letter_point) msg += '\n\nIt will also drop off the management letter.';
-      msg += '\n\nThis cannot be undone.';
-      if (!confirm(msg)) return;
+      if (n > 0) msg += ' It has ' + n + ' linked adjustment(s) in the working TB — these will also be deleted (removing their effect on the adjusted TB and the misstatement schedule).';
+      if (f && f.is_management_letter_point) msg += ' It will also drop off the management letter.';
+      msg += ' This cannot be undone.';
+      if (!await showActionModal({ title: 'Delete finding?', message: msg, okLabel: 'Delete', okClass: 'btn-primary' })) return;
 
       const btn = document.getElementById('finding-btn-delete');
       if (btn) btn.disabled = true;
@@ -3015,7 +3016,7 @@
 
     async function deleteSecJournal() {
       if (!secEditId) return;
-      if (!confirm('Delete this journal/adjustment? It will be removed from the working TB. This cannot be undone.')) return;
+      if (!await showActionModal({ title: 'Delete adjustment?', message: 'This journal will be removed from the working TB. This cannot be undone.', okLabel: 'Delete', okClass: 'btn-primary' })) return;
       const btn = document.getElementById('journal-sec-delete-btn');
       if (btn) btn.disabled = true;
       const { error } = await supabaseClient.from('journal_entries').delete().eq('id', secEditId);

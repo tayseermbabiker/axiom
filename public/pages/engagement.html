@@ -287,6 +287,8 @@
     }
 
     .modal-wide { max-width: 700px; }
+    /* The shared confirm modal must sit above any other modal it's triggered from. */
+    #modal-action { z-index: 9999 !important; }
 
     .badge-high { background: var(--danger-light); color: var(--danger); }
     .badge-medium { background: var(--warning-light); color: var(--warning); }
@@ -5537,7 +5539,7 @@
 
     async function deleteJournal() {
       if (!wtbEditId) return;
-      if (!confirm('Delete this journal entry? It will be removed from the working TB. This cannot be undone.')) return;
+      if (!await showActionModal({ title: 'Delete journal entry?', message: 'This journal will be removed from the working TB. This cannot be undone.', okLabel: 'Delete', okClass: 'btn-primary' })) return;
       const btn = document.getElementById('journal-delete-btn');
       if (btn) btn.disabled = true;
       const { error } = await supabaseClient.from('journal_entries').delete().eq('id', wtbEditId);
