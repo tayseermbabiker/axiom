@@ -75,5 +75,10 @@ BEGIN
 END;
 $$;
 
+-- Lock down: only signed-in users. Supabase default privileges auto-grant
+-- EXECUTE to anon/authenticated on new functions, so revoke anon explicitly
+-- (REVOKE FROM public does not touch the per-role anon grant). The membership
+-- guard already blocks anon, but this also clears the security advisor warning.
 REVOKE EXECUTE ON FUNCTION public.dashboard_engagement_stats(uuid) FROM public;
+REVOKE EXECUTE ON FUNCTION public.dashboard_engagement_stats(uuid) FROM anon;
 GRANT  EXECUTE ON FUNCTION public.dashboard_engagement_stats(uuid) TO authenticated;
