@@ -576,6 +576,7 @@
               <div id="journal-sec-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
             </div>
             <div class="modal-footer">
+              <button class="btn btn-outline" id="journal-sec-delete-btn" onclick="deleteSecJournal()" style="display:none; margin-right:auto; color:#DC2626; border-color:#FECACA;">Delete</button>
               <button class="btn btn-outline" onclick="closeModal('modal-journal-sec')">Cancel</button>
               <button class="btn btn-primary" id="journal-sec-save-btn" onclick="saveSecJournal()">Save journal</button>
             </div>
@@ -2962,8 +2963,27 @@
         if (fSel) fSel.value = '';
         secModalLegs = [secBlankLeg(), secBlankLeg()];
       }
+      const delBtn = document.getElementById('journal-sec-delete-btn');
+      if (delBtn) delBtn.style.display = secEditId ? 'inline-flex' : 'none';
       renderSecLegs();
       document.getElementById('modal-journal-sec').classList.add('active');
+    }
+
+    async function deleteSecJournal() {
+      if (!secEditId) return;
+      if (!confirm('Delete this journal/adjustment? It will be removed from the working TB. This cannot be undone.')) return;
+      const btn = document.getElementById('journal-sec-delete-btn');
+      if (btn) btn.disabled = true;
+      const { error } = await supabaseClient.from('journal_entries').delete().eq('id', secEditId);
+      if (btn) btn.disabled = false;
+      if (error) {
+        const err = document.getElementById('journal-sec-error');
+        if (err) { err.textContent = 'Delete failed: ' + error.message; err.style.display = 'block'; }
+        return;
+      }
+      if (typeof logActivity === 'function') { try { await logActivity(engagementId, 'deleted_journal', 'journal_entry', secEditId, { source_section: sectionId }); } catch (e) {} }
+      closeModal('modal-journal-sec');
+      await loadSectionWorkingTB();
     }
 
     function renderSecLegs() {

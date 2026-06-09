@@ -829,6 +829,7 @@
             <div id="journal-error" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:10px 14px; font-size:13px; color:#991B1B; margin-top:8px;"></div>
           </div>
           <div class="modal-footer">
+            <button class="btn btn-outline" id="journal-delete-btn" onclick="deleteJournal()" style="display:none; margin-right:auto; color:#DC2626; border-color:#FECACA;">Delete</button>
             <button class="btn btn-outline" onclick="closeModal('modal-journal')">Cancel</button>
             <button class="btn btn-primary" id="journal-save-btn" onclick="saveJournal()">Save journal</button>
           </div>
@@ -5528,8 +5529,27 @@
         if (fSel) fSel.value = '';
         wtbModalLegs = [wtbBlankLeg(), wtbBlankLeg()];
       }
+      const jdel = document.getElementById('journal-delete-btn');
+      if (jdel) jdel.style.display = wtbEditId ? 'inline-flex' : 'none';
       renderJournalLegs();
       document.getElementById('modal-journal').classList.add('active');
+    }
+
+    async function deleteJournal() {
+      if (!wtbEditId) return;
+      if (!confirm('Delete this journal entry? It will be removed from the working TB. This cannot be undone.')) return;
+      const btn = document.getElementById('journal-delete-btn');
+      if (btn) btn.disabled = true;
+      const { error } = await supabaseClient.from('journal_entries').delete().eq('id', wtbEditId);
+      if (btn) btn.disabled = false;
+      if (error) {
+        const errEl = document.getElementById('journal-error');
+        if (errEl) { errEl.textContent = 'Delete failed: ' + error.message; errEl.style.display = 'block'; }
+        return;
+      }
+      if (typeof logActivity === 'function') { try { await logActivity(engagementId, 'deleted_journal', 'journal_entry', wtbEditId, {}); } catch (e) {} }
+      closeModal('modal-journal');
+      await loadWorkingTB();
     }
 
     function renderJournalLegs() {
