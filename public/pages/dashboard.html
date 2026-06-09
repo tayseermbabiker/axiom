@@ -509,6 +509,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/ui-notify.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
   <script src="../js/audit-templates.js"></script>
@@ -960,7 +961,7 @@
     }
 
     function openNewEngagement() {
-      if (!can('create_engagement')) { alert('Only admins can create engagements.'); return; }
+      if (!can('create_engagement')) { showToast('Only admins can create engagements.'); return; }
       document.getElementById('modal-new-engagement').classList.add('active');
       document.getElementById('client-name').focus();
     }
@@ -972,10 +973,10 @@
     async function deleteEngagement(engId) {
       const eng = allEngagements.find(e => e.id === engId);
       const clientName = (eng && eng.client_name) || 'this engagement';
-      if (!confirm('Delete engagement "' + clientName + '"?\n\nThis will permanently delete all sections, procedures, findings, review notes, and documents.\n\nThis cannot be undone.')) return;
+      if (!await confirmDialog({ title: 'Delete engagement?', okLabel: 'Delete', okClass: 'danger', message: 'Delete "' + clientName + '"?\n\nThis will permanently delete all sections, procedures, findings, review notes, and documents.\n\nThis cannot be undone.' })) return;
 
       const { error } = await supabaseClient.from('engagements').delete().eq('id', engId);
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       await loadEngagements();
     }
@@ -1000,7 +1001,7 @@
       }).select().single();
 
       if (error) {
-        alert('Error: ' + error.message);
+        showToast('Error: ' + error.message);
         btn.disabled = false;
         btn.textContent = 'Create';
         return;
@@ -1027,7 +1028,7 @@
           });
         } catch (e) {
           console.error('seed_compliance_section failed', e);
-          alert('Note: the Local Compliance section could not be auto-created for this engagement. You can add it manually from the engagement page once it loads. (Engagement creation itself succeeded.)');
+          showToast('Note: the Local Compliance section could not be auto-created for this engagement. You can add it manually from the engagement page once it loads. (Engagement creation itself succeeded.)');
         }
 
         // Pre-seed Risk Assessment row + ISA 240 presumed fraud risks.
@@ -1088,7 +1089,7 @@
         if (!res.ok) throw new Error(data.error || 'Failed to open portal');
         window.location.href = data.url;
       } catch (e) {
-        alert(e.message || 'Could not open billing portal. Email support@audexon.com.');
+        showToast(e.message || 'Could not open billing portal. Email support@audexon.com.');
         btn.textContent = originalText;
         btn.disabled = false;
       }

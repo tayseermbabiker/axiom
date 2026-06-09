@@ -3243,6 +3243,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/ui-notify.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
   <script src="../js/audit-templates.js"></script>
@@ -3380,7 +3381,7 @@
         .single();
 
       if (error || !data) {
-        alert('Error loading engagement: ' + (error?.message || 'not found'));
+        showToast('Error loading engagement: ' + (error?.message || 'not found'));
         window.location.href = 'dashboard.html';
         return;
       }
@@ -3470,7 +3471,7 @@
     }
 
     function editSharedFolder() {
-      if (!can('edit_shared_folder')) { alert('Only partners and supervisors can edit the shared folder.'); return; }
+      if (!can('edit_shared_folder')) { showToast('Only partners and supervisors can edit the shared folder.'); return; }
       // Reset modal state
       document.querySelectorAll('.drive-provider-btn').forEach(b => {
         b.style.borderColor = '';
@@ -3497,7 +3498,7 @@
         .update({ shared_folder_url: val })
         .eq('id', engagementId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       engagement.shared_folder_url = val;
       closeModal('modal-shared-drive');
@@ -3812,7 +3813,7 @@
     // already be signed & locked (Milestone A = report date) — the RPC enforces this.
     let _assembleAfterClosure = false;
     async function assembleAndLockFile() {
-      if (currentRole !== 'admin') { alert('Only partners can assemble and lock the audit file.'); return; }
+      if (currentRole !== 'admin') { showToast('Only partners can assemble and lock the audit file.'); return; }
 
       const openFindings = findings.filter(f => f.status === 'open');
       if (openFindings.length > 0) {
@@ -3855,7 +3856,7 @@
       const updates = [];
       for (const sel of selects) {
         if (!sel.value) {
-          alert('Please categorize all open findings before closing.');
+          showToast('Please categorize all open findings before closing.');
           return;
         }
         updates.push({ id: sel.dataset.findingId, close_category: sel.value });
@@ -3898,7 +3899,7 @@
         p_organization_id: currentOrg.id,
       });
       if (error) {
-        alert('Could not assemble & lock the file: ' + error.message +
+        showToast('Could not assemble & lock the file: ' + error.message +
               '\n\nMake sure the completion memo is signed & locked first (Conclusion → Completion rollup).');
         return;
       }
@@ -3926,7 +3927,7 @@
     }
 
     async function reopenEngagement() {
-      if (currentRole !== 'admin') { alert('Only partners can reopen engagements.'); return; }
+      if (currentRole !== 'admin') { showToast('Only partners can reopen engagements.'); return; }
 
       const reason = await showActionModal({
         title: 'Reopen Engagement',
@@ -3941,7 +3942,7 @@
         .update({ status: 'active' })
         .eq('id', engagementId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       engagement.status = 'active';
       await logActivity(engagementId, 'reopened_engagement', 'engagement', engagementId, {
@@ -3969,21 +3970,24 @@
     // is read-only across the UI; unarchive is available but is logged as
     // a post-assembly change per ISA 560.A14-A19.
     async function archiveEngagement() {
-      if (currentRole !== 'admin') { alert('Only partners can archive engagements.'); return; }
-      const ok = confirm(
+      if (currentRole !== 'admin') { showToast('Only partners can archive engagements.'); return; }
+      const ok = await confirmDialog({
+        title: 'Archive engagement?',
+        okLabel: 'Archive',
+        message:
         'Archive this engagement per ISA 230?\n\n' +
         'This marks the file assembly date. The engagement becomes read-only.\n' +
         'The completion memo must already be locked.\n\n' +
         'You can unarchive later if a subsequent fact is identified (ISA 560), ' +
         'but the unarchive will be logged as a post-assembly change.'
-      );
+      });
       if (!ok) return;
 
       const { error } = await supabaseClient.rpc('archive_engagement', {
         p_engagement_id:   engagementId,
         p_organization_id: currentOrg.id,
       });
-      if (error) { alert('Could not archive: ' + error.message); return; }
+      if (error) { showToast('Could not archive: ' + error.message); return; }
 
       // Re-fetch engagement to get archived_at/by
       const { data: refreshed } = await supabaseClient
@@ -4000,7 +4004,7 @@
     }
 
     async function unarchiveEngagement() {
-      if (currentRole !== 'admin') { alert('Only partners can unarchive engagements.'); return; }
+      if (currentRole !== 'admin') { showToast('Only partners can unarchive engagements.'); return; }
       const reason = await showActionModal({
         title: 'Unarchive engagement (post-assembly change)',
         message: 'This will be logged as a post-assembly change per ISA 230 / ISA 560.A14-A19. Inspectors review unarchives carefully — document the trigger fact precisely.',
@@ -4014,7 +4018,7 @@
         p_engagement_id:   engagementId,
         p_organization_id: currentOrg.id,
       });
-      if (error) { alert('Could not unarchive: ' + error.message); return; }
+      if (error) { showToast('Could not unarchive: ' + error.message); return; }
 
       const { data: refreshed } = await supabaseClient
         .from('engagements')
@@ -4917,7 +4921,7 @@
 
     async function reassignSection(sectionId, newUserId, prevUserId) {
       if (!can('reassign_section')) {
-        alert('Only partners and supervisors can reassign sections.');
+        showToast('Only partners and supervisors can reassign sections.');
         return;
       }
       const newAssignee = newUserId || null;
@@ -4941,7 +4945,7 @@
         .eq('id', sectionId);
 
       if (error) {
-        alert('Could not reassign: ' + error.message);
+        showToast('Could not reassign: ' + error.message);
         // Re-render to restore the previous selection
         renderSections();
         return;
@@ -4959,7 +4963,7 @@
     }
 
     async function deleteSection(sectionId, sectionName) {
-      if (!can('delete_section')) { alert('Only partners can delete sections.'); return; }
+      if (!can('delete_section')) { showToast('Only partners can delete sections.'); return; }
       const ok = await showActionModal({
         title: 'Delete Section',
         message: 'Delete section "' + sectionName + '"?\n\nThis will permanently delete all procedures, findings, review notes, and documents in this section.\n\nThis cannot be undone.',
@@ -4970,7 +4974,7 @@
 
       const { error } = await supabaseClient.rpc('delete_section', { p_section_id: sectionId });
 
-      if (error) { alert('Delete error: ' + error.message); return; }
+      if (error) { showToast('Delete error: ' + error.message); return; }
 
       await logActivity(engagementId, 'deleted_section', 'section', sectionId, { name: sectionName });
 
@@ -5022,7 +5026,7 @@
     let selectedAssertions = [];
 
     function openNewSection() {
-      if (!can('create_section')) { alert('Only partners and supervisors can create sections.'); return; }
+      if (!can('create_section')) { showToast('Only partners and supervisors can create sections.'); return; }
       // Populate member dropdown
       const sel = document.getElementById('section-assign');
       sel.innerHTML = '<option value="">-- Unassigned --</option>';
@@ -5125,7 +5129,7 @@
       }).select().single();
 
       if (error) {
-        alert('Error: ' + error.message);
+        showToast('Error: ' + error.message);
         btn.disabled = false;
         btn.textContent = 'Create';
         return;
@@ -5377,7 +5381,7 @@
     }
     async function updateAccountType(lineId, type) {
       const { error } = await supabaseClient.from('trial_balance_lines').update({ account_type: type || null }).eq('id', lineId);
-      if (error) { alert('Could not set account type: ' + error.message); return; }
+      if (error) { showToast('Could not set account type: ' + error.message); return; }
       const tl = tbLines.find(t => t.id === lineId); if (tl) tl.account_type = type || null;
       renderWtbSum();
     }
@@ -5959,7 +5963,7 @@
         if (item && !item.received_date) patch.received_date = new Date().toISOString().slice(0, 10);
       }
       const { error } = await supabaseClient.from('engagement_pbc_items').update(patch).eq('id', id);
-      if (error) { alert('Could not update status: ' + error.message); return; }
+      if (error) { showToast('Could not update status: ' + error.message); return; }
       await loadPbc();
     }
 
@@ -6040,7 +6044,7 @@
         audit_area: t[0], description: t[1], priority: t[2], status: 'outstanding', sort_order: idx,
       }));
       const { error } = await supabaseClient.from('engagement_pbc_items').insert(rows);
-      if (error) { alert('Could not seed checklist: ' + error.message); return; }
+      if (error) { showToast('Could not seed checklist: ' + error.message); return; }
       if (typeof logActivity === 'function') { try { await logActivity(engagementId, 'seeded_pbc', 'engagement_pbc_items', engagementId, { count: rows.length }); } catch (e) {} }
       await loadPbc();
     }
@@ -6112,7 +6116,7 @@
 
     // ---- Upload TB ----
     function openUploadTB() {
-      if (!can('upload_tb')) { alert('Only partners and supervisors can upload the trial balance.'); return; }
+      if (!can('upload_tb')) { showToast('Only partners and supervisors can upload the trial balance.'); return; }
       document.getElementById('modal-upload-tb').classList.add('active');
       document.getElementById('tb-file').value = '';
       document.getElementById('tb-preview').innerHTML = '';
@@ -6159,7 +6163,7 @@
           } else {
             const text = evt.target.result;
             const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-            if (lines.length < 2) { alert('File must have a header row and at least one data row.'); return; }
+            if (lines.length < 2) { showToast('File must have a header row and at least one data row.'); return; }
             const header = lines[0].split(',').map(h => h.trim());
             rawRows = [];
             for (let i = 1; i < lines.length; i++) {
@@ -6170,7 +6174,7 @@
             }
           }
 
-          if (!rawRows || rawRows.length === 0) { alert('No data found in file.'); return; }
+          if (!rawRows || rawRows.length === 0) { showToast('No data found in file.'); return; }
 
           fileColumns = Object.keys(rawRows[0]);
 
@@ -6212,7 +6216,7 @@
           document.getElementById('tb-mapping').style.display = 'block';
           applyMapping();
         } catch (err) {
-          alert('Error reading file: ' + err.message);
+          showToast('Error reading file: ' + err.message);
           console.error(err);
         }
       };
@@ -6362,7 +6366,7 @@
         switchTab('tb');
 
       } catch (err) {
-        alert('Error: ' + err.message);
+        showToast('Error: ' + err.message);
       }
 
       btn.disabled = false;
@@ -6371,7 +6375,7 @@
 
     // ---- Upload New TB Version ----
     function uploadNewVersion() {
-      if (!can('replace_tb')) { alert('Only partners and supervisors can upload a new TB version.'); return; }
+      if (!can('replace_tb')) { showToast('Only partners and supervisors can upload a new TB version.'); return; }
       // Default to "Final" for new versions
       document.getElementById('tb-version-label').value = 'Final';
       openUploadTB();
@@ -6640,7 +6644,7 @@
     }
 
     function openFsUploadModal() {
-      if (!can('upload_fs')) { alert('Only partners and supervisors can upload Financial Statements.'); return; }
+      if (!can('upload_fs')) { showToast('Only partners and supervisors can upload Financial Statements.'); return; }
       document.getElementById('fs-version-type').value = 'draft';
       document.getElementById('fs-version-label').value = '';
       document.getElementById('fs-file').value = '';
@@ -6783,7 +6787,7 @@
         .from(FS_BUCKET)
         .createSignedUrl(upload.file_path, 60);
       if (error || !data?.signedUrl) {
-        alert('Could not generate download link: ' + (error?.message || 'unknown error'));
+        showToast('Could not generate download link: ' + (error?.message || 'unknown error'));
         return;
       }
       // Open in a new tab — browser handles PDF inline / DOCX download
@@ -6811,7 +6815,7 @@
         })
         .eq('id', id);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       await logActivity(engagementId, 'superseded_fs', 'engagement_fs_upload', id, {
         file_name: upload.file_name,
@@ -7164,7 +7168,7 @@
         .from(FS_BUCKET)
         .createSignedUrl(letter.file_path, 60);
       if (error || !data?.signedUrl) {
-        alert('Could not generate download link: ' + (error?.message || 'unknown error'));
+        showToast('Could not generate download link: ' + (error?.message || 'unknown error'));
         return;
       }
       window.open(data.signedUrl, '_blank');
@@ -7422,14 +7426,14 @@
         status:          'draft',
         created_by:      currentUser.id,
       });
-      if (error) { alert('Could not start assessment: ' + error.message); return; }
+      if (error) { showToast('Could not start assessment: ' + error.message); return; }
 
       const { error: seedErr } = await supabaseClient.rpc('seed_independence_threats', {
         p_independence_id: newId,
         p_organization_id: currentOrg.id,
       });
       if (seedErr) {
-        alert('Assessment created but threat seeding failed: ' + seedErr.message);
+        showToast('Assessment created but threat seeding failed: ' + seedErr.message);
       }
       await loadIndependenceWorkpaper();
     }
@@ -7638,7 +7642,7 @@
         .from('engagement_nas')
         .update({ is_active: !n.is_active })
         .eq('id', nasId);
-      if (error) { alert('Could not update: ' + error.message); return; }
+      if (error) { showToast('Could not update: ' + error.message); return; }
       await loadIndependenceWorkpaper();
     }
 
@@ -7822,7 +7826,7 @@
         acceptance_type: type,
         created_by:      currentUser.id,
       });
-      if (error) { alert('Could not start: ' + error.message); return; }
+      if (error) { showToast('Could not start: ' + error.message); return; }
       await loadEngagementAcceptance();
     }
 
@@ -8372,7 +8376,7 @@
         .eq('engagement_id', engagementId)
         .order('created_at', { ascending: true });
       if (error) {
-        alert('Could not load estimates: ' + error.message);
+        showToast('Could not load estimates: ' + error.message);
         return;
       }
       estimates = data || [];
@@ -8436,7 +8440,7 @@
 
       if (estimateId) {
         const e = estimates.find(x => x.id === estimateId);
-        if (!e) { alert('Estimate not found.'); return; }
+        if (!e) { showToast('Estimate not found.'); return; }
         document.getElementById('modal-estimate-title').textContent = readonly ? 'Accounting estimate (read-only)' : 'Edit accounting estimate';
         document.getElementById('estimate-name').value          = e.estimate_name      || '';
         document.getElementById('estimate-section').value       = e.section_id         || '';
@@ -8521,7 +8525,7 @@
       if (currentRole !== 'admin' || !editingEstimateId) return;
       const e = estimates.find(x => x.id === editingEstimateId);
       if (!e) return;
-      if (!confirm('Delete estimate "' + e.estimate_name + '"? This cannot be undone.')) return;
+      if (!await confirmDialog({ title: 'Delete estimate?', okLabel: 'Delete', okClass: 'danger', message: 'Delete estimate "' + e.estimate_name + '"? This cannot be undone.' })) return;
 
       const { error } = await supabaseClient
         .from('engagement_estimates')
@@ -8562,7 +8566,7 @@
         .eq('engagement_id', engagementId)
         .order('created_at', { ascending: true });
       if (error) {
-        alert('Could not load confirmations: ' + error.message);
+        showToast('Could not load confirmations: ' + error.message);
         return;
       }
       confirmations = data || [];
@@ -8647,7 +8651,7 @@
 
       if (confirmationId) {
         const c = confirmations.find(x => x.id === confirmationId);
-        if (!c) { alert('Confirmation not found.'); return; }
+        if (!c) { showToast('Confirmation not found.'); return; }
         document.getElementById('modal-confirmation-title').textContent = readonly ? 'External confirmation (read-only)' : 'Edit external confirmation';
         document.getElementById('confirmation-counterparty').value = c.counterparty || '';
         document.getElementById('confirmation-type').value         = c.confirmation_type || '';
@@ -8756,7 +8760,7 @@
       if (currentRole !== 'admin' || !editingConfirmationId) return;
       const c = confirmations.find(x => x.id === editingConfirmationId);
       if (!c) return;
-      if (!confirm('Delete confirmation "' + c.counterparty + '"? This cannot be undone.')) return;
+      if (!await confirmDialog({ title: 'Delete confirmation?', okLabel: 'Delete', okClass: 'danger', message: 'Delete confirmation "' + c.counterparty + '"? This cannot be undone.' })) return;
 
       const { error } = await supabaseClient
         .from('engagement_confirmations')

@@ -83,6 +83,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/ui-notify.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
   <script>
@@ -319,7 +320,7 @@
     // Change member role
     async function changeRole(memberId, newRole) {
       // Guard against accidental role changes (this alters what the member can access).
-      if (!confirm('Change this member’s role to "' + newRole + '"? This changes their permissions.')) {
+      if (!await confirmDialog({ title: 'Change role?', okLabel: 'Change role', message: 'Change this member’s role to "' + newRole + '"? This changes their permissions.' })) {
         await loadMembers();  // cancelled — restore the dropdown to the current role
         return;
       }
@@ -329,7 +330,7 @@
         .eq('id', memberId);
 
       if (error) {
-        alert('Error: ' + error.message);
+        showToast('Error: ' + error.message);
         return;
       }
 
@@ -338,7 +339,7 @@
 
     // Remove member
     async function removeMember(memberId, name) {
-      if (!confirm('Remove ' + name + ' from the organization? They will lose access to all engagements.')) return;
+      if (!await confirmDialog({ title: 'Remove member?', okLabel: 'Remove', okClass: 'danger', message: 'Remove ' + name + ' from the organization? They will lose access to all engagements.' })) return;
 
       const { error } = await supabaseClient
         .from('organization_members')
@@ -346,7 +347,7 @@
         .eq('id', memberId);
 
       if (error) {
-        alert('Error: ' + error.message);
+        showToast('Error: ' + error.message);
         return;
       }
 
@@ -356,7 +357,7 @@
 
     // Cancel invite
     async function cancelInvite(inviteId) {
-      if (!confirm('Cancel this invite?')) return;
+      if (!await confirmDialog({ title: 'Cancel invite?', okLabel: 'Cancel invite', message: 'This pending invite will be cancelled.' })) return;
 
       const { data, error } = await supabaseClient
         .from('organization_invites')
@@ -365,13 +366,13 @@
         .select();
 
       if (error) {
-        alert('Error: ' + error.message);
+        showToast('Error: ' + error.message);
         return;
       }
 
       // Detect silent RLS block: delete returns success but 0 rows removed
       if (!data || data.length === 0) {
-        alert('Could not cancel the invite. You may not have permission, or the invite was already removed. If this keeps happening, contact support@audexon.com.');
+        showToast('Could not cancel the invite. You may not have permission, or the invite was already removed. If this keeps happening, contact support@audexon.com.');
         await loadPendingInvites();
         return;
       }

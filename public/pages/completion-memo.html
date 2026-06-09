@@ -633,6 +633,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/ui-notify.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     // ---- State ----
@@ -727,7 +728,7 @@
         .eq('id', engagementId)
         .single();
       if (error || !data) {
-        alert('Engagement not found or access denied.');
+        showToast('Engagement not found or access denied.');
         window.location.href = 'dashboard.html';
         return;
       }
@@ -780,7 +781,7 @@
           document.getElementById('memo-content').style.display = 'block';
           return;
         }
-        alert('A completion memo has not been created yet. Ask the engagement partner to open this page first.');
+        showToast('A completion memo has not been created yet. Ask the engagement partner to open this page first.');
         window.location.href = 'engagement.html#' + engagementId;
         return;
       }
@@ -796,7 +797,7 @@
         .single();
 
       if (error) {
-        alert('Could not create completion memo: ' + error.message);
+        showToast('Could not create completion memo: ' + error.message);
         return;
       }
       memo = created;
@@ -808,7 +809,7 @@
         p_engagement_id:   engagementId,
       });
       if (seedErr) {
-        alert('Memo created but attestation seeding failed: ' + seedErr.message);
+        showToast('Memo created but attestation seeding failed: ' + seedErr.message);
       }
     }
 
@@ -889,13 +890,13 @@
       // surface the actual error instead of failing silently.
       const { error: rollupErr } = await supabaseClient.rpc('refresh_completion_memo_rollups', { p_memo_id: memo.id });
       if (rollupErr) {
-        alert('Rollup refresh failed: ' + rollupErr.message + '\n\nThis usually means the migration 20260519120005_triggers.sql or 20260522120003 was not applied. Send a screenshot to support.');
+        showToast('Rollup refresh failed: ' + rollupErr.message + '\n\nThis usually means the migration 20260519120005_triggers.sql or 20260522120003 was not applied. Send a screenshot to support.');
         return;
       }
       // 2. Recompute attestation system checks
       const { error: checkErr } = await supabaseClient.rpc('recompute_attestation_checks', { p_memo_id: memo.id });
       if (checkErr) {
-        alert('System checks failed: ' + checkErr.message);
+        showToast('System checks failed: ' + checkErr.message);
         return;
       }
       // 3. Re-fetch memo + attestations + misstatement schedule
@@ -1113,16 +1114,19 @@
         // + attested_at so an inspector can see who took responsibility.
         if (!isLocked && currentRole === 'admin') {
           check.style.cursor = 'pointer';
-          check.onclick = () => {
+          check.onclick = async () => {
             if (!ticked && !sysOK && !isManual) {
-              const ok = confirm(
+              const ok = await confirmDialog({
+                title: 'Override system check?',
+                okLabel: 'Override & attest',
+                message:
                 'System check did NOT pass for this attestation:\n\n  "' +
                 (a.source_check || humaniseKey(a.attestation_key)) +
                 '"\n\nThis usually means the underlying section or condition is missing. ' +
                 'As the engagement partner, you can manually attest based on professional judgement ' +
                 '(e.g., the work was performed under a different section name, or N/A to this engagement).\n\n' +
                 'Override and attest anyway?'
-              );
+              });
               if (!ok) return;
             }
             toggleAttestation(a);
@@ -1344,7 +1348,7 @@
         .from('completion_attestations')
         .update({ attested_at: newVal, attested_by: newBy })
         .eq('id', a.id);
-      if (error) { alert('Could not update attestation: ' + error.message); return; }
+      if (error) { showToast('Could not update attestation: ' + error.message); return; }
       // Refresh memo (trigger may have flipped all_attestations_complete)
       const { data: m } = await supabaseClient
         .from('engagement_completion_memo')
@@ -1457,7 +1461,7 @@
         .update({ eqr_required: req })
         .eq('id', memo.id);
       if (error) {
-        alert('Could not update: ' + error.message);
+        showToast('Could not update: ' + error.message);
         document.getElementById('eqr-required').checked = memo.eqr_required;
         return;
       }
@@ -1517,16 +1521,16 @@
       // a Supabase user). Internal mode: only the assigned reviewer can stamp.
       if (memo.eqr_is_external) {
         if (!memo.eqr_external_reviewer_name) {
-          alert('Save the external reviewer name first.');
+          showToast('Save the external reviewer name first.');
           return;
         }
       } else {
         if (!memo.eqr_reviewer_id) {
-          alert('Assign a reviewer first.');
+          showToast('Assign a reviewer first.');
           return;
         }
         if (currentUser.id !== memo.eqr_reviewer_id) {
-          alert('Only the assigned EQR reviewer can mark this complete. (External EQR? Toggle "External EQR" above.)');
+          showToast('Only the assigned EQR reviewer can mark this complete. (External EQR? Toggle "External EQR" above.)');
           return;
         }
       }
@@ -1537,7 +1541,7 @@
           eqr_completed_by: currentUser.id,
         })
         .eq('id', memo.id);
-      if (error) { alert('Could not mark complete: ' + error.message); return; }
+      if (error) { showToast('Could not mark complete: ' + error.message); return; }
       await refreshChecks();
     }
 
@@ -1557,7 +1561,7 @@
         blockers.push('Modified opinion (' + memo.opinion_type + ') requires a documented basis (ISA 705)');
       }
       if (blockers.length > 0) {
-        alert(
+        showToast(
           'Cannot sign — the following ISA requirements are not met:\n\n' +
           blockers.map((b, i) => `  ${i + 1}. ${b}`).join('\n') +
           '\n\nFix the above and try again.'
@@ -1565,7 +1569,7 @@
         return;
       }
 
-      if (!confirm('Sign and lock this completion memo? After signing, all fields become read-only and the engagement can be moved to "Completed".')) return;
+      if (!await confirmDialog({ title: 'Sign & lock memo?', okLabel: 'Sign & lock', message: 'After signing, all fields become read-only and the engagement can be moved to "Completed".' })) return;
 
       const { error } = await supabaseClient
         .from('engagement_completion_memo')
@@ -1574,14 +1578,14 @@
           signed_at: new Date().toISOString(),
         })
         .eq('id', memo.id);
-      if (error) { alert('Could not sign memo: ' + error.message); return; }
+      if (error) { showToast('Could not sign memo: ' + error.message); return; }
 
       // Re-fetch — status should now be 'locked' (set by trigger)
       const { data: m } = await supabaseClient
         .from('engagement_completion_memo').select('*').eq('id', memo.id).single();
       if (m) memo = m;
       renderAll();
-      alert('Memo signed and locked. You can now move the engagement to Completed from the Engagement page.');
+      showToast('Memo signed and locked. You can now move the engagement to Completed from the Engagement page.');
     }
 
     async function reopenMemo() {
@@ -1589,23 +1593,26 @@
       // signed_at goes NULL -> set, so clearing signed_at here will NOT
       // re-lock. Returns the memo to Draft so it can be revised and re-signed.
       if (currentRole !== 'admin') return;
-      if (!confirm(
+      if (!await confirmDialog({
+        title: 'Reopen memo?',
+        okLabel: 'Reopen',
+        message:
         'Reopen this completion memo for editing?\n\n' +
         'It will be unlocked and returned to Draft so it can be revised. ' +
         'The attestations stay ticked, but you must sign and lock it again afterward.'
-      )) return;
+      })) return;
 
       const { error } = await supabaseClient
         .from('engagement_completion_memo')
         .update({ status: 'draft', signed_at: null, signed_by: null })
         .eq('id', memo.id);
-      if (error) { alert('Could not reopen memo: ' + error.message); return; }
+      if (error) { showToast('Could not reopen memo: ' + error.message); return; }
 
       const { data: m } = await supabaseClient
         .from('engagement_completion_memo').select('*').eq('id', memo.id).single();
       if (m) memo = m;
       renderAll();
-      alert('Memo reopened. It is now in Draft and editable. Remember to sign and lock it again when done.');
+      showToast('Memo reopened. It is now in Draft and editable. Remember to sign and lock it again when done.');
     }
 
     // ---- Helpers ----

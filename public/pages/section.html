@@ -920,6 +920,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/ui-notify.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
   <script>
@@ -1041,7 +1042,7 @@
 
     async function reassignSection(newUserId, prevUserId) {
       if (!can('reassign_section')) {
-        alert('Only partners and supervisors can reassign sections.');
+        showToast('Only partners and supervisors can reassign sections.');
         return;
       }
       const newAssignee = newUserId || null;
@@ -1054,7 +1055,7 @@
         .eq('id', sectionId);
 
       if (error) {
-        alert('Could not reassign: ' + error.message);
+        showToast('Could not reassign: ' + error.message);
         await renderAssigneeControl();
         return;
       }
@@ -1135,7 +1136,7 @@
         .single();
 
       if (error || !data) {
-        alert('Error loading section: ' + (error?.message || 'not found'));
+        showToast('Error loading section: ' + (error?.message || 'not found'));
         return;
       }
 
@@ -1336,7 +1337,7 @@
     let editTagsSelected = [];
 
     async function editSectionTags() {
-      if (!can('edit_section_tags')) { alert('Only partners and supervisors can edit tags.'); return; }
+      if (!can('edit_section_tags')) { showToast('Only partners and supervisors can edit tags.'); return; }
 
       // Use the latest (current) TB version only — if the user replaced
       // the TB, superseded versions' lines must NOT appear here.
@@ -1358,7 +1359,7 @@
       const { data: allLines } = await lineQuery;
 
       if (!allLines || allLines.length === 0) {
-        alert('No trial balance uploaded yet. Upload a TB first from the engagement page.');
+        showToast('No trial balance uploaded yet. Upload a TB first from the engagement page.');
         return;
       }
 
@@ -1416,7 +1417,7 @@
       btn.disabled = false;
       btn.textContent = 'Save';
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       section.classification_tags = [...editTagsSelected];
       closeModal('modal-edit-tags');
@@ -1655,7 +1656,7 @@
       const { error } = await supabaseClient.from('audit_procedures')
         .update({ description: newDesc.trim() })
         .eq('id', procId);
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       proc.description = newDesc.trim();
       renderProcedures();
@@ -1677,7 +1678,7 @@
         await supabaseClient.from('procedure_responses').delete().in('id', respIds);
       }
       const { error } = await supabaseClient.from('audit_procedures').delete().eq('id', procId);
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       await loadProcedures();
       updateProgressBar();
@@ -1688,7 +1689,7 @@
       const { error } = await supabaseClient.from('audit_procedures')
         .update({ procedure_type: newType })
         .eq('id', procId);
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
       const proc = procedures.find(p => p.id === procId);
       if (proc) proc.procedure_type = newType;
     }
@@ -1699,12 +1700,12 @@
     }
 
     async function addProcedure() {
-      if (!can('add_procedure')) { alert('Only partners and supervisors can add procedures.'); return; }
+      if (!can('add_procedure')) { showToast('Only partners and supervisors can add procedures.'); return; }
 
       const desc = document.getElementById('new-proc-desc').value.trim();
       const type = document.getElementById('new-proc-type').value;
 
-      if (!desc) { alert('Please enter a procedure description.'); return; }
+      if (!desc) { showToast('Please enter a procedure description.'); return; }
 
       const maxSort = procedures.reduce((max, p) => Math.max(max, p.sort_order || 0), 0);
 
@@ -1715,7 +1716,7 @@
         sort_order: maxSort + 1
       }).select().single();
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       await logActivity(engagementId, 'added_procedure', 'procedure', data.id, { description: desc, type: type });
 
@@ -1760,7 +1761,7 @@
           } else {
             const text = evt.target.result;
             const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-            if (lines.length < 2) { alert('File must have a header row and at least one data row.'); return; }
+            if (lines.length < 2) { showToast('File must have a header row and at least one data row.'); return; }
             const header = lines[0].split(',').map(h => h.trim());
             procUploadRows = [];
             for (let i = 1; i < lines.length; i++) {
@@ -1771,7 +1772,7 @@
             }
           }
 
-          if (!procUploadRows || procUploadRows.length === 0) { alert('No data found.'); return; }
+          if (!procUploadRows || procUploadRows.length === 0) { showToast('No data found.'); return; }
 
           procUploadCols = Object.keys(procUploadRows[0]);
 
@@ -1813,12 +1814,12 @@
             if (val === null) return;
             const descCol = document.getElementById('proc-map-desc').value;
             const typeCol = document.getElementById('proc-map-type').value;
-            if (!descCol) { alert('Please select a Description column.'); return; }
+            if (!descCol) { showToast('Please select a Description column.'); return; }
             importProcedures(descCol, typeCol || null);
           };
 
         } catch (err) {
-          alert('Error reading file: ' + err.message);
+          showToast('Error reading file: ' + err.message);
         }
       };
 
@@ -1849,19 +1850,19 @@
         });
       }
 
-      if (toInsert.length === 0) { alert('No valid procedures found.'); return; }
+      if (toInsert.length === 0) { showToast('No valid procedures found.'); return; }
 
       document.getElementById('modal-action').classList.remove('active');
 
       const { error } = await supabaseClient.from('audit_procedures').insert(toInsert);
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       await logActivity(engagementId, 'uploaded_procedures', 'section', sectionId, { count: toInsert.length });
       await loadProcedures();
       updateProgressBar();
       applyApprovedState();
 
-      alert(toInsert.length + ' procedures imported.');
+      showToast(toInsert.length + ' procedures imported.');
     }
 
     async function saveResponse(procId) {
@@ -1873,7 +1874,7 @@
           .from('procedure_responses')
           .update({ response: text })
           .eq('id', existing.id);
-        if (error) { alert('Error: ' + error.message); return; }
+        if (error) { showToast('Error: ' + error.message); return; }
 
         await logActivity(engagementId, 'updated_response', 'procedure_response', existing.id, { procedure_id: procId });
       } else {
@@ -1883,12 +1884,12 @@
           response: text,
           status: 'pending'
         }).select().single();
-        if (error) { alert('Error: ' + error.message); return; }
+        if (error) { showToast('Error: ' + error.message); return; }
 
         await logActivity(engagementId, 'added_response', 'procedure_response', data.id, { procedure_id: procId });
       }
 
-      alert('Response saved.');
+      showToast('Response saved.');
       await loadProcedures();
       applyApprovedState();
     }
@@ -1905,7 +1906,7 @@
           response: text,
           status: 'done'
         }).select().single();
-        if (error) { alert('Error: ' + error.message); return; }
+        if (error) { showToast('Error: ' + error.message); return; }
 
         await logActivity(engagementId, 'completed_procedure', 'procedure_response', data.id, { procedure_id: procId });
       } else {
@@ -1914,7 +1915,7 @@
           .from('procedure_responses')
           .update({ status: newStatus })
           .eq('id', existing.id);
-        if (error) { alert('Error: ' + error.message); return; }
+        if (error) { showToast('Error: ' + error.message); return; }
 
         await logActivity(engagementId, 'toggled_procedure_status', 'procedure_response', existing.id, { new_status: newStatus });
       }
@@ -2017,7 +2018,7 @@
       if (!editingSamplingProcId) return;
       const existing = samplings.find(s => s.procedure_id === editingSamplingProcId);
       if (!existing) return;
-      if (!confirm('Delete sampling documentation for this procedure? This cannot be undone.')) return;
+      if (!await confirmDialog({ title: 'Delete sampling?', okLabel: 'Delete', okClass: 'danger', message: 'Delete sampling documentation for this procedure? This cannot be undone.' })) return;
 
       const { error } = await supabaseClient
         .from('procedure_sampling')
@@ -2055,7 +2056,7 @@
       const sourceType = document.getElementById('doc-modal-source').value;
       const fileType = document.getElementById('doc-modal-type').value;
 
-      if (!fileName || !fileUrl) { alert('Please enter both a file name and URL.'); return; }
+      if (!fileName || !fileUrl) { showToast('Please enter both a file name and URL.'); return; }
 
       // Validate link is inside shared engagement folder
       if (sharedFolderUrl && !isLinkInsideSharedFolder(fileUrl)) {
@@ -2082,7 +2083,7 @@
           response: text,
           status: 'pending'
         }).select().single();
-        if (error) { alert('Error creating response: ' + error.message); btn.disabled = false; btn.textContent = 'Save'; return; }
+        if (error) { showToast('Error creating response: ' + error.message); btn.disabled = false; btn.textContent = 'Save'; return; }
         resp = data;
       }
 
@@ -2101,7 +2102,7 @@
       btn.disabled = false;
       btn.textContent = 'Save';
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       await logActivity(engagementId, 'linked_document', 'document', doc.id, { file_name: fileName, category: category, source: sourceType });
 
@@ -2196,7 +2197,7 @@
         .update({ status: newStatus })
         .eq('id', findingId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       const f = findings.find(x => x.id === findingId);
       if (f) f.status = newStatus;
@@ -2265,7 +2266,7 @@
     }
 
     function editFinding(findingId) {
-      if (!can('edit_finding')) { alert('Only partners and supervisors can edit findings.'); return; }
+      if (!can('edit_finding')) { showToast('Only partners and supervisors can edit findings.'); return; }
       openFindingModal(findingId);
     }
 
@@ -2275,7 +2276,7 @@
     // schedule / completion counts all stay consistent. (Management letter, findings
     // list, and rollups update automatically since they read findings live / via triggers.)
     async function deleteFinding() {
-      if (!can('edit_finding')) { alert('Only partners and supervisors can delete findings.'); return; }
+      if (!can('edit_finding')) { showToast('Only partners and supervisors can delete findings.'); return; }
       const findingId = document.getElementById('finding-edit-id').value;
       if (!findingId) return;
       const f = findings.find(x => x.id === findingId);
@@ -2296,12 +2297,12 @@
       // 1. Delete linked journals first (FK is SET NULL — they don't cascade). journal_lines cascade with the journal.
       if (n > 0) {
         const { error: jerr } = await supabaseClient.from('journal_entries').delete().in('id', linked.map(j => j.id));
-        if (jerr) { if (btn) btn.disabled = false; alert('Could not delete linked adjustments: ' + jerr.message); return; }
+        if (jerr) { if (btn) btn.disabled = false; showToast('Could not delete linked adjustments: ' + jerr.message); return; }
       }
       // 2. Delete the finding (cascades any legacy adjusting_entries).
       const { error } = await supabaseClient.from('findings').delete().eq('id', findingId);
       if (btn) btn.disabled = false;
-      if (error) { alert('Delete failed: ' + error.message); return; }
+      if (error) { showToast('Delete failed: ' + error.message); return; }
 
       await logActivity(engagementId, 'deleted_finding', 'finding', findingId, { title: f ? f.title : '', linked_journals: n });
       closeModal('modal-finding');
@@ -2328,7 +2329,7 @@
       const monetary = monetaryRaw ? parseFloat(monetaryRaw) : null;
       const editId = document.getElementById('finding-edit-id').value;
 
-      if (!title) { alert('Please enter a finding title.'); return; }
+      if (!title) { showToast('Please enter a finding title.'); return; }
 
       const btn = document.getElementById('btn-save-finding');
       btn.disabled = true;
@@ -2346,7 +2347,7 @@
 
       if (editId) {
         const { error } = await supabaseClient.from('findings').update(findingData).eq('id', editId);
-        if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Save Finding'; return; }
+        if (error) { showToast('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Save Finding'; return; }
         await logActivity(engagementId, 'updated_finding', 'finding', editId, { title });
       } else {
         const { data, error } = await supabaseClient.from('findings').insert({
@@ -2356,7 +2357,7 @@
           status: 'open',
           identified_in_phase: section.phase || 'final'
         }).select().single();
-        if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Save Finding'; return; }
+        if (error) { showToast('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Save Finding'; return; }
         savedId = data.id;
         await logActivity(engagementId, 'added_finding', 'finding', data.id, { title, severity, finding_type: findingType });
       }
@@ -2374,7 +2375,7 @@
 
     // ---- Conclusion ----
     async function saveConclusion() {
-      if (!can('save_conclusion')) { alert('You do not have permission to write the conclusion for this section.'); return; }
+      if (!can('save_conclusion')) { showToast('You do not have permission to write the conclusion for this section.'); return; }
       const text = document.getElementById('conclusion-text').value.trim();
 
       const { error } = await supabaseClient.from('audit_sections').update({
@@ -2382,7 +2383,7 @@
         conclusion_by: currentUser.id
       }).eq('id', sectionId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       section.conclusion = text;
       section.conclusion_by = currentUser.id;
@@ -2392,23 +2393,23 @@
       const name = await resolveProfileName(currentUser.id);
       document.getElementById('conclusion-meta').textContent = 'Written by ' + name;
 
-      alert('Conclusion saved.');
+      showToast('Conclusion saved.');
     }
 
     // ---- Engagement-specific risks (ISA 330 tailoring evidence) ----
     async function saveSpecificRisks() {
-      if (!can('save_conclusion')) { alert('You do not have permission to edit this section.'); return; }
+      if (!can('save_conclusion')) { showToast('You do not have permission to edit this section.'); return; }
       const text = document.getElementById('specific-risks-text').value.trim();
 
       const { error } = await supabaseClient.from('audit_sections').update({
         engagement_specific_risks: text || null
       }).eq('id', sectionId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       section.engagement_specific_risks = text;
       await logActivity(engagementId, 'saved_specific_risks', 'section', sectionId, {});
-      alert('Engagement-specific risks saved.');
+      showToast('Engagement-specific risks saved.');
     }
 
     // ---- Review Notes ----
@@ -2459,10 +2460,10 @@
     }
 
     async function addReviewNote(noteType) {
-      if (noteType === 'review_comment' && !can('add_review_comment')) { alert('Only partners and supervisors can add review comments.'); return; }
-      if (noteType === 'preparer_response' && !can('add_preparer_response')) { alert('Only admins and preparers can add responses.'); return; }
+      if (noteType === 'review_comment' && !can('add_review_comment')) { showToast('Only partners and supervisors can add review comments.'); return; }
+      if (noteType === 'preparer_response' && !can('add_preparer_response')) { showToast('Only admins and preparers can add responses.'); return; }
       const noteText = document.getElementById('new-review-note').value.trim();
-      if (!noteText) { alert('Please type a note.'); return; }
+      if (!noteText) { showToast('Please type a note.'); return; }
 
       const { data, error } = await supabaseClient.from('review_notes').insert({
         section_id: sectionId,
@@ -2471,7 +2472,7 @@
         note_type: noteType
       }).select().single();
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       await logActivity(engagementId, 'added_review_note', 'review_note', data.id, { note_type: noteType });
 
@@ -2579,7 +2580,7 @@
         .update({ status: 'ready_for_supervisor_review' })
         .eq('id', sectionId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       section.status = 'ready_for_supervisor_review';
       await logActivity(engagementId, 'submitted_for_review', 'section', sectionId, { name: section.name });
@@ -2604,7 +2605,7 @@
         .update({ status: 'ready_for_partner_review', supervisor_approved_by: currentUser.id, supervisor_approved_at: now })
         .eq('id', sectionId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       section.status = 'ready_for_partner_review';
       section.supervisor_approved_by = currentUser.id;
@@ -2649,7 +2650,7 @@
         partner_approved_at: now
       }).eq('id', sectionId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       section.status = 'approved';
       section.partner_approved_by = currentUser.id;
@@ -2680,7 +2681,7 @@
         })
         .eq('id', sectionId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       section.status = 'returned_to_preparer';
       section.supervisor_approved_by = null;
@@ -2713,7 +2714,7 @@
         })
         .eq('id', sectionId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       section.status = 'returned_to_supervisor';
       section.supervisor_approved_by = null;
@@ -2731,7 +2732,7 @@
 
     // ---- Admin reopens fully approved section ----
     async function reopenSection() {
-      if (!can('reopen_section')) { alert('Only partners can reopen approved sections.'); return; }
+      if (!can('reopen_section')) { showToast('Only partners can reopen approved sections.'); return; }
 
       const reason = await showActionModal({
         title: 'Reopen Section',
@@ -2753,7 +2754,7 @@
         partner_approved_at: null
       }).eq('id', sectionId);
 
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { showToast('Error: ' + error.message); return; }
 
       section.status = 'returned_to_supervisor';
       section.supervisor_approved_by = null;

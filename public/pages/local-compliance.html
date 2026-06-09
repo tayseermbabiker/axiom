@@ -238,6 +238,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/ui-notify.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     let currentUser = null;
@@ -327,7 +328,7 @@
         })
         .select()
         .single();
-      if (error) { alert('Could not enable: ' + error.message); return; }
+      if (error) { showToast('Could not enable: ' + error.message); return; }
       template = data;
       procedures = [];
       renderTemplate();
@@ -530,7 +531,7 @@
         .from('org_compliance_procedures')
         .update({ is_active: newActive })
         .eq('id', procId);
-      if (error) { alert('Could not update: ' + error.message); return; }
+      if (error) { showToast('Could not update: ' + error.message); return; }
       p.is_active = newActive;
       renderProcedures();
     }
