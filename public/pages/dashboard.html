@@ -665,13 +665,20 @@
 
     /* ---- Engagement loading + render ---- */
     async function loadEngagements() {
-      const { data: engagements, error } = await supabaseClient
-        .from('engagements')
-        .select('*, profiles:created_by(full_name, email)')
-        .eq('organization_id', currentOrg.id)
-        .order('year_end_date', { ascending: false });
+      // Engagements + per-engagement progress counts, IN PARALLEL. The counts
+      // come from one server-side aggregation (dashboard_engagement_stats)
+      // instead of pulling every procedure/response/finding to the client.
+      const [engRes, statsRes] = await Promise.all([
+        supabaseClient
+          .from('engagements')
+          .select('*, profiles:created_by(full_name, email)')
+          .eq('organization_id', currentOrg.id)
+          .order('year_end_date', { ascending: false }),
+        supabaseClient.rpc('dashboard_engagement_stats', { p_org_id: currentOrg.id })
+      ]);
 
-      if (error) { console.error(error); return; }
+      const engagements = engRes.data;
+      if (engRes.error) { console.error(engRes.error); return; }
 
       if (!engagements || engagements.length === 0) {
         allEngagements = [];
@@ -687,87 +694,24 @@
 
       const engIds = engagements.map(e => e.id);
 
-      // Sections (status + engagement_id used for phase + review-pending counts)
-      const { data: sections } = await supabaseClient
-        .from('audit_sections')
-        .select('id, engagement_id, status')
-        .in('engagement_id', engIds);
-      const sectionsList = sections || [];
-
-      // Procedures + done count (procedure_responses.status='done' is the truth)
-      const sectionIds = sectionsList.map(s => s.id);
-      let procedures = [];
-      let doneProcedureIds = new Set();
-      if (sectionIds.length > 0) {
-        const { data: procs } = await supabaseClient
-          .from('audit_procedures')
-          .select('id, section_id')
-          .in('section_id', sectionIds);
-        procedures = procs || [];
-
-        const procIds = procedures.map(p => p.id);
-        if (procIds.length > 0) {
-          const { data: responses } = await supabaseClient
-            .from('procedure_responses')
-            .select('procedure_id')
-            .eq('status', 'done')
-            .in('procedure_id', procIds);
-          (responses || []).forEach(r => doneProcedureIds.add(r.procedure_id));
-        }
-      }
-
-      // Findings (open count per engagement)
-      let findings = [];
-      if (sectionIds.length > 0) {
-        const { data: finds } = await supabaseClient
-          .from('findings')
-          .select('id, section_id, status')
-          .in('section_id', sectionIds);
-        findings = finds || [];
-      }
-
-      // Build lookups
-      const sectionToEng = {};
-      sectionsList.forEach(s => { sectionToEng[s.id] = s.engagement_id; });
-
       const computed = {}; // engagement_id → counts
       engIds.forEach(id => {
-        computed[id] = {
-          totalSections: 0,
-          approvedSections: 0,
-          reviewSections: 0,
-          totalProcs: 0,
-          doneProcs: 0,
-          openFindings: 0,
-        };
+        computed[id] = { totalSections: 0, approvedSections: 0, reviewSections: 0, totalProcs: 0, doneProcs: 0, openFindings: 0 };
       });
 
-      // Section statuses that count as "awaiting partner review"
-      const REVIEW_STATUSES = new Set([
-        'ready_for_partner_review',
-        'in_partner_review',
-      ]);
-
-      sectionsList.forEach(s => {
-        const c = computed[s.engagement_id];
-        if (!c) return;
-        c.totalSections++;
-        if (s.status === 'approved') c.approvedSections++;
-        if (REVIEW_STATUSES.has(s.status)) c.reviewSections++;
-      });
-      procedures.forEach(p => {
-        const engId = sectionToEng[p.section_id];
-        const c = engId ? computed[engId] : null;
-        if (!c) return;
-        c.totalProcs++;
-        if (doneProcedureIds.has(p.id)) c.doneProcs++;
-      });
-      findings.forEach(f => {
-        const engId = sectionToEng[f.section_id];
-        const c = engId ? computed[engId] : null;
-        if (!c) return;
-        if (f.status === 'open') c.openFindings++;
-      });
+      if (!statsRes.error && Array.isArray(statsRes.data)) {
+        // Fast path: server-side aggregation.
+        statsRes.data.forEach(s => {
+          if (!computed[s.engagement_id]) return;
+          computed[s.engagement_id] = {
+            totalSections: s.total_sections, approvedSections: s.approved_sections, reviewSections: s.review_sections,
+            totalProcs: s.total_procs, doneProcs: s.done_procs, openFindings: s.open_findings,
+          };
+        });
+      } else {
+        // Fallback (RPC not deployed yet): client-side counting, slower.
+        await computeStatsFallback(engIds, computed);
+      }
 
       // Attach computed fields + phase label to each engagement
       allEngagements = engagements.map(e => {
@@ -799,6 +743,32 @@
       renderCurrentView();
       document.getElementById('tiles-row').style.display = '';
       document.getElementById('filter-bar').style.display = '';
+    }
+
+    // Fallback for dashboard_engagement_stats (pre-migration): count client-side.
+    async function computeStatsFallback(engIds, computed) {
+      const { data: sections } = await supabaseClient
+        .from('audit_sections').select('id, engagement_id, status').in('engagement_id', engIds);
+      const sectionsList = sections || [];
+      const sectionIds = sectionsList.map(s => s.id);
+      const sectionToEng = {};
+      sectionsList.forEach(s => { sectionToEng[s.id] = s.engagement_id; });
+      let procedures = [], doneProcedureIds = new Set(), findings = [];
+      if (sectionIds.length > 0) {
+        const { data: procs } = await supabaseClient.from('audit_procedures').select('id, section_id').in('section_id', sectionIds);
+        procedures = procs || [];
+        const procIds = procedures.map(p => p.id);
+        if (procIds.length > 0) {
+          const { data: responses } = await supabaseClient.from('procedure_responses').select('procedure_id').eq('status', 'done').in('procedure_id', procIds);
+          (responses || []).forEach(r => doneProcedureIds.add(r.procedure_id));
+        }
+        const { data: finds } = await supabaseClient.from('findings').select('id, section_id, status').in('section_id', sectionIds);
+        findings = finds || [];
+      }
+      const REVIEW_STATUSES = new Set(['ready_for_partner_review', 'in_partner_review']);
+      sectionsList.forEach(s => { const c = computed[s.engagement_id]; if (!c) return; c.totalSections++; if (s.status === 'approved') c.approvedSections++; if (REVIEW_STATUSES.has(s.status)) c.reviewSections++; });
+      procedures.forEach(p => { const c = computed[sectionToEng[p.section_id]]; if (!c) return; c.totalProcs++; if (doneProcedureIds.has(p.id)) c.doneProcs++; });
+      findings.forEach(f => { const c = computed[sectionToEng[f.section_id]]; if (!c) return; if (f.status === 'open') c.openFindings++; });
     }
 
     function engFY(e) { return e.year_end_date ? new Date(e.year_end_date).getFullYear() : null; }

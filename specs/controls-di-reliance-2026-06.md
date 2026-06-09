@@ -194,7 +194,7 @@ All four questions answered and resolved — see "Copilot schema pass — resolu
 - [x] Reliance warning banner fires on `rely`/`combined`; no auto-mutation of substantive extent (decision is documentation-only)
 - [x] `isa_315_controls_di_concluded` attestation = 5th checkbox in confirm modal, set on confirm, enforced by DB CHECK `era_controls_di_concluded_chk`
 - [x] Inspection PDF (`report.html`): controls register + D&I/reliance + control→risk link rendered in the Risk Assessment block; 5th attestation row added (render parity per pre-commit checklist #2/#7)
-- [ ] **PENDING (user/runtime):** migration applied to staging Supabase `lbwowlvajgpdxsdpudem`
+- [x] Migration applied to **prod** Supabase 2026-06-04 — feature LIVE on `main`
 - [ ] **PENDING (user):** smoke test — add control → D&I conclusion → default no_reliance → confirm; toggle rely → warning; non-admin read-only; Essentials sees Pro banner
 - [ ] User signs off
 

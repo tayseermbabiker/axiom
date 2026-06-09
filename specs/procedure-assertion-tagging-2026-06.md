@@ -354,7 +354,7 @@ Legend: E=Exist/Occur · C=Complete · A=Accuracy · V=Valuation · CO=Cut-off �
 - [x] Templates seeded: `PROCEDURE_ASSERTIONS` in `audit-templates.js` (verified mappings); wired into both seed paths (seedSectionsForEngagement + engagement.html New Section modal)
 - [x] `section.html`: read-only assertion chips in header + click-to-toggle editor in body; type badges relabelled (Test of Controls / Test of Details / Substantive Analytical / Risk Assessment·Admin)
 - [x] `report.html`: assertion chips + relabelled type in the procedures table (render parity)
-- [ ] **PENDING (user/runtime):** migration applied to staging Supabase `lbwowlvajgpdxsdpudem`
+- [x] Migration applied to **prod** Supabase 2026-06-04 — feature LIVE on `main`
 - [ ] **PENDING (user):** smoke test — new engagement shows tags; toggle assertions; approved section locks edit (chips read-only); PDF shows assertions
 - [ ] User signs off
 
