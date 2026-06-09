@@ -5489,9 +5489,12 @@
 
     function wtbBlankLeg() { return { tbLineId: '', debit: 0, credit: 0 }; }
 
+    let wtbModalEntryId = null;
     function openJournalModal(entryId) {
       if (!wtbIsPro()) return;
       wtbEditId = entryId || null;
+      // New journal: stable pre-generated id so a double-click / retry can't duplicate.
+      wtbModalEntryId = (!entryId && window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
       const titleEl = document.getElementById('journal-modal-title');
       const errEl = document.getElementById('journal-error');
       if (errEl) errEl.style.display = 'none';
@@ -5574,6 +5577,8 @@
     }
 
     async function saveJournal() {
+      const saveBtn = document.getElementById('journal-save-btn');
+      if (saveBtn && saveBtn.disabled) return;  // already saving — block double-submit
       const errEl = document.getElementById('journal-error');
       const showErr = (m) => { if (errEl) { errEl.textContent = m; errEl.style.display = 'block'; } };
       if (errEl) errEl.style.display = 'none';
@@ -5609,43 +5614,55 @@
         is_posted_to_adjusted_tb: posted,
       };
 
-      let entryId = wtbEditId;
-      if (wtbEditId) {
-        const { error } = await supabaseClient.from('journal_entries').update(entryPayload).eq('id', wtbEditId);
-        if (error) return showErr('Could not save: ' + error.message);
-        await supabaseClient.from('journal_lines').delete().eq('journal_entry_id', wtbEditId);
-      } else {
-        entryPayload.prepared_by = currentUser.id;
-        entryPayload.created_by  = currentUser.id;
-        const { data, error } = await supabaseClient.from('journal_entries').insert(entryPayload).select('id').single();
-        if (error) return showErr('Could not save: ' + error.message);
-        entryId = data.id;
-      }
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+      try {
+        let entryId = wtbEditId;
+        if (wtbEditId) {
+          const { error } = await supabaseClient.from('journal_entries').update(entryPayload).eq('id', wtbEditId);
+          if (error) { showErr('Could not save: ' + error.message); return; }
+          await supabaseClient.from('journal_lines').delete().eq('journal_entry_id', wtbEditId);
+        } else {
+          entryPayload.prepared_by = currentUser.id;
+          entryPayload.created_by  = currentUser.id;
+          if (wtbModalEntryId) entryPayload.id = wtbModalEntryId;  // stable id → a retry can't duplicate
+          const { data, error } = await supabaseClient.from('journal_entries').insert(entryPayload).select('id').single();
+          if (error) {
+            // 23505 = unique violation: this exact journal already saved (a retry). Treat as success.
+            if (error.code === '23505') { closeModal('modal-journal'); await loadWorkingTB(); return; }
+            showErr('Could not save: ' + error.message); return;
+          }
+          entryId = data.id;
+        }
 
-      const linePayload = legs.map((l, idx) => {
-        const tbl = tbLines.find(t => t.id === l.tbLineId);
-        const at = tbl ? tbl.account_type : null;
-        return {
-          journal_entry_id: entryId,
-          organization_id: currentOrg.id,
-          trial_balance_line_id: l.tbLineId,
-          account_code: tbl ? tbl.account_code : null,
-          account_name: tbl ? tbl.account_name : null,
-          account_section_id: tbToSectionMap[l.tbLineId] || null,
-          debit: Number(l.debit) || 0,
-          credit: Number(l.credit) || 0,
-          is_pl_affecting: at ? (at === 'income' || at === 'expense') : null,
-          sort_order: idx,
-        };
-      });
-      const { error: lerr } = await supabaseClient.from('journal_lines').insert(linePayload);
-      if (lerr) return showErr('Saved the header but the lines failed: ' + lerr.message);
+        const linePayload = legs.map((l, idx) => {
+          const tbl = tbLines.find(t => t.id === l.tbLineId);
+          const at = tbl ? tbl.account_type : null;
+          return {
+            journal_entry_id: entryId,
+            organization_id: currentOrg.id,
+            trial_balance_line_id: l.tbLineId,
+            account_code: tbl ? tbl.account_code : null,
+            account_name: tbl ? tbl.account_name : null,
+            account_section_id: tbToSectionMap[l.tbLineId] || null,
+            debit: Number(l.debit) || 0,
+            credit: Number(l.credit) || 0,
+            is_pl_affecting: at ? (at === 'income' || at === 'expense') : null,
+            sort_order: idx,
+          };
+        });
+        const { error: lerr } = await supabaseClient.from('journal_lines').insert(linePayload);
+        if (lerr) { showErr('Saved the header but the lines failed: ' + lerr.message); return; }
 
-      if (typeof logActivity === 'function') {
-        try { await logActivity(engagementId, wtbEditId ? 'updated_journal' : 'created_journal', 'journal_entry', entryId, { impact_type: impact, status: status }); } catch (e) {}
+        if (typeof logActivity === 'function') {
+          try { await logActivity(engagementId, wtbEditId ? 'updated_journal' : 'created_journal', 'journal_entry', entryId, { impact_type: impact, status: status }); } catch (e) {}
+        }
+        closeModal('modal-journal');
+        await loadWorkingTB();
+      } catch (e) {
+        showErr('Save failed (check your connection): ' + (e && e.message ? e.message : e) + ' — please retry.');
+      } finally {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save journal'; }
       }
-      closeModal('modal-journal');
-      await loadWorkingTB();
     }
 
     // ---- AML / KYC (DNFBP client due diligence — reviewer #1) ----
