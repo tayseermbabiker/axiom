@@ -2182,6 +2182,13 @@
     }
 
     async function updateFindingStatus(findingId, newStatus) {
+      // Guard against accidental status changes (a stray click could silently
+      // resolve an open finding and let it slip past the completion gate).
+      const f0 = findings.find(x => x.id === findingId);
+      if (!confirm('Set "' + (f0 ? f0.title : 'this finding') + '" to "' + newStatus.replace(/_/g, ' ') + '"?')) {
+        renderFindings();  // cancelled — restore the dropdown to the current status
+        return;
+      }
       const { error } = await supabaseClient.from('findings')
         .update({ status: newStatus })
         .eq('id', findingId);

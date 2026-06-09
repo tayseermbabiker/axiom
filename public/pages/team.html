@@ -318,6 +318,11 @@
 
     // Change member role
     async function changeRole(memberId, newRole) {
+      // Guard against accidental role changes (this alters what the member can access).
+      if (!confirm('Change this member’s role to "' + newRole + '"? This changes their permissions.')) {
+        await loadMembers();  // cancelled — restore the dropdown to the current role
+        return;
+      }
       const { error } = await supabaseClient
         .from('organization_members')
         .update({ role: newRole })
