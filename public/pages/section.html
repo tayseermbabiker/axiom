@@ -814,6 +814,7 @@
         <input type="hidden" id="finding-edit-id" value="">
       </div>
       <div class="modal-footer">
+        <button class="btn btn-outline" id="finding-btn-delete" onclick="deleteFinding()" style="display:none; margin-right:auto; color:#DC2626; border-color:#FECACA;">Delete</button>
         <button class="btn btn-outline" onclick="closeModal('modal-finding')">Cancel</button>
         <button class="btn btn-primary" id="btn-save-finding" onclick="saveFinding()">Save Finding</button>
       </div>
@@ -2257,12 +2258,55 @@
         }
       }
 
+      const fDel = document.getElementById('finding-btn-delete');
+      if (fDel) fDel.style.display = (findingId && can('edit_finding')) ? 'inline-flex' : 'none';
       document.getElementById('modal-finding').classList.add('active');
     }
 
     function editFinding(findingId) {
       if (!can('edit_finding')) { alert('Only partners and supervisors can edit findings.'); return; }
       openFindingModal(findingId);
+    }
+
+    // Delete a finding + cascade its effect downstream. The linked journal FK is
+    // ON DELETE SET NULL, so the adjustment would otherwise survive in the working
+    // TB — we delete linked journals explicitly so the working TB / misstatement
+    // schedule / completion counts all stay consistent. (Management letter, findings
+    // list, and rollups update automatically since they read findings live / via triggers.)
+    async function deleteFinding() {
+      if (!can('edit_finding')) { alert('Only partners and supervisors can delete findings.'); return; }
+      const findingId = document.getElementById('finding-edit-id').value;
+      if (!findingId) return;
+      const f = findings.find(x => x.id === findingId);
+
+      // Adjustments linked to this finding (these affect the working TB).
+      const { data: linked } = await supabaseClient.from('journal_entries').select('id').eq('linked_finding_id', findingId);
+      const n = (linked || []).length;
+
+      let msg = 'Delete the finding "' + (f ? f.title : '') + '"?';
+      if (n > 0) msg += '\n\nIt has ' + n + ' linked adjustment(s) in the working TB — these will ALSO be deleted (removing their effect on the adjusted TB and the misstatement schedule).';
+      if (f && f.is_management_letter_point) msg += '\n\nIt will also drop off the management letter.';
+      msg += '\n\nThis cannot be undone.';
+      if (!confirm(msg)) return;
+
+      const btn = document.getElementById('finding-btn-delete');
+      if (btn) btn.disabled = true;
+
+      // 1. Delete linked journals first (FK is SET NULL — they don't cascade). journal_lines cascade with the journal.
+      if (n > 0) {
+        const { error: jerr } = await supabaseClient.from('journal_entries').delete().in('id', linked.map(j => j.id));
+        if (jerr) { if (btn) btn.disabled = false; alert('Could not delete linked adjustments: ' + jerr.message); return; }
+      }
+      // 2. Delete the finding (cascades any legacy adjusting_entries).
+      const { error } = await supabaseClient.from('findings').delete().eq('id', findingId);
+      if (btn) btn.disabled = false;
+      if (error) { alert('Delete failed: ' + error.message); return; }
+
+      await logActivity(engagementId, 'deleted_finding', 'finding', findingId, { title: f ? f.title : '', linked_journals: n });
+      closeModal('modal-finding');
+      await loadFindings();
+      if (typeof loadSectionWorkingTB === 'function') await loadSectionWorkingTB();  // refresh the adjustment display
+      applyApprovedState();
     }
 
     async function saveFinding() {
