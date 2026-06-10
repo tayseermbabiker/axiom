@@ -994,18 +994,26 @@
         document.getElementById('add-note-area').style.display = 'none';
       }
 
-      await loadOrgMembers();
+      // Org members and the section/engagement fetch are independent — start
+      // them together. renderAssigneeControl (below) needs both.
+      const orgMembersP = loadOrgMembers();
       await loadSection();
-      if (!section) return;
+      if (!section) { await orgMembersP; return; }
+      await orgMembersP;
+      await renderAssigneeControl();
 
+      // All five loads are independent of each other's data — run them together
+      // instead of running the working-TB load as a separate serial stage.
+      // loadSectionWorkingTB renders against tbLines (set by loadTBLines), so we
+      // re-render the working TB once after the batch to settle that ordering.
       await Promise.all([
         loadTBLines(),
         loadProcedures(),
         loadFindings(),
-        loadReviewNotes()
+        loadReviewNotes(),
+        loadSectionWorkingTB()
       ]);
-
-      await loadSectionWorkingTB();
+      if (secIsPro()) renderSecAdj();
 
       applyApprovedState();
 
@@ -1181,8 +1189,8 @@
       statusBadge.textContent = statusLabel;
       statusBadge.className = 'badge badge-' + (section.status || 'not-started').replace(/_/g, '-');
 
-      // Assigned to — dropdown for admin/supervisor, read-only for everyone else
-      await renderAssigneeControl();
+      // Assigned to — rendered by init() after loadOrgMembers() resolves
+      // (renderAssigneeControl needs orgMembers; the two loads run in parallel).
 
       // Show assertions
       const sectionAssertions = section.assertions || [];
@@ -1443,34 +1451,21 @@
           .in('procedure_id', procIds);
         responses = resps || [];
 
-        // Load documents linked to responses
+        // Response-linked docs, section-level docs, and sampling are all
+        // independent of each other — fetch them in one parallel round instead
+        // of three serial round-trips.
         const respIds = responses.map(r => r.id);
-        let procDocs = [];
-        if (respIds.length > 0) {
-          const { data: rd } = await supabaseClient
-            .from('documents')
-            .select('*')
-            .in('procedure_response_id', respIds)
-            .order('created_at');
-          procDocs = rd || [];
-        }
-
-        // Also load documents linked directly to section (no procedure_response_id)
-        const { data: secDocs } = await supabaseClient
-          .from('documents')
-          .select('*')
-          .eq('section_id', sectionId)
-          .is('procedure_response_id', null)
-          .order('created_at');
-
-        documents = [...procDocs, ...(secDocs || [])];
-
-        // ISA 530 sampling (Sprint 4) — at most one per procedure
-        const { data: sampData } = await supabaseClient
-          .from('procedure_sampling')
-          .select('*')
-          .in('procedure_id', procIds);
-        samplings = sampData || [];
+        const [procDocsRes, secDocsRes, sampRes] = await Promise.all([
+          respIds.length > 0
+            ? supabaseClient.from('documents').select('*').in('procedure_response_id', respIds).order('created_at')
+            : Promise.resolve({ data: [] }),
+          // documents linked directly to section (no procedure_response_id)
+          supabaseClient.from('documents').select('*').eq('section_id', sectionId).is('procedure_response_id', null).order('created_at'),
+          // ISA 530 sampling (Sprint 4) — at most one per procedure
+          supabaseClient.from('procedure_sampling').select('*').in('procedure_id', procIds),
+        ]);
+        documents = [...(procDocsRes.data || []), ...(secDocsRes.data || [])];
+        samplings = sampRes.data || [];
       } else {
         responses = [];
         documents = [];
@@ -2895,15 +2890,17 @@
       if (wrap) wrap.style.display = 'block';
       if (proposeBtn && !isApproved) proposeBtn.style.display = 'inline-flex';
 
-      let q = supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code');
       const vid = await getSectionTbVersionId();
+      let q = supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code');
       if (vid) q = q.eq('tb_version_id', vid);
-      const { data: allTb } = await q;
-      secAllTb = allTb || [];
-
-      const { data: entries } = await supabaseClient.from('journal_entries').select('*')
-        .eq('engagement_id', engagementId).order('created_at', { ascending: true });
-      secEntries = entries || [];
+      // TB lines and journal entries are independent — fetch them together.
+      const [tbRes, entriesRes] = await Promise.all([
+        q,
+        supabaseClient.from('journal_entries').select('*')
+          .eq('engagement_id', engagementId).order('created_at', { ascending: true }),
+      ]);
+      secAllTb = tbRes.data || [];
+      secEntries = entriesRes.data || [];
       if (secEntries.length) {
         const ids = secEntries.map(e => e.id);
         const { data: lines } = await supabaseClient.from('journal_lines').select('*').in('journal_entry_id', ids);
