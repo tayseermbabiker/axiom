@@ -3357,6 +3357,25 @@
       //   that's where their day-to-day work happens.
       const defaultPhase = currentRole === 'admin' ? 'planning' : 'execution';
       switchPhase(defaultPhase);
+
+      // Warm the Completion Memo iframe in the background so clicking Conclusion
+      // reveals an already-booted frame instead of cold-loading a full second
+      // page. Only when (a) Pro — the one tier where the memo renders — and
+      // (b) Conclusion is actually unlocked (all sections approved). Before that,
+      // booting completion-memo.html would eager-create the memo + 13 attestation
+      // rows for an admin; we keep that side effect tied to genuinely reaching
+      // the conclusion stage, same as before.
+      if (currentOrg && currentOrg.feature_tier === 'pro') {
+        const ap = document.getElementById('stat-approved');
+        let a = 0, t = 0;
+        if (ap) { const parts = ap.textContent.split('/'); a = parseInt(parts[0]) || 0; t = parseInt(parts[1]) || 0; }
+        const execComplete = t > 0 && a >= t;
+        if (execComplete) {
+          const warmMemo = () => { try { ensureMemoFrame(); } catch (_) {} };
+          if (window.requestIdleCallback) requestIdleCallback(warmMemo, { timeout: 4000 });
+          else setTimeout(warmMemo, 1500);
+        }
+      }
     }
 
     async function resolveProfileName(userId) {

@@ -692,13 +692,16 @@
 
       document.getElementById('back-to-engagement').href = 'engagement.html#' + engagementId;
 
-      await loadEngagement();
-      await loadOrgMembers();
-      await loadOrCreateMemo();
-      await loadAttestations();
-      await loadMisstatementSchedule();
-      await refreshChecks();
-      renderAll();
+      // loadEngagement, loadOrgMembers and loadOrCreateMemo are mutually
+      // independent — run them together. refreshChecks() then recomputes the
+      // server-side rollups/checks and RE-LOADS attestations + the misstatement
+      // schedule + renders, so pre-loading those here would just be thrown away.
+      await Promise.all([loadEngagement(), loadOrgMembers(), loadOrCreateMemo()]);
+      if (memo) {
+        await refreshChecks();
+      }
+      // If memo is null, loadOrCreateMemo already showed the right message
+      // (embedded) or redirected — nothing further to render.
 
       document.getElementById('memo-content').style.display = 'block';
 
@@ -891,23 +894,26 @@
       const { error: rollupErr } = await supabaseClient.rpc('refresh_completion_memo_rollups', { p_memo_id: memo.id });
       if (rollupErr) {
         showToast('Rollup refresh failed: ' + rollupErr.message + '\n\nThis usually means the migration 20260519120005_triggers.sql or 20260522120003 was not applied. Send a screenshot to support.');
+        await loadAttestations(); await loadMisstatementSchedule(); renderAll();  // still show the memo
         return;
       }
       // 2. Recompute attestation system checks
       const { error: checkErr } = await supabaseClient.rpc('recompute_attestation_checks', { p_memo_id: memo.id });
       if (checkErr) {
         showToast('System checks failed: ' + checkErr.message);
+        await loadAttestations(); await loadMisstatementSchedule(); renderAll();  // still show the memo
         return;
       }
       // 3. Re-fetch memo + attestations + misstatement schedule
-      const { data: m } = await supabaseClient
-        .from('engagement_completion_memo')
-        .select('*')
-        .eq('id', memo.id)
-        .single();
-      if (m) memo = m;
-      await loadAttestations();
-      await loadMisstatementSchedule();
+      // The refreshed memo rollups, attestation checks, and the (unaffected)
+      // misstatement schedule are independent reads of the post-RPC state —
+      // fetch them together instead of in series.
+      const [memoRes] = await Promise.all([
+        supabaseClient.from('engagement_completion_memo').select('*').eq('id', memo.id).single(),
+        loadAttestations(),
+        loadMisstatementSchedule(),
+      ]);
+      if (memoRes.data) memo = memoRes.data;
       renderAll();
     }
 
