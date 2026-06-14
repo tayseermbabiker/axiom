@@ -994,25 +994,41 @@
         document.getElementById('add-note-area').style.display = 'none';
       }
 
-      // Org members and the section/engagement fetch are independent — start
-      // them together. renderAssigneeControl (below) needs both.
+      // Org members loads alongside the section data (renderAssigneeControl needs both).
       const orgMembersP = loadOrgMembers();
-      await loadSection();
-      if (!section) { await orgMembersP; return; }
-      await orgMembersP;
-      await renderAssigneeControl();
 
-      // All five loads are independent of each other's data — run them together
-      // instead of running the working-TB load as a separate serial stage.
-      // loadSectionWorkingTB renders against tbLines (set by loadTBLines), so we
-      // re-render the working TB once after the batch to settle that ordering.
-      await Promise.all([
-        loadTBLines(),
-        loadProcedures(),
-        loadFindings(),
-        loadReviewNotes(),
-        loadSectionWorkingTB()
-      ]);
+      // FAST PATH: one round-trip returns the ENTIRE section (header, TB lines,
+      // procedures + responses + docs + sampling, findings, review notes, and
+      // the Pro working-TB block) instead of ~7 serial queries. This is the main
+      // win for high-latency clients — each old query was a separate "stage".
+      const bootRes = await supabaseClient.rpc('section_bootstrap', { p_section_id: sectionId });
+      const boot = (!bootRes.error && bootRes.data) ? bootRes.data : null;
+
+      if (boot) {
+        _secCurrentTbVersionId = boot.tb_version_id || null;  // pre-seed version cache
+        await loadSection({ section: boot.section, engagement: boot.engagement });
+        if (!section) { await orgMembersP; return; }
+        await orgMembersP;
+        await renderAssigneeControl();
+        await loadTBLines(boot.tb_lines);
+        await loadProcedures({ procedures: boot.procedures, responses: boot.responses, documents: boot.documents, samplings: boot.sampling });
+        await loadFindings(boot.findings);
+        await loadReviewNotes(boot.review_notes);
+        await loadSectionWorkingTB({ all: boot.wtb_all, entries: boot.wtb_entries, lines: boot.wtb_lines });
+      } else {
+        // FALLBACK (RPC missing / errored): original per-query path.
+        await loadSection();
+        if (!section) { await orgMembersP; return; }
+        await orgMembersP;
+        await renderAssigneeControl();
+        await Promise.all([
+          loadTBLines(),
+          loadProcedures(),
+          loadFindings(),
+          loadReviewNotes(),
+          loadSectionWorkingTB()
+        ]);
+      }
       if (secIsPro()) renderSecAdj();
 
       applyApprovedState();
@@ -1136,16 +1152,24 @@
     }
 
     // ---- Load section ----
-    async function loadSection() {
-      const { data, error } = await supabaseClient
-        .from('audit_sections')
-        .select('*')
-        .eq('id', sectionId)
-        .single();
-
-      if (error || !data) {
-        showToast('Error loading section: ' + (error?.message || 'not found'));
-        return;
+    // inj (optional): { section, engagement } from section_bootstrap — skips the
+    // two queries on the fast path. Refresh callers pass nothing and re-query.
+    async function loadSection(inj) {
+      let data, eng;
+      if (inj && inj.section) {
+        data = inj.section;
+        eng  = inj.engagement;
+      } else {
+        const res = await supabaseClient
+          .from('audit_sections')
+          .select('*')
+          .eq('id', sectionId)
+          .single();
+        if (res.error || !res.data) {
+          showToast('Error loading section: ' + (res.error?.message || 'not found'));
+          return;
+        }
+        data = res.data;
       }
 
       section = data;
@@ -1153,12 +1177,15 @@
       // Both interim and final require full three-level sign-off
       isApproved = !!section.partner_approved_at;
 
-      // Fetch engagement for breadcrumb + shared folder + status
-      const { data: eng } = await supabaseClient
-        .from('engagements')
-        .select('client_name, shared_folder_url, status')
-        .eq('id', engagementId)
-        .single();
+      // Fetch engagement for breadcrumb + shared folder + status (unless injected)
+      if (!eng) {
+        const r = await supabaseClient
+          .from('engagements')
+          .select('client_name, shared_folder_url, status')
+          .eq('id', engagementId)
+          .single();
+        eng = r.data;
+      }
 
       sharedFolderUrl = eng?.shared_folder_url || '';
 
@@ -1248,7 +1275,9 @@
     }
 
     // ---- TB Lines (matched by classification_tags) ----
-    async function loadTBLines() {
+    // inj (optional): array of TB lines from section_bootstrap (already scoped to
+    // the section's tags + TB version). Skips the query on the fast path.
+    async function loadTBLines(inj) {
       const tags = section.classification_tags || [];
 
       // Show tags bar
@@ -1269,20 +1298,23 @@
         return;
       }
 
-      // Load TB lines scoped to the section's TB version (pinned, else current).
-      let query = supabaseClient
-        .from('trial_balance_lines')
-        .select('*')
-        .eq('engagement_id', engagementId)
-        .in('classification', tags)
-        .order('account_code');
+      if (Array.isArray(inj)) {
+        tbLines = inj;
+      } else {
+        // Load TB lines scoped to the section's TB version (pinned, else current).
+        let query = supabaseClient
+          .from('trial_balance_lines')
+          .select('*')
+          .eq('engagement_id', engagementId)
+          .in('classification', tags)
+          .order('account_code');
 
-      const vid = await getSectionTbVersionId();
-      if (vid) query = query.eq('tb_version_id', vid);
+        const vid = await getSectionTbVersionId();
+        if (vid) query = query.eq('tb_version_id', vid);
 
-      const { data: lines } = await query;
-
-      tbLines = lines || [];
+        const { data: lines } = await query;
+        tbLines = lines || [];
+      }
 
       // Check for stale tags (tags that match zero TB lines)
       const tbClassifications = new Set(tbLines.map(l => l.classification));
@@ -1433,7 +1465,19 @@
     }
 
     // ---- Procedures ----
-    async function loadProcedures() {
+    // inj (optional): { procedures, responses, documents, samplings } from
+    // section_bootstrap. Skips all four queries on the fast path.
+    async function loadProcedures(inj) {
+      if (inj && Array.isArray(inj.procedures)) {
+        procedures = inj.procedures;
+        responses  = inj.responses || [];
+        documents  = inj.documents || [];
+        samplings  = inj.samplings || [];
+        renderProcedures();
+        updateProgressBar();
+        return;
+      }
+
       const { data: procs } = await supabaseClient
         .from('audit_procedures')
         .select('*')
@@ -2107,14 +2151,18 @@
     }
 
     // ---- Findings ----
-    async function loadFindings() {
-      const { data } = await supabaseClient
-        .from('findings')
-        .select('*')
-        .eq('section_id', sectionId)
-        .order('created_at');
-
-      findings = data || [];
+    // inj (optional): array of findings from section_bootstrap.
+    async function loadFindings(inj) {
+      if (Array.isArray(inj)) {
+        findings = inj;
+      } else {
+        const { data } = await supabaseClient
+          .from('findings')
+          .select('*')
+          .eq('section_id', sectionId)
+          .order('created_at');
+        findings = data || [];
+      }
       renderFindings();
     }
 
@@ -2408,14 +2456,19 @@
     }
 
     // ---- Review Notes ----
-    async function loadReviewNotes() {
-      const { data } = await supabaseClient
-        .from('review_notes')
-        .select('*, profiles:user_id(full_name, email)')
-        .eq('section_id', sectionId)
-        .order('created_at');
-
-      reviewNotes = data || [];
+    // inj (optional): array of review notes (each with a nested `profiles`)
+    // from section_bootstrap. Roles are still resolved client-side (cheap, cached).
+    async function loadReviewNotes(inj) {
+      if (Array.isArray(inj)) {
+        reviewNotes = inj;
+      } else {
+        const { data } = await supabaseClient
+          .from('review_notes')
+          .select('*, profiles:user_id(full_name, email)')
+          .eq('section_id', sectionId)
+          .order('created_at');
+        reviewNotes = data || [];
+      }
 
       // Resolve roles
       const noteRoles = {};
@@ -2874,7 +2927,8 @@
     function secFmt(n) { return (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function secIsPro() { return !!(currentOrg && currentOrg.feature_tier === 'pro'); }
 
-    async function loadSectionWorkingTB() {
+    // inj (optional): { all, entries, lines } from section_bootstrap (wtb_*).
+    async function loadSectionWorkingTB(inj) {
       const card = document.getElementById('sec-adjustments');
       if (!card) return;
       const proNote = document.getElementById('sec-adj-pro-note');
@@ -2890,22 +2944,28 @@
       if (wrap) wrap.style.display = 'block';
       if (proposeBtn && !isApproved) proposeBtn.style.display = 'inline-flex';
 
-      const vid = await getSectionTbVersionId();
-      let q = supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code');
-      if (vid) q = q.eq('tb_version_id', vid);
-      // TB lines and journal entries are independent — fetch them together.
-      const [tbRes, entriesRes] = await Promise.all([
-        q,
-        supabaseClient.from('journal_entries').select('*')
-          .eq('engagement_id', engagementId).order('created_at', { ascending: true }),
-      ]);
-      secAllTb = tbRes.data || [];
-      secEntries = entriesRes.data || [];
-      if (secEntries.length) {
-        const ids = secEntries.map(e => e.id);
-        const { data: lines } = await supabaseClient.from('journal_lines').select('*').in('journal_entry_id', ids);
-        secJLines = lines || [];
-      } else { secJLines = []; }
+      if (inj && Array.isArray(inj.entries)) {
+        secAllTb   = inj.all || [];
+        secEntries = inj.entries || [];
+        secJLines  = inj.lines || [];
+      } else {
+        const vid = await getSectionTbVersionId();
+        let q = supabaseClient.from('trial_balance_lines').select('*').eq('engagement_id', engagementId).order('account_code');
+        if (vid) q = q.eq('tb_version_id', vid);
+        // TB lines and journal entries are independent — fetch them together.
+        const [tbRes, entriesRes] = await Promise.all([
+          q,
+          supabaseClient.from('journal_entries').select('*')
+            .eq('engagement_id', engagementId).order('created_at', { ascending: true }),
+        ]);
+        secAllTb = tbRes.data || [];
+        secEntries = entriesRes.data || [];
+        if (secEntries.length) {
+          const ids = secEntries.map(e => e.id);
+          const { data: lines } = await supabaseClient.from('journal_lines').select('*').in('journal_entry_id', ids);
+          secJLines = lines || [];
+        } else { secJLines = []; }
+      }
 
       renderSecAdj();
     }
