@@ -989,18 +989,20 @@
         const rows = groups[key];
         if (rows.length === 0) return;
         const m = meta[key];
-        let html = `<div class="ms-group ${key}">
-          <div class="ms-group-head">
-            <h4>${m.label} (${rows.length})</h4>
-            <span class="ms-group-hint">${m.hint}</span>
+        let html = `<div style="margin-bottom:20px;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+            <h4 style="font-size:11px; font-weight:700; color:#0a192f; text-transform:uppercase; letter-spacing:.5px; margin:0;">${m.label} (${rows.length})</h4>
+            <span style="font-size:11px; color:#64748b;">${m.hint}</span>
           </div>
-          <table class="ms-table"><thead><tr>
-            <th>Finding</th>
-            <th>Section</th>
-            <th class="num">Impact</th>
-            <th>Adjusting entry</th>
-            <th>Posted?</th>
-          </tr></thead><tbody>`;
+          <div style="border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; background:#fff;">
+          <table style="width:100%; border-collapse:collapse; text-align:left;">
+          <thead><tr style="background:#0a192f; color:#fff; font-size:9pt; text-transform:uppercase;">
+            <th style="padding:12px 16px;">Finding / Description</th>
+            <th style="padding:12px 16px;">Section</th>
+            <th style="padding:12px 16px; text-align:right;">Impact (AED)</th>
+            <th style="padding:12px 16px;">Adjusting Entry (Debit / Credit)</th>
+            <th style="padding:12px 16px; text-align:center;">Status</th>
+          </tr></thead><tbody style="font-size:9.5pt; color:#334155;">`;
         rows.forEach(r => {
           // Impact priority: explicit finding.monetary_impact (if any),
           // else fall back to sum of |AJE amounts| so partners who only
@@ -1013,54 +1015,64 @@
           );
           const amt = findingAmt || ajeAmt;
           sums[key] += Math.abs(amt);
+          const pill = (bg, fg, txt) => `<span style="background:${bg}; color:${fg}; padding:4px 8px; border-radius:4px; font-size:8pt; font-weight:600; text-transform:uppercase;">${txt}</span>`;
           let aeCell;
           if (r.adjusting_entries.length === 0) {
-            aeCell = '<span class="ms-posted-none">—</span>';
+            aeCell = '<span style="color:#94a3b8;">—</span>';
           } else {
             aeCell = r.adjusting_entries.map(a =>
-              `<div class="ms-aje"><span class="ms-aje-side">Dr</span> ${escHtml(a.debit_account)} / <span class="ms-aje-side">Cr</span> ${escHtml(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>`
+              `<div style="font-family:monospace; font-size:8.5pt; color:#0f172a; line-height:1.5;"><span style="color:#2563eb;">Dr</span> ${escHtml(a.debit_account)}<br><span style="color:#dc2626;">Cr</span> ${escHtml(a.credit_account)} — ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>`
             ).join('');
           }
           let postedCell;
           if (r.adjusting_entries.length === 0) {
-            postedCell = '<span class="ms-posted-none">—</span>';
+            postedCell = '<span style="color:#94a3b8;">—</span>';
           } else if (r.adjusting_entries.every(a => a.is_posted)) {
-            postedCell = '<span class="ms-posted-yes">Posted</span>';
+            postedCell = pill('#dcfce7', '#16a34a', 'Posted');
           } else if (r.adjusting_entries.some(a => a.is_posted)) {
-            postedCell = '<span class="ms-posted-partial">Partial</span>';
+            postedCell = pill('#fef9c3', '#ca8a04', 'Partial');
           } else {
-            postedCell = '<span class="ms-posted-no">Not posted</span>';
+            postedCell = pill('#ffedd5', '#ea580c', 'Not Posted');
           }
           const effectExcerpt = r.finding.effect
-            ? `<div style="font-size:11px; color:var(--gray-500); margin-top:2px;">${escHtml(r.finding.effect.length > 200 ? r.finding.effect.slice(0, 200) + '…' : r.finding.effect)}</div>`
+            ? `<br><span style="font-size:8.5pt; color:#64748b;">${escHtml(r.finding.effect.length > 200 ? r.finding.effect.slice(0, 200) + '…' : r.finding.effect)}</span>`
             : '';
-          html += `<tr>
-            <td><div style="font-weight:500;">${escHtml(r.finding.title)}</div>${effectExcerpt}</td>
-            <td>${escHtml(r.section_name)}</td>
-            <td class="num">${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <td>${aeCell}</td>
-            <td>${postedCell}</td>
+          html += `<tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:16px;"><strong>${escHtml(r.finding.title)}</strong>${effectExcerpt}</td>
+            <td style="padding:16px; vertical-align:middle;">${escHtml(r.section_name)}</td>
+            <td style="padding:16px; text-align:right; font-weight:600; color:#ea580c; vertical-align:middle;">${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td style="padding:16px; vertical-align:middle;">${aeCell}</td>
+            <td style="padding:16px; text-align:center; vertical-align:middle;">${postedCell}</td>
           </tr>`;
         });
-        html += '</tbody></table></div>';
+        html += '</tbody></table></div></div>';
         groupsEl.insertAdjacentHTML('beforeend', html);
       });
 
       const matOverall = Number(engagement.materiality_overall) || 0;
       const matPerf    = Number(engagement.materiality_performance) || 0;
       const uncSum     = sums.uncorrected;
-      let totalsHtml = `<div class="ms-totals"><div class="ms-totals-grid">
-        <div><div class="lbl">Corrected (Σ)</div><div class="val corrected">${sums.corrected.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>
-        <div><div class="lbl">Uncorrected (Σ)</div><div class="val uncorrected">${uncSum.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>
-        <div><div class="lbl">Clearly trivial (Σ)</div><div class="val">${sums.clearly_trivial.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>`;
-      if (matOverall) totalsHtml += `<div><div class="lbl">Overall materiality</div><div class="val">${matOverall.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>`;
-      if (matPerf)    totalsHtml += `<div><div class="lbl">Performance materiality</div><div class="val">${matPerf.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>`;
+      const metric = (label, val, color) =>
+        `<div><span style="font-size:8pt; color:#64748b; text-transform:uppercase; font-weight:600;">${label}</span>`
+        + `<div style="font-size:14pt; font-weight:bold; color:${color}; margin-top:4px;">${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div></div>`;
+      // Financial summary ribbon
+      let totalsHtml = `<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:16px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:14px;">`
+        + metric('Corrected (Σ)',  sums.corrected,       '#10b981')
+        + metric('Uncorrected (Σ)', uncSum,              '#ea580c')
+        + metric('Clearly Trivial (Σ)', sums.clearly_trivial, '#64748b');
+      if (matOverall) totalsHtml += metric('Overall Materiality',     matOverall, '#0a192f');
+      if (matPerf)    totalsHtml += metric('Performance Materiality', matPerf,    '#0a192f');
       totalsHtml += '</div>';
+      // ISA 450 threshold banner: breach (red) when uncorrected exceeds overall
+      // materiality, otherwise a quiet "below threshold" note.
       if (matOverall && uncSum > 0) {
         const pct = (uncSum / matOverall) * 100;
-        totalsHtml += `<div class="ms-vs-mat">Uncorrected vs overall materiality: <strong>${pct.toFixed(1)}%</strong></div>`;
+        if (uncSum > matOverall) {
+          totalsHtml += `<div style="background:#fef2f2; border-left:4px solid #ef4444; padding:12px 16px; border-radius:0 4px 4px 0; font-size:9pt; color:#991b1b;"><strong>ISA 450 Threshold Breach:</strong> Uncorrected vs overall materiality is currently at <span style="font-weight:bold;">${pct.toFixed(1)}%</span>, exceeding the firm policy threshold.</div>`;
+        } else {
+          totalsHtml += `<div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px 14px; border-radius:6px; font-size:9pt; color:#166534;">Uncorrected misstatements are <strong>${pct.toFixed(1)}%</strong> of overall materiality — below the firm policy threshold (ISA 320 does not prescribe a fixed band).</div>`;
+        }
       }
-      totalsHtml += '</div>';
       totalsEl.innerHTML = totalsHtml;
     }
 
