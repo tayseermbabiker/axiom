@@ -62,7 +62,8 @@ BEGIN
   result := jsonb_build_object(
     'section',       to_jsonb(v_section),
     'engagement',    (SELECT to_jsonb(x) FROM (
-                        SELECT client_name, shared_folder_url, status
+                        SELECT client_name, shared_folder_url, status,
+                               materiality_overall, materiality_performance, materiality_trivial
                         FROM public.engagements WHERE id = v_eng) x),
     'tb_version_id', v_version,
     'is_pro',        v_is_pro,

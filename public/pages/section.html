@@ -1181,7 +1181,7 @@
       if (!eng) {
         const r = await supabaseClient
           .from('engagements')
-          .select('client_name, shared_folder_url, status')
+          .select('client_name, shared_folder_url, status, materiality_overall, materiality_performance, materiality_trivial')
           .eq('id', engagementId)
           .single();
         eng = r.data;
