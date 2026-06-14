@@ -742,7 +742,15 @@
     // When embedded, talk to the parent engagement page: receive tab switches, report height.
     function setupEmbedBridge() {
       const postHeight = () => {
-        try { parent.postMessage({ type: 'cmHeight', height: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) }, '*'); } catch (_) {}
+        // Measure CONTENT height only. Do NOT use documentElement.scrollHeight —
+        // it is floored to the iframe's viewport, so once the parent grows the
+        // frame this can never report less, and the frame can only grow / never
+        // shrink when you switch to a shorter tab (the "scroll forever" gap).
+        const el = document.getElementById('memo-content');
+        const h = el
+          ? el.getBoundingClientRect().bottom + (window.scrollY || window.pageYOffset || 0)
+          : document.body.scrollHeight;
+        try { parent.postMessage({ type: 'cmHeight', height: Math.ceil(h) }, '*'); } catch (_) {}
       };
       window.addEventListener('message', (e) => {
         if (e.data && e.data.type === 'cmSwitchTab' && e.data.section) {
