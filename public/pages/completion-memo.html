@@ -1155,15 +1155,12 @@
           check.onclick = async () => {
             if (!ticked && !sysOK && !isManual) {
               const ok = await confirmDialog({
-                title: 'Override system check?',
+                title: 'Override & attest?',
                 okLabel: 'Override & attest',
                 message:
-                'System check did NOT pass for this attestation:\n\n  "' +
-                (a.source_check || humaniseKey(a.attestation_key)) +
-                '"\n\nThis usually means the underlying section or condition is missing. ' +
-                'As the engagement partner, you can manually attest based on professional judgement ' +
-                '(e.g., the work was performed under a different section name, or N/A to this engagement).\n\n' +
-                'Override and attest anyway?'
+                "The automatic check for this attestation didn't pass. As engagement " +
+                "partner, you can attest on your own judgement — e.g. the work was done " +
+                "under another section, or it doesn't apply to this engagement."
               });
               if (!ok) return;
             }
