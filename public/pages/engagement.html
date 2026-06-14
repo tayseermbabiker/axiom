@@ -4275,6 +4275,15 @@
       } else if (e.data.type === 'cmHeight' && e.data.height) {
         const f = document.getElementById('conclusion-memo-frame');
         if (f) f.style.height = (Number(e.data.height) + 24) + 'px';
+      } else if (e.data.type === 'cmConfirm') {
+        // The embedded memo asked us to show a confirm in the real viewport.
+        Promise.resolve(window.confirmDialog ? window.confirmDialog(e.data.opts || {}) : window.confirm((e.data.opts && e.data.opts.message) || ''))
+          .then(function (val) {
+            const f = document.getElementById('conclusion-memo-frame');
+            if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'cmConfirmResult', id: e.data.id, value: val }, '*');
+          });
+      } else if (e.data.type === 'cmToast') {
+        if (window.showToast) window.showToast(e.data.message, e.data.toastType || undefined);
       }
     });
 

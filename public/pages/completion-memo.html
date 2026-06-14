@@ -68,9 +68,14 @@
     .cm-embed .sidebar,
     .cm-embed .page-header,
     .cm-embed .tabs { display: none !important; }
-    .cm-embed .main-content { margin-left: 0 !important; max-width: none !important; padding: 8px 14px !important; }
-    .cm-embed .app-layout { display: block; }
-    .cm-embed body, body.cm-embed { background: transparent; }
+    .cm-embed .main-content { margin-left: 0 !important; max-width: none !important; padding: 8px 14px !important; min-height: 0 !important; }
+    /* Embedded height MUST be content-driven, never 100vh. The base styles set
+       min-height:100vh on body + .app-layout; inside the auto-sized iframe the
+       parent sizes the frame to content, 100vh then makes the body grow to fill
+       it, which re-reports a taller height, which the parent re-applies — an
+       endless "scroll forever" growth loop. Neutralise it in embed mode. */
+    .cm-embed .app-layout { display: block; min-height: 0 !important; }
+    body.cm-embed { background: transparent; min-height: 0 !important; height: auto !important; }
 
     /* Rollup grid */
     .rollup-grid {
@@ -658,7 +663,34 @@
     // ---- Init ----
     async function init() {
       cmEmbed = new URLSearchParams(window.location.search).get('embed') === '1';
-      if (cmEmbed) document.body.classList.add('cm-embed');
+      if (cmEmbed) {
+        document.body.classList.add('cm-embed');
+        // Dialogs/toasts must render in the PARENT window. A position:fixed
+        // overlay inside the tall auto-sized iframe centres at the middle of the
+        // full content height — off-screen from wherever you're scrolled (you
+        // see the dark backdrop but never the box). Route them up to the
+        // engagement page, which has a real viewport.
+        let _cfSeq = 0; const _cfPending = {};
+        window.confirmDialog = function (opts) {
+          const id = ++_cfSeq;
+          const payload = (typeof opts === 'string') ? { message: opts } : (opts || {});
+          return new Promise(function (resolve) {
+            _cfPending[id] = resolve;
+            try { parent.postMessage({ type: 'cmConfirm', id: id, opts: payload }, '*'); }
+            catch (_) { resolve(window.confirm(payload.message || '')); }
+          });
+        };
+        const _origToast = window.showToast;
+        window.showToast = function (message, type) {
+          try { parent.postMessage({ type: 'cmToast', message: String(message == null ? '' : message), toastType: type || null }, '*'); }
+          catch (_) { if (_origToast) _origToast(message, type); }
+        };
+        window.addEventListener('message', function (e) {
+          if (e.data && e.data.type === 'cmConfirmResult' && _cfPending[e.data.id]) {
+            const r = _cfPending[e.data.id]; delete _cfPending[e.data.id]; r(!!e.data.value);
+          }
+        });
+      }
 
       currentUser = await requireAuth();
       if (!currentUser) return;
