@@ -8,7 +8,28 @@
   <meta name="google-site-verification" content="eqlCn8Lth2YuHz3c-ob0JzjD8yqQcrAeR1Wd3SSzpO4" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('audexon_lang');
+        if (lang !== 'ar' && lang !== 'en') lang = 'en';
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ---- Arabic / RTL (landing) ---- */
+    html[dir="rtl"] body { font-family: 'Tajawal', 'Inter', -apple-system, sans-serif; }
+    html[dir="rtl"] .price-amount { direction: ltr; justify-content: flex-end; }
+    .lang-toggle-nav {
+      background: transparent; color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 6px 14px; font-size: 14px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .lang-toggle-nav:hover { color: #fff; border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.1); }
+  </style>
   <style>
     *, *::before, *::after {
       margin: 0;
@@ -784,9 +805,10 @@
     <div class="nav-inner">
       <a href="/" class="nav-logo">Audexon<span>.</span></a>
       <div class="nav-links">
-        <a href="#features" class="nav-link">Features</a>
-        <a href="#pricing" class="nav-link">Pricing</a>
-        <a href="/pages/login.html" class="nav-btn">Sign In</a>
+        <a href="#features" class="nav-link" data-i18n="landing.nav.features">Features</a>
+        <a href="#pricing" class="nav-link" data-i18n="landing.nav.pricing">Pricing</a>
+        <button type="button" class="lang-toggle-nav" onclick="I18n.toggleLang()" data-i18n="lang.switchTo">العربية</button>
+        <a href="/pages/login.html" class="nav-btn" data-i18n="landing.nav.signin">Sign In</a>
       </div>
     </div>
   </nav>
@@ -798,12 +820,12 @@
     <div class="hero-orb-1"></div>
     <div class="hero-orb-2"></div>
     <div class="hero-content">
-      <div class="hero-badge">Built for CPA firms with 3&ndash;25 auditors</div>
-      <h1>The audit <em>control room</em> your firm is missing</h1>
-      <p>Structure, review, and sign-off for every engagement &mdash; while your files stay securely in your own cloud.</p>
+      <div class="hero-badge" data-i18n="landing.hero.badge">Built for CPA firms with 3&ndash;25 auditors</div>
+      <h1 data-i18n-html="landing.hero.h1">The audit <em>control room</em> your firm is missing</h1>
+      <p data-i18n="landing.hero.p">Structure, review, and sign-off for every engagement &mdash; while your files stay securely in your own cloud.</p>
       <div class="hero-ctas">
-        <a href="/contact.html" class="btn-primary">Request Access</a>
-        <a href="#pricing" class="btn-secondary">See Pricing</a>
+        <a href="/contact.html" class="btn-primary" data-i18n="landing.hero.cta1">Request Access</a>
+        <a href="#pricing" class="btn-secondary" data-i18n="landing.hero.cta2">See Pricing</a>
       </div>
     </div>
   </section>
@@ -812,9 +834,9 @@
   <section class="section features-section" id="features">
     <div class="section-inner">
       <div class="section-header section-header-center">
-        <span class="section-label">Why Audexon</span>
-        <h2 class="section-title">Purpose-built for the audit workflow</h2>
-        <p class="section-subtitle">Not another project management tool &mdash; designed around how audit teams actually work.</p>
+        <span class="section-label" data-i18n="landing.why.label">Why Audexon</span>
+        <h2 class="section-title" data-i18n="landing.why.title">Purpose-built for the audit workflow</h2>
+        <p class="section-subtitle" data-i18n="landing.why.subtitle">Not another project management tool &mdash; designed around how audit teams actually work.</p>
       </div>
       <div class="features-bento">
         <!-- Row 1: TB-Driven (wide, with TB visualization) + ISA 230 (narrow) -->
@@ -823,8 +845,8 @@
             <div class="feature-icon">
               <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
             </div>
-            <h3>TB-Driven Structure</h3>
-            <p>Upload your trial balance once. Audexon maps classifications to audit sections automatically.</p>
+            <h3 data-i18n="landing.f1.title">TB-Driven Structure</h3>
+            <p data-i18n="landing.f1.p">Upload your trial balance once. Audexon maps classifications to audit sections automatically.</p>
             <div class="bento-mini-viz">
               <div class="tb-viz-header">
                 <div class="tb-viz-header-label"></div>
@@ -839,8 +861,8 @@
             <div class="feature-icon">
               <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
             </div>
-            <h3>ISA 230 Audit Trail</h3>
-            <p>Every action logged. Every reopen requires a reason. Immutable, append-only documentation ready for peer review.</p>
+            <h3 data-i18n="landing.f2.title">ISA 230 Audit Trail</h3>
+            <p data-i18n="landing.f2.p">Every action logged. Every reopen requires a reason. Immutable, append-only documentation ready for peer review.</p>
           </div>
         </div>
 
@@ -850,15 +872,15 @@
             <div class="feature-icon">
               <svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
             </div>
-            <h3>Files Stay in Your Cloud</h3>
-            <p>Audexon links to Google Drive or OneDrive &mdash; zero file storage, zero vendor lock-in.</p>
+            <h3 data-i18n="landing.f3.title">Files Stay in Your Cloud</h3>
+            <p data-i18n="landing.f3.p">Audexon links to Google Drive or OneDrive &mdash; zero file storage, zero vendor lock-in.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
               <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
             </div>
-            <h3>Review From Anywhere</h3>
-            <p>Partners see every section&rsquo;s status, review notes, and sign-offs from one dashboard.</p>
+            <h3 data-i18n="landing.f4.title">Review From Anywhere</h3>
+            <p data-i18n="landing.f4.p">Partners see every section&rsquo;s status, review notes, and sign-offs from one dashboard.</p>
             <div class="bento-mini-viz">
               <div class="progress-chart">
                 <div class="progress-bar green"></div>
@@ -871,9 +893,9 @@
                 <div class="progress-bar gray"></div>
               </div>
               <div class="progress-legend">
-                <span class="progress-legend-item"><span class="progress-legend-dot green"></span>Signed off</span>
-                <span class="progress-legend-item"><span class="progress-legend-dot blue"></span>In review</span>
-                <span class="progress-legend-item"><span class="progress-legend-dot gray"></span>Open</span>
+                <span class="progress-legend-item"><span class="progress-legend-dot green"></span><span data-i18n="landing.legend.signed">Signed off</span></span>
+                <span class="progress-legend-item"><span class="progress-legend-dot blue"></span><span data-i18n="landing.legend.review">In review</span></span>
+                <span class="progress-legend-item"><span class="progress-legend-dot gray"></span><span data-i18n="landing.legend.open">Open</span></span>
               </div>
             </div>
           </div>
@@ -885,15 +907,15 @@
             <div class="feature-icon">
               <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             </div>
-            <h3>Three-Level Sign-Off</h3>
-            <p>Preparer &rarr; supervisor &rarr; partner. Clear permissions. Every action locked and logged.</p>
+            <h3 data-i18n="landing.f5.title">Three-Level Sign-Off</h3>
+            <p data-i18n="landing.f5.p">Preparer &rarr; supervisor &rarr; partner. Clear permissions. Every action locked and logged.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
               <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </div>
-            <h3>Team Assignments &amp; Progress</h3>
-            <p>Assign sections, track completion in real time, exchange review notes inline.</p>
+            <h3 data-i18n="landing.f6.title">Team Assignments &amp; Progress</h3>
+            <p data-i18n="landing.f6.p">Assign sections, track completion in real time, exchange review notes inline.</p>
           </div>
         </div>
       </div>
@@ -904,77 +926,77 @@
   <section class="section" id="pricing">
     <div class="section-inner">
       <div class="section-header section-header-center">
-        <span class="section-label">Pricing</span>
-        <h2 class="section-title">Simple plans that scale with your firm</h2>
-        <p class="section-subtitle">Two plans, priced by firm size &mdash; no per-user math. Unlimited engagements on every plan.</p>
+        <span class="section-label" data-i18n="landing.pricing.label">Pricing</span>
+        <h2 class="section-title" data-i18n="landing.pricing.title">Simple plans that scale with your firm</h2>
+        <p class="section-subtitle" data-i18n="landing.pricing.subtitle">Two plans, priced by firm size &mdash; no per-user math. Unlimited engagements on every plan.</p>
       </div>
 
       <div class="pricing-grid">
         <!-- Execution Plan (Essentials) -->
         <div class="price-card">
-          <h3>Execution</h3>
-          <p class="price-users">For firms that need the execution &amp; review layer</p>
+          <h3 data-i18n="landing.exec.name">Execution</h3>
+          <p class="price-users" data-i18n="landing.exec.for">For firms that need the execution &amp; review layer</p>
           <div class="price-amount">
-            <span class="period" style="align-self:center;">from</span>
+            <span class="period" style="align-self:center;" data-i18n="landing.price.from">from</span>
             <span class="dollar">$</span>
             <span class="number">49</span>
-            <span class="period">/month</span>
+            <span class="period" data-i18n="landing.price.month">/month</span>
           </div>
-          <p class="price-includes">The complete execution file &mdash; import, test, document, sign off.</p>
+          <p class="price-includes" data-i18n="landing.exec.includes">The complete execution file &mdash; import, test, document, sign off.</p>
           <ul class="price-features">
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; classification</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> 19 audit sections &amp; procedures</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Three-level review &amp; sign-off</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Findings tracker</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> FS upload with SHA-256 integrity</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f1">TB import &amp; classification</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f2">19 audit sections &amp; procedures</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f3">Three-level review &amp; sign-off</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f4">Findings tracker</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f5">FS upload with SHA-256 integrity</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f6">Immutable audit trail</span></li>
           </ul>
           <div class="price-bands">
-            <p class="price-bands-label">Monthly price by firm size</p>
+            <p class="price-bands-label" data-i18n="landing.price.bandsLabel">Monthly price by firm size</p>
             <ul>
-              <li><span>Starter &middot; up to 5</span><span class="band-price">$49</span></li>
-              <li><span>Team &middot; up to 12</span><span class="band-price">$99</span></li>
-              <li><span>Firm &middot; up to 25</span><span class="band-price">$199</span></li>
+              <li><span data-i18n="landing.price.starter">Starter &middot; up to 5</span><span class="band-price">$49</span></li>
+              <li><span data-i18n="landing.price.team">Team &middot; up to 12</span><span class="band-price">$99</span></li>
+              <li><span data-i18n="landing.price.firm">Firm &middot; up to 25</span><span class="band-price">$199</span></li>
             </ul>
           </div>
-          <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-outline">Request Access</button>
-          <p style="text-align:center; font-size:12px; color:#6B7280; margin-top:10px;">Includes a complimentary 1-month trial</p>
+          <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-outline" data-i18n="landing.price.request">Request Access</button>
+          <p style="text-align:center; font-size:12px; color:#6B7280; margin-top:10px;" data-i18n="landing.price.trial">Includes a complimentary 1-month trial</p>
         </div>
         <!-- Full Workflow Plan (Pro) -->
         <div class="price-card popular">
-          <div class="price-badge">Full ISA File</div>
-          <h3>Full Workflow</h3>
-          <p class="price-users">The complete ISA audit file &mdash; planning to completion</p>
+          <div class="price-badge" data-i18n="landing.full.badge">Full ISA File</div>
+          <h3 data-i18n="landing.full.name">Full Workflow</h3>
+          <p class="price-users" data-i18n="landing.full.for">The complete ISA audit file &mdash; planning to completion</p>
           <div class="price-amount">
-            <span class="period" style="align-self:center;">from</span>
+            <span class="period" style="align-self:center;" data-i18n="landing.price.from">from</span>
             <span class="dollar">$</span>
             <span class="number">199</span>
-            <span class="period">/month</span>
+            <span class="period" data-i18n="landing.price.month">/month</span>
           </div>
-          <p class="price-includes">Everything in Execution, plus the full methodology layer.</p>
+          <p class="price-includes" data-i18n="landing.full.includes">Everything in Execution, plus the full methodology layer.</p>
           <ul class="price-features">
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Everything in Execution</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Planning &amp; audit strategy</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Materiality (versioned)</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Risk assessment (ISA 315)</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Completion memo + EQR</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Local compliance section</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Inspection-ready PDF</li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f1">Everything in Execution</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f2">Planning &amp; audit strategy</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f3">Materiality (versioned)</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f4">Risk assessment (ISA 315)</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f5">Completion memo + EQR</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f6">Local compliance section</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f7">Inspection-ready PDF</span></li>
           </ul>
           <div class="price-bands">
-            <p class="price-bands-label">Monthly price by firm size</p>
+            <p class="price-bands-label" data-i18n="landing.price.bandsLabel">Monthly price by firm size</p>
             <ul>
-              <li><span>Starter &middot; up to 5</span><span class="band-price">$199</span></li>
-              <li><span>Team &middot; up to 12</span><span class="band-price">$299</span></li>
-              <li><span>Firm &middot; up to 25</span><span class="band-price">$399</span></li>
+              <li><span data-i18n="landing.price.starter">Starter &middot; up to 5</span><span class="band-price">$199</span></li>
+              <li><span data-i18n="landing.price.team">Team &middot; up to 12</span><span class="band-price">$299</span></li>
+              <li><span data-i18n="landing.price.firm">Firm &middot; up to 25</span><span class="band-price">$399</span></li>
             </ul>
           </div>
-          <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-filled">Request Access</button>
-          <p style="text-align:center; font-size:12px; color:#6B7280; margin-top:10px;">Includes a complimentary 1-month trial</p>
+          <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-filled" data-i18n="landing.price.request">Request Access</button>
+          <p style="text-align:center; font-size:12px; color:#6B7280; margin-top:10px;" data-i18n="landing.price.trial">Includes a complimentary 1-month trial</p>
         </div>
       </div>
 
-      <p style="text-align:center; margin-top:32px; font-size:14px; color:#6B7280;">
+      <p style="text-align:center; margin-top:32px; font-size:14px; color:#6B7280;" data-i18n-html="landing.help">
         Need help choosing or have questions? <a href="/contact.html" style="color:#4338CA; font-weight:500;">Talk to us</a> — we'll set you up personally.
       </p>
     </div>
@@ -983,24 +1005,25 @@
   <!-- FINAL CTA -->
   <section class="final-cta">
     <div class="final-cta-glow"></div>
-    <h2>Run your next audit with structure, visibility, and control.</h2>
-    <p>Get in touch to start your pilot.</p>
-    <a href="/contact.html" class="btn-primary">Request Access</a>
+    <h2 data-i18n="landing.cta.h2">Run your next audit with structure, visibility, and control.</h2>
+    <p data-i18n="landing.cta.p">Get in touch to start your pilot.</p>
+    <a href="/contact.html" class="btn-primary" data-i18n="landing.cta.request">Request Access</a>
   </section>
 
   <!-- FOOTER -->
   <footer class="footer">
     <p style="margin-bottom:8px;">
-      <a href="/privacy.html" style="color:rgba(255,255,255,0.5); text-decoration:none; margin:0 12px;">Privacy Policy</a>
-      <a href="/terms.html" style="color:rgba(255,255,255,0.5); text-decoration:none; margin:0 12px;">Terms of Service</a>
-      <a href="/contact.html" style="color:rgba(255,255,255,0.5); text-decoration:none; margin:0 12px;">Contact</a>
-      <a href="/guide.html" style="color:rgba(255,255,255,0.5); text-decoration:none; margin:0 12px;">Getting Started</a>
+      <a href="/privacy.html" style="color:rgba(255,255,255,0.5); text-decoration:none; margin:0 12px;" data-i18n="landing.footer.privacy">Privacy Policy</a>
+      <a href="/terms.html" style="color:rgba(255,255,255,0.5); text-decoration:none; margin:0 12px;" data-i18n="landing.footer.terms">Terms of Service</a>
+      <a href="/contact.html" style="color:rgba(255,255,255,0.5); text-decoration:none; margin:0 12px;" data-i18n="landing.footer.contact">Contact</a>
+      <a href="/guide.html" style="color:rgba(255,255,255,0.5); text-decoration:none; margin:0 12px;" data-i18n="landing.footer.guide">Getting Started</a>
     </p>
-    <p>&copy; 2026 Audexon. Built for auditors who move fast.</p>
+    <p data-i18n="landing.footer.copy">&copy; 2026 Audexon. Built for auditors who move fast.</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/billing.js"></script>
 </body>
 </html>

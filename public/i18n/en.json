@@ -67,5 +67,79 @@
   },
   "common": {
     "loading": "Loading..."
+  },
+  "landing": {
+    "nav": { "features": "Features", "pricing": "Pricing", "signin": "Sign In" },
+    "hero": {
+      "badge": "Built for CPA firms with 3–25 auditors",
+      "h1": "The audit <em>control room</em> your firm is missing",
+      "p": "Structure, review, and sign-off for every engagement — while your files stay securely in your own cloud.",
+      "cta1": "Request Access",
+      "cta2": "See Pricing"
+    },
+    "why": {
+      "label": "Why Audexon",
+      "title": "Purpose-built for the audit workflow",
+      "subtitle": "Not another project management tool — designed around how audit teams actually work."
+    },
+    "f1": { "title": "TB-Driven Structure", "p": "Upload your trial balance once. Audexon maps classifications to audit sections automatically." },
+    "f2": { "title": "ISA 230 Audit Trail", "p": "Every action logged. Every reopen requires a reason. Immutable, append-only documentation ready for peer review." },
+    "f3": { "title": "Files Stay in Your Cloud", "p": "Audexon links to Google Drive or OneDrive — zero file storage, zero vendor lock-in." },
+    "f4": { "title": "Review From Anywhere", "p": "Partners see every section’s status, review notes, and sign-offs from one dashboard." },
+    "f5": { "title": "Three-Level Sign-Off", "p": "Preparer → supervisor → partner. Clear permissions. Every action locked and logged." },
+    "f6": { "title": "Team Assignments & Progress", "p": "Assign sections, track completion in real time, exchange review notes inline." },
+    "legend": { "signed": "Signed off", "review": "In review", "open": "Open" },
+    "pricing": {
+      "label": "Pricing",
+      "title": "Simple plans that scale with your firm",
+      "subtitle": "Two plans, priced by firm size — no per-user math. Unlimited engagements on every plan."
+    },
+    "exec": {
+      "name": "Execution",
+      "for": "For firms that need the execution & review layer",
+      "includes": "The complete execution file — import, test, document, sign off.",
+      "f1": "TB import & classification",
+      "f2": "19 audit sections & procedures",
+      "f3": "Three-level review & sign-off",
+      "f4": "Findings tracker",
+      "f5": "FS upload with SHA-256 integrity",
+      "f6": "Immutable audit trail"
+    },
+    "full": {
+      "badge": "Full ISA File",
+      "name": "Full Workflow",
+      "for": "The complete ISA audit file — planning to completion",
+      "includes": "Everything in Execution, plus the full methodology layer.",
+      "f1": "Everything in Execution",
+      "f2": "Planning & audit strategy",
+      "f3": "Materiality (versioned)",
+      "f4": "Risk assessment (ISA 315)",
+      "f5": "Completion memo + EQR",
+      "f6": "Local compliance section",
+      "f7": "Inspection-ready PDF"
+    },
+    "price": {
+      "from": "from",
+      "month": "/month",
+      "bandsLabel": "Monthly price by firm size",
+      "starter": "Starter · up to 5",
+      "team": "Team · up to 12",
+      "firm": "Firm · up to 25",
+      "request": "Request Access",
+      "trial": "Includes a complimentary 1-month trial"
+    },
+    "help": "Need help choosing or have questions? <a href=\"/contact.html\" style=\"color:#4338CA; font-weight:500;\">Talk to us</a> — we'll set you up personally.",
+    "cta": {
+      "h2": "Run your next audit with structure, visibility, and control.",
+      "p": "Get in touch to start your pilot.",
+      "request": "Request Access"
+    },
+    "footer": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "contact": "Contact",
+      "guide": "Getting Started",
+      "copy": "© 2026 Audexon. Built for auditors who move fast."
+    }
   }
 }
