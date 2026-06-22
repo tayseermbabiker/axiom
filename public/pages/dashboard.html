@@ -393,29 +393,29 @@
           <div class="page-header-sub" id="page-header-sub">Loading…</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <button class="btn btn-primary" id="btn-new-eng-top" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
+          <button class="btn btn-primary" id="btn-new-eng-top" onclick="openNewEngagement()" style="display:none;" data-i18n="dash.newEng">+ New Engagement</button>
         </div>
       </div>
 
       <!-- Status tiles -->
       <div class="tiles-row" id="tiles-row" style="display:none;">
         <div class="tile tile-active" data-filter="active" onclick="switchTab('active')">
-          <div class="tile-label">Active</div>
+          <div class="tile-label" data-i18n="dash.tiles.active">Active</div>
           <div class="tile-value" id="tile-active-value">0</div>
           <div class="tile-hint" id="tile-active-hint">engagements in progress</div>
         </div>
         <div class="tile tile-review" data-filter="review" onclick="switchTab('review')">
-          <div class="tile-label">Awaiting partner review</div>
+          <div class="tile-label" data-i18n="dash.tiles.review">Awaiting partner review</div>
           <div class="tile-value" id="tile-review-value">0</div>
           <div class="tile-hint" id="tile-review-hint">sections need your approval</div>
         </div>
         <div class="tile tile-ready" data-filter="completed" onclick="switchTab('completed')">
-          <div class="tile-label">Ready to archive</div>
+          <div class="tile-label" data-i18n="dash.tiles.ready">Ready to archive</div>
           <div class="tile-value" id="tile-ready-value">0</div>
           <div class="tile-hint" id="tile-ready-hint">closed, not yet assembled</div>
         </div>
         <div class="tile tile-archived" data-filter="archived" onclick="switchTab('archived')">
-          <div class="tile-label">Archived YTD</div>
+          <div class="tile-label" data-i18n="dash.tiles.archived">Archived YTD</div>
           <div class="tile-value" id="tile-archived-value">0</div>
           <div class="tile-hint" id="tile-archived-hint">files assembled this year</div>
         </div>
@@ -426,7 +426,7 @@
         <div class="right-controls">
           <div class="search-wrap">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="search-input" placeholder="Search client..." oninput="applySearch()">
+            <input type="text" id="search-input" placeholder="Search client..." data-i18n-placeholder="dash.searchPh" oninput="applySearch()">
           </div>
           <select id="year-filter" onchange="applyYearFilter()" title="Filter by year" style="padding:7px 30px 7px 12px; border:1px solid var(--gray-300); border-radius:8px; font-size:13px; background:white; cursor:pointer; color:var(--gray-800);"></select>
         </div>
@@ -437,8 +437,8 @@
 
       <!-- No-results state (visible when filters/search return empty but data exists) -->
       <div id="no-results" style="display:none;" class="empty-card">
-        <div class="empty-title">No engagements match this view</div>
-        <div class="empty-desc">Try a different tab or clear the search.</div>
+        <div class="empty-title" data-i18n="dash.empty.noMatch">No engagements match this view</div>
+        <div class="empty-desc" data-i18n="dash.empty.tryOther">Try a different tab or clear the search.</div>
       </div>
 
       <!-- True empty state (no engagements at all in the org) -->
@@ -447,9 +447,9 @@
           <div class="empty-icon">
             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
           </div>
-          <div class="empty-title" id="empty-msg">No engagements yet</div>
-          <div class="empty-desc">Create your first engagement to start your audit workflow.</div>
-          <button class="btn btn-primary" id="btn-new-eng-empty" onclick="openNewEngagement()" style="display:none;">+ New Engagement</button>
+          <div class="empty-title" id="empty-msg" data-i18n="dash.empty.noneYet">No engagements yet</div>
+          <div class="empty-desc" data-i18n="dash.empty.createFirst">Create your first engagement to start your audit workflow.</div>
+          <button class="btn btn-primary" id="btn-new-eng-empty" onclick="openNewEngagement()" style="display:none;" data-i18n="dash.newEng">+ New Engagement</button>
         </div>
       </div>
     </main>
@@ -484,7 +484,7 @@
   <div class="modal-overlay" id="modal-new-engagement">
     <div class="modal">
       <div class="modal-header">
-        <h3>New Engagement</h3>
+        <h3 data-i18n="dash.modal.title">New Engagement</h3>
         <button class="modal-close" onclick="closeModal('modal-new-engagement')">&times;</button>
       </div>
       <form id="form-new-engagement">
@@ -492,29 +492,29 @@
           <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:14px 16px; margin-bottom:18px;">
             <div style="font-weight:600; font-size:13px; color:#075985; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-              How Audexon keeps your data safe
+              <span data-i18n="dash.modal.safeTitle">How Audexon keeps your data safe</span>
             </div>
             <ul style="margin:0; padding-left:18px; font-size:12.5px; color:#334155; line-height:1.7;">
-              <li>Your client files stay in your own Google Drive or OneDrive — Audexon never stores them.</li>
-              <li>Audexon only stores what you enter: trial balance, procedures, findings, and review notes.</li>
-              <li>Only your firm's authorised team members can access your engagements.</li>
-              <li>Your data is protected with strong encryption at all times — whether it's being sent or stored.</li>
-              <li>You always own your data — Audexon simply helps you manage the audit work securely.</li>
+              <li data-i18n="dash.modal.safe1">Your audit work is stored securely in Audexon's encrypted cloud — you control what you upload.</li>
+              <li data-i18n="dash.modal.safe2">Audexon stores what you enter or upload: trial balance, procedures, findings, and review notes.</li>
+              <li data-i18n="dash.modal.safe3">Only your firm's authorised team members can access your engagements.</li>
+              <li data-i18n="dash.modal.safe4">Your data is protected with strong encryption at all times — whether it's being sent or stored.</li>
+              <li data-i18n="dash.modal.safe5">You always own your data — Audexon simply helps you manage the audit work securely.</li>
             </ul>
           </div>
           <div class="form-group">
-            <label for="client-name">Client Name</label>
-            <input type="text" id="client-name" class="form-control" placeholder="e.g. ABC Company" required>
+            <label for="client-name" data-i18n="dash.modal.clientName">Client Name</label>
+            <input type="text" id="client-name" class="form-control" placeholder="e.g. ABC Company" data-i18n-placeholder="dash.modal.clientNamePh" required>
           </div>
           <div class="form-group">
-            <label for="year-end">Year End Date</label>
+            <label for="year-end" data-i18n="dash.modal.yearEnd">Year End Date</label>
             <input type="date" id="year-end" class="form-control" max="9999-12-31" required>
           </div>
           <input type="hidden" id="eng-type" value="audit">
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" onclick="closeModal('modal-new-engagement')">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btn-create-eng">Create</button>
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-new-engagement')" data-i18n="dash.cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-create-eng" data-i18n="dash.create">Create</button>
         </div>
       </form>
     </div>
@@ -820,7 +820,7 @@
       const sel = document.getElementById('year-filter');
       if (!sel) return;
       const years = Array.from(new Set(allEngagements.map(engFY).filter(Boolean))).sort((a, b) => b - a);
-      sel.innerHTML = '<option value="all"' + (currentFY === 'all' ? ' selected' : '') + '>All years</option>'
+      sel.innerHTML = '<option value="all"' + (currentFY === 'all' ? ' selected' : '') + '>' + I18n.t('dash.allYears') + '</option>'
         + years.map(y => '<option value="' + y + '"' + (String(currentFY) === String(y) ? ' selected' : '') + '>' + y + '</option>').join('');
     }
 
@@ -842,29 +842,29 @@
 
       document.getElementById('tile-active-value').textContent = activeList.length;
       document.getElementById('tile-active-hint').textContent =
-        activeList.length === 1 ? 'engagement in progress' : 'engagements in progress';
+        activeList.length === 1 ? I18n.t('dash.hint.activeOne') : I18n.t('dash.hint.activeMany');
 
       document.getElementById('tile-review-value').textContent = reviewSectionCount;
       document.getElementById('tile-review-hint').textContent = reviewSectionCount === 0
-        ? 'all clear'
-        : (reviewSectionCount + ' section' + (reviewSectionCount === 1 ? '' : 's') + ' across ' + reviewEngagementCount + ' engagement' + (reviewEngagementCount === 1 ? '' : 's'));
+        ? I18n.t('dash.hint.allClear')
+        : I18n.t('dash.hint.reviewCount').replace('{n}', reviewSectionCount).replace('{m}', reviewEngagementCount);
 
       document.getElementById('tile-ready-value').textContent = readyList.length;
       document.getElementById('tile-ready-hint').textContent = readyList.length === 0
-        ? 'nothing waiting'
-        : (readyList.length === 1 ? 'closed, awaiting ISA 230 archive' : 'closed, awaiting ISA 230 archive');
+        ? I18n.t('dash.hint.nothingWaiting')
+        : I18n.t('dash.hint.readyArchive');
 
       document.getElementById('tile-archived-value').textContent = archivedYtdList.length;
       document.getElementById('tile-archived-hint').textContent = archivedYtdList.length === 0
-        ? 'none yet this year'
-        : 'files assembled this year';
+        ? I18n.t('dash.hint.noneYet')
+        : I18n.t('dash.hint.filesAssembled');
 
       // Page header subtitle
       const sub = document.getElementById('page-header-sub');
       sub.textContent = activeList.length === 0
-        ? 'No engagements in progress'
-        : (activeList.length + ' engagement' + (activeList.length === 1 ? '' : 's') + ' in progress'
-           + (reviewSectionCount > 0 ? ' · ' + reviewSectionCount + ' section' + (reviewSectionCount === 1 ? '' : 's') + ' awaiting partner review' : ''));
+        ? I18n.t('dash.sub.none')
+        : (I18n.t('dash.sub.inProgress').replace('{n}', activeList.length)
+           + (reviewSectionCount > 0 ? I18n.t('dash.sub.awaiting').replace('{r}', reviewSectionCount) : ''));
     }
 
     function switchTab(tab) {
@@ -932,7 +932,7 @@
         <div class="grid-table-container">
           <table class="data-grid">
             <thead><tr>
-              <th>Client</th><th>Year</th><th>Status</th><th>Progress</th><th>Findings</th><th>Deadline</th><th class="tbl-actions">Actions</th>
+              <th>${I18n.t('dash.col.client')}</th><th>${I18n.t('dash.col.year')}</th><th>${I18n.t('dash.col.status')}</th><th>${I18n.t('dash.col.progress')}</th><th>${I18n.t('dash.col.findings')}</th><th>${I18n.t('dash.col.deadline')}</th><th class="tbl-actions">${I18n.t('dash.col.actions')}</th>
             </tr></thead>
             <tbody>${list.map(renderRow).join('')}</tbody>
           </table>
@@ -953,13 +953,13 @@
     function renderRow(e) {
       const fyYear = engFY(e) || '';
       const deadline = e.year_end_date ? new Date(e.year_end_date + 'T00:00:00').toLocaleDateString('en-GB') : '—';
-      const phaseLabels = { planning: 'Planning', execution: 'Execution', completed: 'Closed', archived: 'Archived' };
+      const phaseLabels = { planning: I18n.t('dash.phase.planning'), execution: I18n.t('dash.phase.execution'), completed: I18n.t('dash.phase.completed'), archived: I18n.t('dash.phase.archived') };
       const phaseClasses = { planning: 'chip-planning', execution: 'chip-execution', completed: 'chip-completed', archived: 'chip-archived' };
-      const phaseLabel = phaseLabels[e._phase] || 'Planning';
+      const phaseLabel = phaseLabels[e._phase] || I18n.t('dash.phase.planning');
       const phaseClass = phaseClasses[e._phase] || 'chip-planning';
       const findings = e._openFindings || 0;
       const del = currentRole === 'admin'
-        ? `<button class="tbl-del" onclick="event.stopPropagation(); event.preventDefault(); deleteEngagement('${e.id}')">Delete</button>`
+        ? `<button class="tbl-del" onclick="event.stopPropagation(); event.preventDefault(); deleteEngagement('${e.id}')">${I18n.t('dash.delete')}</button>`
         : '';
       return `
         <tr class="${e.is_archived ? 'row-archived' : ''}" onclick="window.location.href='engagement.html#${e.id}'">
@@ -969,7 +969,7 @@
           <td><div class="tbl-progress"><div class="tbl-bar"><div class="tbl-bar-fill${e._pct === 100 ? ' done' : ''}" style="width:${e._pct}%;"></div></div><span class="tbl-pct">${e._pct}%</span></div></td>
           <td>${findings > 0 ? '<span class="find-badge">' + findings + '</span>' : '<span class="find-zero">0</span>'}</td>
           <td>${deadline}</td>
-          <td class="tbl-actions" onclick="event.stopPropagation();"><a class="tbl-open" href="engagement.html#${e.id}">${e.is_archived ? 'View' : 'Open'} &rarr;</a>${del}</td>
+          <td class="tbl-actions" onclick="event.stopPropagation();"><a class="tbl-open" href="engagement.html#${e.id}">${e.is_archived ? I18n.t('dash.view') : I18n.t('dash.open')} &rarr;</a>${del}</td>
         </tr>`;
     }
 
@@ -999,7 +999,7 @@
 
       const btn = document.getElementById('btn-create-eng');
       btn.disabled = true;
-      btn.textContent = 'Creating...';
+      btn.textContent = I18n.t('dash.creating');
 
       const clientName = document.getElementById('client-name').value.trim();
       const yearEnd = document.getElementById('year-end').value;
@@ -1016,7 +1016,7 @@
       if (error) {
         alert('Error: ' + error.message);
         btn.disabled = false;
-        btn.textContent = 'Create';
+        btn.textContent = I18n.t('dash.create');
         return;
       }
 
@@ -1066,7 +1066,7 @@
       closeModal('modal-new-engagement');
       document.getElementById('form-new-engagement').reset();
       btn.disabled = false;
-      btn.textContent = 'Create';
+      btn.textContent = I18n.t('dash.create');
 
       window.location.href = `engagement.html#${data.id}`;
     });
@@ -1086,7 +1086,7 @@
     async function openBillingPortal() {
       const btn = document.getElementById('btn-manage-billing');
       const originalText = btn.textContent;
-      btn.textContent = 'Opening...';
+      btn.textContent = I18n.t('dash.opening');
       btn.disabled = true;
       try {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1117,6 +1117,14 @@
     }
 
     init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
+
+    // Re-render the dynamically-built parts (tiles, year filter, engagement
+    // table) when the user flips the language. Static data-i18n nodes are
+    // handled automatically by i18n.js; these are built in JS so we redraw them.
+    document.addEventListener('i18n:changed', () => {
+      if (!Array.isArray(allEngagements) || allEngagements.length === 0) return;
+      try { populateYearFilter(); renderTiles(); renderCurrentView(); } catch (e) {}
+    });
   </script>
 </body>
 </html>

@@ -141,5 +141,72 @@
       "guide": "Getting Started",
       "copy": "© 2026 Audexon. Built for auditors who move fast."
     }
+  },
+  "dash": {
+    "newEng": "+ New Engagement",
+    "searchPh": "Search client...",
+    "allYears": "All years",
+    "tiles": {
+      "active": "Active",
+      "review": "Awaiting partner review",
+      "ready": "Ready to archive",
+      "archived": "Archived YTD"
+    },
+    "hint": {
+      "activeOne": "engagement in progress",
+      "activeMany": "engagements in progress",
+      "allClear": "all clear",
+      "reviewCount": "{n} sections across {m} engagements",
+      "nothingWaiting": "nothing waiting",
+      "readyArchive": "closed, awaiting ISA 230 archive",
+      "noneYet": "none yet this year",
+      "filesAssembled": "files assembled this year"
+    },
+    "sub": {
+      "none": "No engagements in progress",
+      "inProgress": "{n} engagements in progress",
+      "awaiting": " · {r} sections awaiting partner review",
+      "noneYet": "No engagements yet"
+    },
+    "col": {
+      "client": "Client",
+      "year": "Year",
+      "status": "Status",
+      "progress": "Progress",
+      "findings": "Findings",
+      "deadline": "Deadline",
+      "actions": "Actions"
+    },
+    "phase": {
+      "planning": "Planning",
+      "execution": "Execution",
+      "completed": "Closed",
+      "archived": "Archived"
+    },
+    "open": "Open",
+    "view": "View",
+    "delete": "Delete",
+    "creating": "Creating...",
+    "create": "Create",
+    "cancel": "Cancel",
+    "opening": "Opening...",
+    "empty": {
+      "noMatch": "No engagements match this view",
+      "tryOther": "Try a different tab or clear the search.",
+      "noneYet": "No engagements yet",
+      "createFirst": "Create your first engagement to start your audit workflow."
+    },
+    "modal": {
+      "title": "New Engagement",
+      "safeTitle": "How Audexon keeps your data safe",
+      "safe1": "Your audit work is stored securely in Audexon's encrypted cloud — you control what you upload.",
+      "safe2": "Audexon stores what you enter or upload: trial balance, procedures, findings, and review notes.",
+      "safe3": "Only your firm's authorised team members can access your engagements.",
+      "safe4": "Your data is protected with strong encryption at all times — whether it's being sent or stored.",
+      "safe5": "You always own your data — Audexon simply helps you manage the audit work securely.",
+      "clientName": "Client Name",
+      "clientNamePh": "e.g. ABC Company",
+      "yearEnd": "Year End Date"
+    }
   }
 }
