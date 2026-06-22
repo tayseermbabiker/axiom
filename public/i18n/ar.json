@@ -1,0 +1,18 @@
+{
+  "lang": {
+    "name": "العربية",
+    "switchTo": "English"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "team": "الفريق",
+    "complianceTemplate": "نموذج الامتثال",
+    "howItWorks": "كيف يعمل",
+    "manageSubscription": "إدارة الاشتراك",
+    "signOut": "تسجيل الخروج"
+  },
+  "dashboard": {
+    "title": "عمليات المراجعة",
+    "loading": "جارٍ التحميل…"
+  }
+}

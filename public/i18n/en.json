@@ -1,0 +1,18 @@
+{
+  "lang": {
+    "name": "English",
+    "switchTo": "العربية"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "team": "Team",
+    "complianceTemplate": "Compliance Template",
+    "howItWorks": "How it works",
+    "manageSubscription": "Manage subscription",
+    "signOut": "Sign out"
+  },
+  "dashboard": {
+    "title": "Engagements",
+    "loading": "Loading…"
+  }
+}
