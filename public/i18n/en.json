@@ -7,6 +7,8 @@
     "dashboard": "Dashboard",
     "team": "Team",
     "complianceTemplate": "Compliance Template",
+    "engagement": "Engagement",
+    "activityLog": "Activity Log",
     "howItWorks": "How it works",
     "manageSubscription": "Manage subscription",
     "signOut": "Sign out"
