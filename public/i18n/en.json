@@ -73,7 +73,7 @@
     "hero": {
       "badge": "Built for CPA firms with 3–25 auditors",
       "h1": "The audit <em>control room</em> your firm is missing",
-      "p": "Structure, review, and sign-off for every engagement — while your files stay securely in your own cloud.",
+      "p": "Structure, review, and sign-off for every engagement — your audit files stay in your own Google Drive, your data encrypted in Audexon's secure cloud.",
       "cta1": "Request Access",
       "cta2": "See Pricing"
     },
@@ -84,7 +84,7 @@
     },
     "f1": { "title": "TB-Driven Structure", "p": "Upload your trial balance once. Audexon maps classifications to audit sections automatically." },
     "f2": { "title": "ISA 230 Audit Trail", "p": "Every action logged. Every reopen requires a reason. Immutable, append-only documentation ready for peer review." },
-    "f3": { "title": "Files Stay in Your Cloud", "p": "Audexon links to Google Drive or OneDrive — zero file storage, zero vendor lock-in." },
+    "f3": { "title": "Bring Your Own Cloud", "p": "Link your firm's Google Drive or OneDrive for audit working files. Your data and uploads stay encrypted and access-controlled in Audexon's secure cloud." },
     "f4": { "title": "Review From Anywhere", "p": "Partners see every section’s status, review notes, and sign-offs from one dashboard." },
     "f5": { "title": "Three-Level Sign-Off", "p": "Preparer → supervisor → partner. Clear permissions. Every action locked and logged." },
     "f6": { "title": "Team Assignments & Progress", "p": "Assign sections, track completion in real time, exchange review notes inline." },
@@ -199,8 +199,8 @@
     "modal": {
       "title": "New Engagement",
       "safeTitle": "How Audexon keeps your data safe",
-      "safe1": "Your audit work is stored securely in Audexon's encrypted cloud — you control what you upload.",
-      "safe2": "Audexon stores what you enter or upload: trial balance, procedures, findings, and review notes.",
+      "safe1": "Your audit working files stay in your own Google Drive or OneDrive.",
+      "safe2": "Audexon stores what you enter or upload — trial balance, procedures, findings, review notes, and FS documents — encrypted in its secure cloud.",
       "safe3": "Only your firm's authorised team members can access your engagements.",
       "safe4": "Your data is protected with strong encryption at all times — whether it's being sent or stored.",
       "safe5": "You always own your data — Audexon simply helps you manage the audit work securely.",
