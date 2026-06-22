@@ -14,5 +14,58 @@
   "dashboard": {
     "title": "عمليات المراجعة",
     "loading": "جارٍ التحميل…"
+  },
+  "auth": {
+    "signInTitle": "تسجيل الدخول",
+    "signInSubtitle": "أدِر عمليات المراجعة الخاصة بك",
+    "signUpTitle": "إنشاء حساب",
+    "signUpSubtitle": "ابدأ بإدارة ملفات المراجعة",
+    "fullName": "الاسم الكامل",
+    "fullNamePh": "اسمك الكامل",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "passwordPh": "٦ أحرف على الأقل",
+    "signInBtn": "تسجيل الدخول",
+    "signUpBtn": "إنشاء حساب",
+    "signingIn": "جارٍ تسجيل الدخول...",
+    "creatingAccount": "جارٍ إنشاء الحساب...",
+    "noAccount": "ليس لديك حساب؟",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "signUpLink": "إنشاء حساب",
+    "signInLink": "تسجيل الدخول",
+    "forgot": "هل نسيت كلمة المرور؟"
+  },
+  "team": {
+    "title": "الفريق",
+    "inviteHeading": "دعوة عضو إلى الفريق",
+    "rolePreparer": "معِدّ",
+    "roleSupervisor": "مشرف",
+    "rolePartner": "شريك",
+    "sendInvite": "إرسال الدعوة",
+    "membersHeading": "الأعضاء",
+    "pendingHeading": "الدعوات المعلّقة",
+    "loading": "جارٍ التحميل..."
+  },
+  "onboarding": {
+    "welcome": "مرحبًا بك في Audexon",
+    "subtitle": "جهّز مكتبك للبدء.",
+    "createNewTitle": "إنشاء مكتب جديد",
+    "createNewDesc": "أنت تبدأ مؤسسة جديدة على Audexon.",
+    "invitedTitle": "تمت دعوتي",
+    "invitedDesc": "أرسل لك أحد أعضاء مكتبك دعوة بالفعل.",
+    "firmName": "اسم المكتب",
+    "firmNamePh": "مثال: شركة سميث وشركاه للمحاسبة",
+    "country": "الدولة",
+    "countrySelect": "اختر دولتك…",
+    "accessCode": "رمز الدخول",
+    "accessCodePh": "أدخل رمز الدخول",
+    "accessCodeHelp": "تواصل معنا للحصول على رمز دخول لمكتبك.",
+    "terms": "لقد قرأت وأوافق على <a href=\"/terms.html\" target=\"_blank\" rel=\"noopener\">شروط الخدمة</a> و<a href=\"/privacy.html\" target=\"_blank\" rel=\"noopener\">سياسة الخصوصية</a>.",
+    "back": "رجوع",
+    "createFirm": "إنشاء المكتب",
+    "checkingInvites": "جارٍ التحقق من الدعوات..."
+  },
+  "common": {
+    "loading": "جارٍ التحميل..."
   }
 }

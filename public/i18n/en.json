@@ -14,5 +14,58 @@
   "dashboard": {
     "title": "Engagements",
     "loading": "Loading…"
+  },
+  "auth": {
+    "signInTitle": "Sign in",
+    "signInSubtitle": "Manage your audit engagements",
+    "signUpTitle": "Create account",
+    "signUpSubtitle": "Start managing your audit files",
+    "fullName": "Full Name",
+    "fullNamePh": "Your full name",
+    "email": "Email",
+    "password": "Password",
+    "passwordPh": "Min 6 characters",
+    "signInBtn": "Sign in",
+    "signUpBtn": "Sign up",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "signUpLink": "Sign up",
+    "signInLink": "Sign in",
+    "forgot": "Forgot your password?"
+  },
+  "team": {
+    "title": "Team",
+    "inviteHeading": "Invite a Team Member",
+    "rolePreparer": "Preparer",
+    "roleSupervisor": "Supervisor",
+    "rolePartner": "Partner",
+    "sendInvite": "Send Invite",
+    "membersHeading": "Members",
+    "pendingHeading": "Pending Invites",
+    "loading": "Loading..."
+  },
+  "onboarding": {
+    "welcome": "Welcome to Audexon",
+    "subtitle": "Set up your firm to get started.",
+    "createNewTitle": "Create a new firm",
+    "createNewDesc": "You are starting a new organization on Audexon.",
+    "invitedTitle": "I was invited",
+    "invitedDesc": "Someone from your firm already sent you an invite.",
+    "firmName": "Firm Name",
+    "firmNamePh": "e.g. Smith & Associates CPAs",
+    "country": "Country",
+    "countrySelect": "Select your country…",
+    "accessCode": "Access Code",
+    "accessCodePh": "Enter your access code",
+    "accessCodeHelp": "Contact us to get an access code for your firm.",
+    "terms": "I have read and agree to the <a href=\"/terms.html\" target=\"_blank\" rel=\"noopener\">Terms of Service</a> and <a href=\"/privacy.html\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>.",
+    "back": "Back",
+    "createFirm": "Create Firm",
+    "checkingInvites": "Checking for invites..."
+  },
+  "common": {
+    "loading": "Loading..."
   }
 }

@@ -4,8 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Get Started — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('audexon_lang');
+        if (lang !== 'ar' && lang !== 'en') lang = 'en';
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/rtl.css">
   <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
   <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
   <script src="../js/sentry-init.js"></script>
@@ -13,8 +24,8 @@
 <body>
   <div class="onboarding-container">
     <div class="onboarding-card">
-      <h1>Welcome to Audexon</h1>
-      <p class="text-muted">Set up your firm to get started.</p>
+      <h1 data-i18n="onboarding.welcome">Welcome to Audexon</h1>
+      <p class="text-muted" data-i18n="onboarding.subtitle">Set up your firm to get started.</p>
 
       <div class="error-msg" id="error-msg"></div>
       <div class="success-msg" id="success-msg"></div>
@@ -23,12 +34,12 @@
       <div id="choice-section">
         <div class="onboarding-options">
           <button class="onboarding-option" onclick="showCreateFirm()">
-            <div class="onboarding-option-title">Create a new firm</div>
-            <div class="onboarding-option-desc">You are starting a new organization on Audexon.</div>
+            <div class="onboarding-option-title" data-i18n="onboarding.createNewTitle">Create a new firm</div>
+            <div class="onboarding-option-desc" data-i18n="onboarding.createNewDesc">You are starting a new organization on Audexon.</div>
           </button>
           <button class="onboarding-option" onclick="showPendingInvites()">
-            <div class="onboarding-option-title">I was invited</div>
-            <div class="onboarding-option-desc">Someone from your firm already sent you an invite.</div>
+            <div class="onboarding-option-title" data-i18n="onboarding.invitedTitle">I was invited</div>
+            <div class="onboarding-option-desc" data-i18n="onboarding.invitedDesc">Someone from your firm already sent you an invite.</div>
           </button>
         </div>
       </div>
@@ -37,13 +48,13 @@
       <div id="create-firm-section" style="display:none;">
         <form id="form-create-firm">
           <div class="form-group">
-            <label for="firm-name">Firm Name</label>
-            <input type="text" id="firm-name" class="form-control" placeholder="e.g. Smith & Associates CPAs" required>
+            <label for="firm-name" data-i18n="onboarding.firmName">Firm Name</label>
+            <input type="text" id="firm-name" class="form-control" placeholder="e.g. Smith & Associates CPAs" data-i18n-placeholder="onboarding.firmNamePh" required>
           </div>
           <div class="form-group">
-            <label for="firm-country">Country</label>
+            <label for="firm-country" data-i18n="onboarding.country">Country</label>
             <select id="firm-country" class="form-control" required>
-              <option value="">Select your country&hellip;</option>
+              <option value="" data-i18n="onboarding.countrySelect">Select your country&hellip;</option>
               <option value="AE">United Arab Emirates</option>
               <option value="SA">Saudi Arabia</option>
               <option value="QA">Qatar</option>
@@ -62,20 +73,20 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="access-code">Access Code</label>
-            <input type="text" id="access-code" class="form-control" placeholder="Enter your access code" required>
-            <small style="color:var(--gray-500); font-size:11px; margin-top:4px; display:block;">Contact us to get an access code for your firm.</small>
+            <label for="access-code" data-i18n="onboarding.accessCode">Access Code</label>
+            <input type="text" id="access-code" class="form-control" placeholder="Enter your access code" data-i18n-placeholder="onboarding.accessCodePh" required>
+            <small style="color:var(--gray-500); font-size:11px; margin-top:4px; display:block;" data-i18n="onboarding.accessCodeHelp">Contact us to get an access code for your firm.</small>
           </div>
           <div id="code-error" class="error-msg" style="display:none;"></div>
           <div class="form-group" style="display:flex; align-items:flex-start; gap:8px; margin-top:4px;">
             <input type="checkbox" id="accept-terms" style="margin-top:3px; flex-shrink:0;">
-            <label for="accept-terms" style="font-size:13px; color:var(--gray-600); font-weight:400; line-height:1.5;">
+            <label for="accept-terms" style="font-size:13px; color:var(--gray-600); font-weight:400; line-height:1.5;" data-i18n-html="onboarding.terms">
               I have read and agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.
             </label>
           </div>
           <div class="flex gap-8">
-            <button type="button" class="btn btn-outline" onclick="showChoice()">Back</button>
-            <button type="submit" class="btn btn-primary" id="btn-create-firm">Create Firm</button>
+            <button type="button" class="btn btn-outline" onclick="showChoice()" data-i18n="onboarding.back">Back</button>
+            <button type="submit" class="btn btn-primary" id="btn-create-firm" data-i18n="onboarding.createFirm">Create Firm</button>
           </div>
         </form>
       </div>
@@ -86,18 +97,20 @@
           <div class="empty-state"><p>Checking for invites...</p></div>
         </div>
         <div class="mt-16">
-          <button type="button" class="btn btn-outline" id="invites-back-btn" onclick="showChoice()">Back</button>
+          <button type="button" class="btn btn-outline" id="invites-back-btn" onclick="showChoice()" data-i18n="onboarding.back">Back</button>
         </div>
       </div>
 
       <div class="onboarding-footer">
-        <button class="btn btn-outline btn-sm" onclick="signOutOnboarding()">Sign out</button>
+        <button class="lang-toggle" onclick="I18n.toggleLang()" data-i18n="lang.switchTo">العربية</button>
+        <button class="btn btn-outline btn-sm" onclick="signOutOnboarding()" data-i18n="nav.signOut">Sign out</button>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/i18n.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     let currentUser = null;
