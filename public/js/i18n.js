@@ -111,7 +111,14 @@
     applyTo(root, dict);
   }
 
-  window.I18n = { setLang, toggleLang, t, getLang, translate };
+  // Return the active language's full dictionary (loads it if needed).
+  // Used by data-driven pages (e.g. the audit report) that swap labels
+  // via a lookup map rather than data-i18n attributes.
+  async function dict() {
+    return loadDict(active);
+  }
+
+  window.I18n = { setLang, toggleLang, t, getLang, translate, dict };
 
   // Apply on first paint. dir is already set by the inline bootstrap in <head>;
   // here we load the dictionary and swap the strings.

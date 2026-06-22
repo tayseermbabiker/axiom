@@ -4,7 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Audit File — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('audexon_lang');
+        if (lang !== 'ar' && lang !== 'en') lang = 'en';
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ---- Arabic / RTL (audit report) ---- */
+    html[dir="rtl"] body { font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', system-ui, sans-serif; }
+    html[dir="rtl"] body, html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3, html[dir="rtl"] h4, html[dir="rtl"] p { text-align: right; }
+    html[dir="rtl"] th, html[dir="rtl"] td { text-align: right; }
+    /* keep figures, dates and standard refs left-to-right */
+    html[dir="rtl"] th[style*="text-align:right"], html[dir="rtl"] td[style*="text-align:right"] { text-align: left !important; }
+    html[dir="rtl"] .num, html[dir="rtl"] .ltr { direction: ltr; unicode-bidi: isolate; }
+    @media print { .print-bar { display: none !important; } }
+  </style>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #0D1626; line-height: 1.6; padding: 0; max-width: 900px; margin: 0 auto; font-size: 12px; }
@@ -205,12 +225,14 @@
     </select>
     <button class="btn-print" onclick="window.print()">Save as PDF</button>
     <button class="btn-back" onclick="window.close()">Close</button>
+    <button class="btn-back" id="report-lang-toggle" onclick="I18n.toggleLang()" data-i18n="lang.switchTo" style="margin-inline-start:auto;">العربية</button>
   </div>
 
   <div id="report-content">Loading...</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/i18n.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     const urlParams = new URLSearchParams(window.location.search);
@@ -1846,7 +1868,29 @@
       document.getElementById('report-content').innerHTML = html;
       const reportLabel = reportType === 'planning' ? 'Planning Memorandum' : isExec ? 'Audit File' : 'Completion Memorandum';
       document.title = eng.client_name + ' — ' + reportLabel + ' — Audexon';
+      localizeReport();
     }
+
+    // Arabic localization of the generated report. The report is built as an
+    // HTML string, so instead of data-i18n attributes we swap the section
+    // headings and table-label leaf nodes via a lookup map (ar.json →
+    // reportLabels), keyed by the exact English text. Client names, figures,
+    // dates and dynamic cells never match the map, so they stay as-is.
+    async function localizeReport() {
+      const root = document.getElementById('report-content');
+      if (!root || !window.I18n) return;
+      const isAr = I18n.getLang() === 'ar';
+      const dict = await I18n.dict();
+      const map = (dict && dict.reportLabels) || {};
+      root.querySelectorAll('h1, h2, h3, h4, th').forEach((el) => {
+        if (el.children.length) return; // leaf nodes only
+        if (!el.hasAttribute('data-i18n-orig')) el.setAttribute('data-i18n-orig', el.textContent);
+        const orig = el.getAttribute('data-i18n-orig').replace(/\s+/g, ' ').trim();
+        el.textContent = (isAr && map[orig]) ? map[orig] : el.getAttribute('data-i18n-orig');
+      });
+    }
+    // Re-localize when the user flips the language toggle.
+    document.addEventListener('i18n:changed', localizeReport);
 
     function esc(str) {
       const div = document.createElement('div');
