@@ -4,8 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Section — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('audexon_lang');
+        if (lang !== 'ar' && lang !== 'en') lang = 'en';
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/rtl.css">
   <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
   <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
   <script src="../js/sentry-init.js"></script>
@@ -391,14 +402,15 @@
         <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
       </div>
       <nav class="sidebar-nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="team.html">Team</a>
-        <a href="#" id="nav-engagement">Engagement</a>
-        <a href="#" class="active" id="nav-section">Section</a>
+        <a href="dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+        <a href="team.html" data-i18n="nav.team">Team</a>
+        <a href="#" id="nav-engagement" data-i18n="nav.engagement">Engagement</a>
+        <a href="#" class="active" id="nav-section" data-i18n="nav.section">Section</a>
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
-        <button onclick="signOut()">Sign out</button>
+        <button class="lang-toggle" onclick="I18n.toggleLang()" data-i18n="lang.switchTo" style="margin-bottom:8px;">العربية</button>
+        <button onclick="signOut()" data-i18n="nav.signOut">Sign out</button>
       </div>
     </aside>
 
@@ -941,6 +953,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/i18n.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
   <script>
@@ -3212,6 +3225,40 @@
     }
 
     init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
+
+    // ---- Arabic localization (post-render label swap, same engine as engagement) ----
+    let _locMap = null, _locObs = null, _locRaf = 0;
+    const LOC_SEL = '.main-content h1, .main-content h2, .main-content h3, .main-content h4, .main-content h5, .main-content label, .main-content button, .main-content th, .main-content option, .main-content small, .main-content strong, .main-content a, .main-content span';
+    function localizeSectionNow() {
+      if (!_locMap || !window.I18n) return;
+      const isAr = I18n.getLang() === 'ar';
+      if (_locObs) _locObs.disconnect();
+      document.querySelectorAll(LOC_SEL).forEach(el => {
+        if (el.children.length) return;
+        if (el.hasAttribute('data-i18n') || el.hasAttribute('data-i18n-html')) return;
+        if (!el.hasAttribute('data-i18n-orig')) el.setAttribute('data-i18n-orig', el.textContent);
+        const orig = el.getAttribute('data-i18n-orig').replace(/\s+/g, ' ').trim();
+        if (!orig) return;
+        const next = (isAr && _locMap[orig]) ? _locMap[orig] : el.getAttribute('data-i18n-orig');
+        if (el.textContent !== next) el.textContent = next;
+      });
+      if (_locObs) _locObs.observe(document.querySelector('.main-content') || document.body, { childList: true, subtree: true });
+    }
+    function scheduleLoc() { if (_locRaf) return; _locRaf = requestAnimationFrame(() => { _locRaf = 0; localizeSectionNow(); }); }
+    async function setupSectionLocalization() {
+      if (!window.I18n) return;
+      const dict = await I18n.dict();
+      _locMap = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {});
+      localizeSectionNow();
+      _locObs = new MutationObserver(scheduleLoc);
+      _locObs.observe(document.querySelector('.main-content') || document.body, { childList: true, subtree: true });
+    }
+    document.addEventListener('i18n:changed', async () => {
+      const dict = await I18n.dict();
+      _locMap = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {});
+      localizeSectionNow();
+    });
+    setupSectionLocalization();
   </script>
 </body>
 </html>
