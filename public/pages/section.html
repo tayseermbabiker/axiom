@@ -3226,23 +3226,32 @@
 
     init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
 
-    // ---- Arabic localization (post-render label swap, same engine as engagement) ----
+    // ---- Arabic localization (text-node + placeholder swap, same engine as engagement) ----
     let _locMap = null, _locObs = null, _locRaf = 0;
-    const LOC_SEL = '.main-content h1, .main-content h2, .main-content h3, .main-content h4, .main-content h5, .main-content label, .main-content button, .main-content th, .main-content option, .main-content small, .main-content strong, .main-content a, .main-content span';
+    const _locOrig = new WeakMap();
     function localizeSectionNow() {
       if (!_locMap || !window.I18n) return;
       const isAr = I18n.getLang() === 'ar';
-      if (_locObs) _locObs.disconnect();
-      document.querySelectorAll(LOC_SEL).forEach(el => {
-        if (el.children.length) return;
-        if (el.hasAttribute('data-i18n') || el.hasAttribute('data-i18n-html')) return;
-        if (!el.hasAttribute('data-i18n-orig')) el.setAttribute('data-i18n-orig', el.textContent);
-        const orig = el.getAttribute('data-i18n-orig').replace(/\s+/g, ' ').trim();
-        if (!orig) return;
-        const next = (isAr && _locMap[orig]) ? _locMap[orig] : el.getAttribute('data-i18n-orig');
-        if (el.textContent !== next) el.textContent = next;
+      const root = document.querySelector('.main-content') || document.body;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        const p = node.parentNode; if (!p) continue;
+        const tag = p.nodeName; if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+        if (p.closest && p.closest('[data-i18n],[data-i18n-html]')) continue;
+        if (!_locOrig.has(node)) _locOrig.set(node, node.nodeValue);
+        const orig = _locOrig.get(node);
+        const key = orig.replace(/\s+/g, ' ').trim();
+        if (!key) continue;
+        const next = (isAr && _locMap[key]) ? orig.replace(key, _locMap[key]) : orig;
+        if (node.nodeValue !== next) node.nodeValue = next;
+      }
+      root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+        if (!_locOrig.has(el)) _locOrig.set(el, el.getAttribute('placeholder'));
+        const orig = _locOrig.get(el); const key = (orig || '').replace(/\s+/g, ' ').trim(); if (!key) return;
+        const next = (isAr && _locMap[key]) ? _locMap[key] : orig;
+        if (el.getAttribute('placeholder') !== next) el.setAttribute('placeholder', next);
       });
-      if (_locObs) _locObs.observe(document.querySelector('.main-content') || document.body, { childList: true, subtree: true });
     }
     function scheduleLoc() { if (_locRaf) return; _locRaf = requestAnimationFrame(() => { _locRaf = 0; localizeSectionNow(); }); }
     async function setupSectionLocalization() {

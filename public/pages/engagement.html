@@ -9708,30 +9708,39 @@
 
     init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
 
-    // ---- Arabic localization (post-render label swap) ----
+    // ---- Arabic localization (post-render text-node + placeholder swap) ----
     // The workspace is built from huge static forms + many dynamic render
-    // functions, so instead of tagging every node with data-i18n we swap
-    // label leaf-nodes against a validated map (ar.json reportLabels +
-    // engagementLabels), keyed by the exact English text. A MutationObserver
-    // re-applies it whenever a render function rebuilds part of the DOM.
-    // Elements already carrying data-i18n are left to i18n.js.
+    // functions. We translate TEXT NODES (so mixed-content elements like a
+    // <label> with a checkbox child, or a stat span with a number child, still
+    // get their text translated) plus input/textarea placeholders, against the
+    // validated map (ar.json reportLabels + engagementLabels), keyed by exact
+    // English text. A MutationObserver re-applies it after every re-render.
+    // Nodes under [data-i18n] are left to i18n.js.
     let _engMap = null, _engObserver = null, _engRaf = 0;
-    const ENG_SEL = '.main-content h1, .main-content h2, .main-content h3, .main-content h4, .main-content h5, .main-content label, .main-content button, .main-content th, .main-content option, .main-content small, .main-content strong, .main-content a, .main-content span';
-
+    const _engOrig = new WeakMap();
     function localizeEngagementNow() {
       if (!_engMap || !window.I18n) return;
       const isAr = I18n.getLang() === 'ar';
-      if (_engObserver) _engObserver.disconnect();
-      document.querySelectorAll(ENG_SEL).forEach(el => {
-        if (el.children.length) return;                                  // leaf nodes only
-        if (el.hasAttribute('data-i18n') || el.hasAttribute('data-i18n-html')) return;
-        if (!el.hasAttribute('data-i18n-orig')) el.setAttribute('data-i18n-orig', el.textContent);
-        const orig = el.getAttribute('data-i18n-orig').replace(/\s+/g, ' ').trim();
-        if (!orig) return;
-        const next = (isAr && _engMap[orig]) ? _engMap[orig] : el.getAttribute('data-i18n-orig');
-        if (el.textContent !== next) el.textContent = next;
+      const root = document.querySelector('.main-content') || document.body;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        const p = node.parentNode; if (!p) continue;
+        const tag = p.nodeName; if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+        if (p.closest && p.closest('[data-i18n],[data-i18n-html]')) continue;
+        if (!_engOrig.has(node)) _engOrig.set(node, node.nodeValue);
+        const orig = _engOrig.get(node);
+        const key = orig.replace(/\s+/g, ' ').trim();
+        if (!key) continue;
+        const next = (isAr && _engMap[key]) ? orig.replace(key, _engMap[key]) : orig;
+        if (node.nodeValue !== next) node.nodeValue = next;
+      }
+      root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+        if (!_engOrig.has(el)) _engOrig.set(el, el.getAttribute('placeholder'));
+        const orig = _engOrig.get(el); const key = (orig || '').replace(/\s+/g, ' ').trim(); if (!key) return;
+        const next = (isAr && _engMap[key]) ? _engMap[key] : orig;
+        if (el.getAttribute('placeholder') !== next) el.setAttribute('placeholder', next);
       });
-      if (_engObserver) _engObserver.observe(document.querySelector('.main-content') || document.body, { childList: true, subtree: true });
     }
     function scheduleEngLocalize() {
       if (_engRaf) return;
