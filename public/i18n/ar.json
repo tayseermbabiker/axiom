@@ -820,7 +820,15 @@
     "Some classification tags no longer match the current TB. Click \"Edit Tags\" to update.": "بعض وسوم التصنيف لا تتطابق مع ميزان المراجعة الحالي. انقر على «تعديل التصنيفات» للتحديث.",
     "The audit partner or manager adds procedures here. Click \"+ Add Procedure\" above to get started.": "يُضيف الشريك أو المدير المسؤول الإجراءات هنا. انقر على «+ إضافة إجراء» أعلاه للبدء.",
     "Select which TB classifications this section covers. Greyed-out tags are already assigned to another section.": "حدّد تصنيفات ميزان المراجعة التي يغطيها هذا القسم. الوسوم الرمادية مُسندة بالفعل إلى قسم آخر.",
-    "How items were picked. e.g. RANDBETWEEN in Excel; every 28th invoice starting from item 14; all items above AED 25K.": "كيفية اختيار البنود. مثال: RANDBETWEEN في Excel؛ كل فاتورة 28 بدءاً من البند الرقم 14؛ جميع البنود التي تتجاوز AED 25K."
+    "How items were picked. e.g. RANDBETWEEN in Excel; every 28th invoice starting from item 14; all items above AED 25K.": "كيفية اختيار البنود. مثال: RANDBETWEEN في Excel؛ كل فاتورة 28 بدءاً من البند الرقم 14؛ جميع البنود التي تتجاوز AED 25K.",
+    "complete": "مكتمل",
+    "sections": "قسم",
+    "approved": "معتمد",
+    "procedures done": "إجراءات منجزة",
+    "open findings": "ملاحظات مفتوحة",
+    "Reports": "التقارير",
+    "Overall": "الإجمالي",
+    "Not started": "لم يبدأ"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
