@@ -9721,7 +9721,7 @@
     function localizeEngagementNow() {
       if (!_engMap || !window.I18n) return;
       const isAr = I18n.getLang() === 'ar';
-      const root = document.querySelector('.main-content') || document.body;
+      const root = document.body;
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
       for (const node of nodes) {
@@ -9752,7 +9752,7 @@
       _engMap = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {});
       localizeEngagementNow();
       _engObserver = new MutationObserver(scheduleEngLocalize);
-      _engObserver.observe(document.querySelector('.main-content') || document.body, { childList: true, subtree: true });
+      _engObserver.observe(document.body, { childList: true, subtree: true });
     }
     document.addEventListener('i18n:changed', async () => {
       const dict = await I18n.dict();
