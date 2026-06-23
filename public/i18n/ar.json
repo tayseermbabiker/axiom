@@ -1118,7 +1118,17 @@
     "Trial balance": "ميزان المراجعة",
     "Unlocked": "غير مقفَل",
     "version will mark the previous signed version as superseded by restatement.": "الإصدار سيُصنِّف الإصدار الموقَّع السابق على أنه تجاوزه إعادة عرض.",
-    "Working TB": "ميزان المراجعة العملي"
+    "Working TB": "ميزان المراجعة العملي",
+    "open": "مفتوحة",
+    "resolved": "مُعالَجة",
+    "reported": "مُبلَّغة",
+    "low": "منخفض",
+    "medium": "متوسط",
+    "high": "مرتفع",
+    "misstatement": "تحريف",
+    "control deficiency": "قصور رقابي",
+    "observation": "ملاحظة",
+    "pending": "معلّق"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
