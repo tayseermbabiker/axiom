@@ -7923,15 +7923,20 @@
       // Preliminary materiality cross-reference (display-only, live-read)
       const matEl = document.getElementById('eas-prelim-materiality');
       if (matEl) {
+        const _ar = (function(){ try { return localStorage.getItem('audexon_lang') === 'ar'; } catch(e) { return false; } })();
         if (engagement && engagement.materiality_overall) {
           const fmt = (n) => Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 });
-          const benchLabels = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
+          const benchLabels = _ar
+            ? { pbt: 'الربح قبل الضريبة', revenue: 'الإيرادات', assets: 'إجمالي الأصول', equity: 'حقوق الملكية' }
+            : { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
           const bench = benchLabels[engagement.materiality_benchmark] || engagement.materiality_benchmark || '';
-          matEl.textContent = 'Overall: ' + fmt(engagement.materiality_overall)
-            + (engagement.materiality_performance ? ' · Performance: ' + fmt(engagement.materiality_performance) : '')
-            + (bench ? ' · Benchmark: ' + bench : '');
+          matEl.textContent = (_ar ? 'الكلية: ' : 'Overall: ') + fmt(engagement.materiality_overall)
+            + (engagement.materiality_performance ? (_ar ? ' · التنفيذية: ' : ' · Performance: ') + fmt(engagement.materiality_performance) : '')
+            + (bench ? (_ar ? ' · المؤشر المرجعي: ' : ' · Benchmark: ') + bench : '');
         } else {
-          matEl.innerHTML = 'Not yet set — open the <a href="#" onclick="event.preventDefault(); switchModuleTab(\'materiality\');" style="color:var(--primary);">Materiality tab</a> to record it.';
+          matEl.innerHTML = _ar
+            ? 'لم تُحدَّد بعد — افتح <a href="#" onclick="event.preventDefault(); switchModuleTab(\'materiality\');" style="color:var(--primary);">تبويب الأهمية النسبية</a> لتسجيلها.'
+            : 'Not yet set — open the <a href="#" onclick="event.preventDefault(); switchModuleTab(\'materiality\');" style="color:var(--primary);">Materiality tab</a> to record it.';
         }
       }
 
