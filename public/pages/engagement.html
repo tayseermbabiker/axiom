@@ -4141,10 +4141,11 @@
       refreshPhaseChips();
 
       // Step sub-labels — keep them honest as state changes
+      const _arP = (function(){ try { return localStorage.getItem('audexon_lang') === 'ar'; } catch(e) { return false; } })();
       const planSub = document.getElementById('step-sub-planning');
-      if (planSub) planSub.textContent = phase === 'planning' ? 'In progress' : 'Done';
+      if (planSub) planSub.textContent = phase === 'planning' ? (_arP ? 'قيد التنفيذ' : 'In progress') : (_arP ? 'تم' : 'Done');
       const concSub = document.getElementById('step-sub-conclusion');
-      if (concSub) concSub.textContent = execComplete ? 'Unlocked' : 'Locked';
+      if (concSub) concSub.textContent = execComplete ? (_arP ? 'غير مقفل' : 'Unlocked') : (_arP ? 'مقفل' : 'Locked');
 
       // Render module tabs for this phase
       renderModuleTabs(phase);
@@ -4193,7 +4194,9 @@
 
       // Update execution sub-label
       const execSub = document.getElementById('step-sub-execution');
-      if (execSub) execSub.textContent = approvedCount + ' of ' + totalCount + ' sections done';
+      if (execSub) execSub.textContent = ((function(){ try { return localStorage.getItem('audexon_lang') === 'ar'; } catch(e) { return false; } })())
+        ? ('تم ' + approvedCount + ' من ' + totalCount + ' قسم')
+        : (approvedCount + ' of ' + totalCount + ' sections done');
 
       // Unlock conclusion if all done — and keep its sub-label honest
       const conclusionBtn = document.getElementById('phase-btn-conclusion');

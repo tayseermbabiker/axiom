@@ -1354,7 +1354,10 @@
     "Send to Supervisor for Review": "الإرسال إلى المشرف للمراجعة",
     "Send to Supervisor": "الإرسال إلى المشرف",
     "Send for Review": "إرسال للمراجعة",
-    "Final Approve": "الاعتماد النهائي"
+    "Final Approve": "الاعتماد النهائي",
+    "Financial statements": "القوائم المالية",
+    "Confirmations": "المصادقات",
+    "Estimates": "التقديرات"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
