@@ -517,10 +517,10 @@
     /* ---- PRICING ---- */
     .pricing-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr;
       gap: 24px;
       align-items: start;
-      max-width: 840px;
+      max-width: 520px;
       margin: 0 auto;
     }
 
@@ -550,6 +550,12 @@
     .price-bands .band-price {
       font-weight: 700;
       color: #0A1A2F;
+    }
+    .price-bands .band-month {
+      font-weight: 500;
+      color: #6B7280;
+      font-size: 12px;
+      margin-left: 8px;
     }
 
     .price-card {
@@ -927,72 +933,45 @@
     <div class="section-inner">
       <div class="section-header section-header-center">
         <span class="section-label" data-i18n="landing.pricing.label">Pricing</span>
-        <h2 class="section-title" data-i18n="landing.pricing.title">Simple plans that scale with your firm</h2>
-        <p class="section-subtitle" data-i18n="landing.pricing.subtitle">Two plans, priced by firm size &mdash; no per-user math. Unlimited engagements on every plan.</p>
+        <h2 class="section-title" data-i18n="landing.pricing.title">One plan. The complete ISA audit file.</h2>
+        <p class="section-subtitle" data-i18n="landing.pricing.subtitle">Priced by firm size, billed annually &mdash; unlimited engagements and users, no per-seat math.</p>
       </div>
 
       <div class="pricing-grid">
-        <!-- Execution Plan (Essentials) -->
-        <div class="price-card">
-          <h3 data-i18n="landing.exec.name">Execution</h3>
-          <p class="price-users" data-i18n="landing.exec.for">For firms that need the execution &amp; review layer</p>
-          <div class="price-amount">
-            <span class="period" style="align-self:center;" data-i18n="landing.price.from">from</span>
-            <span class="dollar">$</span>
-            <span class="number">49</span>
-            <span class="period" data-i18n="landing.price.month">/month</span>
-          </div>
-          <p class="price-includes" data-i18n="landing.exec.includes">The complete execution file &mdash; import, test, document, sign off.</p>
-          <ul class="price-features">
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f1">TB import &amp; classification</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f2">19 audit sections &amp; procedures</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f3">Three-level review &amp; sign-off</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f4">Findings tracker</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f5">FS upload with SHA-256 integrity</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.exec.f6">Immutable audit trail</span></li>
-          </ul>
-          <div class="price-bands">
-            <p class="price-bands-label" data-i18n="landing.price.bandsLabel">Monthly price by firm size</p>
-            <ul>
-              <li><span data-i18n="landing.price.starter">Starter &middot; up to 5</span><span class="band-price">$49</span></li>
-              <li><span data-i18n="landing.price.team">Team &middot; up to 12</span><span class="band-price">$99</span></li>
-              <li><span data-i18n="landing.price.firm">Firm &middot; up to 25</span><span class="band-price">$199</span></li>
-            </ul>
-          </div>
-          <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-outline" data-i18n="landing.price.request">Request Access</button>
-          <p style="text-align:center; font-size:12px; color:#6B7280; margin-top:10px;" data-i18n="landing.price.trial">Includes a complimentary 1-month trial</p>
-        </div>
-        <!-- Full Workflow Plan (Pro) -->
+        <!-- Single plan: the complete ISA audit file -->
         <div class="price-card popular">
-          <div class="price-badge" data-i18n="landing.full.badge">Full ISA File</div>
-          <h3 data-i18n="landing.full.name">Full Workflow</h3>
-          <p class="price-users" data-i18n="landing.full.for">The complete ISA audit file &mdash; planning to completion</p>
+          <div class="price-badge" data-i18n="landing.full.badge">Complete ISA File</div>
+          <h3 data-i18n="landing.full.name">The Complete ISA Audit File</h3>
+          <p class="price-users" data-i18n="landing.full.for">Planning to completion &mdash; one plan, priced by firm size.</p>
           <div class="price-amount">
             <span class="period" style="align-self:center;" data-i18n="landing.price.from">from</span>
             <span class="dollar">$</span>
-            <span class="number">199</span>
-            <span class="period" data-i18n="landing.price.month">/month</span>
+            <span class="number">590</span>
+            <span class="period" data-i18n="landing.price.year">/year</span>
           </div>
-          <p class="price-includes" data-i18n="landing.full.includes">Everything in Execution, plus the full methodology layer.</p>
+          <p class="price-includes" data-i18n="landing.full.includes">Every stage of the ISA audit file &mdash; no feature gates, no per-seat math.</p>
           <ul class="price-features">
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f1">Everything in Execution</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f2">Planning &amp; audit strategy</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f3">Materiality (versioned)</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f4">Risk assessment (ISA 315)</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f5">Completion memo + EQR</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f6">Local compliance section</span></li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f7">Inspection-ready PDF</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f1">Planning, strategy &amp; engagement acceptance</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f2">Materiality (versioned, ISA 320)</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f3">Risk assessment (ISA 315/330/240)</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f4">AML &amp; KYC client due diligence</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f5">TB import + working/adjusted TB (ISA 450)</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f6">19 audit sections &amp; procedures</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f7">Three-level review &amp; sign-off</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f8">Completion memo + EQR (ISQM 2)</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f9">Inspection-ready PDF (EN/AR)</span></li>
           </ul>
           <div class="price-bands">
-            <p class="price-bands-label" data-i18n="landing.price.bandsLabel">Monthly price by firm size</p>
+            <p class="price-bands-label" data-i18n="landing.price.bandsLabel">Annual price by firm size</p>
             <ul>
-              <li><span data-i18n="landing.price.starter">Starter &middot; up to 5</span><span class="band-price">$199</span></li>
-              <li><span data-i18n="landing.price.team">Team &middot; up to 12</span><span class="band-price">$299</span></li>
-              <li><span data-i18n="landing.price.firm">Firm &middot; up to 25</span><span class="band-price">$399</span></li>
+              <li><span data-i18n="landing.price.b1">Starter &middot; 1&ndash;3 staff</span><span class="band-price">$590<span class="band-month">$49/mo</span></span></li>
+              <li><span data-i18n="landing.price.b2">Growing &middot; 4&ndash;6 staff</span><span class="band-price">$950<span class="band-month">$79/mo</span></span></li>
+              <li><span data-i18n="landing.price.b3">Firm &middot; 7&ndash;10 staff</span><span class="band-price">$1,430<span class="band-month">$119/mo</span></span></li>
+              <li><span data-i18n="landing.price.b4">Practice &middot; 11&ndash;25 staff</span><span class="band-price">$2,388<span class="band-month">$199/mo</span></span></li>
             </ul>
           </div>
           <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-filled" data-i18n="landing.price.request">Request Access</button>
-          <p style="text-align:center; font-size:12px; color:#6B7280; margin-top:10px;" data-i18n="landing.price.trial">Includes a complimentary 1-month trial</p>
+          <p style="text-align:center; font-size:12px; color:#6B7280; margin-top:10px;" data-i18n="landing.price.trial">Includes a complimentary 1-month trial &middot; billed annually</p>
         </div>
       </div>
 

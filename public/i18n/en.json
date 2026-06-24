@@ -94,42 +94,35 @@
     "legend": { "signed": "Signed off", "review": "In review", "open": "Open" },
     "pricing": {
       "label": "Pricing",
-      "title": "Simple plans that scale with your firm",
-      "subtitle": "Two plans, priced by firm size — no per-user math. Unlimited engagements on every plan."
-    },
-    "exec": {
-      "name": "Execution",
-      "for": "For firms that need the execution & review layer",
-      "includes": "The complete execution file — import, test, document, sign off.",
-      "f1": "TB import & classification",
-      "f2": "19 audit sections & procedures",
-      "f3": "Three-level review & sign-off",
-      "f4": "Findings tracker",
-      "f5": "FS upload with SHA-256 integrity",
-      "f6": "Immutable audit trail"
+      "title": "One plan. The complete ISA audit file.",
+      "subtitle": "Priced by firm size, billed annually — unlimited engagements and users, no per-seat math."
     },
     "full": {
-      "badge": "Full ISA File",
-      "name": "Full Workflow",
-      "for": "The complete ISA audit file — planning to completion",
-      "includes": "Everything in Execution, plus the full methodology layer.",
-      "f1": "Everything in Execution",
-      "f2": "Planning & audit strategy",
-      "f3": "Materiality (versioned)",
-      "f4": "Risk assessment (ISA 315)",
-      "f5": "Completion memo + EQR",
-      "f6": "Local compliance section",
-      "f7": "Inspection-ready PDF"
+      "badge": "Complete ISA File",
+      "name": "The Complete ISA Audit File",
+      "for": "Planning to completion — one plan, priced by firm size.",
+      "includes": "Every stage of the ISA audit file — no feature gates, no per-seat math.",
+      "f1": "Planning, strategy & engagement acceptance",
+      "f2": "Materiality (versioned, ISA 320)",
+      "f3": "Risk assessment (ISA 315/330/240)",
+      "f4": "AML & KYC client due diligence",
+      "f5": "TB import + working/adjusted TB (ISA 450)",
+      "f6": "19 audit sections & procedures",
+      "f7": "Three-level review & sign-off",
+      "f8": "Completion memo + EQR (ISQM 2)",
+      "f9": "Inspection-ready PDF (EN/AR)"
     },
     "price": {
       "from": "from",
       "month": "/month",
-      "bandsLabel": "Monthly price by firm size",
-      "starter": "Starter · up to 5",
-      "team": "Team · up to 12",
-      "firm": "Firm · up to 25",
+      "year": "/year",
+      "bandsLabel": "Annual price by firm size",
+      "b1": "Starter · 1–3 staff",
+      "b2": "Growing · 4–6 staff",
+      "b3": "Firm · 7–10 staff",
+      "b4": "Practice · 11–25 staff",
       "request": "Request Access",
-      "trial": "Includes a complimentary 1-month trial"
+      "trial": "Includes a complimentary 1-month trial · billed annually"
     },
     "help": "Need help choosing or have questions? <a href=\"/contact.html\" style=\"color:#4338CA; font-weight:500;\">Talk to us</a> — we'll set you up personally.",
     "cta": {
