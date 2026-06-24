@@ -5108,7 +5108,7 @@
       await logActivity(engagementId, 'created_section', 'audit_section', data.id, { name: name });
 
       // Auto-populate standard procedures from template
-      const templateProcs = PROCEDURE_TEMPLATES[name];
+      const templateProcs = (typeof procTemplatesFor === 'function') ? procTemplatesFor(name) : PROCEDURE_TEMPLATES[name];
       if (templateProcs && templateProcs.length > 0) {
         const assertMap = (typeof PROCEDURE_ASSERTIONS !== 'undefined' && PROCEDURE_ASSERTIONS[name]) || [];
         const procsToInsert = templateProcs.map((p, i) => ({
