@@ -1399,7 +1399,22 @@
     "e.g. Reviewed board minutes, post year-end bank statements, lawyer letters, and inquired of management...": "مثال: مراجعة محاضر مجلس الإدارة، وكشوف الحسابات البنكية بعد نهاية السنة، وخطابات المحامين، وتوجيه استفسارات إلى الإدارة.",
     "Management's Rationale for Not Correcting": "مبررات الإدارة لعدم التصحيح",
     "Final Independence Conclusion (ISA 220 / IESBA Code)": "استنتاج الاستقلالية النهائي (ISA 220 / مدونة ESBA)",
-    "Any other matter the partner wishes to document for the audit file...": "أي أمر آخر يرغب الشريك في توثيقه ضمن ملف المراجعة."
+    "Any other matter the partner wishes to document for the audit file...": "أي أمر آخر يرغب الشريك في توثيقه ضمن ملف المراجعة.",
+    "Management Representation Letter (ISA 580)": "خطاب إقرارات الإدارة (ISA 580)",
+    "Management Representation Letter has been obtained, signed, and is on file": "تم الحصول على خطاب إقرارات الإدارة وتوقيعه وحفظه في الملف",
+    "Letter date": "تاريخ الخطاب",
+    "File reference / location": "المرجع / موقع الحفظ",
+    "e.g. Letter ref MRL-2025-001, filed in /Closing/Reps/": "مثال: مرجع MRL-2025-001، محفوظ في /Closing/Reps/",
+    "Must be ≥ audit report date": "يجب ألا يتجاوز تاريخ تقرير المراجع",
+    "Communication with Those Charged with Governance (ISA 260)": "التواصل مع المكلَّفين بالحوكمة (ISA 260)",
+    "Document the formal communication of audit matters to TCWG (board, audit committee, or owner-manager for SMEs).": "يُوثِّق التواصل الرسمي في شأن مسائل المراجعة مع المكلَّفين بالحوكمة (مجلس الإدارة، لجنة المراجعة، أو المالك-المدير في المنشآت الصغيرة والمتوسطة).",
+    "Communication with TCWG has occurred": "تم التواصل مع المكلَّفين بالحوكمة",
+    "Communication date": "تاريخ التواصل",
+    "Matters communicated": "المسائل التي جرى التواصل بشأنها",
+    "e.g. Significant findings, audit adjustments, control deficiencies (ISA 265), management letter points, independence statements...": "مثال: الملاحظات الجوهرية، وتعديلات المراجعة، والقصور في الضوابط الرقابية (ISA 265)، ونقاط خطاب الإدارة، وبيانات الاستقلالية...",
+    "TCWG response / actions agreed": "استجابة المكلَّفين بالحوكمة / الإجراءات المتفق عليها",
+    "Any response received from TCWG; actions they committed to take, or note if no response received.": "أي استجابة وردت من المكلَّفين بالحوكمة، والإجراءات التي التزموا باتخاذها، أو الإشارة إلى عدم ورود أي استجابة.",
+    "Save Reps & Comms": "حفظ الإقرارات والمراسلات"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
