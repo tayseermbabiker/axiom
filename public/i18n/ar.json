@@ -1414,7 +1414,13 @@
     "e.g. Significant findings, audit adjustments, control deficiencies (ISA 265), management letter points, independence statements...": "مثال: الملاحظات الجوهرية، وتعديلات المراجعة، والقصور في الضوابط الرقابية (ISA 265)، ونقاط خطاب الإدارة، وبيانات الاستقلالية...",
     "TCWG response / actions agreed": "استجابة المكلَّفين بالحوكمة / الإجراءات المتفق عليها",
     "Any response received from TCWG; actions they committed to take, or note if no response received.": "أي استجابة وردت من المكلَّفين بالحوكمة، والإجراءات التي التزموا باتخاذها، أو الإشارة إلى عدم ورود أي استجابة.",
-    "Save Reps & Comms": "حفظ الإقرارات والمراسلات"
+    "Save Reps & Comms": "حفظ الإقرارات والمراسلات",
+    "Opinion Type (ISA 700)": "نوع الرأي (ISA 700)",
+    "- Select opinion type -": "— اختر نوع الرأي —",
+    "Unmodified opinion": "رأي غير معدَّل",
+    "Qualified opinion": "رأي متحفظ",
+    "Adverse opinion": "رأي سلبي",
+    "Disclaimer of opinion": "الامتناع عن إبداء الرأي"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
