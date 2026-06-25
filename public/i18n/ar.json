@@ -1435,7 +1435,8 @@
     "Engagement Quality Reviewer (internal)": "مراجع جودة الارتباط (داخلي)",
     "- Select reviewer -": "— اختر المراجع —",
     "Must be different from the engagement admin (partner) per ISA 220 (Revised).": "يجب أن يكون مختلفًا عن مسؤول الارتباط (الشريك) وفق ISA 220 المعدَّل.",
-    "Assemble & lock file": "تجميع الملف وقفله"
+    "Assemble & lock file": "تجميع الملف وقفله",
+    "After the auditor's report is signed in the Completion Memo, ISA 230 gives an assembly window (benchmark: not more than 60 days) to finalise the audit file - after which it's archived and locked (additions only, with a documented reason).": "بعد توقيع تقرير المدقق في مذكرة الإتمام، تمنح ISA 230 فترة تجميع (معيار: لا تزيد على 60 يومًا) لإنهاء ملف الارتباط — وبعدها يُؤرشَف الملف ويُقفَل (إضافات فقط مع توثيق المبرر)."
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
