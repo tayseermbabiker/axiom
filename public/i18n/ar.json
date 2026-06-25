@@ -1441,7 +1441,8 @@
     "Substantive Analytical": "تحليلي جوهري",
     "Test of Controls": "اختبار الضوابط الرقابية",
     "Risk Assessment / Admin": "تقييم المخاطر / إداري",
-    "Original": "الأصلي"
+    "Original": "الأصلي",
+    "Upload a trial balance first (": "ارفع ميزان المراجعة أولًا ("
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
