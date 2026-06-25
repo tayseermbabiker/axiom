@@ -1437,7 +1437,10 @@
     "Threat present": "تهديد قائم",
     "If present, describe the threat": "إن وُجد، صِف التهديد",
     "How was the threat addressed (if present)": "كيف تمت معالجة هذا التهديد (إن وُجد)",
-    "Threat absent / reduced to acceptable level / engagement should be declined": "التهديد غائب / مُخفَّض إلى مستوى مقبول / ينبغي رفض الارتباط"
+    "Threat absent / reduced to acceptable level / engagement should be declined": "التهديد غائب / مُخفَّض إلى مستوى مقبول / ينبغي رفض الارتباط",
+    "Substantive Analytical": "تحليلي جوهري",
+    "Test of Controls": "اختبار الضوابط الرقابية",
+    "Risk Assessment / Admin": "تقييم المخاطر / إداري"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
