@@ -1393,7 +1393,13 @@
     "Partner's documented conclusion that independence requirements were met throughout the engagement period. Reference any threats identified and safeguards applied.": "استنتاج الشريك الموثَّق بأن متطلبات الاستقلالية كانت مستوفاة طوال فترة الارتباط، مع الإشارة إلى أي تهديدات تم تحديدها وأي وسائل حماية طُبِّقت.",
     "Resources, Specialists & Consultations (ISA 220 Revised)": "الموارد والمتخصصون والمشاورات (ISA 220 المعدَّل)",
     "Other Matters": "أمور أخرى",
-    "Save Narrative": "حفظ السرد التوضيحي"
+    "Save Narrative": "حفظ السرد التوضيحي",
+    "Reps & Comms": "الإقرارات والمراسلات",
+    "ISA 570.16 requires the basis of the conclusion to be documented, not just the conclusion itself.": "يتطلب المعيار ISA 570.15 توثيق أساس الاستنتاج، وليس الاستنتاج وحده.",
+    "e.g. Reviewed board minutes, post year-end bank statements, lawyer letters, and inquired of management...": "مثال: مراجعة محاضر مجلس الإدارة، وكشوف الحسابات البنكية بعد نهاية السنة، وخطابات المحامين، وتوجيه استفسارات إلى الإدارة.",
+    "Management's Rationale for Not Correcting": "مبررات الإدارة لعدم التصحيح",
+    "Final Independence Conclusion (ISA 220 / IESBA Code)": "استنتاج الاستقلالية النهائي (ISA 220 / مدونة ESBA)",
+    "Any other matter the partner wishes to document for the audit file...": "أي أمر آخر يرغب الشريك في توثيقه ضمن ملف المراجعة."
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
