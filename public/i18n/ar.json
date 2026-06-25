@@ -1420,7 +1420,18 @@
     "Unmodified opinion": "رأي غير معدَّل",
     "Qualified opinion": "رأي متحفظ",
     "Adverse opinion": "رأي سلبي",
-    "Disclaimer of opinion": "الامتناع عن إبداء الرأي"
+    "Disclaimer of opinion": "الامتناع عن إبداء الرأي",
+    "EQR is required for this engagement (ISQM 2 / ISA 220 Revised)": "مراجعة جودة الارتباط (EQR) مطلوبة لهذا الارتباط (ISQM 2 / ISA 220 المعدَّل)",
+    "Required by ISQM 2 for listed entities, other public interest entities, engagements with significant risks or complex/contentious judgements, or engagements designated by your firm's ISQM 1 risk assessment or network policy.": "مطلوبة بموجب ISQM 2 للمنشآت المدرجة في الأسواق المالية، والمنشآت ذات الأهمية العامة الأخرى، والارتباطات ذات المخاطر الجوهرية أو الأحكام المعقدة/الخلافية، أو الارتباطات التي يُحددها تقييم مخاطر ISQM 1 لمكتبك أو سياسة الشبكة.",
+    "External EQR (reviewer is outside this firm)": "مراجعة جودة ارتباط خارجية (المراجع خارج المكتب)",
+    "Small firms commonly engage an external EQR (another firm's partner, freelance senior, or network resource) when no internal reviewer is independent of the engagement.": "كثيرًا ما تستعين المكاتب الصغيرة بمراجع جودة ارتباط خارجي (شريك من مكتب آخر، أو مراجع مستقل، أو مورد شبكة) حين لا يكون أي مراجع داخلي مستقلًا عن الارتباط.",
+    "External reviewer - full name *": "المراجع الخارجي — الاسم الكامل *",
+    "e.g. Mohammed Al-Sayed": "مثال: محمد السيد",
+    "External reviewer - firm / qualification": "المراجع الخارجي — المكتب / المؤهل",
+    "e.g. Al-Sayed CPAs / CPA, 20 yrs audit experience": "مثال: مكتب السيد للمحاسبة القانونية / CPA، خبرة 20 سنة في المراجعة",
+    "Optional - firm name, qualification, or basis of independence.": "اختياري — اسم المكتب، أو المؤهل، أو أساس الاستقلالية.",
+    "Save Reviewer": "حفظ بيانات المراجع",
+    "Mark EQR Complete": "تأشير EQR كمكتمل"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
