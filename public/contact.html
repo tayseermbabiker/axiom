@@ -56,8 +56,8 @@
         var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT); var ns=[]; while(w.nextNode())ns.push(w.currentNode);
         ns.forEach(function(n){ var p=n.parentNode; if(!p)return; var t=p.nodeName; if(t==='SCRIPT'||t==='STYLE')return;
           if(p.closest&&p.closest('[data-i18n],[data-i18n-html]'))return;
-          if(!orig.has(n))orig.set(n,n.nodeValue); var o=orig.get(n); var k=o.replace(/\s+/g,' ').trim(); if(!k)return;
-          var nx=(isAr&&map[k])?o.replace(k,map[k]):o; if(n.nodeValue!==nx)n.nodeValue=nx; }); }
+          if(!orig.has(n))orig.set(n,n.nodeValue); var o=orig.get(n); var k=o.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g,' ').trim(); if(!k)return;
+          var nx=o; if(isAr&&map[k]){var _l=(o.match(/^\s*/)||[''])[0],_t=(o.match(/\s*$/)||[''])[0];nx=_l+map[k]+_t;} if(n.nodeValue!==nx)n.nodeValue=nx; }); }
       function sched(){ if(raf)return; raf=requestAnimationFrame(function(){raf=0;run();}); }
       async function setup(){ if(!window.I18n)return; var d=await I18n.dict();
         map=Object.assign({},d.reportLabels||{},d.engagementLabels||{},d.legalText||{}); run();

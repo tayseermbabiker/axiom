@@ -3241,14 +3241,15 @@
         if (p.closest && p.closest('[data-i18n],[data-i18n-html]')) continue;
         if (!_locOrig.has(node)) _locOrig.set(node, node.nodeValue);
         const orig = _locOrig.get(node);
-        const key = orig.replace(/\s+/g, ' ').trim();
+        const key = orig.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim();
         if (!key) continue;
-        const next = (isAr && _locMap[key]) ? orig.replace(key, _locMap[key]) : orig;
+        let next = orig;
+        if (isAr && _locMap[key]) { const _l = (orig.match(/^\s*/)||[''])[0], _t = (orig.match(/\s*$/)||[''])[0]; next = _l + _locMap[key] + _t; }
         if (node.nodeValue !== next) node.nodeValue = next;
       }
       root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
         if (!_locOrig.has(el)) _locOrig.set(el, el.getAttribute('placeholder'));
-        const orig = _locOrig.get(el); const key = (orig || '').replace(/\s+/g, ' ').trim(); if (!key) return;
+        const orig = _locOrig.get(el); const key = (orig || '').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim(); if (!key) return;
         const next = (isAr && _locMap[key]) ? _locMap[key] : orig;
         if (el.getAttribute('placeholder') !== next) el.setAttribute('placeholder', next);
       });

@@ -1662,13 +1662,14 @@
         const tag = p.nodeName; if (tag === 'SCRIPT' || tag === 'STYLE') continue;
         if (p.closest && p.closest('[data-i18n],[data-i18n-html]')) continue;
         if (!_cmOrig.has(n)) _cmOrig.set(n, n.nodeValue);
-        const o = _cmOrig.get(n); const k = o.replace(/\s+/g, ' ').trim(); if (!k) continue;
-        const nx = (isAr && _cmMap[k]) ? o.replace(k, _cmMap[k]) : o;
+        const o = _cmOrig.get(n); const k = o.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim(); if (!k) continue;
+        let nx = o;
+        if (isAr && _cmMap[k]) { const _l = (o.match(/^\s*/)||[''])[0], _t = (o.match(/\s*$/)||[''])[0]; nx = _l + _cmMap[k] + _t; }
         if (n.nodeValue !== nx) n.nodeValue = nx;
       }
       document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
         if (!_cmOrig.has(el)) _cmOrig.set(el, el.getAttribute('placeholder'));
-        const o = _cmOrig.get(el); const k = (o || '').replace(/\s+/g, ' ').trim(); if (!k) return;
+        const o = _cmOrig.get(el); const k = (o || '').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim(); if (!k) return;
         const nx = (isAr && _cmMap[k]) ? _cmMap[k] : o;
         if (el.getAttribute('placeholder') !== nx) el.setAttribute('placeholder', nx);
       });

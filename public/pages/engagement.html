@@ -9738,14 +9738,15 @@
         if (p.closest && p.closest('[data-i18n],[data-i18n-html]')) continue;
         if (!_engOrig.has(node)) _engOrig.set(node, node.nodeValue);
         const orig = _engOrig.get(node);
-        const key = orig.replace(/\s+/g, ' ').trim();
+        const key = orig.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim();
         if (!key) continue;
-        const next = (isAr && _engMap[key]) ? orig.replace(key, _engMap[key]) : orig;
+        let next = orig;
+        if (isAr && _engMap[key]) { const _l = (orig.match(/^\s*/)||[''])[0], _t = (orig.match(/\s*$/)||[''])[0]; next = _l + _engMap[key] + _t; }
         if (node.nodeValue !== next) node.nodeValue = next;
       }
       root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
         if (!_engOrig.has(el)) _engOrig.set(el, el.getAttribute('placeholder'));
-        const orig = _engOrig.get(el); const key = (orig || '').replace(/\s+/g, ' ').trim(); if (!key) return;
+        const orig = _engOrig.get(el); const key = (orig || '').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim(); if (!key) return;
         const next = (isAr && _engMap[key]) ? _engMap[key] : orig;
         if (el.getAttribute('placeholder') !== next) el.setAttribute('placeholder', next);
       });
