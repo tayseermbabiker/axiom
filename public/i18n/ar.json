@@ -1434,7 +1434,8 @@
     "Mark EQR Complete": "تأشير EQR كمكتمل",
     "Engagement Quality Reviewer (internal)": "مراجع جودة الارتباط (داخلي)",
     "- Select reviewer -": "— اختر المراجع —",
-    "Must be different from the engagement admin (partner) per ISA 220 (Revised).": "يجب أن يكون مختلفًا عن مسؤول الارتباط (الشريك) وفق ISA 220 المعدَّل."
+    "Must be different from the engagement admin (partner) per ISA 220 (Revised).": "يجب أن يكون مختلفًا عن مسؤول الارتباط (الشريك) وفق ISA 220 المعدَّل.",
+    "Assemble & lock file": "تجميع الملف وقفله"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",

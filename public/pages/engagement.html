@@ -5995,7 +5995,10 @@
       if (!body) return;
       const isAdmin = currentRole === 'admin';
       const ASSEMBLY_WINDOW_DAYS = 60;
-      const retention = 'Retain the assembled file for the minimum period required by local law (commonly 5–7 years from the report date — 7 years in much of the MENA region).';
+      const _arFA = (function(){ try { return localStorage.getItem('audexon_lang') === 'ar'; } catch(e) { return false; } })();
+      const retention = _arFA
+        ? 'يُحتفظ بالملف المجمَّع للمدة الدنيا المطلوبة بموجب القانون المحلي (عادةً 5–7 سنوات من تاريخ التقرير — 7 سنوات في معظم منطقة الشرق الأوسط وشمال أفريقيا).'
+        : 'Retain the assembled file for the minimum period required by local law (commonly 5–7 years from the report date — 7 years in much of the MENA region).';
 
       // ── State 3: already assembled & locked ──
       if (engagement && engagement.is_archived) {
@@ -6035,8 +6038,10 @@
         const amber = daysLeft <= 14;
         countdown =
           '<div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:' + (amber ? '#B45309' : '#0a2540') + '; margin-bottom:6px;">' +
-          (amber ? '⚠️ ' : '') + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left to assemble the file</div>' +
-          '<p style="margin:0 0 8px; font-size:12px; color:var(--gray-500);">Report date ' + rd + ' · assemble by <strong>' + dl + '</strong> (ISA 230 — within ' + ASSEMBLY_WINDOW_DAYS + ' days).</p>';
+          (amber ? '⚠️ ' : '') + (_arFA ? (daysLeft + ' يوم متبقٍ لتجميع الملف') : (daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left to assemble the file')) + '</div>' +
+          (_arFA
+            ? ('<p style="margin:0 0 8px; font-size:12px; color:var(--gray-500);">تاريخ التقرير ' + rd + ' · يجب التجميع بحلول <strong>' + dl + '</strong> (ISA 230 — في غضون ' + ASSEMBLY_WINDOW_DAYS + ' يومًا).</p>')
+            : ('<p style="margin:0 0 8px; font-size:12px; color:var(--gray-500);">Report date ' + rd + ' · assemble by <strong>' + dl + '</strong> (ISA 230 — within ' + ASSEMBLY_WINDOW_DAYS + ' days).</p>'));
       } else {
         countdown =
           '<div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:#B91C1C; margin-bottom:6px;">⚠️ Assembly window lapsed ' + Math.abs(daysLeft) + ' day' + (Math.abs(daysLeft) === 1 ? '' : 's') + ' ago</div>' +
