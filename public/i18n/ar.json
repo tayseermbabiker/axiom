@@ -1433,7 +1433,11 @@
     "Engagement Quality Reviewer (internal)": "مراجع جودة الارتباط (داخلي)",
     "- Select reviewer -": "— اختر المراجع —",
     "Must be different from the engagement admin (partner) per ISA 220 (Revised).": "يجب أن يكون مختلفًا عن مسؤول الارتباط (الشريك) وفق ISA 220 المعدَّل.",
-    "Assemble & lock file": "تجميع الملف وقفله"
+    "Assemble & lock file": "تجميع الملف وقفله",
+    "Threat present": "تهديد قائم",
+    "If present, describe the threat": "إن وُجد، صِف التهديد",
+    "How was the threat addressed (if present)": "كيف تمت معالجة هذا التهديد (إن وُجد)",
+    "Threat absent / reduced to acceptable level / engagement should be declined": "التهديد غائب / مُخفَّض إلى مستوى مقبول / ينبغي رفض الارتباط"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
