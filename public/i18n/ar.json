@@ -1431,7 +1431,10 @@
     "e.g. Al-Sayed CPAs / CPA, 20 yrs audit experience": "مثال: مكتب السيد للمحاسبة القانونية / CPA، خبرة 20 سنة في المراجعة",
     "Optional - firm name, qualification, or basis of independence.": "اختياري — اسم المكتب، أو المؤهل، أو أساس الاستقلالية.",
     "Save Reviewer": "حفظ بيانات المراجع",
-    "Mark EQR Complete": "تأشير EQR كمكتمل"
+    "Mark EQR Complete": "تأشير EQR كمكتمل",
+    "Engagement Quality Reviewer (internal)": "مراجع جودة الارتباط (داخلي)",
+    "- Select reviewer -": "— اختر المراجع —",
+    "Must be different from the engagement admin (partner) per ISA 220 (Revised).": "يجب أن يكون مختلفًا عن مسؤول الارتباط (الشريك) وفق ISA 220 المعدَّل."
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",
