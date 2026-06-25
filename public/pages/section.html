@@ -1670,6 +1670,10 @@
       const isOpen = body.classList.contains('open');
       body.classList.toggle('open');
       chevron.classList.toggle('open');
+      // Hide the read-only assertion summary in the header while expanded —
+      // the editor row below already shows the same chips (avoids duplication).
+      const hdrAssert = document.getElementById('header-assert-' + procId);
+      if (hdrAssert) hdrAssert.style.display = isOpen ? '' : 'none';
     }
 
     function openDocModal(procId, category) {
