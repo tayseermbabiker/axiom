@@ -72,3 +72,37 @@
   opacity: 0.75;
 }
 .lang-toggle:hover { opacity: 1; }
+
+/* Segmented language switcher (EN | ع) — active half highlighted via html[lang] */
+.lang-seg {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 32px;
+  flex-shrink: 0;
+  background: var(--white, #fff);
+}
+.lang-seg-btn {
+  border: none;
+  background: transparent;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 30px;
+  color: var(--gray-600, #4b5563);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s ease, color .15s ease;
+}
+.lang-seg-btn + .lang-seg-btn { border-inline-start: 1px solid var(--gray-300, #d1d5db); }
+.lang-seg-btn:hover { background: var(--gray-100, #f3f4f6); }
+html[lang="en"] .lang-seg .seg-en,
+html[lang="ar"] .lang-seg .seg-ar {
+  background: var(--primary, #3A7BFF);
+  color: #fff;
+}
+html[lang="en"] .lang-seg .seg-en:hover,
+html[lang="ar"] .lang-seg .seg-ar:hover { background: var(--primary, #3A7BFF); }
+.lang-seg .seg-ar { font-size: 15px; }

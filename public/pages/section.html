@@ -409,14 +409,16 @@
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
-        <button class="lang-toggle" onclick="I18n.toggleLang()" data-i18n="lang.switchTo" style="margin-bottom:8px;">العربية</button>
         <button onclick="signOut()" data-i18n="nav.signOut">Sign out</button>
       </div>
     </aside>
 
     <main class="main-content">
-      <!-- Back link -->
-      <a href="#" class="back-link" id="back-to-engagement">&#8592; Back to engagement</a>
+      <!-- Back link + language switcher -->
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
+        <a href="#" class="back-link" id="back-to-engagement" style="margin-bottom:0;">&#8592; Back to engagement</a>
+        <div class="lang-seg" role="group" aria-label="Language / اللغة" style="margin-inline-start:auto;"><button type="button" class="lang-seg-btn seg-en" onclick="I18n.setLang('en')">EN</button><button type="button" class="lang-seg-btn seg-ar" onclick="I18n.setLang('ar')">ع</button></div>
+      </div>
 
       <!-- Section Hero Header -->
       <div class="section-hero">
