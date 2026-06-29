@@ -1881,13 +1881,24 @@
       if (!root || !window.I18n) return;
       const isAr = I18n.getLang() === 'ar';
       const dict = await I18n.dict();
-      const map = (dict && dict.reportLabels) || {};
-      root.querySelectorAll('h1, h2, h3, h4, th').forEach((el) => {
-        if (el.children.length) return; // leaf nodes only
-        if (!el.hasAttribute('data-i18n-orig')) el.setAttribute('data-i18n-orig', el.textContent);
-        const orig = el.getAttribute('data-i18n-orig').replace(/\s+/g, ' ').trim();
-        el.textContent = (isAr && map[orig]) ? map[orig] : el.getAttribute('data-i18n-orig');
-      });
+      // Match against report + engagement + legal maps — keyed by exact English.
+      // Dynamic cells (client names, figures, dates) never match, so they stay.
+      const map = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {}, dict.legalText || {});
+      if (!root._i18nOrig) root._i18nOrig = new WeakMap();
+      const store = root._i18nOrig;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const n of nodes) {
+        const p = n.parentNode; if (!p) continue;
+        const tag = p.nodeName; if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+        if (!store.has(n)) store.set(n, n.nodeValue);
+        const o = store.get(n);
+        const k = o.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[‐‑‒–—]/g, '-').replace(/\s+/g, ' ').trim();
+        if (!k) continue;
+        let nx = o;
+        if (isAr && map[k]) { const _l = (o.match(/^\s*/) || [''])[0], _t = (o.match(/\s*$/) || [''])[0]; nx = _l + map[k] + _t; }
+        if (n.nodeValue !== nx) n.nodeValue = nx;
+      }
     }
     // Re-localize when the user flips the language toggle.
     document.addEventListener('i18n:changed', localizeReport);
