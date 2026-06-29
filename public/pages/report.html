@@ -331,6 +331,8 @@
     // ISA-precise labels for the procedures table (type + ISA 315 assertions)
     const PROC_TYPE_LABEL = { test_of_detail:'Test of Details', analytical:'Substantive Analytical', controls:'Test of Controls', other:'Risk Assessment / Admin' };
     const ASSERTION_LABEL = { existence:'Existence', occurrence:'Occurrence', completeness:'Completeness', accuracy:'Accuracy', valuation:'Valuation & Allocation', cutoff:'Cut-off', classification:'Classification', rights_obligations:'Rights & Obligations', presentation:'Presentation & Disclosure', fs_level:'FS-level / Pervasive' };
+    const ASSERTION_LABEL_AR = { existence:'الوجود', occurrence:'الحدوث', completeness:'الاكتمال', accuracy:'الدقة', valuation:'التقييم والتوزيع', cutoff:'الفصل الزمني', classification:'التصنيف', rights_obligations:'الحقوق والالتزامات', presentation:'العرض والإفصاح', fs_level:'مستوى القوائم المالية / شامل' };
+    function _repAr() { try { return (window.I18n && I18n.getLang() === 'ar') || localStorage.getItem('audexon_lang') === 'ar'; } catch (e) { return false; } }
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1468,8 +1470,8 @@
             const findCell    = totalFnd === 0
               ? '<span style="color:#6E6E73;">None</span>'
               : (openFnd > 0
-                  ? '<span style="color:#991B1B; font-weight:600;">' + openFnd + ' open</span> / ' + totalFnd
-                  : '<span style="color:#15803D; font-weight:600;">' + totalFnd + ' resolved</span>');
+                  ? '<span style="color:#991B1B; font-weight:600;">' + openFnd + (_repAr() ? ' مفتوحة' : ' open') + '</span> / ' + totalFnd
+                  : '<span style="color:#15803D; font-weight:600;">' + totalFnd + (_repAr() ? ' محلولة' : ' resolved') + '</span>');
             const phaseBadge  = s.phase === 'interim' ? '<span class="chip chip-blue">Interim</span>' : '<span class="chip chip-grey">Final</span>';
             html += `<tr>
               <td><strong>${esc(s.name)}</strong></td>
@@ -1540,9 +1542,10 @@
           for (const p of secProcs) {
             const resp = responses.find(r => r.procedure_id === p.id);
             const status = resp?.status || 'pending';
-            const asserts = (p.assertions || []).map(a => ASSERTION_LABEL[a] || a).join(', ');
+            const _aLbl = _repAr() ? ASSERTION_LABEL_AR : ASSERTION_LABEL;
+            const asserts = (p.assertions || []).map(a => _aLbl[a] || a).join(_repAr() ? '، ' : ', ');
             html += `<tr>
-              <td>${esc(p.description)}${asserts ? '<div style="font-size:9px;color:#6b7280;margin-top:3px;">Assertions: ' + esc(asserts) + '</div>' : ''}</td>
+              <td>${esc(p.description)}${asserts ? '<div style="font-size:9px;color:#6b7280;margin-top:3px;">' + (_repAr() ? 'التأكيدات: ' : 'Assertions: ') + esc(asserts) + '</div>' : ''}</td>
               <td>${esc(PROC_TYPE_LABEL[p.procedure_type] || (p.procedure_type || 'other').replace(/_/g, ' '))}</td>
               <td>${resp?.response ? esc(resp.response) : '<span style="color:#dc2626;font-style:italic;">Not recorded</span>'}</td>
               <td><span class="badge b-${status}">${status}</span></td>
