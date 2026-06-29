@@ -1722,6 +1722,25 @@
     "TOTAL": "الإجمالي",
     "Trial balance is in balance.": "ميزان المراجعة متوازن.",
     "Trial balance is OUT OF BALANCE.": "ميزان المراجعة غير متوازن.",
-    "TOTAL UNCORRECTED": "إجمالي غير المصحَّح"
+    "TOTAL UNCORRECTED": "إجمالي غير المصحَّح",
+    "Audit File - Audexon": "ملف المراجعة - Audexon",
+    "high-risk jurisdiction involved": "وجود ولاية قضائية عالية المخاطر",
+    "- internal planning assumption, not a term of the letter": "- افتراض تخطيطي داخلي وليس بندًا من بنود الخطاب",
+    "No - required by ISA 240.17": "لا - مطلوب بموجب ISA 240.17",
+    "Overall response (ISA 330.5):": "الاستجابة الشاملة (ISA 330.5):",
+    "risk deleted": "خطر محذوف",
+    "Where reliance is taken, operating-effectiveness tests of controls (ISA 330.8) and the sampling methodology are documented separately in the file evidence.": "عند الاعتماد على الضوابط، تُوثَّق اختبارات الفعالية التشغيلية للضوابط (ISA 330.8) ومنهجية أخذ العيّنات بشكل منفصل ضمن أدلة الملف.",
+    "Significant risks identified per professional judgement (ISA 315.28)": "المخاطر الجوهرية المحدَّدة وفق الحكم المهني (ISA 315.28)",
+    "All significant risks linked to responsive procedures (ISA 330.21)": "ربط جميع المخاطر الجوهرية بإجراءات استجابة (ISA 330.21)",
+    "Controls D&I evaluated and reliance decision documented (ISA 315)": "تقييم تصميم وتنفيذ الضوابط وتوثيق قرار الاعتماد (ISA 315)",
+    "High-level recap of the risk assessment finalised during planning. The full register and matrix are in the Planning Memorandum.": "ملخص عام لتقييم المخاطر الذي أُنجز أثناء التخطيط. يوجد السجل الكامل والمصفوفة في مذكرة التخطيط.",
+    "Line-by-line view of every misstatement identified during the audit, grouped per ISA 450.5 (clearly trivial) and ISA 450.11 (corrected vs uncorrected).": "عرض تفصيلي لكل تحريف تم تحديده خلال المراجعة، مُجمَّعًا وفق ISA 450.5 (تافه بوضوح) و ISA 450.11 (مصحَّح مقابل غير مصحَّح).",
+    "Management's significant accounting estimates and auditor's evaluation under ISA 540. Includes method, key assumptions, data sources, sensitivity, risk assessment, and conclusion for each estimate.": "التقديرات المحاسبية الجوهرية للإدارة وتقييم المراجع لها بموجب ISA 540. تشمل الطريقة والافتراضات الرئيسية ومصادر البيانات وتحليل الحساسية وتقييم المخاطر والاستنتاج لكل تقدير.",
+    "Per-procedure sampling judgments: population, method, sample size, selection basis, results, and projection per ISA 530.7-15.": "أحكام أخذ العيّنات لكل إجراء: مجتمع المراجعة، والطريقة، وحجم العيّنة، وأساس الاختيار، والنتائج، والإسقاط وفق ISA 530.7-15.",
+    "Per-section conclusion of work performed. Detailed procedures and evidence remain in the audit file inside Audexon.": "استنتاج لكل قسم عن العمل المنفَّذ. تبقى الإجراءات التفصيلية والأدلة في ملف المراجعة داخل Audexon.",
+    "Engagement-specific risks (ISA 330):": "المخاطر الخاصة بالارتباط (ISA 330):",
+    "Section conclusion:": "استنتاج القسم:",
+    "Adjusting Entry:": "قيد التسوية:",
+    "No - required before sign-off": "لا - مطلوب قبل الاعتماد"
   }
 }
