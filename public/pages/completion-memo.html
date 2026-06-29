@@ -1137,12 +1137,12 @@
 
         const desc = document.createElement('div');
         desc.className = 'attest-check-desc';
-        desc.textContent = a.source_check || '';
+        desc.textContent = ATTEST_DESC[a.attestation_key] || a.source_check || '';
 
         const status = document.createElement('div');
         if (ticked) {
           status.className = 'attest-status attested';
-          status.textContent = `✓ Attested ${a.attested_at ? '· ' + new Date(a.attested_at).toLocaleString() : ''}`;
+          status.textContent = `${(window.I18n && I18n.getLang() === 'ar') ? '✓ تم الإقرار' : '✓ Attested'} ${a.attested_at ? '· ' + new Date(a.attested_at).toLocaleString() : ''}`;
         } else if (isManual) {
           status.className = 'attest-status manual';
           status.textContent = 'Manual attestation — admin must confirm';
@@ -1639,6 +1639,25 @@
       };
       return map[key] || key;
     }
+
+    // Clean, user-facing attestation descriptions (the DB source_check text is
+    // developer-flavoured and leaked internal notes). Arabic is applied by the
+    // localization swap via ar.json. Falls back to source_check if a key is new.
+    const ATTEST_DESC = {
+      all_sections_approved:         'All audit sections for this engagement have been approved.',
+      no_open_findings:              'No findings remain open.',
+      uncorrected_below_materiality: 'Total uncorrected (unposted) misstatements are below overall materiality.',
+      misstatements_communicated:    'Every misstatement has a management response and is no longer open.',
+      going_concern_assessed:        'The Going Concern section is approved and has a conclusion.',
+      subsequent_events_reviewed:    'The Subsequent Events section is approved and has a conclusion.',
+      related_parties_complete:      'The Related Parties section is approved.',
+      all_procedures_responded:      'Every audit procedure has at least one completed response.',
+      independence_reconfirmed:      'Manual attestation: the engagement partner reconfirms independence at completion.',
+      written_reps_obtained:         'Manual attestation: the management representation letter has been obtained.',
+      review_notes_resolved:         'Manual attestation: all review notes have been resolved.',
+      opinion_type_selected:         'The opinion type has been set on this memo.',
+      eqr_review_complete:           'EQR is not required (auto-pass), or EQR has been completed.',
+    };
 
     function disableAutofillOnAllInputs() {
       document.querySelectorAll('input, textarea').forEach(el => {
