@@ -4,8 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign in — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('audexon_lang');
+        if (lang !== 'ar' && lang !== 'en') lang = 'en';
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/rtl.css">
   <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
   <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
   <script src="../js/sentry-init.js"></script>
@@ -13,42 +24,46 @@
 <body>
   <div class="auth-container">
     <div class="auth-card">
-      <h1 id="auth-title">Sign in</h1>
-      <p id="auth-subtitle">Manage your audit engagements</p>
+      <h1 id="auth-title" data-i18n="auth.signInTitle">Sign in</h1>
+      <p id="auth-subtitle" data-i18n="auth.signInSubtitle">Manage your audit engagements</p>
 
       <div class="error-msg" id="error-msg"></div>
 
       <form id="auth-form">
         <div class="form-group" id="name-group" style="display:none;">
-          <label for="full-name">Full Name</label>
-          <input type="text" id="full-name" class="form-control" placeholder="Your full name">
+          <label for="full-name" data-i18n="auth.fullName">Full Name</label>
+          <input type="text" id="full-name" class="form-control" placeholder="Your full name" data-i18n-placeholder="auth.fullNamePh">
         </div>
 
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="email" data-i18n="auth.email">Email</label>
           <input type="email" id="email" class="form-control" placeholder="you@firm.com" required>
         </div>
 
         <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" class="form-control" placeholder="Min 6 characters" required>
+          <label for="password" data-i18n="auth.password">Password</label>
+          <input type="password" id="password" class="form-control" placeholder="Min 6 characters" data-i18n-placeholder="auth.passwordPh" required>
         </div>
 
-        <button type="submit" class="btn btn-primary" id="auth-btn">Sign in</button>
+        <button type="submit" class="btn btn-primary" id="auth-btn" data-i18n="auth.signInBtn">Sign in</button>
       </form>
 
       <div class="auth-toggle">
-        <span id="toggle-text">Don't have an account?</span>
-        <a href="#" id="toggle-link">Sign up</a>
+        <span id="toggle-text" data-i18n="auth.noAccount">Don't have an account?</span>
+        <a href="#" id="toggle-link" data-i18n="auth.signUpLink">Sign up</a>
       </div>
       <div class="auth-toggle" id="forgot-link-wrap">
-        <a href="#" id="forgot-link" style="font-size:13px; color:var(--gray-500);">Forgot your password?</a>
+        <a href="#" id="forgot-link" style="font-size:13px; color:var(--gray-500);" data-i18n="auth.forgot">Forgot your password?</a>
+      </div>
+      <div class="auth-toggle" style="display:flex; justify-content:center;">
+        <div class="lang-seg" role="group" aria-label="Language / اللغة"><button type="button" class="lang-seg-btn seg-en" onclick="I18n.setLang('en')">EN</button><button type="button" class="lang-seg-btn seg-ar" onclick="I18n.setLang('ar')">ع</button></div>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/i18n.js"></script>
   <script>
     let isSignUp = false;
     const form = document.getElementById('auth-form');
@@ -95,7 +110,7 @@
         errorMsg.style.display = 'block';
       }
 
-      forgotLink.textContent = 'Forgot your password?';
+      forgotLink.textContent = I18n.t('auth.forgot');
       forgotLink.style.pointerEvents = '';
     });
 
@@ -112,20 +127,26 @@
       e.preventDefault();
       isSignUp = !isSignUp;
       if (isSignUp) {
-        authTitle.textContent = 'Create account';
-        authSubtitle.textContent = 'Start managing your audit files';
-        authBtn.textContent = 'Sign up';
-        toggleText.textContent = 'Already have an account?';
-        toggleLink.textContent = 'Sign in';
+        authTitle.setAttribute('data-i18n', 'auth.signUpTitle');
+        authSubtitle.setAttribute('data-i18n', 'auth.signUpSubtitle');
+        authBtn.setAttribute('data-i18n', 'auth.signUpBtn');
+        toggleText.setAttribute('data-i18n', 'auth.haveAccount');
+        toggleLink.setAttribute('data-i18n', 'auth.signInLink');
         nameGroup.style.display = 'block';
       } else {
-        authTitle.textContent = 'Sign in';
-        authSubtitle.textContent = 'Manage your audit engagements';
-        authBtn.textContent = 'Sign in';
-        toggleText.textContent = "Don't have an account?";
-        toggleLink.textContent = 'Sign up';
+        authTitle.setAttribute('data-i18n', 'auth.signInTitle');
+        authSubtitle.setAttribute('data-i18n', 'auth.signInSubtitle');
+        authBtn.setAttribute('data-i18n', 'auth.signInBtn');
+        toggleText.setAttribute('data-i18n', 'auth.noAccount');
+        toggleLink.setAttribute('data-i18n', 'auth.signUpLink');
         nameGroup.style.display = 'none';
       }
+      // re-render the freshly-keyed elements in the active language
+      authTitle.textContent = I18n.t(authTitle.getAttribute('data-i18n'));
+      authSubtitle.textContent = I18n.t(authSubtitle.getAttribute('data-i18n'));
+      authBtn.textContent = I18n.t(authBtn.getAttribute('data-i18n'));
+      toggleText.textContent = I18n.t(toggleText.getAttribute('data-i18n'));
+      toggleLink.textContent = I18n.t(toggleLink.getAttribute('data-i18n'));
       errorMsg.style.display = 'none';
     });
 
@@ -133,7 +154,7 @@
       e.preventDefault();
       errorMsg.style.display = 'none';
       authBtn.disabled = true;
-      authBtn.textContent = isSignUp ? 'Creating account...' : 'Signing in...';
+      authBtn.textContent = I18n.t(isSignUp ? 'auth.creatingAccount' : 'auth.signingIn');
 
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
@@ -152,7 +173,7 @@
             errorMsg.style.background = '#dcfce7';
             errorMsg.style.color = '#16a34a';
             errorMsg.style.display = 'block';
-            authBtn.textContent = 'Sign up';
+            authBtn.textContent = I18n.t('auth.signUpBtn');
             authBtn.disabled = false;
             return;
           }
@@ -164,7 +185,7 @@
       } catch (err) {
         errorMsg.textContent = err.message;
         errorMsg.style.display = 'block';
-        authBtn.textContent = isSignUp ? 'Sign up' : 'Sign in';
+        authBtn.textContent = I18n.t(isSignUp ? 'auth.signUpBtn' : 'auth.signInBtn');
         authBtn.disabled = false;
       }
     });

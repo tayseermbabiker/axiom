@@ -4,9 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Terms of Service — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () { try { var l=localStorage.getItem('audexon_lang'); if(l!=='ar'&&l!=='en')l='en';
+      document.documentElement.setAttribute('lang',l); document.documentElement.setAttribute('dir',l==='ar'?'rtl':'ltr'); } catch(e){} })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html[dir="rtl"] body { font-family: 'Tajawal', 'Inter', sans-serif; }
+    html[dir="rtl"] .content { text-align: right; }
+
     body { font-family: 'Inter', sans-serif; color: #1A1A2E; background: #F5F7FA; line-height: 1.7; }
     .nav { background: #0A1A2F; padding: 0 24px; height: 56px; display: flex; align-items: center; }
     .nav a { color: white; text-decoration: none; font-size: 20px; font-weight: 800; }
@@ -22,7 +29,7 @@
   </style>
 </head>
 <body>
-  <nav class="nav"><a href="/">Audexon<span>.</span></a></nav>
+  <nav class="nav"><a href="/">Audexon<span>.</span></a><button onclick="I18n.toggleLang()" data-i18n="lang.switchTo" style="margin-inline-start:auto; background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:6px; padding:4px 12px; cursor:pointer; font-family:inherit; font-size:13px;">العربية</button></nav>
   <div class="content">
     <h1>Terms of Service</h1>
     <p class="updated">Last updated: June 1, 2026</p>
@@ -107,5 +114,24 @@
     <p>For questions about these Terms, contact us at <a href="mailto:support@audexon.com">support@audexon.com</a>.</p>
   </div>
   <div class="footer">Audexon — Built for auditors who move fast.</div>
+  <script src="js/i18n.js"></script>
+  <script>
+    (function(){
+      var orig=new WeakMap(), map=null, obs=null, raf=0;
+      function run(){ if(!map||!window.I18n) return; var isAr=I18n.getLang()==='ar';
+        var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT); var ns=[]; while(w.nextNode())ns.push(w.currentNode);
+        ns.forEach(function(n){ var p=n.parentNode; if(!p)return; var t=p.nodeName; if(t==='SCRIPT'||t==='STYLE')return;
+          if(p.closest&&p.closest('[data-i18n],[data-i18n-html]'))return;
+          if(!orig.has(n))orig.set(n,n.nodeValue); var o=orig.get(n); var k=o.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g,' ').trim(); if(!k)return;
+          var nx=o; if(isAr&&map[k]){var _l=(o.match(/^\s*/)||[''])[0],_t=(o.match(/\s*$/)||[''])[0];nx=_l+map[k]+_t;} if(n.nodeValue!==nx)n.nodeValue=nx; }); }
+      function sched(){ if(raf)return; raf=requestAnimationFrame(function(){raf=0;run();}); }
+      async function setup(){ if(!window.I18n)return; var d=await I18n.dict();
+        map=Object.assign({},d.reportLabels||{},d.engagementLabels||{},d.legalText||{}); run();
+        obs=new MutationObserver(sched); obs.observe(document.body,{childList:true,subtree:true}); }
+      document.addEventListener('i18n:changed',async function(){ var d=await I18n.dict();
+        map=Object.assign({},d.reportLabels||{},d.engagementLabels||{},d.legalText||{}); run(); });
+      setup();
+    })();
+  </script>
 </body>
 </html>

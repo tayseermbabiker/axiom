@@ -1,0 +1,108 @@
+/* Audexon — RTL overrides (Phase 1).
+ *
+ * Loaded on every page; rules only bite when <html dir="rtl"> (Arabic).
+ * Strategy: flip the structural pieces that use physical left/right, and
+ * keep numbers / currency / standard refs LEFT-TO-RIGHT inside Arabic text.
+ *
+ * As more pages are localized, add their RTL fixes here rather than scattering
+ * dir-specific rules across page <style> blocks.
+ */
+
+/* ---- Base ---- */
+[dir="rtl"] body {
+  text-align: right;
+}
+
+/* ---- Fixed sidebar flips to the right edge ---- */
+[dir="rtl"] .sidebar {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Main content shifts its gutter to the right ---- */
+[dir="rtl"] .main-content {
+  margin-left: 0;
+  margin-right: 260px;
+}
+
+/* ---- Generic text alignment flips ---- */
+[dir="rtl"] .sidebar-footer button,
+[dir="rtl"] .text-left,
+[dir="rtl"] th,
+[dir="rtl"] td {
+  text-align: right;
+}
+
+/* Keep numeric / financial columns visually left-aligned (accounting convention)
+   — opt in with class="num" on the cell. */
+[dir="rtl"] td.num,
+[dir="rtl"] th.num {
+  text-align: left;
+}
+
+/* ---- Left/right accent borders mirror ---- */
+[dir="rtl"] .activity-item,
+[dir="rtl"] [style*="border-left"] {
+  border-left: none;
+}
+
+/* ----------------------------------------------------------------------
+   LTR ISLANDS — the #1 RTL bug source in audit software.
+   Wrap figures, currency, dates, and standard refs (ISA 700, IFRS 15)
+   in <span class="ltr"> or use <bdi> so they render left-to-right even
+   inside Arabic sentences.
+---------------------------------------------------------------------- */
+[dir="rtl"] .ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
+
+/* ---- Language toggle button ---- */
+.lang-toggle {
+  background: transparent;
+  color: inherit;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.lang-toggle:hover { opacity: 1; }
+
+/* Segmented language switcher (EN | ع) — active half highlighted via html[lang] */
+.lang-seg {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 32px;
+  flex-shrink: 0;
+  background: var(--white, #fff);
+}
+.lang-seg-btn {
+  border: none;
+  background: transparent;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 30px;
+  color: var(--gray-600, #4b5563);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s ease, color .15s ease;
+}
+.lang-seg-btn + .lang-seg-btn { border-inline-start: 1px solid var(--gray-300, #d1d5db); }
+.lang-seg-btn:hover { background: var(--gray-100, #f3f4f6); }
+html[lang="en"] .lang-seg .seg-en,
+html[lang="ar"] .lang-seg .seg-ar {
+  background: var(--primary, #3A7BFF);
+  color: #fff;
+}
+html[lang="en"] .lang-seg .seg-en:hover,
+html[lang="ar"] .lang-seg .seg-ar:hover { background: var(--primary, #3A7BFF); }
+.lang-seg .seg-ar { font-size: 15px; }

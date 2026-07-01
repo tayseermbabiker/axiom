@@ -4,8 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Team — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('audexon_lang');
+        if (lang !== 'ar' && lang !== 'en') lang = 'en';
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/rtl.css">
   <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
   <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
   <script src="../js/sentry-init.js"></script>
@@ -20,27 +31,30 @@
         <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
       </div>
       <nav class="sidebar-nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="team.html" class="active">Team</a>
-        <a href="local-compliance.html" id="nav-local-compliance" style="display:none;">Compliance Template</a>
+        <a href="dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+        <a href="team.html" class="active" data-i18n="nav.team">Team</a>
+        <a href="local-compliance.html" id="nav-local-compliance" style="display:none;" data-i18n="nav.complianceTemplate">Compliance Template</a>
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
-        <button onclick="signOut()">Sign out</button>
+        <button onclick="signOut()" data-i18n="nav.signOut">Sign out</button>
       </div>
     </aside>
 
     <!-- Main -->
     <main class="main-content">
       <div class="page-header">
-        <h1>Team</h1>
-        <div id="plan-info" class="text-sm text-muted"></div>
+        <h1 data-i18n="team.title">Team</h1>
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div id="plan-info" class="text-sm text-muted"></div>
+          <div class="lang-seg" role="group" aria-label="Language / اللغة"><button type="button" class="lang-seg-btn seg-en" onclick="I18n.setLang('en')">EN</button><button type="button" class="lang-seg-btn seg-ar" onclick="I18n.setLang('ar')">ع</button></div>
+        </div>
       </div>
 
       <!-- Invite form (admin only) -->
       <div class="card mb-24" id="invite-section" style="display:none;">
         <div class="card-header">
-          <h2>Invite a Team Member</h2>
+          <h2 data-i18n="team.inviteHeading">Invite a Team Member</h2>
         </div>
         <div class="card-body">
           <form id="form-invite" class="invite-form">
@@ -49,12 +63,12 @@
             </div>
             <div class="form-group" style="margin:0;">
               <select id="invite-role" class="form-control">
-                <option value="preparer">Preparer</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="admin">Partner</option>
+                <option value="preparer" data-i18n="team.rolePreparer">Preparer</option>
+                <option value="supervisor" data-i18n="team.roleSupervisor">Supervisor</option>
+                <option value="admin" data-i18n="team.rolePartner">Partner</option>
               </select>
             </div>
-            <button type="submit" class="btn btn-primary" id="btn-invite">Send Invite</button>
+            <button type="submit" class="btn btn-primary" id="btn-invite" data-i18n="team.sendInvite">Send Invite</button>
           </form>
           <div class="error-msg mt-8" id="invite-error"></div>
           <div class="success-msg mt-8" id="invite-success"></div>
@@ -64,7 +78,7 @@
       <!-- Members list -->
       <div class="card mb-24">
         <div class="card-header">
-          <h2>Members</h2>
+          <h2 data-i18n="team.membersHeading">Members</h2>
         </div>
         <div id="members-list" class="card-body">
           <div class="empty-state"><p>Loading...</p></div>
@@ -74,7 +88,7 @@
       <!-- Pending invites -->
       <div class="card" id="pending-invites-card" style="display:none;">
         <div class="card-header">
-          <h2>Pending Invites</h2>
+          <h2 data-i18n="team.pendingHeading">Pending Invites</h2>
         </div>
         <div id="pending-invites-list" class="card-body"></div>
       </div>
@@ -84,6 +98,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
   <script src="../js/ui-notify.js"></script>
+  <script src="../js/i18n.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
   <script>

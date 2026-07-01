@@ -4,7 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Audit File — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('audexon_lang');
+        if (lang !== 'ar' && lang !== 'en') lang = 'en';
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ---- Arabic / RTL (audit report) ---- */
+    html[dir="rtl"] body { font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', system-ui, sans-serif; }
+    html[dir="rtl"] body, html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3, html[dir="rtl"] h4, html[dir="rtl"] p { text-align: right; }
+    html[dir="rtl"] th, html[dir="rtl"] td { text-align: right; }
+    /* keep figures, dates and standard refs left-to-right */
+    html[dir="rtl"] th[style*="text-align:right"], html[dir="rtl"] td[style*="text-align:right"] { text-align: left !important; }
+    html[dir="rtl"] .num, html[dir="rtl"] .ltr { direction: ltr; unicode-bidi: isolate; }
+    @media print { .print-bar { display: none !important; } }
+  </style>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #0D1626; line-height: 1.6; padding: 0; max-width: 900px; margin: 0 auto; font-size: 12px; }
@@ -141,6 +161,12 @@
     .print-bar button, .print-bar select { padding: 8px 16px; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; border: 1px solid #D9D9D9; font-family: inherit; }
     .btn-print { background: #1A3A5F; color: white; border-color: #1A3A5F; }
     .btn-back { background: white; color: #374151; }
+    .lang-seg { display:inline-flex; align-items:stretch; border:1px solid #d1d5db; border-radius:8px; overflow:hidden; height:34px; background:#fff; flex-shrink:0; }
+    .lang-seg-btn { border:none; background:transparent; padding:0 12px; font-size:13px; font-weight:600; line-height:32px; color:#4b5563; cursor:pointer; font-family:inherit; }
+    .lang-seg-btn + .lang-seg-btn { border-inline-start:1px solid #d1d5db; }
+    .lang-seg-btn:hover { background:#f3f4f6; }
+    html[lang="en"] .lang-seg .seg-en, html[lang="ar"] .lang-seg .seg-ar { background:#3A7BFF; color:#fff; }
+    .lang-seg .seg-ar { font-size:15px; }
 
     /* ---- Phase label ---- */
     .phase-divider { font-size: 11px; font-weight: 700; color: #1A3A5F; text-transform: uppercase; letter-spacing: 1px; padding: 8px 0; margin: 24px 0 8px; border-bottom: 1px solid #D9D9D9; }
@@ -205,12 +231,14 @@
     </select>
     <button class="btn-print" onclick="window.print()">Save as PDF</button>
     <button class="btn-back" onclick="window.close()">Close</button>
+    <div class="lang-seg" role="group" aria-label="Language / اللغة" style="margin-inline-start:auto;"><button type="button" class="lang-seg-btn seg-en" onclick="I18n.setLang('en')">EN</button><button type="button" class="lang-seg-btn seg-ar" onclick="I18n.setLang('ar')">ع</button></div>
   </div>
 
   <div id="report-content">Loading...</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/i18n.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     const urlParams = new URLSearchParams(window.location.search);
@@ -309,6 +337,8 @@
     // ISA-precise labels for the procedures table (type + ISA 315 assertions)
     const PROC_TYPE_LABEL = { test_of_detail:'Test of Details', analytical:'Substantive Analytical', controls:'Test of Controls', other:'Risk Assessment / Admin' };
     const ASSERTION_LABEL = { existence:'Existence', occurrence:'Occurrence', completeness:'Completeness', accuracy:'Accuracy', valuation:'Valuation & Allocation', cutoff:'Cut-off', classification:'Classification', rights_obligations:'Rights & Obligations', presentation:'Presentation & Disclosure', fs_level:'FS-level / Pervasive' };
+    const ASSERTION_LABEL_AR = { existence:'الوجود', occurrence:'الحدوث', completeness:'الاكتمال', accuracy:'الدقة', valuation:'التقييم والتوزيع', cutoff:'الفصل الزمني', classification:'التصنيف', rights_obligations:'الحقوق والالتزامات', presentation:'العرض والإفصاح', fs_level:'مستوى القوائم المالية / شامل' };
+    function _repAr() { try { return (window.I18n && I18n.getLang() === 'ar') || localStorage.getItem('audexon_lang') === 'ar'; } catch (e) { return false; } }
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1441,8 +1471,8 @@
             const findCell    = totalFnd === 0
               ? '<span style="color:#6E6E73;">None</span>'
               : (openFnd > 0
-                  ? '<span style="color:#991B1B; font-weight:600;">' + openFnd + ' open</span> / ' + totalFnd
-                  : '<span style="color:#15803D; font-weight:600;">' + totalFnd + ' resolved</span>');
+                  ? '<span style="color:#991B1B; font-weight:600;">' + openFnd + (_repAr() ? ' مفتوحة' : ' open') + '</span> / ' + totalFnd
+                  : '<span style="color:#15803D; font-weight:600;">' + totalFnd + (_repAr() ? ' محلولة' : ' resolved') + '</span>');
             const phaseBadge  = s.phase === 'interim' ? '<span class="chip chip-blue">Interim</span>' : '<span class="chip chip-grey">Final</span>';
             html += `<tr>
               <td><strong>${esc(s.name)}</strong></td>
@@ -1513,9 +1543,10 @@
           for (const p of secProcs) {
             const resp = responses.find(r => r.procedure_id === p.id);
             const status = resp?.status || 'pending';
-            const asserts = (p.assertions || []).map(a => ASSERTION_LABEL[a] || a).join(', ');
+            const _aLbl = _repAr() ? ASSERTION_LABEL_AR : ASSERTION_LABEL;
+            const asserts = (p.assertions || []).map(a => _aLbl[a] || a).join(_repAr() ? '، ' : ', ');
             html += `<tr>
-              <td>${esc(p.description)}${asserts ? '<div style="font-size:9px;color:#6b7280;margin-top:3px;">Assertions: ' + esc(asserts) + '</div>' : ''}</td>
+              <td>${esc(p.description)}${asserts ? '<div style="font-size:9px;color:#6b7280;margin-top:3px;">' + (_repAr() ? 'التأكيدات: ' : 'Assertions: ') + esc(asserts) + '</div>' : ''}</td>
               <td>${esc(PROC_TYPE_LABEL[p.procedure_type] || (p.procedure_type || 'other').replace(/_/g, ' '))}</td>
               <td>${resp?.response ? esc(resp.response) : '<span style="color:#dc2626;font-style:italic;">Not recorded</span>'}</td>
               <td><span class="badge b-${status}">${status}</span></td>
@@ -1845,7 +1876,40 @@
       document.getElementById('report-content').innerHTML = html;
       const reportLabel = reportType === 'planning' ? 'Planning Memorandum' : isExec ? 'Audit File' : 'Completion Memorandum';
       document.title = eng.client_name + ' — ' + reportLabel + ' — Audexon';
+      localizeReport();
     }
+
+    // Arabic localization of the generated report. The report is built as an
+    // HTML string, so instead of data-i18n attributes we swap the section
+    // headings and table-label leaf nodes via a lookup map (ar.json →
+    // reportLabels), keyed by the exact English text. Client names, figures,
+    // dates and dynamic cells never match the map, so they stay as-is.
+    async function localizeReport() {
+      const root = document.getElementById('report-content');
+      if (!root || !window.I18n) return;
+      const isAr = I18n.getLang() === 'ar';
+      const dict = await I18n.dict();
+      // Match against report + engagement + legal maps — keyed by exact English.
+      // Dynamic cells (client names, figures, dates) never match, so they stay.
+      const map = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {}, dict.legalText || {});
+      if (!root._i18nOrig) root._i18nOrig = new WeakMap();
+      const store = root._i18nOrig;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const n of nodes) {
+        const p = n.parentNode; if (!p) continue;
+        const tag = p.nodeName; if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+        if (!store.has(n)) store.set(n, n.nodeValue);
+        const o = store.get(n);
+        const k = o.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[‐‑‒–—]/g, '-').replace(/\s+/g, ' ').trim();
+        if (!k) continue;
+        let nx = o;
+        if (isAr && map[k]) { const _l = (o.match(/^\s*/) || [''])[0], _t = (o.match(/\s*$/) || [''])[0]; nx = _l + map[k] + _t; }
+        if (n.nodeValue !== nx) n.nodeValue = nx;
+      }
+    }
+    // Re-localize when the user flips the language toggle.
+    document.addEventListener('i18n:changed', localizeReport);
 
     function esc(str) {
       const div = document.createElement('div');

@@ -4,8 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Completion Memo — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () { try { var l=localStorage.getItem('audexon_lang'); if(l!=='ar'&&l!=='en')l='en';
+      document.documentElement.setAttribute('lang',l); document.documentElement.setAttribute('dir',l==='ar'?'rtl':'ltr'); } catch(e){} })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/rtl.css">
   <style>
     /* ---- Memo-specific styles ---- */
     .memo-status-badge {
@@ -638,6 +643,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
   <script src="../js/ui-notify.js"></script>
+  <script src="../js/i18n.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     // ---- State ----
@@ -1200,12 +1206,12 @@
 
         const desc = document.createElement('div');
         desc.className = 'attest-check-desc';
-        desc.textContent = a.source_check || '';
+        desc.textContent = ATTEST_DESC[a.attestation_key] || a.source_check || '';
 
         const status = document.createElement('div');
         if (ticked) {
           status.className = 'attest-status attested';
-          status.textContent = `✓ Attested ${a.attested_at ? '· ' + new Date(a.attested_at).toLocaleString() : ''}`;
+          status.textContent = `${(window.I18n && I18n.getLang() === 'ar') ? '✓ تم الإقرار' : '✓ Attested'} ${a.attested_at ? '· ' + new Date(a.attested_at).toLocaleString() : ''}`;
         } else if (isManual) {
           status.className = 'attest-status manual';
           status.textContent = 'Manual attestation — admin must confirm';
@@ -1706,6 +1712,25 @@
       return map[key] || key;
     }
 
+    // Clean, user-facing attestation descriptions (the DB source_check text is
+    // developer-flavoured and leaked internal notes). Arabic is applied by the
+    // localization swap via ar.json. Falls back to source_check if a key is new.
+    const ATTEST_DESC = {
+      all_sections_approved:         'All audit sections for this engagement have been approved.',
+      no_open_findings:              'No findings remain open.',
+      uncorrected_below_materiality: 'Total uncorrected (unposted) misstatements are below overall materiality.',
+      misstatements_communicated:    'Every misstatement has a management response and is no longer open.',
+      going_concern_assessed:        'The Going Concern section is approved and has a conclusion.',
+      subsequent_events_reviewed:    'The Subsequent Events section is approved and has a conclusion.',
+      related_parties_complete:      'The Related Parties section is approved.',
+      all_procedures_responded:      'Every audit procedure has at least one completed response.',
+      independence_reconfirmed:      'Manual attestation: the engagement partner reconfirms independence at completion.',
+      written_reps_obtained:         'Manual attestation: the management representation letter has been obtained.',
+      review_notes_resolved:         'Manual attestation: all review notes have been resolved.',
+      opinion_type_selected:         'The opinion type has been set on this memo.',
+      eqr_review_complete:           'EQR is not required (auto-pass), or EQR has been completed.',
+    };
+
     function disableAutofillOnAllInputs() {
       document.querySelectorAll('input, textarea').forEach(el => {
         el.setAttribute('autocomplete', 'off');
@@ -1715,6 +1740,42 @@
     }
 
     init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
+
+    // ---- Arabic localization (text-node + placeholder swap; same engine as engagement) ----
+    let _cmMap = null, _cmObs = null, _cmRaf = 0; const _cmOrig = new WeakMap();
+    function cmLocalizeNow() {
+      if (!_cmMap || !window.I18n) return;
+      const isAr = I18n.getLang() === 'ar';
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const ns = []; while (walker.nextNode()) ns.push(walker.currentNode);
+      for (const n of ns) {
+        const p = n.parentNode; if (!p) continue;
+        const tag = p.nodeName; if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+        if (p.closest && p.closest('[data-i18n],[data-i18n-html]')) continue;
+        if (!_cmOrig.has(n)) _cmOrig.set(n, n.nodeValue);
+        const o = _cmOrig.get(n); const k = o.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim(); if (!k) continue;
+        let nx = o;
+        if (isAr && _cmMap[k]) { const _l = (o.match(/^\s*/)||[''])[0], _t = (o.match(/\s*$/)||[''])[0]; nx = _l + _cmMap[k] + _t; }
+        if (n.nodeValue !== nx) n.nodeValue = nx;
+      }
+      document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+        if (!_cmOrig.has(el)) _cmOrig.set(el, el.getAttribute('placeholder'));
+        const o = _cmOrig.get(el); const k = (o || '').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim(); if (!k) return;
+        const nx = (isAr && _cmMap[k]) ? _cmMap[k] : o;
+        if (el.getAttribute('placeholder') !== nx) el.setAttribute('placeholder', nx);
+      });
+    }
+    function cmSched() { if (_cmRaf) return; _cmRaf = requestAnimationFrame(() => { _cmRaf = 0; cmLocalizeNow(); }); }
+    async function cmSetupLoc() {
+      if (!window.I18n) return;
+      const d = await I18n.dict();
+      _cmMap = Object.assign({}, d.reportLabels || {}, d.engagementLabels || {});
+      cmLocalizeNow();
+      _cmObs = new MutationObserver(cmSched);
+      _cmObs.observe(document.body, { childList: true, subtree: true });
+    }
+    document.addEventListener('i18n:changed', async () => { const d = await I18n.dict(); _cmMap = Object.assign({}, d.reportLabels || {}, d.engagementLabels || {}); cmLocalizeNow(); });
+    cmSetupLoc();
   </script>
 </body>
 </html>

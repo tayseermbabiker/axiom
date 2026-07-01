@@ -4,8 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Section — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('audexon_lang');
+        if (lang !== 'ar' && lang !== 'en') lang = 'en';
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/rtl.css">
   <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
   <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
   <script src="../js/sentry-init.js"></script>
@@ -394,20 +405,23 @@
         <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
       </div>
       <nav class="sidebar-nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="team.html">Team</a>
-        <a href="#" id="nav-engagement">Engagement</a>
-        <a href="#" class="active" id="nav-section">Section</a>
+        <a href="dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+        <a href="team.html" data-i18n="nav.team">Team</a>
+        <a href="#" id="nav-engagement" data-i18n="nav.engagement">Engagement</a>
+        <a href="#" class="active" id="nav-section" data-i18n="nav.section">Section</a>
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
-        <button onclick="signOut()">Sign out</button>
+        <button onclick="signOut()" data-i18n="nav.signOut">Sign out</button>
       </div>
     </aside>
 
     <main class="main-content">
-      <!-- Back link -->
-      <a href="#" class="back-link" id="back-to-engagement">&#8592; Back to engagement</a>
+      <!-- Back link + language switcher -->
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
+        <a href="#" class="back-link" id="back-to-engagement" style="margin-bottom:0;">&#8592; Back to engagement</a>
+        <div class="lang-seg" role="group" aria-label="Language / اللغة" style="margin-inline-start:auto;"><button type="button" class="lang-seg-btn seg-en" onclick="I18n.setLang('en')">EN</button><button type="button" class="lang-seg-btn seg-ar" onclick="I18n.setLang('ar')">ع</button></div>
+      </div>
 
       <!-- Section Hero Header -->
       <div class="section-hero">
@@ -921,6 +935,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
   <script src="../js/ui-notify.js"></script>
+  <script src="../js/i18n.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
   <script>
@@ -1655,6 +1670,10 @@
       const isOpen = body.classList.contains('open');
       body.classList.toggle('open');
       chevron.classList.toggle('open');
+      // Hide the read-only assertion summary in the header while expanded —
+      // the editor row below already shows the same chips (avoids duplication).
+      const hdrAssert = document.getElementById('header-assert-' + procId);
+      if (hdrAssert) hdrAssert.style.display = isOpen ? '' : 'none';
     }
 
     function openDocModal(procId, category) {
@@ -3247,6 +3266,50 @@
     }
 
     init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
+
+    // ---- Arabic localization (text-node + placeholder swap, same engine as engagement) ----
+    let _locMap = null, _locObs = null, _locRaf = 0;
+    const _locOrig = new WeakMap();
+    function localizeSectionNow() {
+      if (!_locMap || !window.I18n) return;
+      const isAr = I18n.getLang() === 'ar';
+      const root = document.body;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        const p = node.parentNode; if (!p) continue;
+        const tag = p.nodeName; if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+        if (p.closest && p.closest('[data-i18n],[data-i18n-html]')) continue;
+        if (!_locOrig.has(node)) _locOrig.set(node, node.nodeValue);
+        const orig = _locOrig.get(node);
+        const key = orig.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim();
+        if (!key) continue;
+        let next = orig;
+        if (isAr && _locMap[key]) { const _l = (orig.match(/^\s*/)||[''])[0], _t = (orig.match(/\s*$/)||[''])[0]; next = _l + _locMap[key] + _t; }
+        if (node.nodeValue !== next) node.nodeValue = next;
+      }
+      root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+        if (!_locOrig.has(el)) _locOrig.set(el, el.getAttribute('placeholder'));
+        const orig = _locOrig.get(el); const key = (orig || '').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim(); if (!key) return;
+        const next = (isAr && _locMap[key]) ? _locMap[key] : orig;
+        if (el.getAttribute('placeholder') !== next) el.setAttribute('placeholder', next);
+      });
+    }
+    function scheduleLoc() { if (_locRaf) return; _locRaf = requestAnimationFrame(() => { _locRaf = 0; localizeSectionNow(); }); }
+    async function setupSectionLocalization() {
+      if (!window.I18n) return;
+      const dict = await I18n.dict();
+      _locMap = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {});
+      localizeSectionNow();
+      _locObs = new MutationObserver(scheduleLoc);
+      _locObs.observe(document.body, { childList: true, subtree: true });
+    }
+    document.addEventListener('i18n:changed', async () => {
+      const dict = await I18n.dict();
+      _locMap = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {});
+      localizeSectionNow();
+    });
+    setupSectionLocalization();
   </script>
 </body>
 </html>

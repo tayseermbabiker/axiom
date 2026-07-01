@@ -4,8 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Engagement — Audexon</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('audexon_lang');
+        if (lang !== 'ar' && lang !== 'en') lang = 'en';
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/rtl.css">
   <!-- Sentry error tracking (no-op until window.SENTRY_DSN is set in sentry-init.js) -->
   <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
   <script src="../js/sentry-init.js"></script>
@@ -528,15 +539,15 @@
         <span class="role-badge role-admin" id="user-role-badge" style="display:none;">admin</span>
       </div>
       <nav class="sidebar-nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="team.html">Team</a>
-        <a href="local-compliance.html" id="nav-local-compliance" style="display:none;">Compliance Template</a>
-        <a href="#" class="active" id="nav-engagement">Engagement</a>
-        <a href="#" id="nav-activity" onclick="switchTab('activity')">Activity Log</a>
+        <a href="dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+        <a href="team.html" data-i18n="nav.team">Team</a>
+        <a href="local-compliance.html" id="nav-local-compliance" style="display:none;" data-i18n="nav.complianceTemplate">Compliance Template</a>
+        <a href="#" class="active" id="nav-engagement" data-i18n="nav.engagement">Engagement</a>
+        <a href="#" id="nav-activity" onclick="switchTab('activity')" data-i18n="nav.activityLog">Activity Log</a>
       </nav>
       <div class="sidebar-footer">
         <div class="text-sm text-muted mb-16" id="user-email"></div>
-        <button onclick="signOut()">Sign out</button>
+        <button onclick="signOut()" data-i18n="nav.signOut">Sign out</button>
       </div>
     </aside>
 
@@ -556,6 +567,7 @@
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start;">
+          <div class="lang-seg" role="group" aria-label="Language / اللغة"><button type="button" class="lang-seg-btn seg-en" onclick="I18n.setLang('en')">EN</button><button type="button" class="lang-seg-btn seg-ar" onclick="I18n.setLang('ar')">ع</button></div>
           <div class="reports-dropdown" style="position:relative;">
             <button class="btn btn-outline btn-sm" onclick="toggleReportsMenu(event)" style="display:flex; align-items:center; gap:6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -3244,6 +3256,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
   <script src="../js/ui-notify.js"></script>
+  <script src="../js/i18n.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/activity.js"></script>
   <script src="../js/audit-templates.js"></script>
@@ -4154,10 +4167,11 @@
       refreshPhaseChips();
 
       // Step sub-labels — keep them honest as state changes
+      const _arP = (function(){ try { return localStorage.getItem('audexon_lang') === 'ar'; } catch(e) { return false; } })();
       const planSub = document.getElementById('step-sub-planning');
-      if (planSub) planSub.textContent = phase === 'planning' ? 'In progress' : 'Done';
+      if (planSub) planSub.textContent = phase === 'planning' ? (_arP ? 'قيد التنفيذ' : 'In progress') : (_arP ? 'تم' : 'Done');
       const concSub = document.getElementById('step-sub-conclusion');
-      if (concSub) concSub.textContent = execComplete ? 'Unlocked' : 'Locked';
+      if (concSub) concSub.textContent = execComplete ? (_arP ? 'غير مقفل' : 'Unlocked') : (_arP ? 'مقفل' : 'Locked');
 
       // Render module tabs for this phase
       renderModuleTabs(phase);
@@ -4206,7 +4220,9 @@
 
       // Update execution sub-label
       const execSub = document.getElementById('step-sub-execution');
-      if (execSub) execSub.textContent = approvedCount + ' of ' + totalCount + ' sections done';
+      if (execSub) execSub.textContent = ((function(){ try { return localStorage.getItem('audexon_lang') === 'ar'; } catch(e) { return false; } })())
+        ? ('تم ' + approvedCount + ' من ' + totalCount + ' قسم')
+        : (approvedCount + ' of ' + totalCount + ' sections done');
 
       // Unlock conclusion if all done — and keep its sub-label honest
       const conclusionBtn = document.getElementById('phase-btn-conclusion');
@@ -5166,7 +5182,7 @@
       await logActivity(engagementId, 'created_section', 'audit_section', data.id, { name: name });
 
       // Auto-populate standard procedures from template
-      const templateProcs = PROCEDURE_TEMPLATES[name];
+      const templateProcs = (typeof procTemplatesFor === 'function') ? procTemplatesFor(name) : PROCEDURE_TEMPLATES[name];
       if (templateProcs && templateProcs.length > 0) {
         const assertMap = (typeof PROCEDURE_ASSERTIONS !== 'undefined' && PROCEDURE_ASSERTIONS[name]) || [];
         const procsToInsert = templateProcs.map((p, i) => ({
@@ -6086,7 +6102,10 @@
       if (!body) return;
       const isAdmin = currentRole === 'admin';
       const ASSEMBLY_WINDOW_DAYS = 60;
-      const retention = 'Retain the assembled file for the minimum period required by local law (commonly 5–7 years from the report date — 7 years in much of the MENA region).';
+      const _arFA = (function(){ try { return localStorage.getItem('audexon_lang') === 'ar'; } catch(e) { return false; } })();
+      const retention = _arFA
+        ? 'يُحتفظ بالملف المجمَّع للمدة الدنيا المطلوبة بموجب القانون المحلي (عادةً 5–7 سنوات من تاريخ التقرير — 7 سنوات في معظم منطقة الشرق الأوسط وشمال أفريقيا).'
+        : 'Retain the assembled file for the minimum period required by local law (commonly 5–7 years from the report date — 7 years in much of the MENA region).';
 
       // ── State 3: already assembled & locked ──
       if (engagement && engagement.is_archived) {
@@ -6126,8 +6145,10 @@
         const amber = daysLeft <= 14;
         countdown =
           '<div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:' + (amber ? '#B45309' : '#0a2540') + '; margin-bottom:6px;">' +
-          (amber ? '⚠️ ' : '') + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left to assemble the file</div>' +
-          '<p style="margin:0 0 8px; font-size:12px; color:var(--gray-500);">Report date ' + rd + ' · assemble by <strong>' + dl + '</strong> (ISA 230 — within ' + ASSEMBLY_WINDOW_DAYS + ' days).</p>';
+          (amber ? '⚠️ ' : '') + (_arFA ? (daysLeft + ' يوم متبقٍ لتجميع الملف') : (daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left to assemble the file')) + '</div>' +
+          (_arFA
+            ? ('<p style="margin:0 0 8px; font-size:12px; color:var(--gray-500);">تاريخ التقرير ' + rd + ' · يجب التجميع بحلول <strong>' + dl + '</strong> (ISA 230 — في غضون ' + ASSEMBLY_WINDOW_DAYS + ' يومًا).</p>')
+            : ('<p style="margin:0 0 8px; font-size:12px; color:var(--gray-500);">Report date ' + rd + ' · assemble by <strong>' + dl + '</strong> (ISA 230 — within ' + ASSEMBLY_WINDOW_DAYS + ' days).</p>'));
       } else {
         countdown =
           '<div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:#B91C1C; margin-bottom:6px;">⚠️ Assembly window lapsed ' + Math.abs(daysLeft) + ' day' + (Math.abs(daysLeft) === 1 ? '' : 's') + ' ago</div>' +
@@ -8017,15 +8038,20 @@
       // Preliminary materiality cross-reference (display-only, live-read)
       const matEl = document.getElementById('eas-prelim-materiality');
       if (matEl) {
+        const _ar = (function(){ try { return localStorage.getItem('audexon_lang') === 'ar'; } catch(e) { return false; } })();
         if (engagement && engagement.materiality_overall) {
           const fmt = (n) => Number(n).toLocaleString(undefined, { minimumFractionDigits: 0 });
-          const benchLabels = { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
+          const benchLabels = _ar
+            ? { pbt: 'الربح قبل الضريبة', revenue: 'الإيرادات', assets: 'إجمالي الأصول', equity: 'حقوق الملكية' }
+            : { pbt: 'Profit Before Tax', revenue: 'Revenue', assets: 'Total Assets', equity: 'Equity' };
           const bench = benchLabels[engagement.materiality_benchmark] || engagement.materiality_benchmark || '';
-          matEl.textContent = 'Overall: ' + fmt(engagement.materiality_overall)
-            + (engagement.materiality_performance ? ' · Performance: ' + fmt(engagement.materiality_performance) : '')
-            + (bench ? ' · Benchmark: ' + bench : '');
+          matEl.textContent = (_ar ? 'الكلية: ' : 'Overall: ') + fmt(engagement.materiality_overall)
+            + (engagement.materiality_performance ? (_ar ? ' · التنفيذية: ' : ' · Performance: ') + fmt(engagement.materiality_performance) : '')
+            + (bench ? (_ar ? ' · المؤشر المرجعي: ' : ' · Benchmark: ') + bench : '');
         } else {
-          matEl.innerHTML = 'Not yet set — open the <a href="#" onclick="event.preventDefault(); switchModuleTab(\'materiality\');" style="color:var(--primary);">Materiality tab</a> to record it.';
+          matEl.innerHTML = _ar
+            ? 'لم تُحدَّد بعد — افتح <a href="#" onclick="event.preventDefault(); switchModuleTab(\'materiality\');" style="color:var(--primary);">تبويب الأهمية النسبية</a> لتسجيلها.'
+            : 'Not yet set — open the <a href="#" onclick="event.preventDefault(); switchModuleTab(\'materiality\');" style="color:var(--primary);">Materiality tab</a> to record it.';
         }
       }
 
@@ -9801,6 +9827,60 @@
     }
 
     init().then(() => disableAutofillOnAllInputs()).catch(() => disableAutofillOnAllInputs());
+
+    // ---- Arabic localization (post-render text-node + placeholder swap) ----
+    // The workspace is built from huge static forms + many dynamic render
+    // functions. We translate TEXT NODES (so mixed-content elements like a
+    // <label> with a checkbox child, or a stat span with a number child, still
+    // get their text translated) plus input/textarea placeholders, against the
+    // validated map (ar.json reportLabels + engagementLabels), keyed by exact
+    // English text. A MutationObserver re-applies it after every re-render.
+    // Nodes under [data-i18n] are left to i18n.js.
+    let _engMap = null, _engObserver = null, _engRaf = 0;
+    const _engOrig = new WeakMap();
+    function localizeEngagementNow() {
+      if (!_engMap || !window.I18n) return;
+      const isAr = I18n.getLang() === 'ar';
+      const root = document.body;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        const p = node.parentNode; if (!p) continue;
+        const tag = p.nodeName; if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+        if (p.closest && p.closest('[data-i18n],[data-i18n-html]')) continue;
+        if (!_engOrig.has(node)) _engOrig.set(node, node.nodeValue);
+        const orig = _engOrig.get(node);
+        const key = orig.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim();
+        if (!key) continue;
+        let next = orig;
+        if (isAr && _engMap[key]) { const _l = (orig.match(/^\s*/)||[''])[0], _t = (orig.match(/\s*$/)||[''])[0]; next = _l + _engMap[key] + _t; }
+        if (node.nodeValue !== next) node.nodeValue = next;
+      }
+      root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+        if (!_engOrig.has(el)) _engOrig.set(el, el.getAttribute('placeholder'));
+        const orig = _engOrig.get(el); const key = (orig || '').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[‐‑‒–—]/g,'-').replace(/\s+/g, ' ').trim(); if (!key) return;
+        const next = (isAr && _engMap[key]) ? _engMap[key] : orig;
+        if (el.getAttribute('placeholder') !== next) el.setAttribute('placeholder', next);
+      });
+    }
+    function scheduleEngLocalize() {
+      if (_engRaf) return;
+      _engRaf = requestAnimationFrame(() => { _engRaf = 0; localizeEngagementNow(); });
+    }
+    async function setupEngagementLocalization() {
+      if (!window.I18n) return;
+      const dict = await I18n.dict();
+      _engMap = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {});
+      localizeEngagementNow();
+      _engObserver = new MutationObserver(scheduleEngLocalize);
+      _engObserver.observe(document.body, { childList: true, subtree: true });
+    }
+    document.addEventListener('i18n:changed', async () => {
+      const dict = await I18n.dict();
+      _engMap = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {});
+      localizeEngagementNow();
+    });
+    setupEngagementLocalization();
   </script>
 </body>
 </html>
