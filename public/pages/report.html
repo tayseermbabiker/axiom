@@ -161,6 +161,12 @@
     .print-bar button, .print-bar select { padding: 8px 16px; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; border: 1px solid #D9D9D9; font-family: inherit; }
     .btn-print { background: #1A3A5F; color: white; border-color: #1A3A5F; }
     .btn-back { background: white; color: #374151; }
+    .lang-seg { display:inline-flex; align-items:stretch; border:1px solid #d1d5db; border-radius:8px; overflow:hidden; height:34px; background:#fff; flex-shrink:0; }
+    .lang-seg-btn { border:none; background:transparent; padding:0 12px; font-size:13px; font-weight:600; line-height:32px; color:#4b5563; cursor:pointer; font-family:inherit; }
+    .lang-seg-btn + .lang-seg-btn { border-inline-start:1px solid #d1d5db; }
+    .lang-seg-btn:hover { background:#f3f4f6; }
+    html[lang="en"] .lang-seg .seg-en, html[lang="ar"] .lang-seg .seg-ar { background:#3A7BFF; color:#fff; }
+    .lang-seg .seg-ar { font-size:15px; }
 
     /* ---- Phase label ---- */
     .phase-divider { font-size: 11px; font-weight: 700; color: #1A3A5F; text-transform: uppercase; letter-spacing: 1px; padding: 8px 0; margin: 24px 0 8px; border-bottom: 1px solid #D9D9D9; }
@@ -225,7 +231,7 @@
     </select>
     <button class="btn-print" onclick="window.print()">Save as PDF</button>
     <button class="btn-back" onclick="window.close()">Close</button>
-    <button class="btn-back" id="report-lang-toggle" onclick="I18n.toggleLang()" data-i18n="lang.switchTo" style="margin-inline-start:auto;">العربية</button>
+    <div class="lang-seg" role="group" aria-label="Language / اللغة" style="margin-inline-start:auto;"><button type="button" class="lang-seg-btn seg-en" onclick="I18n.setLang('en')">EN</button><button type="button" class="lang-seg-btn seg-ar" onclick="I18n.setLang('ar')">ع</button></div>
   </div>
 
   <div id="report-content">Loading...</div>
