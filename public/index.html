@@ -125,7 +125,7 @@
     .hero {
       position: relative;
       background: linear-gradient(135deg, #0A1A2F 0%, #0F2647 50%, #0A1A2F 100%);
-      padding: 160px 24px 120px;
+      padding: 88px 24px 64px;
       overflow: hidden;
     }
 
@@ -197,18 +197,22 @@
       color: #93B4FF;
       font-size: 13px;
       font-weight: 600;
-      margin-bottom: 32px;
+      margin-bottom: 18px;
       letter-spacing: 0.5px;
     }
 
     .hero h1 {
-      font-size: clamp(36px, 5.5vw, 64px);
+      font-size: clamp(34px, 5vw, 54px);
       font-weight: 800;
       color: #FFFFFF;
       line-height: 1.1;
       letter-spacing: -1.5px;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
+
+    /* Arabic: connected script needs no negative tracking and a smaller size */
+    html[dir="rtl"] .hero h1 { letter-spacing: normal; font-size: clamp(28px, 4.5vw, 48px); line-height: 1.25; }
+    html[dir="rtl"] .hero p { line-height: 1.9; }
 
     .hero h1 em {
       font-style: normal;
@@ -222,7 +226,7 @@
       font-size: 18px;
       color: rgba(255, 255, 255, 0.6);
       max-width: 600px;
-      margin: 0 auto 40px;
+      margin: 0 auto 28px;
       line-height: 1.7;
     }
 
@@ -781,7 +785,7 @@
         display: none;
       }
       .hero {
-        padding: 130px 24px 80px;
+        padding: 72px 24px 48px;
       }
       .section {
         padding: 72px 24px;
