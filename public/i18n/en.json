@@ -72,7 +72,11 @@
     "loading": "Loading..."
   },
   "landing": {
-    "nav": { "features": "Features", "pricing": "Pricing", "signin": "Sign In" },
+    "nav": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "signin": "Sign In"
+    },
     "hero": {
       "badge": "Built for CPA firms with 3–25 auditors",
       "h1": "The audit <em>control room</em> your firm is missing",
@@ -85,17 +89,41 @@
       "title": "Purpose-built for the audit workflow",
       "subtitle": "Not another project management tool — designed around how audit teams actually work."
     },
-    "f1": { "title": "TB-Driven Structure", "p": "Upload your trial balance once. Audexon maps classifications to audit sections automatically." },
-    "f2": { "title": "ISA 230 Audit Trail", "p": "Every action logged. Every reopen requires a reason. Immutable, append-only documentation ready for peer review." },
-    "f3": { "title": "Bring Your Own Cloud", "p": "Link your firm's Google Drive or OneDrive for audit working files. Your data and uploads stay encrypted and access-controlled in Audexon's secure cloud." },
-    "f4": { "title": "Review From Anywhere", "p": "Partners see every section’s status, review notes, and sign-offs from one dashboard." },
-    "f5": { "title": "Three-Level Sign-Off", "p": "Preparer → supervisor → partner. Clear permissions. Every action locked and logged." },
-    "f6": { "title": "Team Assignments & Progress", "p": "Assign sections, track completion in real time, exchange review notes inline." },
-    "legend": { "signed": "Signed off", "review": "In review", "open": "Open" },
+    "f1": {
+      "title": "TB-Driven Structure",
+      "p": "Upload your trial balance once. Audexon maps classifications to audit sections automatically."
+    },
+    "f2": {
+      "title": "ISA 230 Audit Trail",
+      "p": "Every action logged. Every reopen requires a reason. Immutable, append-only documentation ready for peer review."
+    },
+    "f3": {
+      "title": "Bring Your Own Cloud",
+      "p": "Link your firm's Google Drive or OneDrive for audit working files. Your data and uploads stay encrypted and access-controlled in Audexon's secure cloud."
+    },
+    "f4": {
+      "title": "Review From Anywhere",
+      "p": "Partners see every section’s status, review notes, and sign-offs from one dashboard."
+    },
+    "f5": {
+      "title": "Three-Level Sign-Off",
+      "p": "Preparer → supervisor → partner. Clear permissions. Every action locked and logged."
+    },
+    "f6": {
+      "title": "Team Assignments & Progress",
+      "p": "Assign sections, track completion in real time, exchange review notes inline."
+    },
+    "legend": {
+      "signed": "Signed off",
+      "review": "In review",
+      "open": "Open"
+    },
     "pricing": {
       "label": "Pricing",
       "title": "One plan. The complete ISA audit file.",
-      "subtitle": "Priced by firm size, billed annually — unlimited engagements and users, no per-seat math."
+      "subtitle": "Priced by firm size, billed annually — unlimited engagements and users, no per-seat math.",
+      "title2": "Simple pricing. Unlimited everything.",
+      "subtitle2": "Unlimited audit files and users — never metered per seat or per file. Pricing scales with your firm size."
     },
     "full": {
       "badge": "Complete ISA File",
@@ -121,8 +149,10 @@
       "b2": "Growing · 4–6 staff",
       "b3": "Firm · 7–10 staff",
       "b4": "Practice · 11–25 staff",
-      "request": "Request Access",
-      "trial": "Includes a complimentary 1-month trial · billed annually"
+      "request": "Request pricing",
+      "trial": "Includes a complimentary 1-month trial",
+      "custom": "Custom pricing",
+      "scales": "Scales with your firm size — request a quote"
     },
     "help": "Need help choosing or have questions? <a href=\"/contact.html\" style=\"color:#4338CA; font-weight:500;\">Talk to us</a> — we'll set you up personally.",
     "cta": {
