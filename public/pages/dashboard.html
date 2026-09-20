@@ -617,7 +617,7 @@
       {
         icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
         title: 'Step 6: Invite Your Team',
-        body: 'Go to the <strong>Team</strong> page (in the sidebar) to invite colleagues. Each person gets a role: <strong>Partner</strong> (approves work), <strong>Supervisor</strong> (reviews), or <strong>Staff</strong> (does the fieldwork). Everyone logs in with their own email.'
+        body: 'Go to the <strong>Team</strong> page (in the sidebar) to invite colleagues. Each person gets a role: <strong>Partner</strong> (approves work), <strong>Supervisor</strong> (reviews), or <strong>Preparer</strong> (does the fieldwork). Everyone logs in with their own email.'
       },
       {
         icon: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
@@ -625,6 +625,40 @@
         body: 'That is all you need to get started. Create your first engagement and begin your audit. If you need to see this guide again, click <strong>"How it works"</strong> on this page.'
       }
     ];
+
+    // Arabic mirror of onboardingSteps — same icons/order, translated title+body.
+    // "Preparer" kept as the team-role term (matches team.html / ar.json "Preparer": "المُعِدّ"),
+    // not "Staff"/"مدقق" which the raw translation used.
+    const onboardingStepsAr = [
+      { icon: onboardingSteps[0].icon,
+        title: 'مرحباً بك في منصة Audexon!',
+        body: 'تعمل منصة Audexon مباشرة عبر متصفح الإنترنت الخاص بك دون الحاجة لتنزيل أو تثبيت أي برامج. نوصي بحفظ هذه الصفحة في المفضلة لسهولة العودة إليها في أي وقت — المنصة متوافقة تماماً مع أجهزة الكمبيوتر والتلفونات والأجهزة اللوحية.' },
+      { icon: onboardingSteps[1].icon,
+        title: 'الخطوة 1: إنشاء عملية تدقيق جديدة',
+        body: 'تُمثّل "عملية التدقيق" المشروع الخاص بعميل معين. انقر على <strong>"+ New Engagement"</strong> أعلى هذه الصفحة لإنشاء عملية جديدة. كل ما عليك هو إدخال اسم العميل وتاريخ نهاية السنة المالية للبدء مباشرة.' },
+      { icon: onboardingSteps[2].icon,
+        title: 'الخطوة 2: إعداد مجلد المشاركة السحابي',
+        body: 'قم بإنشاء مجلد على <strong>Google Drive</strong> أو <strong>OneDrive</strong> ليتمكن فريق العمل من حفظ ورفع كافة ملفات التدقيق فيه، ثم شارك المجلد مع أعضاء الفريق. يمكنك إدراج رابط المجلد داخل صفحة عملية التدقيق بعد إنشائها.' },
+      { icon: onboardingSteps[3].icon,
+        title: 'الخطوة 3: رفع ميزان المراجعة (Trial Balance)',
+        body: '<strong>هذه الخطوة إلزامية:</strong> قبل عملية الرفع، يرجى فتح ملف ميزان المراجعة (بصيغة Excel أو CSV) والتأكد من تحديد اسم القسم لكل حساب في عمود التصنيف (على سبيل المثال: النقدية، الإيرادات، الأجور والرواتب، الأصول الثابتة). بعد ذلك، انتقل إلى تبويب <strong>"Trial Balance"</strong> داخل عملية التدقيق وقم برفع الملف. تقرأ منصة Audexon أسماء الأقسام تلقائياً وتنشئ أقسام التدقيق المخصصة مع إدراج إجراءات المراجعة الجاهزة بها. يرجى الملاحظة أنه لن تظهر أي أقسام تدقيق بدون إتمام هذه الخطوة.' },
+      { icon: onboardingSteps[4].icon,
+        title: 'الخطوة 4: تحديد مستوى الأهمية النسبية (Materiality)',
+        body: 'انتقل إلى تبويب <strong>"Materiality"</strong> لتحديد مستويات الأهمية النسبية. اختر المؤشر المرجعي المناسب (مثل: الأرباح قبل الضريبة، أو إجمالي الإيرادات)، وادخل المبلغ المطلق؛ لتتولى منصة Audexon احتساب الأهمية النسبية الإجمالية، والأهمية النسبية الأداءية، وحد الفروق التافهة تلقائياً. يحدد هذا المعيار العناصر الجوهرية التي تستدعي الفحص في أقسام التدقيق.' },
+      { icon: onboardingSteps[5].icon,
+        title: 'الخطوة 5: إنجاز أقسام العمل',
+        body: 'بمجرد تحميل ميزان المراجعة، ستظهر الأقسام الخاصة بك تلقائياً ضمن تبويب <strong>"Sections"</strong>. قم بفتح أي قسم للاطلاع على إجراءات التدقيق المتعلقة به، وتعليمها كمنجزة، وتسجيل النتائج. يرجى إرفاق أوراق العمل الخاصة بك (التحليلات) ومستندات العميل (الفواتير والعقود) لكل إجراء، وذلك عبر حفظها في المحرك المشترك أولاً ثم نسخ الرابط الخاص بها. كما يمكنك إسناد الأقسام لأعضاء الفريق لضمان وضوح مهام الجميع.' },
+      { icon: onboardingSteps[6].icon,
+        title: 'الخطوة 6: دعوة فريق العمل',
+        body: 'انتقل إلى صفحة <strong>"الفريق" (Team)</strong> عبر الشريط الجانبي لدعوة زملائك. يتم تحديد دور كل فرد كالتالي: <strong>الشريك (Partner)</strong> للاعتماد، أو <strong>المشرف (Supervisor)</strong> للمراجعة، أو <strong>المُعِدّ (Preparer)</strong> لتنفيذ الأعمال الميدانية. ويسجل كل فرد دخوله باستخدام بريده الإلكتروني الخاص.' },
+      { icon: onboardingSteps[7].icon,
+        title: 'أنت الآن جاهز للبدء!',
+        body: 'هذا كل ما تحتاجه للبدء. قم بإنشاء أول عملية تدقيق وابدأ عملك. إذا أردت العودة إلى هذا الدليل في أي وقت، انقر على <strong>"كيف يعمل النظام"</strong> في هذه الصفحة.' }
+    ];
+
+    function activeOnboardingSteps() {
+      return (window.I18n && I18n.getLang() === 'ar') ? onboardingStepsAr : onboardingSteps;
+    }
 
     let onboardingStep = 0;
 
@@ -635,25 +669,38 @@
     }
 
     function renderOnboardingStep() {
-      const step = onboardingSteps[onboardingStep];
-      const total = onboardingSteps.length;
+      const ar = !!(window.I18n && I18n.getLang() === 'ar');
+      const steps = activeOnboardingSteps();
+      const step = steps[onboardingStep];
+      const total = steps.length;
       document.getElementById('onboarding-icon').innerHTML = step.icon;
       document.getElementById('onboarding-title').textContent = step.title;
       document.getElementById('onboarding-body').innerHTML = step.body;
-      document.getElementById('onboarding-step-label').textContent = (onboardingStep + 1) + ' of ' + total;
+      document.getElementById('onboarding-step-label').textContent = ar
+        ? (onboardingStep + 1) + ' من ' + total
+        : (onboardingStep + 1) + ' of ' + total;
       document.getElementById('onboarding-progress').style.width = ((onboardingStep + 1) / total * 100) + '%';
 
       const nextBtn = document.getElementById('onboarding-next');
       const backBtn = document.getElementById('onboarding-back');
+      const skipBtn = document.getElementById('onboarding-skip');
+      backBtn.textContent = ar ? 'رجوع' : 'Back';
+      skipBtn.textContent = ar ? 'تخطي' : 'Skip';
       backBtn.style.display = onboardingStep === 0 ? 'none' : '';
       if (onboardingStep === total - 1) {
-        nextBtn.textContent = 'Get Started';
-        document.getElementById('onboarding-skip').style.display = 'none';
+        nextBtn.textContent = ar ? 'ابدأ الآن' : 'Get Started';
+        skipBtn.style.display = 'none';
       } else {
-        nextBtn.textContent = 'Next';
-        document.getElementById('onboarding-skip').style.display = '';
+        nextBtn.textContent = ar ? 'التالي' : 'Next';
+        skipBtn.style.display = '';
       }
     }
+
+    // Live-update the walkthrough if the language toggle is used while it's open.
+    document.addEventListener('i18n:changed', function () {
+      const overlay = document.getElementById('onboarding-overlay');
+      if (overlay && overlay.style.display !== 'none') renderOnboardingStep();
+    });
 
     function prevOnboardingStep() {
       if (onboardingStep > 0) {
@@ -663,7 +710,7 @@
     }
 
     function nextOnboardingStep() {
-      if (onboardingStep < onboardingSteps.length - 1) {
+      if (onboardingStep < activeOnboardingSteps().length - 1) {
         onboardingStep++;
         renderOnboardingStep();
       } else {
