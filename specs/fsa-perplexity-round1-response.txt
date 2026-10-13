@@ -1,0 +1,284 @@
+The drafts provide a useful starting point, but require **revision** before use as firm-policy templates. The most important corrections are: separate full IFRS from IFRS for SMEs; add genuine completeness procedures; correct investment measurement and impairment branches; strengthen disclosure evidence; and expressly test closing journals and adjustments rather than merely record them. ISA 330.18, .20 and .24 require substantive coverage of material balances, transactions and disclosures, reconciliation to accounting records, examination of material closing adjustments, and evaluation of presentation. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+
+Some submitted sentences and assertion lists are truncated. I have reviewed the identifiable procedure on every numbered line without treating missing text as confirmed wording.
+
+## Review conventions and framework boundaries
+
+- The revised lists retain your format: `Procedure (standard paragraphs). — type — [assertions]`.
+- `[Conditional: …]` identifies an applicability condition. N/A requires a documented reason; it is not a substitute for assessing the condition.
+- IFRS paragraphs prescribe accounting outcomes. ISAs normally require risk-responsive evidence, not a universal subject-specific checklist. The procedures below distinguish necessary accounting coverage from optional methods of obtaining that evidence. ISA 330.6–7, .18–21. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+- The IFAC Guide supports proportionate, risk-based audit planning, testing and documentation—particularly Volume 2, Chapters 16–18 and 21. Its fourth edition predates ISA 540 (Revised) and ISA 315 (Revised 2019), so those standards take precedence over older guidance. [ifac](https://www.ifac.org/knowledge-gateway/audit-assurance/publications/guide-using-international-standards-auditing-audits-small-and-medium-sized-entities)
+- Select the reporting framework and applicable edition before enabling accounting branches. The IFRS for SMEs third edition applies for periods beginning on or after 1 January 2027, with early application permitted. IFRS 18 also applies from that date, with early application permitted; therefore IAS 1 references below apply where IFRS 18 has not been adopted. [ifrs](https://www.ifrs.org/content/dam/ifrs/publications/html-standards/english/2025/issued/html-ifrs-for-smes.html)
+- None of the submitted lines is a genuine test of operating effectiveness. Do not relabel management approval, auditor review or documentation as `control`. Add or cross-reference actual control tests where reliance is planned or substantive procedures alone cannot provide sufficient evidence—ISA 330.8–10. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+- Your three-type taxonomy has no appropriate category for administrative documentation, overall evaluations or ISA 720 reading procedures. Where retained below, `test_of_detail` is a platform-category proxy, not a claim that ISA classifies the activity as a substantive test. Ideally, store a separate activity-purpose field. `fs_level` likewise denotes scope, not an ISA assertion.
+
+Across all sections, test the completeness and accuracy of entity-produced information used as evidence, select items responsively to risk, and document exceptions and conclusions. These requirements should be global policy rather than repeated in every template—ISA 500.9–10; ISA 330.28–30. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+
+## 1. Intangible Assets & Goodwill
+
+### Missing coverage and substantive corrections
+
+1. Annual impairment testing also covers intangibles not yet available for use—not just goodwill and indefinite-life assets. A “no indicators” conclusion cannot replace a mandatory annual test: IAS 36.9–10, .90. [bdo](https://www.bdo.global/getmedia/3ef39b97-e129-4275-a291-2208290823ac/IFRS-AS-IP-IAS-36-2024-25.pdf)
+2. Amortisation needs an available-for-use date, residual-value assessment, contractual-life limits and annual reassessment: IAS 38.94, .97, .100–104, .109. [ifrs](https://www.ifrs.org/content/dam/ifrs/publications/html-standards/english/2026/issued/ias38.html)
+3. Goodwill is not simply consideration minus identifiable net assets. The calculation includes applicable non-controlling interests and previously held interests; asset acquisitions must be distinguished from business combinations: IFRS 3.2(b), .18–19, .32, .34–36.
+4. Impairment coverage should include model/data integrity, management bias, CGU consistency, allocation of losses, permitted reversals and the prohibition on goodwill reversals: ISA 540.18, .22–27, .32–36; IAS 36.75, .104–105, .110–125. Sensitivity analysis is useful where uncertainty warrants it, not an unconditional requirement for every estimate. [irba.co](https://www.irba.co.za/upload/ISA-540-Revised-and-Conforming-Amendments.pdf)
+5. Full-IFRS rules cannot be applied unchanged to SMEs. IFRS for SMEs expenses internally generated intangible expenditure, including research and development, and amortises intangibles and goodwill: 18.14–15, .19–24; 19.23; impairment follows Section 27. [ifrs](https://www.ifrs.org/content/dam/ifrs/publications/html-standards/english/2025/issued/html-ifrs-for-smes.html)
+6. Add source-to-register completeness work and, where applicable, revaluation-model testing. Schedule-to-GL agreement alone cannot establish that all eligible assets were recorded: ISA 330.A45; IAS 38.72–78. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+
+### Original-line review
+
+| Original | Finding on wording, type and assertions |
+|---|---|
+| 1 | Keep `test_of_detail`. Add report-reliability work. `[accuracy, completeness]` concerns the schedule/reconciliation only; add a separate search for omitted assets. ISA 510 is conditional on an initial audit. |
+| 2 | Keep `test_of_detail`; use `[existence, rights_obligations, accuracy, valuation, classification, cutoff]`. Separate acquisition cost from business-combination recognition; bank payment alone does not establish an asset. |
+| 3 | Keep `test_of_detail`; `[valuation, classification, accuracy]` is more direct than `existence`. Add the date development criteria first became satisfied. Use a different SME branch. |
+| 4 | Keep `test_of_detail`; `[rights_obligations, existence]` is appropriate. Can share evidence with line 2, but covers continuing rights and restrictions. |
+| 5 | Keep `test_of_detail`; `[valuation, accuracy, cutoff, classification]`. Add available-for-use dates and residual values. Non-amortisation is a full-IFRS branch only. |
+| 6 | Conditional; keep `test_of_detail`; `[valuation, accuracy, classification]`. Correct the goodwill formula and distinguish business combinations from asset acquisitions. |
+| 7 | Keep `test_of_detail`; `[valuation, accuracy]`. Add not-yet-available-for-use assets and impairment reversals. Do not make the annual test conditional on indicators. |
+| 8 | Conditional; keep `test_of_detail`; add `[occurrence, accuracy, cutoff, existence]`. Include abandonment and derecognition without proceeds. |
+| 9 | Keep `analytical`; `[accuracy, valuation]` fits amortisation expectations. `completeness` needs an independently supported expectation. Budget comparisons alone provide weak substantive evidence. |
+| 10 | Keep `test_of_detail`; `[completeness, accuracy, presentation, classification]`. Add completeness and accuracy of note amounts, not merely presentation. |
+
+### Revised list — 11 procedures
+
+1. Obtain the intangible-asset and goodwill movement schedule; test its completeness and accuracy, recalculate movements, and reconcile opening and closing amounts to the GL/TB and prior-period closing records; investigate differences. [Conditional: initial audit—perform opening-balance procedures.] (ISA 500.9; ISA 510.6–8; ISA 330.20(a)). — test_of_detail — [completeness, accuracy]
+
+2. Inspect relevant acquisition agreements, project records and selected expense accounts for omitted assets, incorrectly capitalised expenditure or required derecognition; trace identified items to the register or expense accounts. (ISA 330.6, .18, A45; IAS 38.18–23, .68–71). — test_of_detail — [completeness, classification, valuation]
+
+3. [Conditional: additions] Vouch selected additions to contracts, invoices and delivery/implementation evidence; evaluate identification, control, recognition and directly attributable cost; verify recognition dates and exclude service arrangements or expenditure that does not create a controlled asset. (IAS 38.12–23, .27–32; IFRS for SMEs 18.4–10). — test_of_detail — [existence, rights_obligations, accuracy, valuation, classification, cutoff]
+
+4. [Conditional: internally generated expenditure] Under full IFRS, expense research and prohibited internally generated items; test every development-recognition criterion and capitalise only eligible expenditure from the date all criteria were satisfied. Under IFRS for SMEs, expense internally generated intangible expenditure except where it forms part of another qualifying asset. (IAS 38.48, .54, .57, .63, .65, .71; IFRS for SMEs 18.14–15). — test_of_detail — [accuracy, valuation, classification, cutoff]
+
+5. Inspect licences, registrations and contracts to verify continuing control and rights, renewal terms, expiry dates, restrictions and pledges; assess their effect on carrying amounts and useful lives. (IAS 38.13–16, .94–96, .122(d)). — test_of_detail — [rights_obligations, existence, valuation]
+
+6. Evaluate useful lives, residual values and amortisation methods; verify available-for-use dates and recalculate selected charges. Under full IFRS, verify non-amortisation of goodwill and indefinite-life intangibles and reassessment of indefinite lives; under IFRS for SMEs, verify amortisation of intangibles and goodwill. (IAS 38.88–109; IFRS 3.B63(a); IFRS for SMEs 18.19–24, 19.23). — test_of_detail — [valuation, accuracy, cutoff, classification]
+
+7. [Conditional: business combinations/new goodwill] Evaluate whether the acquisition is a business combination; test acquisition-date identifiable assets and liabilities, consideration, applicable non-controlling interests and previously held interests; recalculate goodwill or reassessed bargain-purchase gain. Under full IFRS, test goodwill allocation to appropriate CGUs. (IFRS 3.2(b), .18–19, .32–36; IAS 36.80–87; IFRS for SMEs Section 19). — test_of_detail — [valuation, accuracy, classification]
+
+8. Assess impairment indicators and test required impairment assessments. Under full IFRS, cover annual tests for goodwill, indefinite-life intangibles and intangibles not yet available for use regardless of indicators. Evaluate methods, assumptions, data, forecasts, discount rates, CGU composition and estimation uncertainty; recalculate losses and permitted reversals and verify no goodwill reversal. Use sensitivity analysis or an auditor’s estimate/range where warranted. (IAS 36.9–10, .75, .90, .104–105, .110–125; ISA 540.18, .22–29, .32–36; IFRS for SMEs 27.7–20, .28–31). — test_of_detail — [valuation, accuracy]
+
+9. [Conditional: disposals, abandonment or revaluation] Test derecognition dates, removal of carrying amounts and related goodwill where applicable, disposal proceeds and gains/losses. If the full-IFRS revaluation model is used, verify an active market, class-wide application and correct surplus/deficit treatment. (IAS 38.72–78, .85–86, .112–117; IAS 36.86). — test_of_detail — [existence, occurrence, valuation, accuracy, cutoff, classification]
+
+10. [Conditional: suitable analytical evidence] Develop supported amortisation or carrying-amount expectations using reliable data, establish an investigation threshold and corroborate significant differences; do not use broad budget/trend comparisons as the sole evidence for recognition or impairment. (ISA 520.5, .7). — analytical — [accuracy, valuation]
+
+11. Test applicable disclosures against supporting evidence, including class reconciliations, lives/methods, restrictions, commitments, research/development expense, acquisition information and impairment assumptions/sensitivities where required; link exceptions to the misstatement schedule. (IAS 38.118–128; IAS 36.126–137; IFRS 3.59–63; IFRS for SMEs 18.27–29, 19.25–26). — test_of_detail — [completeness, accuracy, presentation, classification]
+
+The recognition, amortisation and revaluation revisions follow IAS 38; the mandatory annual-test and reversal distinctions follow IAS 36; estimation testing follows ISA 540. [irba.co](https://www.irba.co.za/upload/ISA-540-Revised-and-Conforming-Amendments.pdf)
+
+## 2. Investments: Subsidiaries, Associates, Joint Arrangements & Financial Investments
+
+### Missing coverage and substantive corrections
+
+1. Distinguish joint operations from joint ventures. Joint operations require recognition of relevant assets, liabilities, revenue and expenses, not a single equity-accounted investment: IFRS 11.14–16, .20–24.
+2. Equity accounting needs acquisition-date basis differences, distributions, unrealised-profit elimination, loss-recognition limits and impairment of the net investment: IAS 28.10, .28, .32–43. Long-term interests not equity-accounted also require IFRS 9 consideration: IAS 28.14A. [ifrs](https://www.ifrs.org/issued-standards/list-of-standards/ias-28-investments-in-associates-and-joint-ventures/)
+3. Business-model and SPPI testing applies to debt assets, not ordinary equity investments. Equity investments ordinarily use FVTPL; eligible non-trading equity investments may have an irrevocable FVOCI election, with no disposal recycling to profit or loss and no ECL allowance: IFRS 9.4.1.2–4, .5.7.5–6, B5.7.1. [iasplus](https://iasplus.com/en/standards/ifrs/ifrs9)
+4. Initial measurement, transaction costs, effective-interest amortisation and impairment must follow the selected measurement basis. IAS 36 cannot be applied indiscriminately to all separate-FS investments: IFRS 9.5.1.1, .5.4.1, .5.5.1; IAS 36.4; IAS 27.10. [bdo](https://www.bdo.global/getmedia/3ef39b97-e129-4275-a291-2208290823ac/IFRS-AS-IP-IAS-36-2024-25.pdf)
+5. Group-audit applicability is broader than “consolidated subsidiaries”; it may include equity-method information and aggregated business-unit information. A single investment line cannot replace the ISA 600 programme: ISA 600 (Revised).14(k), .22–29, .35–38, .45–51. [mia.org](https://mia.org.my/wp-content/uploads/2022/09/ISA-600-Revised-Standard-and-Conforming-Amendments.pdf)
+6. Add completeness work from minutes, agreements and external records. Confirmation is a considered evidence strategy—not an unconditional requirement to confirm every investment: ISA 330.19, A48–49. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+
+### Original-line review
+
+| Original | Finding on wording, type and assertions |
+|---|---|
+| 1 | Keep `test_of_detail`, `[completeness, accuracy]`; add distributions, FX and source-to-schedule completeness. ISA 510 conditional. |
+| 2 | Keep `test_of_detail`, `[existence, rights_obligations]`; confirmation conditional on evidence strategy, with auditor control and non-response follow-up. |
+| 3 | Keep `test_of_detail`; `[classification, rights_obligations]`. Ownership percentage is not decisive; add joint-operation classification and consolidation-exemption assessment. |
+| 4 | Conditional; keep `test_of_detail`; `[valuation, accuracy, completeness]`. Add basis differences, distributions, unrealised profits, loss limits and impairment. |
+| 5 | Conditional; keep `test_of_detail`; `[valuation, accuracy, classification]`. Separate debt classification from equity FVOCI election; add initial measurement and transaction costs. |
+| 6 | Conditional; keep `test_of_detail`; `[valuation, accuracy]`. ECL needs staging, forward-looking information and appropriate presentation; not equity investments. |
+| 7 | Conditional; keep `test_of_detail`; `[valuation, accuracy, classification]`. Include joint ventures and consistent basis by category; branch impairment by basis. |
+| 8 | Conditional; keep `test_of_detail`; `[occurrence, accuracy, cutoff, valuation, classification]`. Separate changes without loss of control from loss-of-control transactions. |
+| 9 | Keep `test_of_detail`; `[occurrence, accuracy, completeness, cutoff, classification]` only if completeness work is added. Equity-method dividends reduce the investment, rather than creating dividend income. |
+| 10 | Conditional; substantive consolidation work is `test_of_detail`, `[fs_level, completeness, accuracy, classification]`. Group planning is not itself a test of detail. |
+| 11 | Keep `test_of_detail`; `[rights_obligations, completeness, presentation]`. “Related-party investee” needs actual relationship assessment, not blanket designation. |
+| 12 | Keep `test_of_detail`; `[completeness, accuracy, presentation, classification]`. IFRS 12 is not a blanket checklist for every separate-FS investment. |
+
+### Revised list — 12 procedures
+
+1. Obtain the investment movement schedule by investee/instrument, including acquisitions, disposals, distributions, results/OCI, valuation movements, impairment and FX; test report reliability, recalculate and reconcile to GL/TB and opening records. Inspect minutes, agreements and relevant external records for omitted holdings. [Conditional: initial audit—test opening balances.] (ISA 500.9; ISA 330.18, .20(a), A45; ISA 510.6–8). — test_of_detail — [completeness, accuracy]
+
+2. Verify selected holdings and ownership through appropriate independent evidence, custody/registrar records, ownership documents and agreements. [Conditional: confirmations used—retain auditor control, investigate exceptions and perform appropriate non-response procedures.] (ISA 330.19; ISA 505.7, .12, .16). — test_of_detail — [existence, rights_obligations]
+
+3. Assess control, significant influence and joint control from substantive rights and actual arrangements, not percentages alone; distinguish subsidiaries, associates, joint ventures, joint operations and IFRS 9 assets; assess required consolidation and any claimed exemption. (IFRS 10.5–9, .4, .31–32; IAS 28.5–9, .16–19; IFRS 11.7, .14–16). — test_of_detail — [classification, rights_obligations, completeness]
+
+4. [Conditional: separate financial statements] Verify the permitted measurement basis for subsidiaries, associates and joint ventures and consistent application by investment category; test carrying amounts using the relevant cost, IFRS 9 or equity-method branch. For SMEs, apply the applicable Section 9 requirements. (IAS 27.10–12; IFRS for SMEs 9.26). — test_of_detail — [classification, valuation, accuracy]
+
+5. [Conditional: equity method] Test initial cost and acquisition-date basis differences; evaluate investee-information reliability; recalculate share of post-acquisition results/OCI, distributions, policy/reporting-date adjustments, unrealised-profit eliminations and loss-recognition limits, including relevant long-term interests and obligations. Under SMEs, first establish the permitted policy selected. (IAS 28.10, .14A, .28, .32–39; ISA 500.6–9; IFRS for SMEs Sections 14–15). — test_of_detail — [valuation, accuracy, completeness, classification]
+
+6. [Conditional: financial investments] Test debt business models and SPPI terms; separately evaluate equity FVTPL/FVOCI treatment and election eligibility. Verify initial fair value, transaction-cost treatment, subsequent measurement, effective-interest calculations and profit-or-loss/OCI allocation. Under SMEs, use the applicable financial-instrument requirements rather than automatically applying IFRS 9. (IFRS 9.4.1.2–4, .5.1.1, .5.4.1, .5.7.5–6; IFRS for SMEs applicable Sections 11–12). — test_of_detail — [classification, valuation, accuracy]
+
+7. [Conditional: fair-value measurement] Independently corroborate quoted prices or test valuation techniques, significant inputs, model calculations and measurement-date assumptions; evaluate estimation uncertainty and management bias, and specialist involvement where necessary. (IFRS 13.24, .61–67, .76–90; ISA 540.15, .18, .22–29, .32–36). — test_of_detail — [valuation, accuracy]
+
+8. [Conditional: impairment applies] For IFRS 9 debt assets, test ECL scope, credit-risk staging, probability-weighted forward-looking cash shortfalls and calculations. For cost investments, assess IAS 36 indicators and required recoverable amounts; for equity-accounted investments, test impairment of the net investment and the treatment of long-term interests. Apply the separate SME impairment requirements where relevant. (IFRS 9.5.5.1–17; IAS 36.4, .9; IAS 28.14A, .40–43; ISA 540.18–36; IFRS for SMEs Sections 11, 14–15, 27). — test_of_detail — [valuation, accuracy]
+
+9. [Conditional: acquisitions, disposals or ownership changes] Vouch agreements and settlement; test recognition/derecognition dates, transaction costs, gains/losses, retained-interest measurement and applicable OCI treatment. Distinguish ownership changes without loss of control from loss of control or significant influence; do not recycle equity-FVOCI gains to profit or loss. (IFRS 9.3.1.1, .3.2.3, .5.7.5, B5.7.1; IFRS 10.23, .25, B96–B99; IAS 28.22–25). — test_of_detail — [occurrence, accuracy, valuation, cutoff, classification]
+
+10. Test investment returns against holdings, declarations and contractual/effective rates; search for unrecorded accrued income, test entitlement dates and distinguish dividend income from equity-method distributions and consolidated intra-group income. (IFRS 9.5.4.1, .5.7.1A; IAS 27.12; IAS 28.10; IFRS 10.B86(c)). — test_of_detail — [occurrence, completeness, accuracy, cutoff, classification]
+
+11. [Conditional: group financial statements or joint operations] For group financial statements, cross-reference the ISA 600 programme and test consolidation completeness, adjustments, eliminations, non-controlling interests and applicable reporting-date/policy/translation adjustments. For joint operations, test the recognised rights to assets and obligations for liabilities and relevant income/expenses. (ISA 600 (Revised).14(k), .35–38, .45–51; IFRS 10.B86–B93; IFRS 11.20–24; IAS 21.39). — test_of_detail — [fs_level, completeness, accuracy, classification, rights_obligations]
+
+12. Test classification and applicable disclosures, including restrictions, pledges, commitments, related parties, interests in other entities, financial risks, ECL and fair-value hierarchy; apply IAS 27 disclosures in separate financial statements and the correct SME checklist where relevant. (IAS 27.16–17; IFRS 12.5–9, .10–23; IFRS 7.14–15, .31–42; IFRS 13.93–99; IAS 24.18; IFRS for SMEs applicable Sections 9, 11–15, 33). — test_of_detail — [rights_obligations, completeness, accuracy, presentation, classification]
+
+These branches address the principal differences between IFRS 9 assets, equity-accounted interests, cost investments and group information. [bdo](https://www.bdo.global/getmedia/3ef39b97-e129-4275-a291-2208290823ac/IFRS-AS-IP-IAS-36-2024-25.pdf)
+
+## 3. Other Income
+
+### Missing coverage and substantive corrections
+
+1. Vouching recorded credits does not establish completeness. Search underlying deposits, holdings, leases, disposal records, awards and subsequent receipts for omitted entitlements/accruals: ISA 330.6, .18, A45. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+2. Apply recognition requirements by income nature. Cash receipt does not necessarily determine recognition, and ordinary customer revenue should not be parked in “other income”: IFRS 15.31; IFRS 9.5.4.1, .5.7.1A; IFRS 16.81.
+3. “Grant conditions are met” is too absolute for IAS 20. Recognition requires reasonable assurance of compliance and receipt, followed by appropriate systematic recognition; distinguish asset-related from income-related grants. SMEs use the performance-condition model in 24.4, not IAS 20’s matching model. [ifrs](https://www.ifrs.org/content/dam/ifrs/publications/html-standards/english/2025/issued/html-ifrs-for-smes.html)
+4. Test insurance/compensation recognition thresholds and the basis for liability/provision releases; age alone does not justify writing back a payable: IAS 37.31–35, .53, .59; IAS 16.65; IFRS 9.3.3.1–3. [ifrs](https://www.ifrs.org/issued-standards/list-of-standards/ias-37-provisions-contingent-liabilities-and-contingent-assets/)
+5. Add income-specific fraud-risk assessment and the appropriate response. Unusual-credit inspection does not replace journal-entry testing or assessment of revenue-recognition fraud risks: ISA 240.26, .32–33.
+6. Avoid duplication with investment, PPE and foreign-currency workpapers. Cross-reference completed evidence and test only remaining recognition, completeness or presentation issues.
+
+### Original-line review
+
+| Original | Finding on wording, type and assertions |
+|---|---|
+| 1 | Keep `test_of_detail`, `[completeness, accuracy]` for the analysis; does not itself prove income completeness. |
+| 2 | Keep `analytical`, `[occurrence, completeness, accuracy]` where supported by precise, independent expectations; separate heterogeneous income streams. |
+| 3 | Keep `test_of_detail`; `[occurrence, accuracy, classification]`. Add entitlement and recognition criteria; receipt is not sufficient. |
+| 4 | Keep `test_of_detail`, `[accuracy, classification]`; cross-reference source sections rather than recompute the same item twice. |
+| 5 | Conditional; keep `test_of_detail`; `[occurrence, accuracy, cutoff, classification, presentation]`. Correct recognition threshold and framework branch. |
+| 6 | Keep `test_of_detail`; `[occurrence, accuracy, cutoff, classification]`. Add legal/accounting basis for write-backs and follow through to JET. |
+| 7 | Keep `test_of_detail`; `[cutoff, completeness, occurrence]` if both pre/post-year-end evidence is inspected. |
+| 8 | Keep `test_of_detail`, `[classification, presentation]`. Do not hard-code a universal operating/other/finance taxonomy; account for IFRS 18 adoption. |
+| 9 | Keep `test_of_detail`; add `[completeness, accuracy, presentation]`. Use the relevant framework’s requirements and materiality. |
+
+### Revised list — 10 procedures
+
+1. Obtain an analysis of other income by nature and source; test completeness and accuracy of the analysis, recalculate totals and agree to GL/TB; identify material, unusual and related-party streams. (ISA 500.9; ISA 330.18, .20(a)). — test_of_detail — [completeness, accuracy]
+
+2. Search underlying deposits, investment holdings, leases, disposal records, grant/claim correspondence and selected subsequent receipts for income entitlements not recorded; trace them to income, accruals or deferred-income balances as appropriate. (ISA 330.6, .18, A45). — test_of_detail — [completeness, cutoff, classification]
+
+3. [Conditional: predictable streams] Develop separate income expectations from verified rates, holdings, lease terms or other reliable drivers; establish precision and investigation thresholds and corroborate differences. Do not rely on aggregate prior-year comparisons for heterogeneous one-off income. (ISA 520.5, .7). — analytical — [occurrence, completeness, accuracy]
+
+4. Vouch selected material and risk-targeted items to agreements, declarations, settlement evidence and other corroboration; verify entitlement, recognition requirements and substance rather than relying solely on receipt. (ISA 500.6–7; applicable IFRS 9, IFRS 15, IFRS 16 or SME recognition requirements). — test_of_detail — [occurrence, accuracy, classification]
+
+5. [Conditional: interest, dividends, rentals, disposals or FX] Recalculate amounts and recognition periods; evaluate effective-interest treatment, dividend entitlement, lease-income recognition, disposal gains and exchange differences. Cross-reference source-section testing and perform only incremental work. (IFRS 9.5.4.1, .5.7.1A; IFRS 16.81; IAS 16.68–71; IAS 38.113; IAS 21.23, .28). — test_of_detail — [accuracy, cutoff, classification]
+
+6. [Conditional: government grants] Under full IFRS, test reasonable assurance of compliance and receipt, systematic recognition, asset/income-related presentation and potential repayment. Under SMEs, test performance conditions, recognition when receivable where no future conditions exist, and liabilities for amounts received before recognition criteria are satisfied. (IAS 20.7–8, .12, .20, .24, .29, .32; IFRS for SMEs 24.4–5). — test_of_detail — [occurrence, accuracy, cutoff, classification, presentation]
+
+7. [Conditional: claims, reimbursements or write-backs] Test the applicable recognition threshold and evidence of entitlement; verify the legal/accounting basis for extinguishing payables or reversing provisions; ensure contingent assets and uncertain recoveries are not recognised prematurely. (IAS 37.31–35, .53, .59; IAS 16.65; IFRS 9.3.3.1–3; IFRS for SMEs Sections 11, 17, 21). — test_of_detail — [occurrence, accuracy, classification]
+
+8. Test selected items and supporting evidence around year-end for correct accrual, deferral and recognition period; distinguish subsequent evidence of year-end conditions from new post-year-end events. (IAS 10.3, .8–10; ISA 330.6). — test_of_detail — [cutoff, completeness, occurrence]
+
+9. Assess fraud susceptibility by income stream and inspect unusual/manual credits, round sums, year-end entries and related-party items; evaluate business rationale, supporting evidence and management bias, and cross-reference journal-entry and management-override testing. Document any rebuttal of the revenue-recognition fraud presumption where relevant. (ISA 240.26, .32–33, .47). — test_of_detail — [occurrence, accuracy, cutoff, classification]
+
+10. Test classification, permitted offsetting and applicable disclosures of material income by nature, grants, related parties and uncertainties; verify customer revenue and OCI items are not misclassified as other income, and apply IFRS 18 categories where adopted. (IAS 1.32, .85, .97; IAS 20.39; IAS 24.18; IFRS 18.44–47 where applicable; IFRS for SMEs Sections 5, 8, 24, 33). — test_of_detail — [completeness, accuracy, classification, presentation]
+
+The grant and contingent-recovery revisions are particularly important: the recognition tests differ both by income nature and reporting framework. [ifrs](https://www.ifrs.org/content/dam/ifrs/publications/html-standards/english/2025/issued/html-ifrs-for-smes.html)
+
+## 4. Financial Statement Disclosures
+
+### Missing coverage and substantive corrections
+
+1. “Agree all figures to the TB” is not achievable for disclosures derived outside the ledger—commitments, contingencies, maturity analyses, sensitivities and qualitative information need their own evidence: ISA 330.20(a), .30. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+2. A checklist does not substitute for testing completeness, accuracy and faithful description of disclosures, or considering additional disclosures needed for fair presentation: ISA 700.13–15; ISA 540.31, .36. [irba.co](https://www.irba.co.za/upload/ISA-540-Revised-and-Conforming-Amendments.pdf)
+3. Cash flows cannot be verified solely from comparative balance sheets and profit or loss. Inspect actual cash movements and remove non-cash, acquisition, FX and other reconciling effects; test applicable financing-liability reconciliations: IAS 7.18–21, .43–45, .44A–44E. [ey](https://www.ey.com/content/dam/ey-unified-site/ey-com/en-gl/technical/ifrs-technical-resources/documents/en-gl-annual-ifrs-disclosure-checklist-v2-09-2025.pdf)
+4. Other-information work must address inconsistency with both the financial statements and knowledge obtained in the audit, plus apparent material misstatements—not just inconsistency with FS figures: ISA 720.14–20.
+5. Add final overall analytical review, unless completed and cross-referenced elsewhere: ISA 520.6–7. [ibr-ire](https://www.ibr-ire.be/docs/default-source/nl/documents/regelgeving-en-publicaties/rechtsleer/normen-en-aanbevelingen/isa-s/isa-english-version/isa-520_en.pdf?sfvrsn=2813e4d9_1)
+6. Distinguish standards effective/adopted in the period from issued-but-not-effective standards: IAS 8.28, .30–31. Do not require application merely because a standard has been issued. [ey](https://www.ey.com/content/dam/ey-unified-site/ey-com/en-gl/technical/ifrs-technical-resources/documents/en-gl-annual-ifrs-disclosure-checklist-v2-09-2025.pdf)
+
+### Original-line review
+
+| Original | Finding on wording, type and assertions |
+|---|---|
+| 1 | Keep `test_of_detail`; `[accuracy, completeness, presentation]`. Reconcile ledger-derived figures; support non-ledger information separately. |
+| 2 | Keep `test_of_detail`; `[completeness, presentation]`. Checklist must match framework, edition and permitted disclosure regime. N/A and immaterial are different conclusions. |
+| 3 | Keep `test_of_detail`; add `[completeness, accuracy, classification, presentation]`. Comparative balances alone are insufficient. |
+| 4 | Keep `test_of_detail`; `[presentation, completeness, accuracy]`. Use “material accounting policy information” where applicable, not boilerplate “significant policies.” |
+| 5 | Keep `test_of_detail`; `[accuracy, completeness, presentation, classification]`. Add implications of comparative misstatements and opening statements where required. |
+| 6 | Keep `test_of_detail`; `[completeness, accuracy, presentation]`. Cross-reference underlying audit work; do not infer that listing disclosures fulfils ISA 550/560/570. |
+| 7 | Keep `test_of_detail`; `[classification, accuracy, completeness, presentation]`. Separate application/transition from issued-but-not-effective disclosures. |
+| 8 | Keep `test_of_detail`; `[completeness, presentation]`. Conditional on applicable additional requirements; retain jurisdiction-neutral wording. |
+| 9 | `other` invalid. Use `test_of_detail` as evaluation proxy, `[fs_level, presentation, classification]`; not a control test. |
+| 10 | Conditional. `other` invalid; `test_of_detail` as reading/evaluation proxy, `[fs_level]`. Other information is outside the FS assertions and audit opinion. |
+| 11 | `other` invalid. Use `test_of_detail` as conclusion proxy, `[fs_level, completeness, presentation]`; link omissions and qualitative misstatements to ISA 450. |
+
+### Revised list — 12 procedures
+
+1. Establish the applicable reporting framework, edition, effective standards, early adoptions and any eligible reduced-disclosure regime; verify the financial statements accurately describe that framework. (ISA 700.15; IAS 1.16 or applicable successor requirements; IFRS for SMEs 3.3). — test_of_detail — [fs_level, classification, presentation]
+
+2. Reconcile primary-statement and ledger-derived note amounts to the final adjusted TB, lead schedules and underlying records; test casts, cross-references and consistent use of final versions. (ISA 330.20(a), .30). — test_of_detail — [accuracy, completeness, presentation]
+
+3. Identify disclosures sourced outside the GL and test their completeness, accuracy and consistency with contracts, minutes, legal correspondence, models and other audit evidence; investigate contradictory information. (ISA 330.20(a), .26; ISA 500.6–9). — test_of_detail — [completeness, accuracy, presentation]
+
+4. Complete the period-specific disclosure checklist, linking material requirements to notes and evidence; distinguish N/A from materiality-based omission and consider disclosures necessary to meet disclosure objectives and fair presentation beyond checklist wording. (ISA 700.13–14; ISA 540.36; IAS 1.31, .112(c); IFRS for SMEs 3.2, Section 8). — test_of_detail — [completeness, presentation]
+
+5. Test the cash-flow statement against cash records and supporting reconciliations; verify operating/investing/financing classification, permitted netting, cash-equivalent composition, FX and acquisition effects, exclusion/disclosure of non-cash transactions, and applicable financing-liability and supplier-finance disclosures. (IAS 7.6–9, .18–24, .28, .39, .43–45, .44A–44H; IFRS for SMEs Section 7). — test_of_detail — [completeness, accuracy, classification, presentation]
+
+6. Verify material accounting-policy information matches actual accounting; test disclosures of significant judgements, estimation uncertainty and relevant changes against supporting workpapers and entity-specific circumstances. (IAS 1.117–125 where applicable; IAS 8.28–29, .39–40; ISA 540.26(b), .31, .36; IFRS for SMEs 8.5–7, Section 10). — test_of_detail — [completeness, accuracy, presentation]
+
+7. Verify comparative amounts and relevant narratives, consistency of policies, restatements and reclassifications; inspect supporting adjustments and required explanations and any required opening statement of financial position. (ISA 710.6–9; IAS 1.38–44; IAS 8.42–49; IFRS for SMEs 3.14, Section 10). — test_of_detail — [accuracy, completeness, classification, presentation]
+
+8. Test applicable cross-cutting disclosures against completed audit work, including related parties, contingencies/commitments, subsequent events, going concern and material uncertainties, financial risks and capital management; resolve missing underlying audit evidence rather than merely ticking disclosure boxes. (ISA 550.25; ISA 560.6–8; applicable ISA 570; IAS 24.18; IAS 37.84–89; IAS 10.17, .21; IAS 1.25–26, .134–136; IFRS 7.31–42; corresponding SME sections). — test_of_detail — [completeness, accuracy, presentation]
+
+9. [Conditional: new/amended standards or framework transition] Verify required application and transition accounting for effective/adopted standards; separately test issued-but-not-effective disclosures and relevant first-time-adoption reconciliations. (IAS 8.28, .30–31; IFRS 1.23–25; IFRS for SMEs Sections 10, 35 and applicable transition provisions). — test_of_detail — [accuracy, completeness, classification, presentation]
+
+10. [Conditional: additional statutory/regulatory disclosures or accompanying other information] Test applicable additional FS disclosure requirements. Separately obtain/read other information within ISA 720’s scope, considering inconsistencies with the FS and audit knowledge and apparent material misstatements; resolve or report identified matters as required. (ISA 250.13–15; ISA 720.13–20). — test_of_detail — [fs_level, completeness, presentation]
+
+11. Perform or cross-reference analytical procedures near audit completion using final financial information; investigate significant unexplained relationships and reassess risks/additional work where necessary. (ISA 520.6–7). — analytical — [fs_level]
+
+12. Read and evaluate the complete final FS for understandable, relevant and faithful presentation, appropriate aggregation/disaggregation and terminology; confirm all components are complete, accumulate disclosure misstatements, evaluate reporting implications and document the conclusion. (ISA 330.24–27; ISA 700.11–15, .48; ISA 450.5, .11–15). — test_of_detail — [fs_level, completeness, classification, presentation]
+
+Lines 10 and 12 use the taxonomy proxy described above. Financial-statement disclosures and accompanying other information should remain separate workpaper objects even if the template combines their applicability checkpoint. The closing-reconciliation and final-presentation requirements are explicit in ISA 330 and ISA 700. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+
+## 5. Trial Balance, Adjustments & Lead Schedules
+
+### Missing coverage and substantive corrections
+
+1. Add examination of material closing journals and adjustments, including entries outside the GL. Recording proposed adjustments is not the test required by ISA 330.20(b). Cross-reference fraud-focused journal testing under ISA 240.32(a). [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+2. Do not exclude accounts merely because each is below materiality. Consider aggregation, qualitative significance, material transaction classes and disclosures; all accounts must remain in the financial-statement population. ISA 330.18; ISA 450.11. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+3. A single TB account can support multiple audit areas and disclosures. Require a controlled primary mapping and appropriate secondary links—not “exactly one audit section” as an ISA rule.
+4. Corrected/uncorrected describes correction status; clearly trivial describes whether accumulation is required. They are not three equivalent categories. Accumulate all non-clearly-trivial misstatements and distinguish factual, judgemental and projected misstatements where useful: ISA 450.5, A2–A6. [ibr-ire](https://www.ibr-ire.be/docs/default-source/fr/documents/reglementation-et-publications/normes-et-recommandations/isa/isa-english-version/isa-450_en.pdf?sfvrsn=ee26e4d9_1)
+5. Add materiality reassessment, qualitative/prior-period effects, management correction requests/refusals, governance communication and written representations: ISA 450.8–15. [ibr-ire](https://www.ibr-ire.be/docs/default-source/fr/documents/reglementation-et-publications/normes-et-recommandations/isa/isa-english-version/isa-450_en.pdf?sfvrsn=ee26e4d9_1)
+6. Add evidence that agreed adjustments were actually reflected, version-difference testing and traceability to the authorised final FS. ISA 230 does not prescribe a particular lead-schedule format; it prescribes adequate documentation.
+
+### Original-line review
+
+| Original | Finding on wording, type and assertions |
+|---|---|
+| 1 | Keep `test_of_detail`; `[accuracy, completeness]`. Test extract integrity; a balanced TB can still omit or misstate accounts. ISA 510 initial-audit only. |
+| 2 | Keep `test_of_detail`; `[completeness, classification]`. Remove automatic “Out of Scope / Below Materiality”; allow secondary links. |
+| 3 | Keep `test_of_detail`; `[accuracy, completeness, classification, presentation]`. Lead schedules are an implementation method, not a prescribed ISA document. |
+| 4 | Keep `analytical`; `[fs_level, accuracy, completeness]` as broad review targets. No specific assertion is conclusively tested by an unexplained variance comparison. |
+| 5 | `other` invalid. Expand to validation of adjustment support; `test_of_detail`, `[accuracy, classification]`. Keep posting proposals separate from booked amounts. |
+| 6 | `other` invalid. `test_of_detail` as evaluation proxy, `[fs_level]`. Correct the categories and expand ISA 450 evaluation. |
+| 7 | Keep `test_of_detail`; `[accuracy, completeness, classification, presentation]`. Approval alone is insufficient; verify reflection in books/final FS. |
+| 8 | `other` invalid. Make conditional; `test_of_detail`, `[accuracy, completeness]`, including comparison and testing of changes—not merely version recording. |
+| 9 | `other` invalid. Documentation proxy `test_of_detail`, `[fs_level]`; `presentation` is inappropriate because working-paper organisation is not FS presentation. |
+
+### Revised list — 11 procedures
+
+1. Obtain the year-end TB and relevant GL extracts; verify entity, period, currency, extract parameters and completeness/accuracy of imported data; reconcile control totals, confirm debits equal credits and investigate missing, duplicate or inconsistent accounts. (ISA 500.9; ISA 330.20(a)). — test_of_detail — [completeness, accuracy]
+
+2. Reconcile opening balances to prior-period closing accounting records and explain changes, including prior-period corrections and reclassifications. [Conditional: initial audit—obtain sufficient appropriate evidence on opening balances and consistent accounting policies.] (ISA 510.6–8; ISA 710.7). — test_of_detail — [accuracy, completeness, classification]
+
+3. Verify every TB account is included once in controlled primary financial-statement mapping and linked to relevant audit sections/disclosures; investigate unmapped, new and unusual accounts. Document reduced/no detailed testing using risk, aggregation and qualitative materiality—not individual balance size alone. (ISA 330.6, .18; ISA 450.11). — test_of_detail — [completeness, classification]
+
+4. Obtain or prepare lead schedules showing constituent accounts, current/comparative balances, booked adjustments, uncorrected proposals and final balances; recalculate and reconcile to the relevant TB version and FS captions without double-counting adjustments. (ISA 330.20(a), .30; ISA 230.8–9). — test_of_detail — [accuracy, completeness, classification, presentation]
+
+5. Analyse account movements and unusual relationships using appropriately disaggregated information; corroborate explanations and route new risks to relevant audit sections. [Conditional: substantive analytical reliance—document suitable assertions, reliable data, precise expectations and investigation thresholds.] (ISA 315 (Revised 2019).14(b); ISA 520.5, .7). — analytical — [fs_level, accuracy, completeness]
+
+6. Examine material journals and other adjustments used to prepare the FS, including post-close, consolidation and top-side entries outside the GL; inspect support, recalculate, test accounting/period/classification and cross-reference management-override journal testing. (ISA 330.20(b); ISA 240.32(a)). — test_of_detail — [occurrence, accuracy, completeness, cutoff, classification]
+
+7. Maintain and validate a misstatement/adjustment schedule with unique references, supporting evidence, source sections, affected accounts/disclosures and correction status; accumulate all misstatements other than clearly trivial items and identify factual, judgemental or projected differences where useful. (ISA 450.5, .15, A2–A6). — test_of_detail — [fs_level, accuracy, completeness, classification]
+
+8. Communicate accumulated misstatements to management and request correction; document refusal reasons. For accepted corrections, verify actual posting or reflection in the controlled FS preparation records and test whether further misstatements remain where management has undertaken corrective investigation. (ISA 450.7–9). — test_of_detail — [accuracy, completeness, classification]
+
+9. Reassess materiality using actual results; evaluate uncorrected amount and disclosure misstatements individually and collectively, including qualitative significance, prior-period effects and implications for risk assessments, additional work and the audit opinion; communicate to governance and obtain the required written representation. (ISA 450.6, .10–15). — test_of_detail — [fs_level]
+
+10. Reconcile the final adjusted TB, lead schedules, equity movements and FS, distinguishing booked corrections from uncorrected proposals. [Conditional: later TB/FS version—compare changes with the tested version, test new/changed entries and refresh affected procedures.] Retain the exact versions supporting the issued report. (ISA 330.20, .30; ISA 230.8–9; ISA 700.48). — test_of_detail — [accuracy, completeness, classification, presentation]
+
+11. Verify traceability from TB accounts and lead schedules to evidence, adjustments, findings and conclusions; record preparer/reviewer identities and dates, resolve significant outstanding matters, and perform or cross-reference final analytical review using final financial information. (ISA 230.8–9; ISA 330.26, .28; ISA 520.6–7). — test_of_detail — [fs_level]
+
+Line 11 is a documentation/completion proxy; its analytical component should link to the `analytical` completion procedure in Section 4 rather than be performed twice. The substantive closing requirements and misstatement-evaluation requirements are supported directly by ISA 330.20 and ISA 450.5–15. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+
+## Implementation notes for the firm policy
+
+Keep these five templates as risk-responsive programmes, not unconditional checklists. Each selected procedure should record applicability, relevant risk/assertion, extent of testing, evidence, exceptions and conclusion. Cross-references are acceptable when they identify completed work that actually addresses the relevant objective; they should not merely point to another unfinished section. ISA 330.28–30 and the IFAC Guide’s documentation and responsive-planning guidance support this approach. [mia.org](https://mia.org.my/wp-content/uploads/2022/04/MIA_ISA_330.pdf)
+
+Before release, version the templates by reporting framework and audit-standard effective date. Also separate administrative/evaluation activities from substantive and control procedures in the platform’s data model; forcing all activities into three audit-test categories otherwise creates misleading coverage reports.

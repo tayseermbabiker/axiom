@@ -139,4 +139,4 @@ rights_obligations, classification, presentation, fs_level.
 ---
 
 ## Perplexity prompt #2 — Arabic translation
-See `specs/fsa-perplexity-prompt-2-arabic.txt` (prompt + all 54 locked procedures, ready to paste).
+See `specs/fsa-perplexity-prompt-2-arabic.txt` (prompt + all 56 locked procedures, ready to paste).
