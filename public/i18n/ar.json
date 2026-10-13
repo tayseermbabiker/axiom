@@ -135,7 +135,7 @@
       "f3": "تقييم المخاطر (ISA 315/330/240)",
       "f4": "العناية الواجبة بالعميل (AML/KYC)",
       "f5": "استيراد ميزان المراجعة + الميزان المعدّل (ISA 450)",
-      "f6": "19 قسماً وإجراءات مراجعة",
+      "f6": "24 قسماً وإجراءات مراجعة",
       "f7": "فحص واعتماد على ثلاثة مستويات",
       "f8": "مذكرة الإتمام + فحص جودة الارتباط (ISQM 2)",
       "f9": "ملف PDF جاهز للفحص الرقابي (EN/AR)"
@@ -1477,7 +1477,12 @@
     "System check passed - ready to attest": "فحص النظام اجتاز — جاهز للإقرار",
     "System check NOT passed - resolve before attesting": "فحص النظام فشل — يجب الحل قبل الإقرار",
     "13 attestations must be ticked before the memo can be signed. The system pre-checks 9 of them. Three (independence, mgmt rep, review notes) are manual. EQR auto-passes if not required.": "يجب تأكيد 13 إقرارًا قبل التمكن من توقيع المذكرة. يتحقق النظام تلقائيًا من 9 منها. ثلاثة إقرارات (الاستقلالية، خطاب الإقرارات الخطية، ملاحظات المراجعة) يدوية. يُجاز إقرار فحص جودة الارتباط (EQR) تلقائيًا إن لم يكن مطلوبًا.",
-    "attestations complete": "إقرارًا مكتملاً"
+    "attestations complete": "إقرارًا مكتملاً",
+    "Intangible Assets & Goodwill": "الأصول غير الملموسة والشهرة",
+    "Investments": "الاستثمارات",
+    "Other Income": "الإيرادات الأخرى",
+    "Financial Statement Disclosures": "إفصاحات القوائم المالية",
+    "Trial Balance, Adjustments & Lead Schedules": "ميزان المراجعة والتعديلات والجداول الرئيسية"
   },
   "reportLabels": {
     "Client Acceptance / Continuance (ISA 220)": "قبول العملاء والاستمرار في ارتباطات المراجعة (ISA 220)",

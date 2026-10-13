@@ -2732,6 +2732,8 @@
                 <option value="Prepayments & Other Receivables">Prepayments & Other Receivables</option>
                 <option value="Inventory">Inventory</option>
                 <option value="PPE / Fixed Assets">PPE / Fixed Assets</option>
+                <option value="Intangible Assets &amp; Goodwill">Intangible Assets &amp; Goodwill</option>
+                <option value="Investments">Investments</option>
               </optgroup>
               <optgroup label="Balance Sheet — Liabilities & Equity">
                 <option value="Accounts Payable">Accounts Payable</option>
@@ -2741,6 +2743,7 @@
               </optgroup>
               <optgroup label="Income Statement">
                 <option value="Revenue">Revenue</option>
+                <option value="Other Income">Other Income</option>
                 <option value="Cost of Sales">Cost of Sales</option>
                 <option value="Payroll & HR">Payroll & HR</option>
                 <option value="Operating Expenses">Operating Expenses</option>
@@ -2751,6 +2754,8 @@
                 <option value="Subsequent Events">Subsequent Events</option>
                 <option value="Going Concern">Going Concern</option>
                 <option value="Journal Entry Testing">Journal Entry Testing</option>
+                <option value="Financial Statement Disclosures">Financial Statement Disclosures</option>
+                <option value="Trial Balance, Adjustments &amp; Lead Schedules">Trial Balance, Adjustments &amp; Lead Schedules</option>
                 <option value="Out of Scope / Below Materiality">Out of Scope / Below Materiality</option>
               </optgroup>
               <option value="custom">Custom section...</option>
@@ -6401,7 +6406,7 @@
         });
 
         // Sections are NOT auto-created from TB classifications anymore.
-        // The 19 standard audit sections are seeded at engagement creation
+        // The 21 standard audit sections are seeded at engagement creation
         // (see /js/audit-templates.js seedSectionsForEngagement). After
         // upload, the auditor explicitly tags their classifications onto
         // those standard sections — preserves audit-area integrity and

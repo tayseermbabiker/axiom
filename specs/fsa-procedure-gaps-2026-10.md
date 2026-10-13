@@ -18,11 +18,11 @@ Status legend: ✅ locked · ⏳ in progress · ⬜ pending
 ## Targets (5)
 | # | Section | EN | AR | Seeding |
 |---|---|---|---|---|
-| 1 | Intangible Assets & Goodwill | ✅ | ⬜ | template only (dropdown) |
-| 2 | Investments | ✅ | ⬜ | template only (dropdown) |
-| 3 | Other Income | ✅ | ⬜ | template only (dropdown) |
-| 4 | Financial Statement Disclosures | ✅ | ⬜ | auto-seeded on every new engagement |
-| 5 | Trial Balance, Adjustments & Lead Schedules | ✅ | ⬜ | auto-seeded on every new engagement |
+| 1 | Intangible Assets & Goodwill | ✅ | ✅ | template only (dropdown) |
+| 2 | Investments | ✅ | ✅ | template only (dropdown) |
+| 3 | Other Income | ✅ | ✅ | template only (dropdown) |
+| 4 | Financial Statement Disclosures | ✅ | ✅ | auto-seeded on every new engagement |
+| 5 | Trial Balance, Adjustments & Lead Schedules | ✅ | ✅ | auto-seeded on every new engagement |
 
 Rationale for seeding split: 4 and 5 apply to every audit; 1–3 only when the client
 has those balances, so auto-seeding would clutter simple SME files.
@@ -140,3 +140,16 @@ rights_obligations, classification, presentation, fs_level.
 
 ## Perplexity prompt #2 — Arabic translation
 See `specs/fsa-perplexity-prompt-2-arabic.txt` (prompt + all 56 locked procedures, ready to paste).
+
+---
+
+## Round 2 — Arabic (Perplexity, 2026-10-13) — ✅ APPLIED
+Source: `specs/fsa-perplexity-round2-arabic.txt` (56/56 procedures + terminology notes).
+Claude fixes before applying: leftover English ("initial audit", "as applicable",
+"for first-time adoption") translated; «زميلة» → «شقيقة» to match the regulator's
+circular wording; Investments #11 «مطابقة أعمال تدقيق المجموعة مع» → «الإحالة إلى
+أعمال تدقيق المجموعة المنفذة وفق» (cross-reference, not reconcile).
+
+Applied to: `public/js/audit-templates.js` (EN + AR + assertions; seed order now 21),
+`public/pages/engagement.html` (New Section dropdown), `public/i18n/ar.json`
+(5 section labels), landing copy 19 → 24 sections. Related Parties AR glitch fixed.

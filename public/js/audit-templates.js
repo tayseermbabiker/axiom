@@ -267,6 +267,73 @@ const PROCEDURE_TEMPLATES = {
     { description: 'Evaluate segregation of duties around JE processing. From the user-access listing for the accounting system, identify: (a) users with both posting AND approval rights for journal entries, (b) users who can post directly to the GL bypassing approval workflows, (c) users with both JE-posting and bank-reconciliation rights (a high-risk combination per ISA 240). Document findings and recommend compensating controls or report as a control deficiency', type: 'controls' },
     { description: 'Document the overall conclusion. State explicitly: (a) the total population tested by each filter and number of entries selected for substantive vouching, (b) exceptions found and their disposition (resolved with management explanation / posted as audit adjustment / escalated as a finding), (c) the impact on the fraud risk assessment per ISA 240.A45 — does the JET work confirm, reduce, or increase the risk of material misstatement due to fraud? (d) any changes required to other audit procedures based on JET findings. Cross-reference any unresolved exceptions to the Findings section', type: 'other' },
   ],
+  // ---------- FSA-circular coverage (Oct 2026) — see specs/fsa-procedure-gaps-2026-10.md ----------
+  'Intangible Assets & Goodwill': [
+    { description: 'Obtain the movement schedule for intangible assets and goodwill (opening, additions, disposals, amortisation, impairment, closing); test its accuracy, recompute, and reconcile to the GL/TB and prior-year closing balances; for an initial audit, perform opening-balance procedures (ISA 500, ISA 330.20, ISA 510)', type: 'test_of_detail' },
+    { description: 'Completeness: inspect acquisition agreements, project records, board minutes and selected expense accounts for unrecorded intangibles, expenditure wrongly capitalised, or assets requiring derecognition (ISA 330; IAS 38.18–23, .68–71)', type: 'test_of_detail' },
+    { description: '(Conditional — additions) Vouch selected additions to contracts, invoices and implementation evidence; verify identifiability, control, probable future benefits, directly attributable cost and recognition date; exclude service arrangements that do not create a controlled asset (IAS 38.12–23, .27–32)', type: 'test_of_detail' },
+    { description: '(Conditional — internally generated) Full IFRS: research expensed; development capitalised only from the date all IAS 38.57 criteria are met; internally generated brands, customer lists and goodwill not capitalised. IFRS for SMEs: all internally generated intangible expenditure, including R&D, expensed (Section 18)', type: 'test_of_detail' },
+    { description: 'Inspect registrations, licences and contracts for continuing rights, renewal terms, expiry dates, restrictions and pledges; assess the effect on carrying amounts and useful lives (IAS 38)', type: 'test_of_detail' },
+    { description: 'Evaluate useful lives, residual values, amortisation methods and available-for-use dates; recompute amortisation for a sample. Full IFRS: confirm goodwill and indefinite-life intangibles are not amortised and the indefinite-life assessment is reviewed annually. IFRS for SMEs: confirm intangibles and goodwill are amortised (IAS 38.88–109; IFRS for SMEs 18.19–24, 19.23)', type: 'test_of_detail' },
+    { description: '(Conditional — new goodwill) Assess whether the acquisition is a business combination or an asset acquisition; test acquisition-date fair values of identifiable net assets, consideration, non-controlling interest and any previously held interest; recompute goodwill (or bargain-purchase gain); under full IFRS, test allocation to cash-generating units (IFRS 3; IAS 36.80–87; IFRS for SMEs Section 19)', type: 'test_of_detail' },
+    { description: 'Impairment: assess indicators for all intangibles. Under full IFRS, test the annual impairment test for goodwill, indefinite-life intangibles and intangibles not yet available for use, regardless of indicators. Evaluate method, key assumptions and data (forecasts, discount rate, growth rate, CGU composition) for management bias; recompute; perform sensitivity analysis where estimation uncertainty is high; verify any reversal is permitted and that goodwill impairment is not reversed (IAS 36.9–10, .90, .104–125; ISA 540; IFRS for SMEs Section 27)', type: 'test_of_detail' },
+    { description: '(Conditional — disposals, abandonment or revaluation) Test derecognition date, removal of cost and accumulated amortisation, proceeds and gain/loss; if the revaluation model is used (full IFRS), verify an active market, class-wide application and surplus treatment (IAS 38.72–87, .112–117)', type: 'test_of_detail' },
+    { description: 'Analytical: develop an expectation of the amortisation charge from cost and useful lives; investigate significant differences (ISA 520)', type: 'analytical' },
+    { description: 'Test disclosures against evidence: reconciliation by class, lives and methods, indefinite-life assets and reasons, restrictions and pledges, commitments, R&D expense, business-combination information, goodwill by CGU, and key impairment assumptions and sensitivities (IAS 38.118–128; IAS 36.126–137; IFRS 3.59–63; IFRS for SMEs 18.27–29, 19.25–26)', type: 'test_of_detail' },
+  ],
+  'Investments': [
+    { description: 'Obtain the investment movement schedule by investee/instrument (acquisitions, disposals, distributions, share of results/OCI, fair-value movements, impairment, FX); recompute and reconcile to the GL/TB and prior-year closing balances; inspect minutes, agreements and external records for unrecorded holdings (ISA 500, ISA 330.20; initial audit: ISA 510)', type: 'test_of_detail' },
+    { description: 'Verify existence and ownership of selected holdings: custodian/broker/registrar confirmations (ISA 505 — auditor-controlled, with follow-up of exceptions and non-responses), share certificates, investee registry records and purchase agreements', type: 'test_of_detail' },
+    { description: 'Assess control, significant influence and joint control from substantive rights and actual arrangements, not ownership percentage alone; classify as subsidiary (IFRS 10), associate (IAS 28), joint venture or joint operation (IFRS 11), or financial asset (IFRS 9); assess any claimed consolidation exemption and document the judgement', type: 'test_of_detail' },
+    { description: '(Conditional — separate financial statements) Verify the measurement basis elected for subsidiaries, associates and joint ventures (cost / IFRS 9 / equity method) is permitted and applied consistently by category (IAS 27.10; IFRS for SMEs Section 9)', type: 'test_of_detail' },
+    { description: '(Conditional — equity method) Test initial cost and acquisition-date basis differences; assess the reliability of investee financial information; recompute the share of results and OCI, distributions (which reduce the investment), policy and reporting-date adjustments, unrealised-profit eliminations and loss-recognition limits including long-term interests (IAS 28.10, .14A, .26–39; IFRS for SMEs Sections 14–15)', type: 'test_of_detail' },
+    { description: '(Conditional — financial investments) Debt instruments: test the business model and SPPI to confirm the category (amortised cost / FVOCI / FVTPL) and recompute effective interest. Equity instruments: confirm FVTPL, or for an irrevocable FVOCI election verify eligibility (not held for trading) and that gains are not recycled to profit or loss. Verify initial fair value and transaction-cost treatment (IFRS 9.4.1, .5.1.1, .5.7.5; IFRS for SMEs Sections 11–12)', type: 'test_of_detail' },
+    { description: '(Conditional — fair value) Agree quoted prices to independent sources, or evaluate the valuation technique, significant inputs and model calculations; assess estimation uncertainty and management bias; consider using an expert where needed (IFRS 13; ISA 540; ISA 620)', type: 'test_of_detail' },
+    { description: '(Conditional — impairment) Debt at amortised cost/FVOCI: test the expected-credit-loss allowance (staging, forward-looking information) — not applicable to equity instruments. Cost-basis investments: assess IAS 36 indicators and test the recoverable amount where required. Equity-accounted investments: test impairment of the net investment (IFRS 9.5.5; IAS 36; IAS 28.40–43; ISA 540)', type: 'test_of_detail' },
+    { description: '(Conditional — acquisitions, disposals, ownership changes) Vouch to agreements and bank; test recognition/derecognition dates, transaction costs, gain or loss and retained-interest measurement; distinguish changes without loss of control from loss of control or significant influence (IFRS 9.3.2; IFRS 10.23, .25, B96–B99; IAS 28.22–25)', type: 'test_of_detail' },
+    { description: 'Test investment income: dividends to declarations, entitlement dates and bank; interest recomputed at contractual/effective rates; search for unrecorded accrued income; verify that dividends from equity-accounted investees reduce the investment rather than being recognised as income (IFRS 9.5.7.1A; IAS 27.12; IAS 28.10)', type: 'test_of_detail' },
+    { description: '(Conditional — group FS or joint operations) Group FS: cross-reference the ISA 600 group-audit work and test consolidation completeness, elimination of intra-group balances, transactions and unrealised profits, non-controlling interests and translation adjustments. Joint operations: test recognition of the entity\'s share of assets, liabilities, revenue and expenses (ISA 600 (Revised); IFRS 10.B86; IFRS 11.20–23; IAS 21)', type: 'test_of_detail' },
+    { description: 'Test current/non-current classification and disclosures against evidence: restrictions, pledges, commitments, related-party investees, interests in other entities, fair-value hierarchy, credit risk and ECL, and separate-FS disclosures (IAS 1; IAS 27.16–17; IFRS 12; IFRS 7; IFRS 13.93–99; IAS 24; IFRS for SMEs Sections 9, 11–15)', type: 'test_of_detail' },
+  ],
+  'Other Income': [
+    { description: 'Obtain an analysis of other income by nature and source (interest, dividends, rental, disposal gains, FX gains, grants, insurance claims, write-backs); recompute and agree to the GL/TB; identify material, unusual and related-party items (ISA 500)', type: 'test_of_detail' },
+    { description: 'Completeness: from deposits, investment holdings, leases, disposal records, grant and claim correspondence and post-year-end receipts, identify income entitlements not recorded and trace them to income, accruals or deferred income (ISA 330)', type: 'test_of_detail' },
+    { description: '(Conditional — predictable streams) Develop an expectation for each stream from verified drivers (rates × balances, lease terms); investigate significant differences; do not rely on an aggregate prior-year comparison for one-off income (ISA 520)', type: 'analytical' },
+    { description: 'Vouch selected material and risk-based items to agreements, declarations and settlement evidence; verify entitlement and that recognition criteria are met, not merely receipt of cash (ISA 500; IFRS 9, IFRS 15, IFRS 16 as applicable)', type: 'test_of_detail' },
+    { description: '(Conditional — interest, dividends, rentals, disposals, FX) Recompute amounts and recognition periods, cross-referencing work already performed in the Investments, PPE and Cash sections and performing only incremental work (IFRS 9.5.4.1, .5.7.1A; IFRS 16.81; IAS 16.68–71; IAS 21)', type: 'test_of_detail' },
+    { description: '(Conditional — government grants) Full IFRS: verify reasonable assurance of compliance with conditions and of receipt, systematic recognition, asset- vs income-related presentation and any repayment obligation (IAS 20). IFRS for SMEs: recognise when performance conditions are met; amounts received earlier are a liability (Section 24)', type: 'test_of_detail' },
+    { description: '(Conditional — insurance claims, reimbursements, write-backs) Verify evidence of entitlement and the recognition threshold (contingent assets only when virtually certain); verify the legal or accounting basis for derecognising payables or reversing provisions — age alone is not sufficient (IAS 37.31–35, .53, .59; IAS 16.65; IFRS 9.3.3.1)', type: 'test_of_detail' },
+    { description: 'Test cut-off of material items around year-end for correct accrual, deferral and period (ISA 500)', type: 'test_of_detail' },
+    { description: 'Fraud risk: assess susceptibility by income stream; inspect unusual or manual credits, round sums, year-end entries and related-party items for business rationale and management bias; cross-reference Journal Entry Testing (ISA 240.26, .32)', type: 'test_of_detail' },
+    { description: 'Test classification (other income vs revenue vs finance income vs OCI; IFRS 18 categories where adopted), prohibited offsetting, and disclosure of material items by nature, grants and related parties (IAS 1.32, .97; IAS 20.39; IAS 24.18)', type: 'test_of_detail' },
+  ],
+  'Financial Statement Disclosures': [
+    { description: 'Confirm the applicable financial reporting framework and edition (full IFRS or IFRS for SMEs), the standards effective for the period and any early adoption; verify the basis-of-preparation note describes it accurately (ISA 700.15; IAS 1.16; IFRS for SMEs 3.3)', type: 'test_of_detail' },
+    { description: 'Agree primary-statement and note amounts derived from the ledger to the final adjusted TB and lead schedules; check casts and cross-references, and that the final version is used throughout (ISA 330.20(a))', type: 'test_of_detail' },
+    { description: 'For disclosures not derived from the GL (commitments, contingencies, maturity analyses, sensitivities, narrative), test completeness and accuracy against contracts, minutes, legal letters, models and other audit evidence (ISA 330; ISA 500)', type: 'test_of_detail' },
+    { description: 'Complete the disclosure checklist for the applicable framework, linking each material requirement to the note and evidence; distinguish "not applicable" from "omitted as immaterial"; consider additional disclosures needed for fair presentation (ISA 700.13–14; IAS 1.31; IFRS for SMEs 3.2)', type: 'other' },
+    { description: 'Test the statement of cash flows against cash records and supporting reconciliations: classification of operating, investing and financing flows, cash-equivalent composition, FX effects, exclusion of non-cash transactions, and the reconciliation of liabilities arising from financing activities (IAS 7; IFRS for SMEs Section 7)', type: 'test_of_detail' },
+    { description: 'Verify that material accounting-policy information reflects the policies actually applied, and that significant judgements and sources of estimation uncertainty are disclosed consistently with the audit work (IAS 1.117–133; IAS 8; ISA 540.31, .36)', type: 'test_of_detail' },
+    { description: 'Verify that comparatives agree to the prior-year audited FS; test any restatement, reclassification or change in accounting policy and the required disclosures (ISA 710; IAS 1.38–44; IAS 8.42–49)', type: 'test_of_detail' },
+    { description: 'Verify cross-cutting disclosures against completed audit work — related parties (IAS 24), contingencies and commitments (IAS 37), subsequent events (IAS 10), going concern and any material uncertainty (ISA 570), financial risk management (IFRS 7), capital management (IAS 1); resolve missing underlying evidence rather than only ticking the checklist (ISA 550; ISA 560)', type: 'test_of_detail' },
+    { description: '(Conditional — new or amended standards, framework transition) Verify application and transition disclosures for standards effective in the period; separately check disclosure of standards issued but not yet effective (IAS 8.28, .30–31; IFRS 1 for first-time adoption)', type: 'test_of_detail' },
+    { description: '(Conditional — statutory/regulatory disclosures or other information) Test any additional local statutory or regulatory disclosure requirements (ISA 250). Read the other information in the annual report for material inconsistencies with the FS and with knowledge obtained in the audit, and for apparent material misstatement (ISA 720.14–20)', type: 'other' },
+    { description: 'Perform, or cross-reference to the Completion Memo, the final analytical review using the final FS; investigate unexplained relationships and reassess risks where needed (ISA 520.6)', type: 'analytical' },
+    { description: 'Read the complete final FS for overall presentation, appropriate aggregation and terminology; accumulate disclosure misstatements in the misstatement schedule, evaluate their effect on the opinion and document the conclusion (ISA 330.24; ISA 700.13–15; ISA 450)', type: 'other' },
+  ],
+  'Trial Balance, Adjustments & Lead Schedules': [
+    { description: 'Obtain the year-end TB and GL; verify entity, period and currency; confirm the import is complete and accurate (control totals, debits equal credits) and investigate missing, duplicate or inconsistent accounts (ISA 500.9; ISA 330.20(a))', type: 'test_of_detail' },
+    { description: 'Reconcile opening balances to the prior-year audited closing balances and explain differences, including prior-period corrections and reclassifications; for an initial audit, perform opening-balance procedures (ISA 510; ISA 710)', type: 'test_of_detail' },
+    { description: 'Verify every TB account has one primary mapping to an FS caption and audit section (with secondary links where relevant); investigate unmapped, new and unusual accounts; justify accounts placed in "Out of Scope / Below Materiality" on aggregation and qualitative factors, not individual size alone (ISA 330.18; ISA 450.11)', type: 'test_of_detail' },
+    { description: 'Prepare or obtain a lead schedule for each section showing constituent accounts, current and prior-year balances, booked adjustments, uncorrected proposals and final balances; recompute and agree to the TB version and FS caption without double-counting adjustments (ISA 330.20(a); ISA 230)', type: 'test_of_detail' },
+    { description: 'Analyse account movements using disaggregated data; corroborate management\'s explanations for significant variances and route any new risks to the relevant sections (ISA 315.14; ISA 520)', type: 'analytical' },
+    { description: 'Examine material journal entries and other adjustments made in preparing the FS, including post-closing, consolidation and top-side entries outside the GL: inspect support, recompute, and test period and classification; cross-reference Journal Entry Testing (ISA 330.20(b); ISA 240.32(a))', type: 'test_of_detail' },
+    { description: 'Maintain the misstatement schedule in the working TB with reference, source section, affected accounts/disclosures and evidence; accumulate all misstatements other than clearly trivial ones, identifying factual, judgemental and projected misstatements (ISA 450.5, A2–A6)', type: 'other' },
+    { description: 'Communicate accumulated misstatements to management and request correction; document the reasons for any refusal; for accepted corrections, verify they are posted in the books and reflected in the final FS (ISA 450.7–9)', type: 'test_of_detail' },
+    { description: 'Reassess materiality against actual results; evaluate uncorrected misstatements (amounts and disclosures) individually and in aggregate, including qualitative factors and prior-period effects; communicate to those charged with governance and obtain the written representation (ISA 450.10–14; ISA 260; ISA 580)', type: 'other' },
+    { description: 'Agree the final adjusted TB and lead schedules to the final FS. (Conditional — later TB version) compare it with the version tested, test new or changed entries and update the affected procedures; retain the version supporting the signed report (ISA 330.20; ISA 230; ISA 700)', type: 'test_of_detail' },
+    { description: 'Cross-reference each lead schedule to working papers, adjustments, findings and conclusions; confirm preparer and reviewer sign-off and that significant matters are resolved (ISA 230.8–9)', type: 'other' },
+  ],
   'Out of Scope / Below Materiality': [
     { description: 'Document the performance materiality threshold determined for the engagement and the basis of calculation per ISA 320', type: 'other' },
     { description: 'Schedule all classifications and accounts assigned to this section with aggregate balance; confirm total is below performance materiality', type: 'test_of_detail' },
@@ -378,6 +445,22 @@ const PROCEDURE_ASSERTIONS = {
     ['occurrence','accuracy'], ['classification','accuracy'], ['occurrence','classification'], ['occurrence','accuracy'],
     ['occurrence','cutoff'], ['occurrence','accuracy'], [],
   ],
+  // FSA-circular coverage (Oct 2026)
+  'Intangible Assets & Goodwill': [
+    ['completeness','accuracy'], ['completeness','classification','valuation'], ['existence','rights_obligations','accuracy','valuation','cutoff'], ['valuation','classification','accuracy','cutoff'], ['rights_obligations','existence','valuation'], ['valuation','accuracy','classification'], ['valuation','accuracy','classification'], ['valuation','accuracy'], ['existence','occurrence','valuation','accuracy','cutoff'], ['accuracy','valuation'], ['completeness','accuracy','presentation','classification'],
+  ],
+  'Investments': [
+    ['completeness','accuracy'], ['existence','rights_obligations'], ['classification','rights_obligations','completeness'], ['classification','valuation','accuracy'], ['valuation','accuracy','completeness'], ['classification','valuation','accuracy'], ['valuation','accuracy'], ['valuation','accuracy'], ['occurrence','accuracy','valuation','cutoff','classification'], ['occurrence','completeness','accuracy','cutoff','classification'], ['fs_level','completeness','accuracy','classification'], ['rights_obligations','completeness','accuracy','presentation','classification'],
+  ],
+  'Other Income': [
+    ['completeness','accuracy'], ['completeness','cutoff'], ['occurrence','completeness','accuracy'], ['occurrence','accuracy','classification'], ['accuracy','cutoff','classification'], ['occurrence','accuracy','cutoff','classification','presentation'], ['occurrence','accuracy','classification'], ['cutoff','completeness','occurrence'], ['occurrence','accuracy','cutoff','classification'], ['completeness','accuracy','classification','presentation'],
+  ],
+  'Financial Statement Disclosures': [
+    ['fs_level','presentation'], ['accuracy','completeness','presentation'], ['completeness','accuracy','presentation'], ['completeness','presentation'], ['completeness','accuracy','classification','presentation'], ['completeness','accuracy','presentation'], ['accuracy','completeness','classification','presentation'], ['completeness','accuracy','presentation'], ['accuracy','completeness','presentation'], ['fs_level','completeness','presentation'], ['fs_level'], ['fs_level','presentation'],
+  ],
+  'Trial Balance, Adjustments & Lead Schedules': [
+    ['completeness','accuracy'], ['accuracy','completeness','classification'], ['completeness','classification'], ['accuracy','completeness','classification','presentation'], ['fs_level','accuracy','completeness'], ['occurrence','accuracy','completeness','cutoff','classification'], ['fs_level','accuracy','completeness'], ['accuracy','completeness','classification'], ['fs_level'], ['accuracy','completeness','classification','presentation'], ['fs_level'],
+  ],
   'Out of Scope / Below Materiality': [
     [], ['completeness'], [], [],
   ],
@@ -408,10 +491,12 @@ const SECTION_SEED_ORDER = [
   'Subsequent Events',
   'Going Concern',
   'Journal Entry Testing',
+  'Financial Statement Disclosures',
+  'Trial Balance, Adjustments & Lead Schedules',
   'Out of Scope / Below Materiality',
 ];
 
-// Seeds the 19 standard audit sections (with their procedure templates)
+// Seeds the 21 standard audit sections (with their procedure templates)
 // onto a freshly created engagement. Idempotent-ish: if any section with
 // the same name already exists for the engagement, that section is
 // skipped (matters when an admin re-runs seeding manually).
@@ -1102,7 +1187,7 @@ const PROCEDURE_TEMPLATES_AR = {
   ],
   "Related Parties": [
     {
-      "description": "توثيق النطاق ومستوى المخاطر. تحديد الأطراف ذات الصلة مطلوب بموجب ISA 550 في كل عملية تدقيق. (أ) توثيق نوع المنشأة (مملوكة بصرف خاص / عائلية / مجموعة / مدرجة) — المنشآت المملوكة بصرف خاص والعائلية تحمل مخاطر أعلى. (ب) توثيق أي مخاوف سابقة تتعلق بالأطراف ذات الصلة أو إعادة عرض البيانات المالية. (ج) تصنيف المخاطر: اعتيادية (مساهم واحد، لا هيكل مجموعة) / مرتفعة (ولايات قضائية متعددة، هيكل مجموعة، أو سحوبات المالك) / مخاطر جوهرية (إدارة المالك مع معاملات نقدية ضخمة أو قروض غير موثقة). ربط النطاق بتقييم مخاطر ISA 315",
+      "description": "توثيق النطاق ومستوى المخاطر. تحديد الأطراف ذات الصلة مطلوب بموجب ISA 550 في كل عملية تدقيق. (أ) توثيق نوع المنشأة (مملوكة ملكية خاصة / عائلية / مجموعة / مدرجة) — المنشآت المملوكة ملكية خاصة والعائلية تحمل مخاطر أعلى. (ب) توثيق أي مخاوف سابقة تتعلق بالأطراف ذات الصلة أو إعادة عرض البيانات المالية. (ج) تصنيف المخاطر: اعتيادية (مساهم واحد، لا هيكل مجموعة) / مرتفعة (ولايات قضائية متعددة، هيكل مجموعة، أو سحوبات المالك) / مخاطر جوهرية (إدارة المالك مع معاملات نقدية ضخمة أو قروض غير موثقة). ربط النطاق بتقييم مخاطر ISA 315",
       "type": "other"
     },
     {
@@ -1285,6 +1370,240 @@ const PROCEDURE_TEMPLATES_AR = {
     },
     {
       "description": "توثيق الاستنتاج الشامل. يُذكر صراحةً: (أ) إجمالي المجتمع الخاضع للاختبار بكل فلتر وعدد القيود المختارة للتحقق الجوهري، (ب) الاستثناءات المكتشفة وطريقة معالجتها (حُلَّت بتفسير من الإدارة / أُدرجت كتعديل مراجعة / رُفعت كملاحظة)، (ج) الأثر على تقييم مخاطر الغش وفق ISA 240.A45 — هل عمل اختبار قيود اليومية يؤكد أو يُخفّض أو يرفع خطر التحريف الجوهري بسبب الغش؟ (د) أي تعديلات مطلوبة على إجراءات المراجعة الأخرى بناءً على نتائج اختبار قيود اليومية. الإحالة المرجعية لأي استثناءات غير محلولة إلى قسم الملاحظات",
+      "type": "other"
+    }
+  ],
+  "Intangible Assets & Goodwill": [
+    {
+      "description": "الحصول على جدول حركة الأصول غير الملموسة والشهرة (الرصيد الافتتاحي، والإضافات، والاستبعادات، والإطفاء، والانخفاض في القيمة، والرصيد الختامي)؛ واختبار دقته وإعادة احتسابه ومطابقته مع دفتر الأستاذ العام (GL) وميزان المراجعة (TB) والأرصدة الختامية للسنة السابقة؛ وتنفيذ إجراءات الأرصدة الافتتاحية في حالة التدقيق لأول مرة (ISA 500, ISA 330.20, ISA 510)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "التحقق من الاكتمال من خلال فحص اتفاقيات الاستحواذ، وسجلات المشروعات، ومحاضر اجتماعات مجلس الإدارة، وعينة من حسابات المصروفات؛ لتحديد الأصول غير الملموسة غير المسجلة، أو النفقات المرسملة خطأً، أو الأصول الواجب إلغاء الاعتراف بها (ISA 330; IAS 38.18–23, .68–71)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — الإضافات) فحص عينة من الإضافات بالرجوع إلى العقود والفواتير وأدلة التنفيذ؛ والتحقق من قابلية الأصل للتحديد، والسيطرة عليه، واحتمال تدفق المنافع الاقتصادية المستقبلية، وقصر الرسملة على التكاليف المنسوبة مباشرةً، وصحة تاريخ الاعتراف؛ واستبعاد ترتيبات الخدمات التي لا تنشئ أصلاً خاضعاً لسيطرة المنشأة (IAS 38.12–23, .27–32)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — الأصول المنشأة داخلياً) التحقق، وفقاً للمعايير الدولية الكاملة (IFRS)، من تحميل تكاليف البحث على المصروفات، وعدم رسملة تكاليف التطوير إلا من التاريخ الذي تُستوفى فيه جميع معايير IAS 38.57، وعدم رسملة العلامات التجارية وقوائم العملاء والشهرة المنشأة داخلياً. والتحقق، وفقاً للمعيار الدولي للمنشآت الصغيرة والمتوسطة (IFRS for SMEs)، من تحميل جميع النفقات المتعلقة بالأصول غير الملموسة المنشأة داخلياً، بما فيها نفقات البحث والتطوير (R&D)، على المصروفات (Section 18)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "فحص التسجيلات والتراخيص والعقود للتحقق من استمرار الحقوق، وشروط التجديد، وتواريخ الانتهاء، والقيود والرهونات؛ وتقييم أثرها في القيم الدفترية والأعمار الإنتاجية (IAS 38)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "تقييم الأعمار الإنتاجية والقيم المتبقية وطرق الإطفاء وتواريخ جاهزية الأصول للاستخدام؛ وإعادة احتساب الإطفاء لعينة مختارة. والتحقق، وفقاً للمعايير الدولية الكاملة (IFRS)، من عدم إطفاء الشهرة والأصول غير الملموسة ذات الأعمار غير المحددة، ومن مراجعة تقييم العمر غير المحدد سنوياً. والتحقق، وفقاً للمعيار الدولي للمنشآت الصغيرة والمتوسطة (IFRS for SMEs)، من إطفاء الأصول غير الملموسة والشهرة (IAS 38.88–109; IFRS for SMEs 18.19–24, 19.23)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — شهرة جديدة) تقييم ما إذا كانت المعاملة تمثل تجميع أعمال أو اقتناء أصول؛ واختبار القيم العادلة في تاريخ الاستحواذ لصافي الأصول القابلة للتحديد، والمقابل المحول، والحصص غير المسيطرة، وأي حصة محتفظ بها سابقاً؛ وإعادة احتساب الشهرة أو مكسب الشراء بصفقة رابحة؛ واختبار تخصيص الشهرة إلى الوحدات المولِّدة للنقد (CGU) وفقاً للمعايير الدولية الكاملة (IFRS) (IFRS 3; IAS 36.80–87; IFRS for SMEs Section 19)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "تقييم مؤشرات الانخفاض في القيمة لجميع الأصول غير الملموسة. واختبار، وفقاً للمعايير الدولية الكاملة (IFRS)، الاختبار السنوي للانخفاض في قيمة الشهرة والأصول غير الملموسة ذات الأعمار غير المحددة والأصول غير الملموسة غير الجاهزة للاستخدام، بصرف النظر عن وجود مؤشرات للانخفاض في القيمة. وتقييم المنهجية والافتراضات والبيانات الرئيسة، بما فيها التوقعات ومعدل الخصم ومعدل النمو وتكوين الوحدة المولِّدة للنقد (CGU)، للكشف عن تحيز الإدارة؛ وإعادة إجراء الحسابات وتنفيذ تحليل الحساسية عندما يكون عدم التأكد في التقدير مرتفعاً؛ والتحقق من جواز أي عكس للانخفاض في القيمة ومن عدم عكس الانخفاض في قيمة الشهرة (IAS 36.9–10, .90, .104–125; ISA 540; IFRS for SMEs Section 27)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — الاستبعادات أو التخلي أو إعادة التقييم) اختبار تاريخ إلغاء الاعتراف، واستبعاد التكلفة ومجمع الإطفاء، والمتحصلات، والربح أو الخسارة؛ والتحقق، عند استخدام نموذج إعادة التقييم وفقاً للمعايير الدولية الكاملة (IFRS)، من وجود سوق نشطة، وتطبيق النموذج على الفئة بأكملها، والمعالجة الصحيحة لفائض إعادة التقييم (IAS 38.72–87, .112–117)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "تنفيذ إجراء تحليلي من خلال وضع توقع لمصروف الإطفاء استناداً إلى التكلفة والأعمار الإنتاجية؛ والتحقق من الفروق الجوهرية (ISA 520)",
+      "type": "analytical"
+    },
+    {
+      "description": "اختبار الإفصاحات بالرجوع إلى أدلة التدقيق، بما يشمل المطابقة حسب الفئة، والأعمار والطرق، والأصول ذات الأعمار غير المحددة وأسباب ذلك، والقيود والرهونات، والالتزامات، ومصروفات البحث والتطوير (R&D)، ومعلومات تجميع الأعمال، والشهرة حسب الوحدة المولِّدة للنقد (CGU)، والافتراضات الرئيسة للانخفاض في القيمة وتحليلات الحساسية (IAS 38.118–128; IAS 36.126–137; IFRS 3.59–63; IFRS for SMEs 18.27–29, 19.25–26)",
+      "type": "test_of_detail"
+    }
+  ],
+  "Investments": [
+    {
+      "description": "الحصول على جدول حركة الاستثمارات حسب المنشأة المستثمر فيها أو الأداة، بما يشمل عمليات الاقتناء والاستبعاد والتوزيعات والحصة في النتائج والدخل الشامل الآخر (OCI) وحركات القيمة العادلة والانخفاض في القيمة وفروق صرف العملات الأجنبية (FX)؛ وإعادة احتسابه ومطابقته مع دفتر الأستاذ العام (GL) وميزان المراجعة (TB) والأرصدة الختامية للسنة السابقة؛ وفحص المحاضر والاتفاقيات والسجلات الخارجية للتحقق من عدم وجود استثمارات غير مسجلة (ISA 500, ISA 330.20؛ في حالة التدقيق لأول مرة: ISA 510)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "التحقق من وجود وملكية عينة من الاستثمارات من خلال مصادقات أمين الحفظ أو الوسيط أو مسجل الأوراق المالية، مع إبقائها تحت سيطرة المدقق ومتابعة الاستثناءات وحالات عدم الرد، وشهادات الأسهم، وسجلات المنشأة المستثمر فيها، واتفاقيات الشراء (ISA 505)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "تقييم السيطرة والتأثير الجوهري والسيطرة المشتركة استناداً إلى الحقوق الجوهرية والترتيبات الفعلية، وليس إلى نسبة الملكية وحدها؛ وتصنيف الاستثمار باعتباره شركة تابعة (IFRS 10)، أو شركة شقيقة (IAS 28)، أو مشروعاً مشتركاً أو عملية مشتركة (IFRS 11)، أو أصلاً مالياً (IFRS 9)؛ وتقييم أي إعفاء مُدّعى من إعداد القوائم المالية الموحدة وتوثيق الحكم المهني",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — القوائم المالية المنفصلة) التحقق من أن أساس القياس المختار للاستثمارات في الشركات التابعة والشركات الشقيقة والمشروعات المشتركة، سواء بالتكلفة أو وفقاً لـ IFRS 9 أو بطريقة حقوق الملكية، مسموح به ومطبق بصورة متسقة حسب فئة الاستثمار (IAS 27.10; IFRS for SMEs Section 9)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — طريقة حقوق الملكية) اختبار التكلفة الأولية وفروق أساس القياس في تاريخ الاستحواذ؛ وتقييم موثوقية المعلومات المالية للمنشأة المستثمر فيها؛ وإعادة احتساب الحصة في النتائج والدخل الشامل الآخر (OCI)، والتوزيعات التي تخفض رصيد الاستثمار، والتعديلات المتعلقة بالسياسات المحاسبية وتواريخ التقارير، وإلغاءات الأرباح غير المحققة، وحدود الاعتراف بالخسائر، بما في ذلك المصالح طويلة الأجل (IAS 28.10, .14A, .26–39; IFRS for SMEs Sections 14–15)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — الاستثمارات المالية) اختبار نموذج الأعمال واختبار الاقتصار على دفعات أصل المبلغ والفائدة (SPPI) لأدوات الدين لتأكيد تصنيفها بالتكلفة المطفأة أو بالقيمة العادلة من خلال الدخل الشامل الآخر (FVOCI) أو بالقيمة العادلة من خلال الربح أو الخسارة (FVTPL)، وإعادة احتساب الفائدة الفعلية. والتحقق، بالنسبة إلى أدوات حقوق الملكية، من قياسها بالقيمة العادلة من خلال الربح أو الخسارة (FVTPL)، أو التحقق عند إجراء اختيار غير قابل للإلغاء للقياس بالقيمة العادلة من خلال الدخل الشامل الآخر (FVOCI) من أهلية الأداة لذلك، بما يشمل عدم الاحتفاظ بها لأغراض المتاجرة، ومن عدم إعادة تصنيف الأرباح إلى الربح أو الخسارة. والتحقق من القيمة العادلة الأولية ومعالجة تكاليف المعاملة (IFRS 9.4.1, .5.1.1, .5.7.5; IFRS for SMEs Sections 11–12)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — القيمة العادلة) مطابقة الأسعار المدرجة مع مصادر مستقلة، أو تقييم أسلوب التقييم والمدخلات الجوهرية وحسابات النموذج؛ وتقييم عدم التأكد في التقدير وتحيز الإدارة؛ والنظر في الاستعانة بخبير عند الحاجة (IFRS 13; ISA 540; ISA 620)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — الانخفاض في القيمة) اختبار مخصص الخسائر الائتمانية المتوقعة (ECL)، بما يشمل تحديد المراحل والمعلومات المستقبلية، لأدوات الدين المقاسة بالتكلفة المطفأة أو بالقيمة العادلة من خلال الدخل الشامل الآخر (FVOCI)، مع التأكد من عدم تطبيق ذلك على أدوات حقوق الملكية. وتقييم مؤشرات IAS 36 واختبار القيمة القابلة للاسترداد، عند الاقتضاء، للاستثمارات المقاسة على أساس التكلفة. واختبار الانخفاض في قيمة صافي الاستثمار بالنسبة إلى الاستثمارات المحاسب عنها بطريقة حقوق الملكية (IFRS 9.5.5; IAS 36; IAS 28.40–43; ISA 540)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — عمليات الاقتناء أو الاستبعاد أو تغيرات الملكية) فحص الاتفاقيات والتحويلات البنكية؛ واختبار تواريخ الاعتراف وإلغاء الاعتراف، وتكاليف المعاملات، والربح أو الخسارة، وقياس الحصة المحتفظ بها؛ والتمييز بين تغيرات الملكية دون فقد السيطرة وبين فقد السيطرة أو التأثير الجوهري (IFRS 9.3.2; IFRS 10.23, .25, B96–B99; IAS 28.22–25)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "اختبار دخل الاستثمارات من خلال مطابقة توزيعات الأرباح مع قرارات التوزيع وتواريخ استحقاق الحق وكشوف البنك؛ وإعادة احتساب الفائدة وفقاً للمعدلات التعاقدية أو الفعلية؛ والبحث عن دخل مستحق غير مسجل؛ والتحقق من أن توزيعات الأرباح المستلمة من المنشآت المستثمر فيها والمحاسب عنها بطريقة حقوق الملكية تخفض رصيد الاستثمار بدلاً من الاعتراف بها دخلاً (IFRS 9.5.7.1A; IAS 27.12; IAS 28.10)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — القوائم المالية للمجموعة أو العمليات المشتركة) الإحالة إلى أعمال تدقيق المجموعة المنفذة وفق ISA 600، واختبار اكتمال التوحيد وإلغاء الأرصدة والمعاملات والأرباح غير المحققة داخل المجموعة، والحصص غير المسيطرة، وتعديلات ترجمة العملات، بالنسبة إلى القوائم المالية (FS) للمجموعة. واختبار الاعتراف بحصة المنشأة في الأصول والالتزامات والإيرادات والمصروفات بالنسبة إلى العمليات المشتركة (ISA 600 (Revised); IFRS 10.B86; IFRS 11.20–23; IAS 21)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "اختبار التصنيف إلى متداول أو غير متداول والإفصاحات بالرجوع إلى الأدلة، بما يشمل القيود والرهونات والالتزامات والمنشآت المستثمر فيها ذات العلاقة والمصالح في المنشآت الأخرى وتسلسل القيمة العادلة ومخاطر الائتمان والخسائر الائتمانية المتوقعة (ECL) وإفصاحات القوائم المالية المنفصلة (IAS 1; IAS 27.16–17; IFRS 12; IFRS 7; IFRS 13.93–99; IAS 24; IFRS for SMEs Sections 9, 11–15)",
+      "type": "test_of_detail"
+    }
+  ],
+  "Other Income": [
+    {
+      "description": "الحصول على تحليل للإيرادات الأخرى حسب طبيعتها ومصدرها، بما يشمل الفوائد وتوزيعات الأرباح والإيجارات وأرباح الاستبعادات وأرباح صرف العملات الأجنبية (FX) والمنح ومطالبات التأمين ورد المخصصات أو الالتزامات؛ وإعادة احتسابه ومطابقته مع دفتر الأستاذ العام (GL) وميزان المراجعة (TB)؛ وتحديد البنود ذات الأهمية النسبية أو غير المعتادة أو المتعلقة بالأطراف ذات العلاقة (ISA 500)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "التحقق من الاكتمال من خلال فحص الودائع والاستثمارات المحتفظ بها وعقود الإيجار وسجلات الاستبعادات والمراسلات المتعلقة بالمنح والمطالبات والمتحصلات اللاحقة لنهاية السنة؛ وتحديد استحقاقات الإيرادات غير المسجلة وتتبعها إلى الإيرادات أو المستحقات أو الإيرادات المؤجلة (ISA 330)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — التدفقات القابلة للتوقع) وضع توقع لكل تدفق بالاستناد إلى محركات تم التحقق منها، مثل المعدلات مضروبة في الأرصدة أو شروط عقود الإيجار؛ والتحقق من الفروق الجوهرية؛ وعدم الاعتماد على مقارنة إجمالية مع السنة السابقة بالنسبة إلى الإيرادات غير المتكررة (ISA 520)",
+      "type": "analytical"
+    },
+    {
+      "description": "فحص عينة من البنود ذات الأهمية النسبية أو المختارة وفقاً للمخاطر بالرجوع إلى الاتفاقيات وقرارات التوزيع وأدلة التسوية؛ والتحقق من الاستحقاق واستيفاء معايير الاعتراف، بدلاً من الاعتماد على مجرد استلام النقد (ISA 500; IFRS 9, IFRS 15, IFRS 16 حسب الاقتضاء)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — الفوائد أو توزيعات الأرباح أو الإيجارات أو الاستبعادات أو فروق الصرف) إعادة احتساب المبالغ وفترات الاعتراف، مع الإحالة إلى الأعمال المنفذة في أقسام الاستثمارات والممتلكات والآلات والمعدات والنقدية، وتنفيذ الأعمال الإضافية اللازمة فقط (IFRS 9.5.4.1, .5.7.1A; IFRS 16.81; IAS 16.68–71; IAS 21)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — المنح الحكومية) التحقق، وفقاً للمعايير الدولية الكاملة (IFRS)، من وجود تأكد معقول من الالتزام بالشروط واستلام المنحة، ومن الاعتراف المنتظم بها، وتصنيفها وعرضها باعتبارها منحة متعلقة بأصل أو بالدخل، وأي التزام بردها (IAS 20). والتحقق، وفقاً للمعيار الدولي للمنشآت الصغيرة والمتوسطة (IFRS for SMEs)، من الاعتراف بالمنحة عند استيفاء شروط الأداء، ومن إثبات المبالغ المستلمة قبل ذلك باعتبارها التزاماً (Section 24)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — مطالبات التأمين أو المبالغ المستردة أو رد الالتزامات والمخصصات) التحقق من أدلة الاستحقاق ومن استيفاء حد الاعتراف، بحيث لا يُعترف بالأصول المحتملة إلا عندما يصبح التدفق شبه مؤكد؛ والتحقق من الأساس القانوني أو المحاسبي لإلغاء الاعتراف بالالتزامات أو عكس المخصصات، مع عدم اعتبار تقادم الرصيد وحده أساساً كافياً (IAS 37.31–35, .53, .59; IAS 16.65; IFRS 9.3.3.1)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "اختبار الفصل الزمني للبنود ذات الأهمية النسبية حول نهاية السنة للتحقق من صحة الاستحقاق والتأجيل والفترة المحاسبية (ISA 500)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "تقييم قابلية كل تدفق من الإيرادات لمخاطر الاحتيال؛ وفحص القيود الدائنة غير المعتادة أو اليدوية، والمبالغ المقربة، والقيود المسجلة في نهاية السنة، والبنود المتعلقة بالأطراف ذات العلاقة؛ للتحقق من المبرر التجاري وتحيز الإدارة؛ والإحالة إلى اختبار قيود اليومية (ISA 240.26, .32)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "اختبار التصنيف بين الإيرادات الأخرى والإيرادات من الأنشطة العادية وإيرادات التمويل والدخل الشامل الآخر (OCI)، وفئات IFRS 18 عند تطبيقه، وحظر المقاصة، والإفصاح عن البنود ذات الأهمية النسبية حسب طبيعتها وعن المنح والأطراف ذات العلاقة (IAS 1.32, .97; IAS 20.39; IAS 24.18)",
+      "type": "test_of_detail"
+    }
+  ],
+  "Financial Statement Disclosures": [
+    {
+      "description": "التأكد من إطار التقرير المالي المطبق وإصداره، سواء المعايير الدولية الكاملة (IFRS) أو المعيار الدولي للمنشآت الصغيرة والمتوسطة (IFRS for SMEs)، والمعايير النافذة خلال الفترة وأي تطبيق مبكر؛ والتحقق من أن إيضاح أساس الإعداد يصف الإطار المطبق بدقة (ISA 700.15; IAS 1.16; IFRS for SMEs 3.3)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "مطابقة مبالغ القوائم الأساسية والإيضاحات المستخرجة من دفتر الأستاذ مع ميزان المراجعة (TB) النهائي المعدل والجداول الرئيسية؛ والتحقق من صحة العمليات الحسابية والإحالات المرجعية ومن استخدام النسخة النهائية في جميع أجزاء القوائم (ISA 330.20(a))",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "اختبار اكتمال ودقة الإفصاحات غير المستخرجة من دفتر الأستاذ العام (GL)، بما فيها الالتزامات والاحتمالات وتحليلات الاستحقاق وتحليلات الحساسية والمعلومات السردية، بالرجوع إلى العقود والمحاضر والخطابات القانونية والنماذج وأدلة التدقيق الأخرى (ISA 330; ISA 500)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "استكمال قائمة التحقق من الإفصاحات الخاصة بالإطار المطبق، وربط كل متطلب ذي أهمية نسبية بالإيضاح وأدلة التدقيق؛ والتمييز بين «غير منطبق» و«محذوف لعدم الأهمية النسبية»؛ والنظر في الإفصاحات الإضافية اللازمة لتحقيق العرض العادل (ISA 700.13–14; IAS 1.31; IFRS for SMEs 3.2)",
+      "type": "other"
+    },
+    {
+      "description": "اختبار قائمة التدفقات النقدية بالرجوع إلى السجلات النقدية والتسويات المؤيدة؛ بما يشمل تصنيف التدفقات إلى تشغيلية واستثمارية وتمويلية، وتكوين النقد وما في حكمه، وآثار صرف العملات الأجنبية (FX)، واستبعاد المعاملات غير النقدية، وتسوية الالتزامات الناشئة عن الأنشطة التمويلية (IAS 7; IFRS for SMEs Section 7)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "التحقق من أن معلومات السياسات المحاسبية ذات الأهمية النسبية تعكس السياسات المطبقة فعلياً، ومن اتساق الإفصاح عن الأحكام الجوهرية ومصادر عدم التأكد في التقدير مع أعمال التدقيق المنفذة (IAS 1.117–133; IAS 8; ISA 540.31, .36)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "التحقق من مطابقة معلومات المقارنة مع القوائم المالية (FS) المدققة للسنة السابقة؛ واختبار أي إعادة بيان أو إعادة تصنيف أو تغيير في السياسة المحاسبية والإفصاحات المطلوبة عنه (ISA 710; IAS 1.38–44; IAS 8.42–49)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "التحقق من الإفصاحات الشاملة بالرجوع إلى أعمال التدقيق المكتملة، بما يشمل الأطراف ذات العلاقة (IAS 24)، والاحتمالات والالتزامات (IAS 37)، والأحداث اللاحقة (IAS 10)، والاستمرارية وأي عدم تأكد جوهري (ISA 570)، وإدارة المخاطر المالية (IFRS 7)، وإدارة رأس المال (IAS 1)؛ ومعالجة أي نقص في أدلة التدقيق الأساسية بدلاً من الاكتفاء بالتأشير على قائمة التحقق (ISA 550; ISA 560)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — المعايير الجديدة أو المعدلة أو الانتقال بين الأطر) التحقق من تطبيق المعايير النافذة خلال الفترة ومن إفصاحات الانتقال المتعلقة بها؛ والتحقق بشكل منفصل من الإفصاح عن المعايير الصادرة التي لم تصبح نافذة بعد (IAS 8.28, .30–31; IFRS 1 عند التطبيق لأول مرة)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "(مشروط — الإفصاحات النظامية أو الرقابية أو المعلومات الأخرى) اختبار أي متطلبات محلية إضافية للإفصاح تفرضها الأنظمة أو الجهات الرقابية (ISA 250). وقراءة المعلومات الأخرى الواردة في التقرير السنوي للتحقق من عدم وجود تعارض جوهري مع القوائم المالية (FS) أو مع المعرفة المكتسبة أثناء التدقيق، ولتحديد أي تحريف جوهري ظاهر (ISA 720.14–20)",
+      "type": "other"
+    },
+    {
+      "description": "تنفيذ المراجعة التحليلية النهائية باستخدام القوائم المالية (FS) النهائية، أو الإحالة إلى المراجعة المنفذة في مذكرة الإنجاز؛ والتحقق من العلاقات غير المفسرة وإعادة تقييم المخاطر عند الحاجة (ISA 520.6)",
+      "type": "analytical"
+    },
+    {
+      "description": "قراءة مجموعة القوائم المالية (FS) النهائية كاملةً لتقييم العرض العام، ومدى ملاءمة التجميع والمصطلحات؛ وتجميع تحريفات الإفصاح في جدول التحريفات، وتقييم أثرها في رأي المدقق، وتوثيق الاستنتاج (ISA 330.24; ISA 700.13–15; ISA 450)",
+      "type": "other"
+    }
+  ],
+  "Trial Balance, Adjustments & Lead Schedules": [
+    {
+      "description": "الحصول على ميزان المراجعة (TB) ودفتر الأستاذ العام (GL) في نهاية السنة؛ والتحقق من المنشأة والفترة والعملة؛ والتأكد من اكتمال ودقة البيانات المستوردة، بما يشمل المجاميع الرقابية وتساوي الأرصدة المدينة والدائنة؛ والتحقق من الحسابات المفقودة أو المكررة أو غير المتسقة (ISA 500.9; ISA 330.20(a))",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "مطابقة الأرصدة الافتتاحية مع الأرصدة الختامية المدققة للسنة السابقة، وتفسير الفروق، بما فيها تصحيحات الفترات السابقة وإعادات التصنيف؛ وتنفيذ إجراءات الأرصدة الافتتاحية في حالة التدقيق لأول مرة (ISA 510; ISA 710)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "التحقق من وجود ربط أساسي واحد لكل حساب في ميزان المراجعة (TB) مع بند في القوائم المالية (FS) وقسم تدقيق، مع إضافة روابط ثانوية حيثما كان ذلك ملائماً؛ والتحقق من الحسابات غير المربوطة أو الجديدة أو غير المعتادة؛ وتبرير وضع أي حساب ضمن «خارج النطاق / دون الأهمية النسبية» استناداً إلى التجميع والعوامل النوعية، وليس إلى حجم الحساب منفرداً (ISA 330.18; ISA 450.11)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "إعداد أو الحصول على جدول رئيسي لكل قسم يوضح الحسابات المكونة له، وأرصدة السنة الحالية والسنة السابقة، والتعديلات المثبتة، والتعديلات المقترحة غير المصححة، والأرصدة النهائية؛ وإعادة احتسابه ومطابقته مع نسخة ميزان المراجعة (TB) وبند القوائم المالية (FS)، مع تجنب احتساب التعديلات مرتين (ISA 330.20(a); ISA 230)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "تحليل حركات الحسابات باستخدام بيانات مفصلة؛ وتأييد تفسيرات الإدارة للفروق الجوهرية بأدلة مناسبة؛ وإحالة أي مخاطر جديدة إلى أقسام التدقيق ذات الصلة (ISA 315.14; ISA 520)",
+      "type": "analytical"
+    },
+    {
+      "description": "فحص قيود اليومية والتعديلات الجوهرية الأخرى المستخدمة في إعداد القوائم المالية (FS)، بما فيها القيود المسجلة بعد الإقفال وقيود التوحيد والقيود العليا المسجلة خارج دفتر الأستاذ العام (GL)؛ وفحص المستندات المؤيدة وإعادة إجراء الحسابات واختبار الفترة والتصنيف؛ والإحالة إلى اختبار قيود اليومية (ISA 330.20(b); ISA 240.32(a))",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "الاحتفاظ بجدول التحريفات في ميزان المراجعة العامل، موضحاً الرقم المرجعي والقسم المصدر والحسابات أو الإفصاحات المتأثرة وأدلة التدقيق؛ وتجميع جميع التحريفات باستثناء التحريفات التافهة بوضوح، مع تحديد التحريفات الواقعية والتحريفات الحكمية والتحريفات المستنتجة من العينات (ISA 450.5, A2–A6)",
+      "type": "other"
+    },
+    {
+      "description": "إبلاغ الإدارة بالتحريفات المتراكمة وطلب تصحيحها؛ وتوثيق أسباب رفض أي تصحيح؛ والتحقق، بالنسبة إلى التصحيحات المقبولة، من إثباتها في الدفاتر وانعكاسها في القوائم المالية (FS) النهائية (ISA 450.7–9)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "إعادة تقييم الأهمية النسبية بالاستناد إلى النتائج الفعلية؛ وتقييم التحريفات غير المصححة، المتعلقة بالمبالغ والإفصاحات، بصورة فردية ومجمعة، بما يشمل العوامل النوعية وآثار الفترات السابقة؛ وإبلاغ المكلفين بالحوكمة والحصول على الإقرار المكتوب (ISA 450.10–14; ISA 260; ISA 580)",
+      "type": "other"
+    },
+    {
+      "description": "مطابقة ميزان المراجعة (TB) النهائي المعدل والجداول الرئيسية مع القوائم المالية (FS) النهائية. (مشروط — إصدار نسخة لاحقة من ميزان المراجعة) مقارنة النسخة اللاحقة بالنسخة التي تم اختبارها، واختبار القيود الجديدة أو المعدلة، وتحديث الإجراءات المتأثرة، والاحتفاظ بالنسخة المؤيدة للتقرير الموقع (ISA 330.20; ISA 230; ISA 700)",
+      "type": "test_of_detail"
+    },
+    {
+      "description": "ربط كل جدول رئيسي بأوراق العمل والتعديلات والنتائج والاستنتاجات؛ والتحقق من توقيع المُعد والمراجع ومن معالجة جميع الأمور الجوهرية المعلقة (ISA 230.8–9)",
       "type": "other"
     }
   ],
