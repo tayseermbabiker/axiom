@@ -153,3 +153,27 @@ circular wording; Investments #11 «مطابقة أعمال تدقيق المج�
 Applied to: `public/js/audit-templates.js` (EN + AR + assertions; seed order now 21),
 `public/pages/engagement.html` (New Section dropdown), `public/i18n/ar.json`
 (5 section labels), landing copy 19 → 24 sections. Related Parties AR glitch fixed.
+
+---
+
+## Parity audit (2026-10-13) — new sections vs original 19
+Benchmark: Inventory (+ Revenue for type mix). Every code path that touches a section by name was enumerated.
+
+| Touch-point | Original sections | New 5 | Status |
+|---|---|---|---|
+| EN procedure template | ✅ | ✅ 10–12 each | OK |
+| AR procedure template (same count/order/type) | ✅ | ✅ | OK |
+| Per-procedure assertion tags, none empty, valid vocabulary | ✅ | ✅ | OK |
+| Standard reference on every procedure | 11/12 (Inventory) | 100% | OK |
+| New Section dropdown option | ✅ | ✅ | OK |
+| ar.json section label | ✅ | ✅ | OK |
+| Seeded on new engagement | 19 | Disclosures + TB/Lead (by design; other 3 via dropdown) | OK |
+| DB name-pattern hooks (ILIKE going concern / subsequent event / related part / revenue) | n/a | no collisions | OK |
+| TB import | no longer auto-creates sections | same | OK |
+| Report / inspection PDF, section page | generic by sort_order | generic | OK |
+| PBC request template rows | ✅ per area | ❌ → **fixed**: added Intangibles, Investments, Other income, Draft FS with notes | FIXED |
+| Analytical procedure present | Inventory 1, Revenue 1 | Investments 0 | NOTE — optional add (needs Perplexity AR) |
+
+**Content coverage** — every procedure in the first-draft Arabic doc (items 1, 3, 13, 16, 17, 18) maps to a locked procedure; nothing dropped. Only deliberate drop: "additions vs approved budget" analytical (Perplexity: weak evidence).
+
+**Pre-existing (not caused by this change):** PBC template rows and statuses are English-only (no ar.json entries) for all areas.
