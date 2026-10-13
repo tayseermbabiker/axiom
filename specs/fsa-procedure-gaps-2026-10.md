@@ -177,3 +177,8 @@ Benchmark: Inventory (+ Revenue for type mix). Every code path that touches a se
 **Content coverage** — every procedure in the first-draft Arabic doc (items 1, 3, 13, 16, 17, 18) maps to a locked procedure; nothing dropped. Only deliberate drop: "additions vs approved budget" analytical (Perplexity: weak evidence).
 
 **Pre-existing (not caused by this change):** PBC template rows and statuses are English-only (no ar.json entries) for all areas.
+
+## Round 3 (Perplexity, 2026-10-13) — ✅ APPLIED
+Source: `specs/fsa-perplexity-round3-investments-pbc.txt` (pre-signed S3 link stripped).
+- Investments #11 (new, analytical, [accuracy, completeness, occurrence]) — Perplexity tightened the draft ("where relationships are predictable… sufficiently precise expectations… verified holdings, declared dividends, effective rates and timing"). Investments now 13 procedures; former #11–12 → #12–13.
+- PBC checklist Arabic: 10 area labels + 20 document descriptions added to `ar.json` engagementLabels (keys normalised the way the page localiser normalises — em dash → hyphen). Translation happens at render time, so existing engagements' seeded rows show in Arabic too, in the PBC tab and the planning PDF. No DB change.

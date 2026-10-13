@@ -1,0 +1,64 @@
+You are a bilingual (Arabic/English) audit professional familiar with the ISAs, IFRS and how GCC audit firms (SOCPA, UAE, Oman, Qatar) write audit working papers in Arabic. This request has TWO parts.
+
+=== PART A — Review and translate ONE new audit procedure ===
+It is being added to the "Investments" section of an audit workpaper platform for small and mid-size audit firms. The section already has procedures for: movement schedule, existence/ownership confirmations, classification (IFRS 10/11, IAS 28, IFRS 9), separate-FS measurement, equity method, financial-instrument classification, fair value, impairment/ECL, acquisitions/disposals, investment income, group/joint operations, and disclosures. It has no analytical procedure.
+
+Draft (format: procedure — type — [assertions]):
+Analytical: develop expectations for investment income (dividend and interest yield on the average carrying amount of each class) and, for equity-accounted investees, for the share of profit compared with the investees' reported results; investigate significant differences and corroborate explanations (ISA 520). — analytical — [accuracy, completeness, occurrence]
+
+1. Confirm it is correct and proportionate for an SME audit under ISA 520, or return a corrected version in the same format (one procedure only, jurisdiction-agnostic, keep it to 1–3 lines).
+2. Translate the final version into formal professional Arabic, masdar style (e.g. «تنفيذ…»، «وضع توقعات…»), keeping ISA/IAS/IFRS references in Latin script.
+
+=== PART B — Translate a client document-request (PBC) checklist ===
+These are the default items an audit firm requests from its client before fieldwork. Translate each AREA label and each DOCUMENT description into short, natural Arabic as a Gulf audit firm would write it in a request list sent to a client. Keep the same numbering. Do not add or remove items. Keep abbreviations commonly left in Latin script in brackets if useful.
+
+Area labels:
+A1. General
+A2. Cash & Bank
+A3. Receivables
+A4. Inventory
+A5. PPE
+A6. Intangibles
+A7. Investments
+A8. Payables
+A9. Revenue
+A10. Other income
+A11. Payroll
+A12. Tax
+A13. Provisions
+A14. Equity / Legal
+A15. Related parties
+
+Document descriptions (area in brackets for context only — translate the description):
+D1. [General] Final trial balance (year-end)
+D2. [General] General ledger / detailed transactions
+D3. [General] Lead schedules by account
+D4. [General] Prior-year audited financial statements
+D5. [General] Draft financial statements with notes
+D6. [Cash & Bank] Bank statements — all accounts (year-end)
+D7. [Cash & Bank] Bank reconciliations (year-end)
+D8. [Receivables] Accounts receivable ageing (year-end)
+D9. [Inventory] Inventory listing / count sheets
+D10. [PPE] Fixed asset register (additions & disposals)
+D11. [Intangibles] Intangible asset register, acquisition/licence agreements & impairment test
+D12. [Investments] Investment schedule, custodian/broker statements & investee financial statements
+D13. [Payables] Accounts payable ageing + supplier statements
+D14. [Revenue] Sales listing / cut-off support
+D15. [Other income] Other income analysis with supporting agreements
+D16. [Payroll] Payroll summary + end-of-service computation
+D17. [Tax] Tax computations / filings
+D18. [Provisions] Provisions & accruals schedule
+D19. [Equity / Legal] Board minutes & legal / confirmation letters
+D20. [Related parties] Related-party listing & transactions
+
+Use this terminology: trial balance = ميزان المراجعة; general ledger = دفتر الأستاذ العام; lead schedule = الجدول الرئيسي; ageing = أعمار الذمم; fixed asset register = سجل الأصول الثابتة; end-of-service = مكافأة نهاية الخدمة; related parties = الأطراف ذات العلاقة; cut-off = الفصل الزمني; impairment = الانخفاض في القيمة.
+
+Return ONLY this, in exactly this format so it can be pasted back into software:
+=== PART A ===
+EN: <final English procedure — type — [assertions]>
+AR: <Arabic procedure>
+=== PART B ===
+A1. <Arabic area label>
+...
+D1. <Arabic description>
+...
