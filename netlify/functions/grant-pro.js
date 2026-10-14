@@ -28,9 +28,9 @@ const SITE_URL = process.env.SITE_URL || 'https://auditsaas.netlify.app';
 
 // Same seat limits as stripe-webhook.js TIER_BY_PRICE.
 const TIERS = {
-  starter: { max_members: 5,  label_en: 'Up to 5 users',  label_ar: 'حتى 5 مستخدمين' },
-  team:    { max_members: 12, label_en: 'Up to 12 users', label_ar: 'حتى 12 مستخدماً' },
-  firm:    { max_members: 25, label_en: 'Up to 25 users', label_ar: 'حتى 25 مستخدماً' },
+  starter: { max_members: 5,  label_en: 'Up to 5 users',  label_ar: 'حتى 5 مستخدمين',   count_ar: '5 مستخدمين' },
+  team:    { max_members: 12, label_en: 'Up to 12 users', label_ar: 'حتى 12 مستخدماً', count_ar: '12 مستخدماً' },
+  firm:    { max_members: 25, label_en: 'Up to 25 users', label_ar: 'حتى 25 مستخدماً', count_ar: '25 مستخدماً' },
 };
 
 exports.handler = async (event) => {
@@ -96,8 +96,8 @@ exports.handler = async (event) => {
         from: 'Audexon <noreply@audexon.com>',
         to: user.email,
         reply_to: 'support@audexon.com',
-        subject: 'مرحباً بكم في Audexon — تفعيل باقة Pro | Welcome to Audexon Pro',
-        html: welcomeHtml({ orgName: org.name, name: user.full_name, tier, from }),
+        subject: 'تفعيل اشتراككم في باقة Pro — Audexon',
+        html: welcomeHtml({ orgName: org.name, tier, from }),
       });
       emailResult = error ? { sent: false, error: error.message } : { sent: true, id: data.id };
     } catch (e) {
@@ -112,40 +112,32 @@ exports.handler = async (event) => {
   }
 };
 
-function welcomeHtml({ orgName, name, tier, from }) {
+function welcomeHtml({ orgName, tier, from }) {
   const esc = (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const loginUrl = `${SITE_URL}/pages/login.html`;
-  const row = (k, v) => `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">${k}</td><td style="padding:6px 0;font-size:13px;font-weight:600;color:#111827;">${v}</td></tr>`;
+  const p = (html) => `<p style="font-size:14px;color:#374151;line-height:1.9;margin:0 0 14px;">${html}</p>`;
+  const li = (title, body) => `<li style="font-size:14px;color:#374151;line-height:1.9;margin:0 0 10px;"><strong>${title}:</strong> ${body}</li>`;
   return `
-  <div style="font-family:'Inter',-apple-system,Tahoma,sans-serif;max-width:560px;margin:0 auto;padding:32px 0;">
+  <div dir="rtl" style="font-family:Tahoma,'Segoe UI',Arial,sans-serif;max-width:580px;margin:0 auto;padding:32px 0;text-align:right;">
     <div style="background:#0A1A2F;padding:24px 28px;border-radius:12px 12px 0 0;">
       <h1 style="color:white;margin:0;font-size:22px;font-weight:700;">Audexon</h1>
     </div>
     <div style="background:white;border:1px solid #e5e7eb;border-top:none;padding:28px;border-radius:0 0 12px 12px;">
-      <div dir="rtl" style="text-align:right;">
-        <p style="font-size:15px;color:#111827;margin:0 0 12px;">السادة / ${esc(orgName)}${name ? ` — ${esc(name)}` : ''}،</p>
-        <p style="font-size:14px;color:#374151;line-height:1.8;margin:0 0 16px;">
-          يسعدنا تأكيد تفعيل اشتراككم في منصة Audexon على <strong>باقة Pro</strong> (${tier.label_ar})،
-          اعتباراً من <strong>${esc(from)}</strong>.
-        </p>
-        <p style="font-size:14px;color:#374151;line-height:1.8;margin:0 0 16px;">
-          تشمل باقتكم: ملفات تدقيق غير محدودة، ومراحل التخطيط والتنفيذ والإنجاز وفق المعايير الدولية للمراجعة (ISA)،
-          وقائمة المستندات المطلوبة من العملاء (PBC)، وأرشفة ملفات التدقيق وقفلها (ISA 230)، والواجهة باللغتين العربية والإنجليزية.
-        </p>
-      </div>
-      <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
-      <p style="font-size:14px;color:#374151;line-height:1.7;margin:0 0 12px;">
-        Your Audexon subscription is active on the <strong>Pro plan</strong> from ${esc(from)}.
-      </p>
-      <table style="border-collapse:collapse;margin:8px 0 20px;">
-        ${row('Plan', 'Pro')}
-        ${row('Users', esc(tier.label_en))}
-        ${row('Start date', esc(from))}
-      </table>
-      <a href="${loginUrl}" style="display:inline-block;background:#3A7BFF;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Sign in to Audexon</a>
-      <p style="font-size:12px;color:#9ca3af;margin:24px 0 0;line-height:1.5;">Support / الدعم الفني: support@audexon.com</p>
+      <p style="font-size:15px;color:#111827;margin:0 0 12px;">السادة / <strong>${esc(orgName)}</strong>،</p>
+      ${p('تحية طيبة وبعد،')}
+      ${p(`يسرنا تأكيد تفعيل اشتراككم رسمياً في <strong>باقة Pro</strong> (والتي تتيح استخدام المنصة لما يصل إلى <strong>${tier.count_ar}</strong>) عبر منصة Audexon، وذلك اعتباراً من تاريخ <strong>${esc(from)}</strong>.`)}
+      ${p('تتضمن باقتكم المزايا والحزم التالية:')}
+      <ul style="padding-right:20px;padding-left:0;margin:0 0 16px;">
+        ${li('إدارة ملفات التدقيق', 'إنشاء ملفات تدقيق غير محدودة، وتتبع كافة مراحل العمل بدءاً من التخطيط، والتقصي، والتحقق، وصولاً إلى الإنجاز النهائي وفقاً للمعايير الدولية للمراجعة (ISA).')}
+        ${li('إدارة طلبات العملاء (PBC)', 'قوائم مخصصة لإدارة وتتبع المستندات المطلوبة من العملاء بكل كفاءة.')}
+        ${li('الأرشفة والإغلاق', 'أرشفة وإغلاق ملفات التدقيق وفق معيار المراجعة الدولي (ISA 230).')}
+        ${li('دعم متعدد اللغات', 'واجهة سحابية متكاملة تدعم اللغتين العربية والإنجليزية.')}
+      </ul>
+      ${p('يمكنكم الآن البدء بإنشاء حسابات فريق العمل وإدارة مشاريعكم المباشرة عبر المنصة.')}
+      <a href="${loginUrl}" style="display:inline-block;background:#3A7BFF;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">الدخول إلى Audexon</a>
+      <p style="font-size:12px;color:#9ca3af;margin:24px 0 0;line-height:1.6;">للدعم الفني: support@audexon.com</p>
     </div>
-    <p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:16px;">Audexon Audit Platform</p>
+    <p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:16px;">Audexon</p>
   </div>`;
 }
 
