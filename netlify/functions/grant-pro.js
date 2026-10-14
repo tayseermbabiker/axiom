@@ -96,7 +96,7 @@ exports.handler = async (event) => {
         from: 'Audexon <noreply@audexon.com>',
         to: user.email,
         reply_to: 'support@audexon.com',
-        subject: 'تفعيل اشتراككم في باقة Pro — Audexon',
+        subject: 'تأكيد تفعيل اشتراككم في منصة Audexon — باقة Pro',
         html: welcomeHtml({ orgName: org.name, tier, from }),
       });
       emailResult = error ? { sent: false, error: error.message } : { sent: true, id: data.id };
@@ -115,27 +115,40 @@ exports.handler = async (event) => {
 function welcomeHtml({ orgName, tier, from }) {
   const esc = (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const loginUrl = `${SITE_URL}/pages/login.html`;
+  const [y, m, d] = from.split('-');
+  const fromDisplay = `${d}/${m}/${y}`;
   const p = (html) => `<p style="font-size:14px;color:#374151;line-height:1.9;margin:0 0 14px;">${html}</p>`;
   const li = (title, body) => `<li style="font-size:14px;color:#374151;line-height:1.9;margin:0 0 10px;"><strong>${title}:</strong> ${body}</li>`;
+  const row = (k, v) => `<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #eef0f3;width:40%;">${k}</td><td style="padding:8px 12px;font-size:13px;font-weight:600;color:#111827;border-bottom:1px solid #eef0f3;">${v}</td></tr>`;
   return `
   <div dir="rtl" style="font-family:Tahoma,'Segoe UI',Arial,sans-serif;max-width:580px;margin:0 auto;padding:32px 0;text-align:right;">
     <div style="background:#0A1A2F;padding:24px 28px;border-radius:12px 12px 0 0;">
       <h1 style="color:white;margin:0;font-size:22px;font-weight:700;">Audexon</h1>
     </div>
     <div style="background:white;border:1px solid #e5e7eb;border-top:none;padding:28px;border-radius:0 0 12px 12px;">
-      <p style="font-size:15px;color:#111827;margin:0 0 12px;">السادة / <strong>${esc(orgName)}</strong>،</p>
+      <p style="font-size:15px;color:#111827;margin:0 0 12px;">السادة / <strong>${esc(orgName)}</strong> المحترمون،</p>
       ${p('تحية طيبة وبعد،')}
-      ${p(`يسرنا تأكيد تفعيل اشتراككم رسمياً في <strong>باقة Pro</strong> (والتي تتيح استخدام المنصة لما يصل إلى <strong>${tier.count_ar}</strong>) عبر منصة Audexon، وذلك اعتباراً من تاريخ <strong>${esc(from)}</strong>.`)}
-      ${p('تتضمن باقتكم المزايا والحزم التالية:')}
+      ${p('يسعدنا إعلامكم بتفعيل اشتراككم رسمياً في منصة <strong>Audexon</strong> لإدارة أعمال التدقيق.')}
+      <p style="font-size:14px;color:#111827;font-weight:700;margin:18px 0 8px;">تفاصيل الاشتراك:</p>
+      <table dir="rtl" style="border-collapse:collapse;width:100%;background:#F8FAFC;border:1px solid #eef0f3;border-radius:8px;margin:0 0 20px;">
+        ${row('الباقة', 'Pro')}
+        ${row('عدد المستخدمين', esc(tier.label_ar))}
+        ${row('تاريخ التفعيل', esc(fromDisplay))}
+      </table>
+      <p style="font-size:14px;color:#111827;font-weight:700;margin:0 0 8px;">تتضمن باقتكم المزايا التالية:</p>
       <ul style="padding-right:20px;padding-left:0;margin:0 0 16px;">
-        ${li('إدارة ملفات التدقيق', 'إنشاء ملفات تدقيق غير محدودة، وتتبع كافة مراحل العمل بدءاً من التخطيط، والتقصي، والتحقق، وصولاً إلى الإنجاز النهائي وفقاً للمعايير الدولية للمراجعة (ISA).')}
-        ${li('إدارة طلبات العملاء (PBC)', 'قوائم مخصصة لإدارة وتتبع المستندات المطلوبة من العملاء بكل كفاءة.')}
+        ${li('إدارة ملفات التدقيق', 'إنشاء ملفات تدقيق غير محدودة، وتتبع مراحل العمل (التخطيط، والتنفيذ، والإنجاز) وفقاً للمعايير الدولية للمراجعة (ISA).')}
+        ${li('إدارة طلبات العملاء (PBC)', 'قوائم مخصصة لطلب وتتبع مستندات العملاء بكل كفاءة.')}
         ${li('الأرشفة والإغلاق', 'أرشفة وإغلاق ملفات التدقيق وفق معيار المراجعة الدولي (ISA 230).')}
         ${li('دعم متعدد اللغات', 'واجهة سحابية متكاملة تدعم اللغتين العربية والإنجليزية.')}
       </ul>
-      ${p('يمكنكم الآن البدء بإنشاء حسابات فريق العمل وإدارة مشاريعكم المباشرة عبر المنصة.')}
-      <a href="${loginUrl}" style="display:inline-block;background:#3A7BFF;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">الدخول إلى Audexon</a>
-      <p style="font-size:12px;color:#9ca3af;margin:24px 0 0;line-height:1.6;">للدعم الفني: support@audexon.com</p>
+      ${p('يمكنكم الآن البدء بإنشاء حسابات فريق العمل وإدارة مشاريعكم عبر المنصة.')}
+      <div style="text-align:center;margin:24px 0 8px;">
+        <a href="${loginUrl}" style="display:inline-block;background:#3A7BFF;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">تسجيل الدخول إلى المنصة</a>
+      </div>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0 16px;">
+      <p style="font-size:12px;color:#6b7280;margin:0 0 6px;line-height:1.7;text-align:center;">لأي استفسار، يرجى التواصل مع فريق الدعم الفني عبر: <a href="mailto:support@audexon.com" style="color:#3A7BFF;text-decoration:none;">support@audexon.com</a></p>
+      <p style="font-size:12px;color:#9ca3af;margin:0;text-align:center;"><a href="${SITE_URL}/terms.html" style="color:#9ca3af;">شروط الخدمة</a> · <a href="${SITE_URL}/privacy.html" style="color:#9ca3af;">سياسة الخصوصية</a></p>
     </div>
     <p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:16px;">Audexon</p>
   </div>`;
