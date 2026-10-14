@@ -14,6 +14,8 @@
 //   from   — optional subscription start date, YYYY-MM-DD (default: today) — shown in the email
 //   until  — optional internal note only (e.g. waiver end); NOT shown in the email.
 //            Access does NOT auto-expire — revoke with `update organizations set plan = null where id = ...`
+//   name   — optional firm name to show in the email greeting (default: the org name in the DB;
+//            the DB is not changed)
 //   confirm=1 — actually apply
 //
 // Required Netlify env vars:
@@ -46,6 +48,7 @@ exports.handler = async (event) => {
   const tierKey = (p.tier || '').trim().toLowerCase();
   const until = (p.until || '').trim();
   const from = (p.from || new Date().toISOString().slice(0, 10)).trim();
+  const displayName = (p.name || '').trim();
   const confirm = p.confirm === '1';
 
   if (!email) return json(400, { error: 'email is required' });
@@ -81,6 +84,7 @@ exports.handler = async (event) => {
       start_date: from,
       internal_note_until: until || null,
       welcome_email_to: user.email,
+      email_greeting_name: displayName || org.name,
     };
 
     if (!confirm) {
@@ -97,7 +101,7 @@ exports.handler = async (event) => {
         to: user.email,
         reply_to: 'support@audexon.com',
         subject: 'تأكيد تفعيل اشتراككم في منصة Audexon — باقة Pro',
-        html: welcomeHtml({ orgName: org.name, tier, from }),
+        html: welcomeHtml({ orgName: displayName || org.name, tier, from }),
       });
       emailResult = error ? { sent: false, error: error.message } : { sent: true, id: data.id };
     } catch (e) {
