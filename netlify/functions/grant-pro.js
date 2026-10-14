@@ -1,19 +1,19 @@
-// Audexon — grant complimentary Pro (fee waiver) + send welcome email
+// Audexon — activate Pro outside Stripe + send welcome email
 //
 // Admin-only tool for subscriptions agreed outside Stripe (e.g. a signed
 // contract with a full fee waiver). Two-step by design:
 //
 //   1. Preview (no changes):
-//      /.netlify/functions/grant-pro?key=GRANT_SECRET&email=admin@firm.com&tier=starter&until=2027-01-31
+//      /.netlify/functions/grant-pro?key=GRANT_SECRET&email=admin@firm.com&tier=starter&from=2026-10-14
 //   2. Apply (updates the org + sends the welcome email):
 //      ...same URL...&confirm=1
 //
 // Params:
 //   email  — email of the firm's admin user (the person who created the org)
-//   tier   — starter | team | firm   (published bands: up to 10 / 11–18 / 19–25 users)
-//   until  — waiver end date, YYYY-MM-DD (shown in the email; access does NOT auto-expire —
-//            revoke with `update organizations set plan = null where id = ...`)
-//   from   — optional start date, YYYY-MM-DD (default: today)
+//   tier   — starter | team | firm   (same seat limits as stripe-webhook: 5 / 12 / 25 users)
+//   from   — optional subscription start date, YYYY-MM-DD (default: today) — shown in the email
+//   until  — optional internal note only (e.g. waiver end); NOT shown in the email.
+//            Access does NOT auto-expire — revoke with `update organizations set plan = null where id = ...`
 //   confirm=1 — actually apply
 //
 // Required Netlify env vars:
@@ -26,11 +26,11 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SITE_URL = process.env.SITE_URL || 'https://auditsaas.netlify.app';
 
-// Published pricing bands (index.html), not the Stripe webhook's 5/12/25.
+// Same seat limits as stripe-webhook.js TIER_BY_PRICE.
 const TIERS = {
-  starter: { max_members: 10, label_en: 'Starter (up to 10 users)', label_ar: 'حتى 10 مستخدمين' },
-  team:    { max_members: 18, label_en: 'Team (11–18 users)',       label_ar: 'من 11 إلى 18 مستخدماً' },
-  firm:    { max_members: 25, label_en: 'Firm (19–25 users)',       label_ar: 'من 19 إلى 25 مستخدماً' },
+  starter: { max_members: 5,  label_en: 'Up to 5 users',  label_ar: 'حتى 5 مستخدمين' },
+  team:    { max_members: 12, label_en: 'Up to 12 users', label_ar: 'حتى 12 مستخدماً' },
+  firm:    { max_members: 25, label_en: 'Up to 25 users', label_ar: 'حتى 25 مستخدماً' },
 };
 
 exports.handler = async (event) => {
@@ -50,9 +50,9 @@ exports.handler = async (event) => {
 
   if (!email) return json(400, { error: 'email is required' });
   if (!TIERS[tierKey]) return json(400, { error: 'tier must be starter, team or firm' });
-  if (!isDate(until)) return json(400, { error: 'until must be YYYY-MM-DD' });
   if (!isDate(from)) return json(400, { error: 'from must be YYYY-MM-DD' });
-  if (until < from) return json(400, { error: 'until is before from' });
+  if (until && !isDate(until)) return json(400, { error: 'until must be YYYY-MM-DD' });
+  if (until && until < from) return json(400, { error: 'until is before from' });
 
   try {
     // Exact email match via profiles (populated from auth.users by trigger).
@@ -78,7 +78,8 @@ exports.handler = async (event) => {
       organization: { id: org.id, name: org.name },
       before: { plan: org.plan, feature_tier: org.feature_tier, max_members: org.max_members, trial_expires_at: org.trial_expires_at },
       after: changes,
-      waiver: { from, until },
+      start_date: from,
+      internal_note_until: until || null,
       welcome_email_to: user.email,
     };
 
@@ -96,7 +97,7 @@ exports.handler = async (event) => {
         to: user.email,
         reply_to: 'support@audexon.com',
         subject: 'مرحباً بكم في Audexon — تفعيل باقة Pro | Welcome to Audexon Pro',
-        html: welcomeHtml({ orgName: org.name, name: user.full_name, tier, from, until }),
+        html: welcomeHtml({ orgName: org.name, name: user.full_name, tier, from }),
       });
       emailResult = error ? { sent: false, error: error.message } : { sent: true, id: data.id };
     } catch (e) {
@@ -111,7 +112,7 @@ exports.handler = async (event) => {
   }
 };
 
-function welcomeHtml({ orgName, name, tier, from, until }) {
+function welcomeHtml({ orgName, name, tier, from }) {
   const esc = (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const loginUrl = `${SITE_URL}/pages/login.html`;
   const row = (k, v) => `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">${k}</td><td style="padding:6px 0;font-size:13px;font-weight:600;color:#111827;">${v}</td></tr>`;
@@ -125,7 +126,7 @@ function welcomeHtml({ orgName, name, tier, from, until }) {
         <p style="font-size:15px;color:#111827;margin:0 0 12px;">السادة / ${esc(orgName)}${name ? ` — ${esc(name)}` : ''}،</p>
         <p style="font-size:14px;color:#374151;line-height:1.8;margin:0 0 16px;">
           يسعدنا تأكيد تفعيل اشتراككم في منصة Audexon على <strong>باقة Pro</strong> (${tier.label_ar})،
-          مع <strong>إعفاء كامل من الرسوم</strong> للفترة من <strong>${esc(from)}</strong> إلى <strong>${esc(until)}</strong> وفق عقد الاشتراك المبرم بيننا.
+          اعتباراً من <strong>${esc(from)}</strong>.
         </p>
         <p style="font-size:14px;color:#374151;line-height:1.8;margin:0 0 16px;">
           تشمل باقتكم: ملفات تدقيق غير محدودة، ومراحل التخطيط والتنفيذ والإنجاز وفق المعايير الدولية للمراجعة (ISA)،
@@ -134,13 +135,12 @@ function welcomeHtml({ orgName, name, tier, from, until }) {
       </div>
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
       <p style="font-size:14px;color:#374151;line-height:1.7;margin:0 0 12px;">
-        Your Audexon subscription is active on the <strong>Pro plan</strong>, with a <strong>full fee waiver</strong> from ${esc(from)} to ${esc(until)} under our signed subscription agreement.
+        Your Audexon subscription is active on the <strong>Pro plan</strong> from ${esc(from)}.
       </p>
       <table style="border-collapse:collapse;margin:8px 0 20px;">
         ${row('Plan', 'Pro')}
-        ${row('Firm size', esc(tier.label_en))}
-        ${row('Fee waiver', `${esc(from)} → ${esc(until)}`)}
-        ${row('Fees during waiver', 'USD 0')}
+        ${row('Users', esc(tier.label_en))}
+        ${row('Start date', esc(from))}
       </table>
       <a href="${loginUrl}" style="display:inline-block;background:#3A7BFF;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Sign in to Audexon</a>
       <p style="font-size:12px;color:#9ca3af;margin:24px 0 0;line-height:1.5;">Support / الدعم الفني: support@audexon.com</p>
