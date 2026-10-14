@@ -1,0 +1,179 @@
+// Audexon — grant complimentary Pro (fee waiver) + send welcome email
+//
+// Admin-only tool for subscriptions agreed outside Stripe (e.g. a signed
+// contract with a full fee waiver). Two-step by design:
+//
+//   1. Preview (no changes):
+//      /.netlify/functions/grant-pro?key=GRANT_SECRET&email=admin@firm.com&tier=starter&until=2027-01-31
+//   2. Apply (updates the org + sends the welcome email):
+//      ...same URL...&confirm=1
+//
+// Params:
+//   email  — email of the firm's admin user (the person who created the org)
+//   tier   — starter | team | firm   (published bands: up to 10 / 11–18 / 19–25 users)
+//   until  — waiver end date, YYYY-MM-DD (shown in the email; access does NOT auto-expire —
+//            revoke with `update organizations set plan = null where id = ...`)
+//   from   — optional start date, YYYY-MM-DD (default: today)
+//   confirm=1 — actually apply
+//
+// Required Netlify env vars:
+//   GRANT_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY
+
+const crypto = require('crypto');
+const { Resend } = require('resend');
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SITE_URL = process.env.SITE_URL || 'https://auditsaas.netlify.app';
+
+// Published pricing bands (index.html), not the Stripe webhook's 5/12/25.
+const TIERS = {
+  starter: { max_members: 10, label_en: 'Starter (up to 10 users)', label_ar: 'حتى 10 مستخدمين' },
+  team:    { max_members: 18, label_en: 'Team (11–18 users)',       label_ar: 'من 11 إلى 18 مستخدماً' },
+  firm:    { max_members: 25, label_en: 'Firm (19–25 users)',       label_ar: 'من 19 إلى 25 مستخدماً' },
+};
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'GET') return json(405, { error: 'Method not allowed' });
+
+  const secret = process.env.GRANT_SECRET;
+  if (!secret) return json(500, { error: 'GRANT_SECRET not configured' });
+  const p = event.queryStringParameters || {};
+  if (!safeEqual(p.key || '', secret)) return json(401, { error: 'Unauthorized' });
+  if (!SUPABASE_URL || !SUPABASE_KEY) return json(500, { error: 'Supabase env vars not set' });
+
+  const email = (p.email || '').trim().toLowerCase();
+  const tierKey = (p.tier || '').trim().toLowerCase();
+  const until = (p.until || '').trim();
+  const from = (p.from || new Date().toISOString().slice(0, 10)).trim();
+  const confirm = p.confirm === '1';
+
+  if (!email) return json(400, { error: 'email is required' });
+  if (!TIERS[tierKey]) return json(400, { error: 'tier must be starter, team or firm' });
+  if (!isDate(until)) return json(400, { error: 'until must be YYYY-MM-DD' });
+  if (!isDate(from)) return json(400, { error: 'from must be YYYY-MM-DD' });
+  if (until < from) return json(400, { error: 'until is before from' });
+
+  try {
+    // Exact email match via profiles (populated from auth.users by trigger).
+    const profiles = await sb(`profiles?select=id,email,full_name&email=eq.${encodeURIComponent(email)}`);
+    if (profiles.length !== 1) {
+      return json(404, { error: `Expected exactly 1 user with that email, found ${profiles.length}` });
+    }
+    const user = profiles[0];
+
+    const memberships = await sb(`organization_members?select=organization_id,role&user_id=eq.${user.id}&role=eq.admin`);
+    if (memberships.length !== 1) {
+      return json(404, { error: `Expected the user to be admin of exactly 1 organization, found ${memberships.length}` });
+    }
+    const orgId = memberships[0].organization_id;
+    const orgs = await sb(`organizations?select=id,name,plan,feature_tier,max_members,trial_expires_at&id=eq.${orgId}`);
+    const org = orgs[0];
+    if (!org) return json(404, { error: 'Organization not found' });
+
+    const tier = TIERS[tierKey];
+    const changes = { plan: tierKey, feature_tier: 'pro', max_members: tier.max_members };
+    const summary = {
+      user: { email: user.email, name: user.full_name },
+      organization: { id: org.id, name: org.name },
+      before: { plan: org.plan, feature_tier: org.feature_tier, max_members: org.max_members, trial_expires_at: org.trial_expires_at },
+      after: changes,
+      waiver: { from, until },
+      welcome_email_to: user.email,
+    };
+
+    if (!confirm) {
+      return json(200, { mode: 'PREVIEW — nothing changed. Add &confirm=1 to apply.', ...summary });
+    }
+
+    await sb(`organizations?id=eq.${orgId}`, { method: 'PATCH', body: changes });
+
+    let emailResult;
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const { data, error } = await resend.emails.send({
+        from: 'Audexon <noreply@audexon.com>',
+        to: user.email,
+        reply_to: 'support@audexon.com',
+        subject: 'مرحباً بكم في Audexon — تفعيل باقة Pro | Welcome to Audexon Pro',
+        html: welcomeHtml({ orgName: org.name, name: user.full_name, tier, from, until }),
+      });
+      emailResult = error ? { sent: false, error: error.message } : { sent: true, id: data.id };
+    } catch (e) {
+      emailResult = { sent: false, error: e.message };
+    }
+
+    console.log('[grant-pro] applied', { orgId, tier: tierKey, until, email: emailResult.sent });
+    return json(200, { mode: 'APPLIED', ...summary, email: emailResult });
+  } catch (e) {
+    console.error('[grant-pro] failed:', e.message);
+    return json(500, { error: e.message });
+  }
+};
+
+function welcomeHtml({ orgName, name, tier, from, until }) {
+  const esc = (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const loginUrl = `${SITE_URL}/pages/login.html`;
+  const row = (k, v) => `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">${k}</td><td style="padding:6px 0;font-size:13px;font-weight:600;color:#111827;">${v}</td></tr>`;
+  return `
+  <div style="font-family:'Inter',-apple-system,Tahoma,sans-serif;max-width:560px;margin:0 auto;padding:32px 0;">
+    <div style="background:#0A1A2F;padding:24px 28px;border-radius:12px 12px 0 0;">
+      <h1 style="color:white;margin:0;font-size:22px;font-weight:700;">Audexon</h1>
+    </div>
+    <div style="background:white;border:1px solid #e5e7eb;border-top:none;padding:28px;border-radius:0 0 12px 12px;">
+      <div dir="rtl" style="text-align:right;">
+        <p style="font-size:15px;color:#111827;margin:0 0 12px;">السادة / ${esc(orgName)}${name ? ` — ${esc(name)}` : ''}،</p>
+        <p style="font-size:14px;color:#374151;line-height:1.8;margin:0 0 16px;">
+          يسعدنا تأكيد تفعيل اشتراككم في منصة Audexon على <strong>باقة Pro</strong> (${tier.label_ar})،
+          مع <strong>إعفاء كامل من الرسوم</strong> للفترة من <strong>${esc(from)}</strong> إلى <strong>${esc(until)}</strong> وفق عقد الاشتراك المبرم بيننا.
+        </p>
+        <p style="font-size:14px;color:#374151;line-height:1.8;margin:0 0 16px;">
+          تشمل باقتكم: ملفات تدقيق غير محدودة، ومراحل التخطيط والتنفيذ والإنجاز وفق المعايير الدولية للمراجعة (ISA)،
+          وقائمة المستندات المطلوبة من العملاء (PBC)، وأرشفة ملفات التدقيق وقفلها (ISA 230)، والواجهة باللغتين العربية والإنجليزية.
+        </p>
+      </div>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
+      <p style="font-size:14px;color:#374151;line-height:1.7;margin:0 0 12px;">
+        Your Audexon subscription is active on the <strong>Pro plan</strong>, with a <strong>full fee waiver</strong> from ${esc(from)} to ${esc(until)} under our signed subscription agreement.
+      </p>
+      <table style="border-collapse:collapse;margin:8px 0 20px;">
+        ${row('Plan', 'Pro')}
+        ${row('Firm size', esc(tier.label_en))}
+        ${row('Fee waiver', `${esc(from)} → ${esc(until)}`)}
+        ${row('Fees during waiver', 'USD 0')}
+      </table>
+      <a href="${loginUrl}" style="display:inline-block;background:#3A7BFF;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Sign in to Audexon</a>
+      <p style="font-size:12px;color:#9ca3af;margin:24px 0 0;line-height:1.5;">Support / الدعم الفني: support@audexon.com</p>
+    </div>
+    <p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:16px;">Audexon Audit Platform</p>
+  </div>`;
+}
+
+async function sb(path, opts = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method: opts.method || 'GET',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+  return opts.method === 'PATCH' ? null : res.json();
+}
+
+function isDate(s) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s + 'T00:00:00Z'));
+}
+
+function safeEqual(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+function json(statusCode, body) {
+  return { statusCode, headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(body, null, 2) };
+}

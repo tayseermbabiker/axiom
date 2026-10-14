@@ -259,7 +259,10 @@ async function findOrgId({ userId, email } = {}) {
 }
 
 async function lookupUserIdByEmail(email) {
-  const url = `${SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}`;
+  // Exact match via public.profiles (mirrors auth.users.email via trigger).
+  // The GoTrue admin list endpoint does not filter by an `email` query param,
+  // so reading users[0] from it could return an unrelated account.
+  const url = `${SUPABASE_URL}/rest/v1/profiles?select=id&email=eq.${encodeURIComponent(String(email).trim().toLowerCase())}&limit=2`;
   const res = await fetch(url, {
     headers: {
       apikey: SUPABASE_KEY,
@@ -267,8 +270,8 @@ async function lookupUserIdByEmail(email) {
     },
   });
   if (!res.ok) return null;
-  const data = await res.json();
-  return data?.users?.[0]?.id || null;
+  const rows = await res.json();
+  return rows?.length === 1 ? rows[0].id : null;
 }
 
 async function patchOrg(orgId, fields) {
