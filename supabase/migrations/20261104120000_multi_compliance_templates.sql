@@ -24,23 +24,11 @@
 -- =========================================================================
 -- 1. Drop the one-template-per-org UNIQUE constraint
 -- =========================================================================
-DO $$
-DECLARE
-  v_con text;
-BEGIN
-  SELECT c.conname INTO v_con
-  FROM pg_constraint c
-  JOIN pg_attribute a
-    ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
-  WHERE c.conrelid = 'public.org_local_compliance_templates'::regclass
-    AND c.contype = 'u'
-    AND a.attname = 'organization_id'
-    AND array_length(c.conkey, 1) = 1;
-
-  IF v_con IS NOT NULL THEN
-    EXECUTE format('ALTER TABLE public.org_local_compliance_templates DROP CONSTRAINT %I', v_con);
-  END IF;
-END $$;
+-- Default Postgres name for the inline UNIQUE on organization_id (20260519120004).
+-- Plain statement (no DO block): the Supabase SQL editor mis-splits DO blocks
+-- that SELECT ... INTO a variable.
+ALTER TABLE public.org_local_compliance_templates
+  DROP CONSTRAINT IF EXISTS org_local_compliance_templates_organization_id_key;
 
 ALTER TABLE public.org_local_compliance_templates
   ALTER COLUMN sort_order SET DEFAULT 22,
@@ -105,10 +93,10 @@ BEGIN
     RAISE EXCEPTION 'seed_compliance_sections: organization % is not on Pro tier', p_organization_id;
   END IF;
 
-  SELECT EXISTS (
+  v_any_template := EXISTS (
     SELECT 1 FROM public.org_local_compliance_templates
     WHERE organization_id = p_organization_id
-  ) INTO v_any_template;
+  );
 
   -- Firm never enabled the feature → standard sections only.
   IF NOT v_any_template THEN
@@ -224,3 +212,7 @@ $$;
 
 REVOKE EXECUTE ON FUNCTION public.seed_compliance_section(uuid, uuid) FROM public;
 GRANT  EXECUTE ON FUNCTION public.seed_compliance_section(uuid, uuid) TO authenticated;
+
+-- Supabase default privileges grant EXECUTE to anon explicitly; REVOKE FROM public doesn't remove it.
+REVOKE EXECUTE ON FUNCTION public.seed_compliance_sections(uuid, uuid, uuid[]) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.seed_compliance_section(uuid, uuid) FROM anon;

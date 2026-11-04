@@ -231,3 +231,5 @@ $$;
 
 revoke execute on function public.sign_off_fs_agreement(uuid, jsonb) from public;
 grant  execute on function public.sign_off_fs_agreement(uuid, jsonb) to authenticated;
+-- Supabase default privileges grant EXECUTE to anon explicitly; REVOKE FROM public doesn't remove it.
+revoke execute on function public.sign_off_fs_agreement(uuid, jsonb) from anon;
