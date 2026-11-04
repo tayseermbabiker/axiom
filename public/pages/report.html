@@ -240,6 +240,7 @@
   <script src="../js/config.js"></script>
   <script src="../js/i18n.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/fs-agreement-core.js"></script>
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const engagementId = urlParams.get('id');
@@ -453,6 +454,24 @@
           const jids = journalEntries.map(e => e.id);
           const { data: jls } = await supabaseClient.from('journal_lines').select('*').in('journal_entry_id', jids);
           journalLines = jls || [];
+        }
+      }
+
+      // FS Agreement (ISA 330.20(a)) — completion + audit file.
+      let fsaHdr = null, fsaMapRpt = {}, fsaLinesRpt = {}, fsaUpload = null;
+      if (showFindingsTbMl) {
+        const [h, m, l] = await Promise.all([
+          supabaseClient.from('engagement_fs_agreements').select('*').eq('engagement_id', engagementId).maybeSingle(),
+          supabaseClient.from('engagement_fs_caption_map').select('account_code, caption_key').eq('engagement_id', engagementId),
+          supabaseClient.from('engagement_fs_agreement_lines').select('*').eq('engagement_id', engagementId),
+        ]);
+        fsaHdr = h.data || null;
+        (m.data || []).forEach(r => { fsaMapRpt[r.account_code] = r.caption_key; });
+        (l.data || []).forEach(r => { fsaLinesRpt[r.caption_key] = r; });
+        if (fsaHdr && fsaHdr.fs_upload_id) {
+          const { data: up } = await supabaseClient.from('engagement_fs_uploads')
+            .select('file_name, version_type, version_label, uploaded_at').eq('id', fsaHdr.fs_upload_id).maybeSingle();
+          fsaUpload = up || null;
         }
       }
 
@@ -1870,6 +1889,102 @@
             html += `<div style="margin-top:10px; padding:10px 14px; border-radius:6px; font-size:12px; ${below ? 'background:#EDFAF3; color:#065F46; border-left:3px solid #065F46;' : 'background:#FEF0F0; color:#991B1B; border-left:3px solid #991B1B;'}">${below ? '&#10003;' : '&#10007;'} Aggregate uncorrected ${f(totAmt)} = ${pct}% of overall materiality${below ? ' (below materiality).' : ' — EXCEEDS overall materiality; evaluate the effect on the opinion (ISA 450.11).'}</div>`;
           }
         }
+      }
+      // ===== 5c. FS AGREEMENT (ISA 330.20(a)) =====
+      html += '<h2>FS Agreement (ISA 330.20(a))</h2>';
+      if (!fsaHdr) {
+        html += '<p class="no-data">No FS agreement recorded in Audexon for this engagement.</p>';
+      } else {
+        const unit = Number(fsaHdr.rounding_unit) || 1;
+        const fx = (n) => {
+          if (n === null || n === undefined) return '—';
+          const v = Number(n) || 0;
+          const t = Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: unit === 1 ? 2 : 0, maximumFractionDigits: unit === 1 ? 2 : 0 });
+          return v < 0 ? '(' + t + ')' : t;
+        };
+        const totals = fsCaptionTotals(tbLines, fsPostedAdjByCode(journalEntries, journalLines), fsaMapRpt);
+        const unitLabel = unit === 1000 ? "'000" : unit === 1000000 ? 'millions' : 'units';
+        const upLabel = fsaUpload
+          ? esc((fsaUpload.version_label || fsaUpload.version_type) + ' — ' + fsaUpload.file_name + ' (uploaded ' + new Date(fsaUpload.uploaded_at).toLocaleDateString() + ')')
+          : '<span style="color:#991B1B;">Not identified</span>';
+        html += '<p style="font-size:12px; color:#5b7186;">Management FS agreed: ' + upLabel +
+          ' &middot; Presentation: ' + esc(fsaHdr.currency || '—') + ', ' + unitLabel +
+          ' &middot; Prior-year signed FS: ' + esc(fsaHdr.py_fs_reference || '—') +
+          '<br>Each line of management&#39;s statement of financial position and profit or loss is agreed to the adjusted trial balance. Audexon does not prepare the client&#39;s financial statements.</p>';
+
+        const RES = { rounding: 'Rounding', classification: 'Classification difference', misstatement: 'Misstatement (ISA 450)', fs_to_be_corrected: 'FS to be corrected by management' };
+        const sum = { tb: {}, cy: {}, py: {} };
+        let lastGrp = null, openCount = 0;
+        const sub = (label, grps) => {
+          const t = k => grps.reduce((a, g) => a + (sum[k][g] || 0), 0);
+          html += '<tr style="background:#F5F7FA; font-weight:700;"><td>' + label + '</td><td style="text-align:right;">' + fx(t('tb')) + '</td><td style="text-align:right;">' + fx(t('cy')) + '</td><td></td><td style="text-align:right;">' + fx(t('py')) + '</td><td></td><td></td></tr>';
+        };
+        html += '<table><thead><tr><th>FS line item</th><th style="text-align:right;">Adjusted TB</th><th style="text-align:right;">Per FS (CY)</th><th style="text-align:right;">Difference</th><th style="text-align:right;">Comparative (PY)</th><th>PY agreed</th><th>Resolution</th></tr></thead><tbody>';
+        for (const c of FS_CAPTIONS) {
+          if (c.grp !== lastGrp) {
+            if (lastGrp === 'ca') sub('Total assets', ['nca', 'ca']);
+            if (lastGrp === 'eq') sub('Total equity', ['eq']);
+            if (lastGrp === 'cl') sub('Total liabilities', ['ncl', 'cl']);
+            html += '<tr><td colspan="7" style="font-weight:700; padding-top:10px;">' + (c.grp === 'pl' ? 'Profit or loss' : FS_GROUP_LABELS[c.grp]) + '</td></tr>';
+            lastGrp = c.grp;
+          }
+          const tb = fsDisplayAmount(c, totals.raw[c.key], unit);
+          const ln = fsaLinesRpt[c.key] || {};
+          const hasFs = ln.fs_amount_cy !== null && ln.fs_amount_cy !== undefined;
+          const hasPy = ln.fs_amount_py !== null && ln.fs_amount_py !== undefined;
+          if (Math.abs(tb) < 0.005 && !hasFs && !hasPy) continue;
+          const plSign = c.st === 'pl' && c.nature === 'debit' ? -1 : 1;
+          sum.tb[c.grp] = (sum.tb[c.grp] || 0) + plSign * tb;
+          sum.cy[c.grp] = (sum.cy[c.grp] || 0) + plSign * (Number(ln.fs_amount_cy) || 0);
+          sum.py[c.grp] = (sum.py[c.grp] || 0) + plSign * (Number(ln.fs_amount_py) || 0);
+          const diff = hasFs ? Number(ln.fs_amount_cy) - tb : null;
+          const big = hasFs && Math.abs(diff) > 1;
+          const linkedJe = ln.journal_entry_id ? journalEntries.find(e => e.id === ln.journal_entry_id) : null;
+          let res = '';
+          if (big) {
+            res = ln.resolution_type ? esc(RES[ln.resolution_type] || ln.resolution_type) : '<span style="color:#991B1B;">Unresolved</span>';
+            if (linkedJe) res += '<br><span style="color:#5b7186;">Journal: ' + esc((linkedJe.description || '').slice(0, 60)) + ' (' + esc(linkedJe.isa450_status) + ')</span>';
+            if (ln.explanation) res += '<br><span style="color:#5b7186;">' + esc(ln.explanation) + '</span>';
+            if (!ln.resolution_type || ln.resolution_type === 'fs_to_be_corrected') openCount++;
+          } else if (!hasFs && Math.abs(tb) >= 0.005) {
+            res = '<span style="color:#991B1B;">FS figure not entered</span>'; openCount++;
+          }
+          html += '<tr><td>' + esc(c.label) + '</td>' +
+            '<td style="text-align:right;">' + fx(tb) + '</td>' +
+            '<td style="text-align:right;">' + (hasFs ? fx(ln.fs_amount_cy) : '—') + '</td>' +
+            '<td style="text-align:right;">' + (hasFs ? (big ? '<span style="color:#991B1B;">' + fx(diff) + '</span>' : '&#10003;') : '—') + '</td>' +
+            '<td style="text-align:right;">' + (hasPy ? fx(ln.fs_amount_py) : '—') + '</td>' +
+            '<td>' + (hasPy ? (ln.py_agreed ? '&#10003; Agreed' : '<span style="color:#991B1B;">Not agreed</span>') : '—') + '</td>' +
+            '<td style="font-size:11px;">' + res + '</td></tr>';
+        }
+        html += '</tbody></table>';
+
+        const assetsTb = (sum.tb.nca || 0) + (sum.tb.ca || 0), leTb = (sum.tb.eq || 0) + (sum.tb.ncl || 0) + (sum.tb.cl || 0);
+        const assetsFs = (sum.cy.nca || 0) + (sum.cy.ca || 0), leFs = (sum.cy.eq || 0) + (sum.cy.ncl || 0) + (sum.cy.cl || 0);
+        const tbProfit = -totals.plRaw / unit, fsProfit = sum.cy.pl || 0;
+        const chk = (ok, t) => '<div>' + (ok ? '&#10003; ' : '&#10007; ') + t + '</div>';
+        html += '<div style="margin-top:10px; font-size:12px;">' +
+          chk(Math.abs(totals.tbNet) < 0.5, 'Adjusted TB nets to zero') +
+          chk(totals.unmapped === 0, totals.unmapped === 0 ? 'All TB accounts with a balance are mapped to an FS line item' : totals.unmapped + ' TB account(s) with a balance are not mapped') +
+          chk(Math.abs(assetsTb - leTb) <= 1, 'Adjusted TB: total assets ' + fx(assetsTb) + ' = equity + liabilities ' + fx(leTb)) +
+          chk(Math.abs(assetsFs - leFs) <= 1, 'Per FS: total assets ' + fx(assetsFs) + ' = equity + liabilities ' + fx(leFs)) +
+          chk(Math.abs(fsProfit - tbProfit) <= 1, 'Profit for the year per FS ' + fx(fsProfit) + ' = adjusted TB ' + fx(tbProfit)) +
+          '</div>';
+
+        // Sign-off status — compare the signed snapshot with the current state.
+        const nowSnap = fsBuildSnapshot(totals, fsaLinesRpt, fsaMapRpt, _tbVers ? _tbVers.id : null, fsaHdr.fs_upload_id, unit);
+        const changes = fsaHdr.review_snapshot ? fsSnapshotDiff(fsaHdr.review_snapshot, nowSnap) : [];
+        const who = (id, at) => id ? esc(profiles[id] || ('User ' + String(id).slice(0, 8))) + ', ' + new Date(at).toLocaleString() : 'not yet';
+        const signedClean = fsaHdr.reviewed_by && changes.length === 0;
+        html += '<div style="margin-top:10px; padding:10px 14px; border-radius:6px; font-size:12px; ' +
+          (signedClean ? 'background:#EDFAF3; color:#065F46; border-left:3px solid #065F46;' : 'background:#FEF0F0; color:#991B1B; border-left:3px solid #991B1B;') + '">' +
+          '<strong>Prepared:</strong> ' + who(fsaHdr.prepared_by, fsaHdr.prepared_at) +
+          ' &middot; <strong>Reviewed:</strong> ' + who(fsaHdr.reviewed_by, fsaHdr.reviewed_at) +
+          (fsaHdr.reviewed_by
+            ? (changes.length ? '<br>&#10007; Changed since reviewer sign-off: ' + esc(changes.join('; ')) + '.' : '<br>&#10003; No changes since reviewer sign-off.')
+            : '<br>&#10007; Not yet signed off by a reviewer.') +
+          (openCount ? '<br>&#10007; ' + openCount + ' line(s) open (FS figure missing, unresolved difference or FS to be corrected).' : '') +
+          '</div>';
       }
       } // end if (reportType === 'completion') — wraps ML + CM + TB
 

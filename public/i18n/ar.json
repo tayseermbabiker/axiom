@@ -1814,6 +1814,17 @@
     "Engagement-specific risks (ISA 330):": "المخاطر الخاصة بالارتباط (ISA 330):",
     "Section conclusion:": "استنتاج القسم:",
     "Adjusting Entry:": "قيد التسوية:",
-    "No - required before sign-off": "لا - مطلوب قبل الاعتماد"
+    "No - required before sign-off": "لا - مطلوب قبل الاعتماد",
+    "FS Agreement (ISA 330.20(a))": "مطابقة القوائم المالية (ISA 330.20(a))",
+    "FS line item": "بند القوائم المالية",
+    "Adjusted TB": "ميزان المراجعة المعدّل",
+    "Per FS (CY)": "حسب القوائم المالية (السنة الحالية)",
+    "Comparative (PY)": "المقارن (السنة السابقة)",
+    "PY agreed": "مطابقة السنة السابقة",
+    "Resolution": "المعالجة",
+    "Total assets": "إجمالي الأصول",
+    "Total equity": "إجمالي حقوق الملكية",
+    "Total liabilities": "إجمالي المطلوبات",
+    "Profit or loss": "الربح أو الخسارة"
   }
 }
