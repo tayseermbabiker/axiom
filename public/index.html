@@ -938,37 +938,15 @@
       <div class="section-header section-header-center">
         <span class="section-label">Pricing</span>
         <h2 class="section-title" data-i18n="landing.pricing.title2">Simple pricing. Unlimited everything.</h2>
-        <p class="section-subtitle" data-i18n="landing.pricing.subtitle2">Unlimited audit files and users &mdash; never metered per seat or per file. Pricing scales with your firm size.</p>
+        <p class="section-subtitle" data-i18n="landing.pricing.subtitle2">One plan with every feature &mdash; unlimited audit files and users, never metered per seat or per file. Priced for your firm and country.</p>
       </div>
 
-      <div class="pricing-grid">
-        <!-- Execution Plan (Essentials) -->
-        <div class="price-card">
-          <h3>Execution</h3>
-          <p class="price-users">For firms that need the execution &amp; review layer</p>
-          <div class="price-amount" style="justify-content:center;">
-            <span class="number" style="font-size:26px;" data-i18n="landing.price.custom">Custom pricing</span>
-          </div>
-          <p class="price-includes">The complete execution file &mdash; import, test, document, sign off.</p>
-          <ul class="price-features">
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> TB import &amp; classification</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> 24 audit sections &amp; procedures</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Three-level review &amp; sign-off</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Findings tracker</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> FS upload with SHA-256 integrity</li>
-            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Immutable audit trail</li>
-          </ul>
-          <div class="price-bands">
-            <p class="price-bands-label" style="text-align:center;" data-i18n="landing.price.scales">Scales with your firm size &mdash; request a quote</p>
-          </div>
-          <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-outline" data-i18n="landing.price.request">Request pricing</button>
-          <p style="text-align:center; font-size:12px; color:#6B7280; margin-top:10px;">Includes a complimentary 1-month trial</p>
-        </div>
-        <!-- Full Workflow Plan (Pro) -->
+      <div class="pricing-grid" style="grid-template-columns:1fr; max-width:520px;">
+        <!-- Single Pro plan (Nov 2026): one plan, everything included; price quoted per firm and country -->
         <div class="price-card popular">
           <div class="price-badge" data-i18n="landing.full.badge">Complete ISA File</div>
-          <h3 data-i18n="landing.full.name">The Complete ISA Audit File</h3>
-          <p class="price-users" data-i18n="landing.full.for">Planning to completion &mdash; one plan, priced by firm size.</p>
+          <h3 data-i18n="landing.full.name">Audexon Pro</h3>
+          <p class="price-users" data-i18n="landing.full.for">Planning to completion &mdash; one plan, everything included.</p>
           <div class="price-amount" style="justify-content:center;">
             <span class="number" style="font-size:26px;" data-i18n="landing.price.custom">Custom pricing</span>
           </div>
@@ -983,9 +961,11 @@
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f7">Three-level review &amp; sign-off</span></li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f8">Completion memo + EQR (ISQM 2)</span></li>
             <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f9">Inspection-ready PDF (EN/AR)</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f10">FS agreement to the adjusted TB (ISA 330)</span></li>
+            <li><span class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> <span data-i18n="landing.full.f11">Your own compliance sections (ESR, Zakat, QFC&hellip;)</span></li>
           </ul>
           <div class="price-bands">
-            <p class="price-bands-label" style="text-align:center;" data-i18n="landing.price.scales">Scales with your firm size &mdash; request a quote</p>
+            <p class="price-bands-label" style="text-align:center;" data-i18n="landing.price.scales">Priced for your firm size and country &mdash; request a quote</p>
           </div>
           <button type="button" onclick="window.location.href='/contact.html'" class="price-cta price-cta-filled" data-i18n="landing.price.request">Request pricing</button>
           <p style="text-align:center; font-size:12px; color:#6B7280; margin-top:10px;" data-i18n="landing.price.trial">Includes a complimentary 1-month trial</p>
@@ -996,7 +976,7 @@
         Unlimited audit files and users &nbsp;&middot;&nbsp; No per-seat or per-file charges &nbsp;&middot;&nbsp; Founding-member rate locked at launch
       </p>
       <p style="text-align:center; margin-top:14px; font-size:14px; color:#6B7280;">
-        Need help choosing or have questions? <a href="/contact.html" style="color:#4338CA; font-weight:500;">Talk to us</a> — we'll set you up personally.
+        Questions before you start? <a href="/contact.html" style="color:#4338CA; font-weight:500;">Talk to us</a> — we'll set you up personally.
       </p>
     </div>
   </section>

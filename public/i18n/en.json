@@ -123,12 +123,12 @@
       "title": "One plan. The complete ISA audit file.",
       "subtitle": "Priced by firm size, billed annually — unlimited engagements and users, no per-seat math.",
       "title2": "Simple pricing. Unlimited everything.",
-      "subtitle2": "Unlimited audit files and users — never metered per seat or per file. Pricing scales with your firm size."
+      "subtitle2": "One plan with every feature — unlimited audit files and users, never metered per seat or per file. Priced for your firm and country."
     },
     "full": {
       "badge": "Complete ISA File",
-      "name": "The Complete ISA Audit File",
-      "for": "Planning to completion — one plan, priced by firm size.",
+      "name": "Audexon Pro",
+      "for": "Planning to completion — one plan, everything included.",
       "includes": "Every stage of the ISA audit file — no feature gates, no per-seat math.",
       "f1": "Planning, strategy & engagement acceptance",
       "f2": "Materiality (versioned, ISA 320)",
@@ -138,7 +138,9 @@
       "f6": "24 audit sections & procedures",
       "f7": "Three-level review & sign-off",
       "f8": "Completion memo + EQR (ISQM 2)",
-      "f9": "Inspection-ready PDF (EN/AR)"
+      "f9": "Inspection-ready PDF (EN/AR)",
+      "f10": "FS agreement to the adjusted TB (ISA 330)",
+      "f11": "Your own compliance sections (ESR, Zakat, QFC…)"
     },
     "price": {
       "from": "from",
@@ -152,7 +154,7 @@
       "request": "Request pricing",
       "trial": "Includes a complimentary 1-month trial",
       "custom": "Custom pricing",
-      "scales": "Scales with your firm size — request a quote"
+      "scales": "Priced for your firm size and country — request a quote"
     },
     "help": "Need help choosing or have questions? <a href=\"/contact.html\" style=\"color:#4338CA; font-weight:500;\">Talk to us</a> — we'll set you up personally.",
     "cta": {
