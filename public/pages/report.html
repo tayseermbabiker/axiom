@@ -1839,19 +1839,17 @@
       // ===== 5b. ADJUSTED TB + UNCORRECTED MISSTATEMENTS (ISA 450) =====
       {
         const f = (n) => (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
-        const postedIds = new Set(journalEntries.filter(e => e.isa450_status === 'corrected' && e.is_posted_to_adjusted_tb).map(e => e.id));
-        const adjByLine = {};
-        journalLines.forEach(l => {
-          if (!postedIds.has(l.journal_entry_id) || !l.trial_balance_line_id) return;
-          adjByLine[l.trial_balance_line_id] = (adjByLine[l.trial_balance_line_id] || 0) + (parseFloat(l.debit) || 0) - (parseFloat(l.credit) || 0);
-        });
-        const adjustedLines = tbLines.filter(l => adjByLine[l.id]);
+        // Keyed by account_code (not the TB line id) so adjustments survive a TB
+        // re-upload into a new version — same rule as the Working TB tab.
+        const adjByCode = fsPostedAdjByCode(journalEntries, journalLines);
+        const adjNet = (l) => { const a = adjByCode[l.account_code]; return a ? a.debit - a.credit : 0; };
+        const adjustedLines = tbLines.filter(l => adjNet(l) !== 0);
         if (adjustedLines.length) {
           html += '<h2>Adjusted Trial Balance (ISA 450)</h2>';
           html += '<p style="font-size:12px; color:#5b7186;">Accounts affected by posted (corrected) audit adjustments. Original balances are unchanged; adjustments roll up to the audited figures.</p>';
           html += '<table><thead><tr><th>Code</th><th>Account</th><th style="text-align:right;">Original</th><th style="text-align:right;">Adjustment</th><th style="text-align:right;">Audited</th></tr></thead><tbody>';
           adjustedLines.forEach(l => {
-            const orig = parseFloat(l.balance) || 0; const net = adjByLine[l.id] || 0;
+            const orig = parseFloat(l.balance) || 0; const net = adjNet(l);
             html += `<tr><td>${esc(l.account_code)}</td><td>${esc(l.account_name)}</td><td style="text-align:right;">${f(orig)}</td><td style="text-align:right;">${f(net)}</td><td style="text-align:right; font-weight:600;">${f(orig + net)}</td></tr>`;
           });
           html += '</tbody></table>';
@@ -1875,9 +1873,12 @@
             const amt = legs.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0);
             let pl = 0, plKnown = false;
             legs.forEach(l => {
-              const tbl = tbLines.find(t => t.id === l.trial_balance_line_id);
+              // Prefer the flag saved on the leg; fall back to the TB line (by id, then code).
+              const tbl = tbLines.find(t => t.id === l.trial_balance_line_id) || tbLines.find(t => l.account_code && t.account_code === l.account_code);
               const at = tbl ? tbl.account_type : null;
-              if (at === 'income' || at === 'expense') { pl += (parseFloat(l.credit) || 0) - (parseFloat(l.debit) || 0); plKnown = true; }
+              const isPl = l.is_pl_affecting != null ? l.is_pl_affecting : (at ? (at === 'income' || at === 'expense') : null);
+              if (isPl) { pl += (parseFloat(l.credit) || 0) - (parseFloat(l.debit) || 0); }
+              if (isPl !== null) plKnown = true;
             });
             totAmt += amt; totPl += pl;
             html += `<tr><td>${i + 1}</td><td>${esc(e.description || '—')}</td><td>${e.impact_type === 'reclassification' ? 'Reclass' : 'Adjustment'}</td><td>${e.misstatement_type ? esc(e.misstatement_type) : '—'}</td><td style="text-align:right;">${f(amt)}</td><td style="text-align:right;">${plKnown ? f(pl) : '—'}</td></tr>`;

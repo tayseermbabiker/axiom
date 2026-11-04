@@ -2989,15 +2989,24 @@
       renderSecAdj();
     }
 
+    // Keyed by account_code (not the TB line id) so adjustments survive a TB
+    // re-upload into a new version — same rule as the Working TB tab.
     function secAdjPostedMap() {
       const postedIds = new Set(secEntries.filter(e => e.isa450_status === 'corrected' && e.is_posted_to_adjusted_tb).map(e => e.id));
       const map = {};
       for (const ln of secJLines) {
-        if (!postedIds.has(ln.journal_entry_id) || !ln.trial_balance_line_id) continue;
-        if (!map[ln.trial_balance_line_id]) map[ln.trial_balance_line_id] = 0;
-        map[ln.trial_balance_line_id] += (Number(ln.debit) || 0) - (Number(ln.credit) || 0);
+        if (!postedIds.has(ln.journal_entry_id) || !ln.account_code) continue;
+        if (!map[ln.account_code]) map[ln.account_code] = 0;
+        map[ln.account_code] += (Number(ln.debit) || 0) - (Number(ln.credit) || 0);
       }
       return map;
+    }
+
+    // Re-link a saved leg to the current TB line by account code after a TB re-upload.
+    function secResolveLegLine(l) {
+      if (l.trial_balance_line_id && secAllTb.some(t => t.id === l.trial_balance_line_id)) return l.trial_balance_line_id;
+      const byCode = l.account_code ? secAllTb.find(t => t.account_code === l.account_code) : null;
+      return byCode ? byCode.id : (l.trial_balance_line_id || '');
     }
 
     const SEC_STATUS_BADGE = {
@@ -3019,7 +3028,7 @@
         } else {
           tbody.innerHTML = tbLines.map(line => {
             const orig = Number(line.balance) || 0;
-            const net = adjMap[line.id] || 0;
+            const net = adjMap[line.account_code] || 0;
             const adj = orig + net;
             return '<tr' + (net !== 0 ? ' style="background:#F0FDF4;"' : '') + '>' +
               '<td><strong>' + escHtml(line.account_code) + '</strong></td>' +
@@ -3074,7 +3083,7 @@
         document.getElementById('journal-sec-narration').value = e.description || '';
         document.getElementById('journal-sec-mgmt').value = e.management_response || '';
         if (fSel) fSel.value = e.linked_finding_id || '';
-        secModalLegs = legs.length ? legs.map(l => ({ tbLineId: l.trial_balance_line_id || '', debit: Number(l.debit) || 0, credit: Number(l.credit) || 0 })) : [secBlankLeg(), secBlankLeg()];
+        secModalLegs = legs.length ? legs.map(l => ({ tbLineId: secResolveLegLine(l), debit: Number(l.debit) || 0, credit: Number(l.credit) || 0 })) : [secBlankLeg(), secBlankLeg()];
       } else {
         document.getElementById('journal-sec-modal-title').textContent = 'Propose adjustment';
         document.getElementById('journal-sec-impact').value = 'adjustment';

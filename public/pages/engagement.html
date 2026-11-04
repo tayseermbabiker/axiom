@@ -5915,6 +5915,15 @@
       }
     }
 
+    // A saved leg points at a TB line id that no longer exists after a TB re-upload;
+    // re-link it to the current line with the same account code so editing and
+    // re-saving the journal doesn't drop its account.
+    function wtbResolveLegLine(l) {
+      if (l.trial_balance_line_id && tbLines.some(t => t.id === l.trial_balance_line_id)) return l.trial_balance_line_id;
+      const byCode = l.account_code ? tbLines.find(t => t.account_code === l.account_code) : null;
+      return byCode ? byCode.id : (l.trial_balance_line_id || '');
+    }
+
     // Adjusted TB reflects only CORRECTED + posted journals (ISA 450).
     function wtbPostedLineMap() {
       const postedIds = new Set(
@@ -6081,9 +6090,12 @@
         const amt = legs.reduce((s, l) => s + (Number(l.debit) || 0), 0);
         let pl = 0, plKnown = false;
         legs.forEach(l => {
-          const tbl = tbLines.find(t => t.id === l.trial_balance_line_id);
+          // Prefer the flag saved on the leg; fall back to the TB line (by id, then code).
+          const tbl = tbLines.find(t => t.id === l.trial_balance_line_id) || tbLines.find(t => l.account_code && t.account_code === l.account_code);
           const at = tbl ? tbl.account_type : null;
-          if (at === 'income' || at === 'expense') { pl += (Number(l.credit) || 0) - (Number(l.debit) || 0); plKnown = true; }
+          const isPl = l.is_pl_affecting != null ? l.is_pl_affecting : (at ? (at === 'income' || at === 'expense') : null);
+          if (isPl) { pl += (Number(l.credit) || 0) - (Number(l.debit) || 0); }
+          if (isPl !== null) plKnown = true;
         });
         totAmt += amt; totPl += pl;
         return '<tr>' +
@@ -6140,7 +6152,7 @@
         document.getElementById('journal-mgmt').value       = e.management_response || '';
         if (fSel) fSel.value = e.linked_finding_id || '';
         wtbModalLegs = legs.length
-          ? legs.map(l => ({ tbLineId: l.trial_balance_line_id || '', debit: Number(l.debit) || 0, credit: Number(l.credit) || 0 }))
+          ? legs.map(l => ({ tbLineId: wtbResolveLegLine(l), debit: Number(l.debit) || 0, credit: Number(l.credit) || 0 }))
           : [wtbBlankLeg(), wtbBlankLeg()];
       } else {
         if (titleEl) titleEl.textContent = 'New journal entry';
