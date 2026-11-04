@@ -232,7 +232,9 @@
       "safe5": "You always own your data — Audexon simply helps you manage the audit work securely.",
       "clientName": "Client Name",
       "clientNamePh": "e.g. ABC Company",
-      "yearEnd": "Year End Date"
+      "yearEnd": "Year End Date",
+      "complianceSections": "Compliance sections",
+      "complianceHint": "Tick the firm compliance sections that apply to this client. Any you untick are listed in an Applicability Assessment section for the partner to document why."
     }
   }
 }

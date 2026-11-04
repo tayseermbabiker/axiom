@@ -510,6 +510,11 @@
             <label for="year-end" data-i18n="dash.modal.yearEnd">Year End Date</label>
             <input type="date" id="year-end" class="form-control" max="9999-12-31" required>
           </div>
+          <div class="form-group" id="lc-picker-wrap" style="display:none;">
+            <label data-i18n="dash.modal.complianceSections">Compliance sections</label>
+            <div class="text-sm text-muted" style="margin-bottom:6px;" data-i18n="dash.modal.complianceHint">Tick the firm compliance sections that apply to this client. Any you untick are listed in an Applicability Assessment section for the partner to document why.</div>
+            <div id="lc-picker"></div>
+          </div>
           <input type="hidden" id="eng-type" value="audit">
         </div>
         <div class="modal-footer">
@@ -987,6 +992,35 @@
       if (!can('create_engagement')) { showToast('Only admins can create engagements.'); return; }
       document.getElementById('modal-new-engagement').classList.add('active');
       document.getElementById('client-name').focus();
+      loadCompliancePicker();
+    }
+
+    // Active firm compliance templates offered in the New Engagement modal (Pro only).
+    let complianceTemplates = [];
+    async function loadCompliancePicker() {
+      const wrap = document.getElementById('lc-picker-wrap');
+      complianceTemplates = [];
+      wrap.style.display = 'none';
+      if (!currentOrg || currentOrg.feature_tier !== 'pro') return;
+
+      const { data } = await supabaseClient
+        .from('org_local_compliance_templates')
+        .select('id, name, jurisdiction')
+        .eq('organization_id', currentOrg.id)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true });
+      complianceTemplates = data || [];
+      if (!complianceTemplates.length) return;
+
+      document.getElementById('lc-picker').innerHTML = complianceTemplates.map(t => {
+        const div = document.createElement('div');
+        div.textContent = t.name + (t.jurisdiction ? ' · ' + t.jurisdiction : '');
+        return `<label style="display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0; cursor:pointer;">
+          <input type="checkbox" value="${t.id}" checked> ${div.innerHTML}
+        </label>`;
+      }).join('');
+      wrap.style.display = 'block';
     }
 
     function closeModal(id) {
@@ -1042,16 +1076,22 @@
         // Seeding failure is non-blocking; auditor can manually create sections.
       }
 
-      // Pro tier only: seed the firm's 20th Local Compliance section.
+      // Pro tier only: seed the firm's compliance sections the partner ticked.
+      // Unticked-but-offered ones land in an Applicability Assessment section.
       if (currentOrg && currentOrg.feature_tier === 'pro') {
+        const pickedIds = complianceTemplates.length
+          ? [...document.querySelectorAll('#lc-picker input[type=checkbox]:checked')].map(cb => cb.value)
+          : null;
         try {
-          await supabaseClient.rpc('seed_compliance_section', {
+          const { error: lcErr } = await supabaseClient.rpc('seed_compliance_sections', {
             p_engagement_id:   data.id,
             p_organization_id: currentOrg.id,
+            p_template_ids:    pickedIds,
           });
+          if (lcErr) throw lcErr;
         } catch (e) {
-          console.error('seed_compliance_section failed', e);
-          showToast('Note: the Local Compliance section could not be auto-created for this engagement. You can add it manually from the engagement page once it loads. (Engagement creation itself succeeded.)');
+          console.error('seed_compliance_sections failed', e);
+          showToast('Note: the compliance sections could not be auto-created for this engagement. You can add them manually from the engagement page once it loads. (Engagement creation itself succeeded.)');
         }
 
         // Pre-seed Risk Assessment row + ISA 240 presumed fraud risks.
