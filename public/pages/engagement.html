@@ -1340,6 +1340,118 @@
         </div>
       </div>
 
+      <!-- ═══ FS AGREEMENT (ISA 330.20(a)) — agree management's FS to the adjusted TB ═══ -->
+      <div class="tab-panel" id="tab-fs-agreement">
+        <div id="fsa-pro-blocked" class="card" style="display:none; text-align:center; padding:40px 20px;">
+          <strong style="color:var(--gray-900);">FS Agreement is a Pro feature</strong>
+        </div>
+        <div id="fsa-no-tb" class="card" style="display:none; padding:20px; color:var(--gray-500); font-size:14px;">Upload a trial balance first (<strong>Trial balance</strong> tab) — the FS agreement is built on the adjusted TB.</div>
+
+        <div id="fsa-main" style="display:none;">
+          <div id="fsa-changed-banner" style="display:none; background:#FEF3C7; border:1px solid #FDE68A; color:#92400E; border-radius:10px; padding:12px 16px; font-size:13px; margin-bottom:14px;"></div>
+
+          <div class="card mb-24">
+            <div class="card-header">
+              <div>
+                <h2>FS Agreement</h2>
+                <p class="text-sm text-muted" style="margin:4px 0 0;">Agree each line of management's statement of financial position and profit or loss (current and prior year) to the adjusted trial balance — ISA 330.20(a). Audexon does not prepare the client's financial statements; notes are agreed through the FS disclosures procedures.</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Management FS version agreed *</label>
+                  <select id="fsa-fs-upload" class="form-control" onchange="fsaSaveHeader()"></select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">FS rounding unit</label>
+                  <select id="fsa-rounding" class="form-control" onchange="fsaSaveHeader()">
+                    <option value="1">Units</option>
+                    <option value="1000">Thousands ('000)</option>
+                    <option value="1000000">Millions</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="text-sm">Currency</label>
+                  <input type="text" id="fsa-currency" class="form-control" placeholder="e.g. AED, QAR, OMR" onchange="fsaSaveHeader()">
+                </div>
+              </div>
+              <div class="form-group" style="margin:12px 0 0;">
+                <label class="text-sm">Prior-year signed FS reference</label>
+                <input type="text" id="fsa-py-ref" class="form-control" placeholder="e.g. FY2025 audited FS signed 14 Mar 2026" onchange="fsaSaveHeader()">
+              </div>
+              <div id="fsa-status" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;"></div>
+            </div>
+          </div>
+
+          <div class="card mb-24">
+            <div class="card-header">
+              <div>
+                <h2>Agreement schedule</h2>
+                <p class="text-sm text-muted" style="margin:4px 0 0;">Key in the figures exactly as shown in management's FS. Differences beyond one rounding unit need a resolution.</p>
+              </div>
+              <label class="text-sm text-muted" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="fsa-show-all" onchange="fsaRenderAll()"> Show all line items</label>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>FS line item</th>
+                    <th style="text-align:right;">Adjusted TB</th>
+                    <th style="text-align:right;">Per FS (CY)</th>
+                    <th style="text-align:right;">Difference</th>
+                    <th style="text-align:right;">Comparative (PY)</th>
+                    <th style="text-align:center;">PY agrees to signed FS</th>
+                  </tr>
+                </thead>
+                <tbody id="fsa-schedule"></tbody>
+              </table>
+            </div>
+            <div id="fsa-tieouts" style="padding:12px 20px; font-size:13px; border-top:1px solid var(--gray-200);"></div>
+          </div>
+
+          <div class="card mb-24">
+            <div class="card-header">
+              <div>
+                <h2>Account mapping</h2>
+                <p class="text-sm text-muted" style="margin:4px 0 0;">Map each TB account to an IFRS for SMEs line item. Suggestions come from the account's audit section and type — review them before relying on the schedule.</p>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <label class="text-sm text-muted" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="fsa-only-unmapped" onchange="fsaRenderMapping()"> Unmapped only</label>
+                <button class="btn btn-outline btn-sm" onclick="fsaCopyPriorMapping()">Copy from prior year</button>
+                <button class="btn btn-outline btn-sm" onclick="fsaApplySuggestions()">Apply suggestions to unmapped</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Account</th>
+                    <th>Section</th>
+                    <th style="text-align:right;">Adjusted balance</th>
+                    <th>FS line item</th>
+                  </tr>
+                </thead>
+                <tbody id="fsa-mapping"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2>Sign-off</h2></div>
+            <div class="card-body">
+              <div id="fsa-signoff-info" class="text-sm" style="margin-bottom:10px;"></div>
+              <div id="fsa-blockers" class="text-sm" style="color:#991B1B; margin-bottom:10px;"></div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-outline btn-sm" id="fsa-prepare-btn" onclick="fsaMarkPrepared()">Mark prepared</button>
+                <button class="btn btn-primary btn-sm" id="fsa-signoff-btn" onclick="fsaSignOff()">Reviewer sign-off</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="tab-panel" id="tab-fs">
         <div class="card">
           <div class="card-header">
@@ -4095,6 +4207,7 @@
         { label: 'Confirmations',      tab: 'confirmations' },
         { label: 'PBC requests',       tab: 'pbc'           },
         { label: 'Financial statements', tab: 'fs'          },
+        { label: 'FS agreement',       tab: 'fs-agreement'  },
         { label: 'Activity log',       tab: 'activity'      },
       ],
       conclusion: [
@@ -4337,9 +4450,573 @@
       if (tab === 'estimates') loadEstimates();
       if (tab === 'confirmations') loadConfirmations();
       if (tab === 'working-tb') loadWorkingTB();
+      if (tab === 'fs-agreement') loadFsAgreement();
       if (tab === 'conclusion-home') loadAssemblyStatus();
       if (tab === 'aml-kyc') loadAmlKyc();
       if (tab === 'pbc') loadPbc();
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       FS AGREEMENT (ISA 330.20(a)) — agree management's SoFP + P&L
+       (CY + PY) to the adjusted TB. Spec: specs/tb-fs-agreement-2026-11.md
+       Audexon does NOT prepare the client's FS; figures are keyed from it.
+       ══════════════════════════════════════════════════════════════ */
+
+    // IFRS for SMEs line items (Sections 4 + 5). nature = natural balance side;
+    // credit-natural captions are displayed as positive when in credit.
+    const FS_CAPTIONS = [
+      { key: 'ppe',                 st: 'sofp', grp: 'nca', nature: 'debit',  label: 'Property, plant and equipment' },
+      { key: 'investment_property', st: 'sofp', grp: 'nca', nature: 'debit',  label: 'Investment property' },
+      { key: 'intangibles',         st: 'sofp', grp: 'nca', nature: 'debit',  label: 'Intangible assets and goodwill' },
+      { key: 'investments_assoc',   st: 'sofp', grp: 'nca', nature: 'debit',  label: 'Investments in associates and joint ventures' },
+      { key: 'fin_assets_nc',       st: 'sofp', grp: 'nca', nature: 'debit',  label: 'Other financial assets (non-current)' },
+      { key: 'deferred_tax_asset',  st: 'sofp', grp: 'nca', nature: 'debit',  label: 'Deferred tax asset' },
+      { key: 'inventories',         st: 'sofp', grp: 'ca',  nature: 'debit',  label: 'Inventories' },
+      { key: 'trade_receivables',   st: 'sofp', grp: 'ca',  nature: 'debit',  label: 'Trade and other receivables' },
+      { key: 'prepayments',         st: 'sofp', grp: 'ca',  nature: 'debit',  label: 'Prepayments and other current assets' },
+      { key: 'due_from_rp',         st: 'sofp', grp: 'ca',  nature: 'debit',  label: 'Due from related parties' },
+      { key: 'current_tax_asset',   st: 'sofp', grp: 'ca',  nature: 'debit',  label: 'Current tax asset' },
+      { key: 'cash',                st: 'sofp', grp: 'ca',  nature: 'debit',  label: 'Cash and cash equivalents' },
+      { key: 'share_capital',       st: 'sofp', grp: 'eq',  nature: 'credit', label: 'Share capital' },
+      { key: 'reserves',            st: 'sofp', grp: 'eq',  nature: 'credit', label: 'Statutory and other reserves' },
+      { key: 'retained_earnings',   st: 'sofp', grp: 'eq',  nature: 'credit', label: 'Retained earnings', note: 'Includes the current-year result from the TB' },
+      { key: 'borrowings_nc',       st: 'sofp', grp: 'ncl', nature: 'credit', label: 'Borrowings (non-current)' },
+      { key: 'provisions_nc',       st: 'sofp', grp: 'ncl', nature: 'credit', label: 'Employee end-of-service benefits and provisions (non-current)' },
+      { key: 'other_ncl',           st: 'sofp', grp: 'ncl', nature: 'credit', label: 'Other non-current liabilities' },
+      { key: 'deferred_tax_liab',   st: 'sofp', grp: 'ncl', nature: 'credit', label: 'Deferred tax liability' },
+      { key: 'trade_payables',      st: 'sofp', grp: 'cl',  nature: 'credit', label: 'Trade and other payables' },
+      { key: 'due_to_rp',           st: 'sofp', grp: 'cl',  nature: 'credit', label: 'Due to related parties' },
+      { key: 'borrowings_c',        st: 'sofp', grp: 'cl',  nature: 'credit', label: 'Borrowings and bank overdrafts (current)' },
+      { key: 'provisions_c',        st: 'sofp', grp: 'cl',  nature: 'credit', label: 'Provisions (current)' },
+      { key: 'current_tax_liab',    st: 'sofp', grp: 'cl',  nature: 'credit', label: 'Current tax liability' },
+      { key: 'revenue',             st: 'pl',   grp: 'pl',  nature: 'credit', label: 'Revenue' },
+      { key: 'cost_of_sales',       st: 'pl',   grp: 'pl',  nature: 'debit',  label: 'Cost of sales' },
+      { key: 'other_income',        st: 'pl',   grp: 'pl',  nature: 'credit', label: 'Other income' },
+      { key: 'distribution_costs',  st: 'pl',   grp: 'pl',  nature: 'debit',  label: 'Selling and distribution expenses' },
+      { key: 'admin_expenses',      st: 'pl',   grp: 'pl',  nature: 'debit',  label: 'General and administrative expenses' },
+      { key: 'other_expenses',      st: 'pl',   grp: 'pl',  nature: 'debit',  label: 'Other expenses' },
+      { key: 'finance_income',      st: 'pl',   grp: 'pl',  nature: 'credit', label: 'Finance income' },
+      { key: 'finance_costs',       st: 'pl',   grp: 'pl',  nature: 'debit',  label: 'Finance costs' },
+      { key: 'income_tax',          st: 'pl',   grp: 'pl',  nature: 'debit',  label: 'Income tax expense' },
+    ];
+    const FS_CAPTION_BY_KEY = Object.fromEntries(FS_CAPTIONS.map(c => [c.key, c]));
+    const FS_GROUP_LABELS = {
+      nca: 'Non-current assets', ca: 'Current assets', eq: 'Equity',
+      ncl: 'Non-current liabilities', cl: 'Current liabilities', pl: 'Profit or loss',
+    };
+
+    // Suggestion = section name + account_type → caption. Suggested only; the
+    // auditor applies and reviews. Keyword rules run first for equity/tax detail.
+    const FS_SECTION_SUGGEST = {
+      'Cash & Bank':                          { asset: 'cash', liability: 'borrowings_c', income: 'finance_income', expense: 'finance_costs' },
+      'Accounts Receivable':                  { asset: 'trade_receivables', expense: 'admin_expenses' },
+      'Prepayments & Other Receivables':      { asset: 'prepayments' },
+      'Inventory':                            { asset: 'inventories', expense: 'cost_of_sales' },
+      'PPE / Fixed Assets':                   { asset: 'ppe', expense: 'admin_expenses', income: 'other_income' },
+      'Accounts Payable':                     { liability: 'trade_payables' },
+      'Loans & Borrowings':                   { liability: 'borrowings_nc', expense: 'finance_costs' },
+      'Provisions & End-of-Service Benefits': { liability: 'provisions_nc', expense: 'admin_expenses' },
+      'Equity & Share Capital':               { equity: 'share_capital' },
+      'Revenue':                              { income: 'revenue', liability: 'trade_payables' },
+      'Cost of Sales':                        { expense: 'cost_of_sales' },
+      'Payroll & HR':                         { expense: 'admin_expenses', liability: 'trade_payables' },
+      'Operating Expenses':                   { expense: 'admin_expenses' },
+      'Tax':                                  { expense: 'income_tax', liability: 'current_tax_liab', asset: 'current_tax_asset' },
+      'Related Parties':                      { asset: 'due_from_rp', liability: 'due_to_rp' },
+    };
+
+    let fsaHeader = null;        // engagement_fs_agreements row
+    let fsaMap = {};             // account_code -> caption_key
+    let fsaLines = {};           // caption_key -> engagement_fs_agreement_lines row
+    let fsaUploads = [];         // engagement_fs_uploads (not superseded)
+
+    function fsaUnit() { return (fsaHeader && Number(fsaHeader.rounding_unit)) || 1; }
+    function fsaFmt(n) {
+      if (n === null || n === undefined || n === '') return '';
+      const v = Number(n) || 0;
+      const s = Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: fsaUnit() === 1 ? 2 : 0, maximumFractionDigits: fsaUnit() === 1 ? 2 : 0 });
+      return v < 0 ? '(' + s + ')' : s;
+    }
+    // Accepts "1,234", "(1,234)" and "-1234".
+    function fsaParse(str) {
+      const t = String(str == null ? '' : str).trim();
+      if (!t) return null;
+      const neg = /^\(.*\)$/.test(t) || t.startsWith('-');
+      const v = parseFloat(t.replace(/[^0-9.]/g, ''));
+      if (isNaN(v)) return null;
+      return neg ? -v : v;
+    }
+
+    function fsaSuggest(line) {
+      const name = (line.account_name || '').toLowerCase();
+      const type = line.account_type || '';
+      if (/retained|accumulated (profit|loss)/.test(name)) return 'retained_earnings';
+      if (/statutory|legal reserve|reserve/.test(name) && (type === 'equity' || !type)) return 'reserves';
+      if (/share capital|paid.?up capital|capital account/.test(name)) return 'share_capital';
+      if (/deferred tax/.test(name)) return type === 'asset' ? 'deferred_tax_asset' : 'deferred_tax_liab';
+      if (/overdraft/.test(name)) return 'borrowings_c';
+      if (/end.of.service|eosb|gratuity/.test(name) && type !== 'expense') return 'provisions_nc';
+      const secId = tbToSectionMap[line.id];
+      const sec = secId ? sections.find(s => s.id === secId) : null;
+      const bySec = sec ? FS_SECTION_SUGGEST[sec.name] : null;
+      if (bySec && type && bySec[type]) return bySec[type];
+      if (bySec && !type) return Object.values(bySec)[0];
+      if (type === 'income') return 'other_income';
+      if (type === 'expense') return 'admin_expenses';
+      return null;
+    }
+
+    async function loadFsAgreement() {
+      const blocked = document.getElementById('fsa-pro-blocked');
+      const main    = document.getElementById('fsa-main');
+      const noTb    = document.getElementById('fsa-no-tb');
+      [blocked, main, noTb].forEach(el => { if (el) el.style.display = 'none'; });
+      if (!wtbIsPro()) { blocked.style.display = 'block'; return; }
+      if (!tbLines || tbLines.length === 0) { noTb.style.display = 'block'; return; }
+
+      const [hdr, maps, lines, ups] = await Promise.all([
+        supabaseClient.from('engagement_fs_agreements').select('*').eq('engagement_id', engagementId).maybeSingle(),
+        supabaseClient.from('engagement_fs_caption_map').select('*').eq('engagement_id', engagementId),
+        supabaseClient.from('engagement_fs_agreement_lines').select('*').eq('engagement_id', engagementId),
+        supabaseClient.from('engagement_fs_uploads').select('id, file_name, version_type, version_label, uploaded_at, is_superseded')
+          .eq('engagement_id', engagementId).order('uploaded_at', { ascending: false }),
+        wtbLoadJournals(),
+      ]);
+      const loadErr = hdr.error || maps.error || lines.error || ups.error;
+      if (loadErr) { showToast('Could not load FS agreement: ' + loadErr.message); return; }
+
+      fsaHeader = hdr.data || null;
+      fsaMap = {};
+      (maps.data || []).forEach(m => { fsaMap[m.account_code] = m.caption_key; });
+      fsaLines = {};
+      (lines.data || []).forEach(l => { fsaLines[l.caption_key] = l; });
+      fsaUploads = ups.data || [];
+
+      main.style.display = 'block';
+      fsaRenderHeader();
+      fsaRenderAll();
+    }
+
+    function fsaRenderHeader() {
+      const sel = document.getElementById('fsa-fs-upload');
+      const current = fsaHeader ? fsaHeader.fs_upload_id : '';
+      const opts = fsaUploads.map(u => {
+        const label = (u.version_label || u.version_type) + ' — ' + u.file_name + ' (' + new Date(u.uploaded_at).toLocaleDateString() + ')' + (u.is_superseded ? ' [superseded]' : '');
+        return '<option value="' + u.id + '"' + (u.id === current ? ' selected' : '') + '>' + escHtml(label) + '</option>';
+      });
+      sel.innerHTML = '<option value="">' + (fsaUploads.length ? '— Select the FS version —' : '— Upload the FS in the Financial statements tab first —') + '</option>' + opts.join('');
+      document.getElementById('fsa-rounding').value = String(fsaUnit());
+      document.getElementById('fsa-currency').value = (fsaHeader && fsaHeader.currency) || '';
+      document.getElementById('fsa-py-ref').value = (fsaHeader && fsaHeader.py_fs_reference) || '';
+    }
+
+    async function fsaEnsureHeader() {
+      if (fsaHeader) return true;
+      const { data, error } = await supabaseClient.from('engagement_fs_agreements').insert({
+        engagement_id: engagementId,
+        organization_id: currentOrg.id,
+        created_by: currentUser.id,
+      }).select().single();
+      if (error) { showToast('Could not create FS agreement: ' + error.message); return false; }
+      fsaHeader = data;
+      return true;
+    }
+
+    async function fsaSaveHeader() {
+      if (!await fsaEnsureHeader()) return;
+      const payload = {
+        fs_upload_id: document.getElementById('fsa-fs-upload').value || null,
+        rounding_unit: parseInt(document.getElementById('fsa-rounding').value, 10) || 1,
+        currency: document.getElementById('fsa-currency').value.trim() || null,
+        py_fs_reference: document.getElementById('fsa-py-ref').value.trim() || null,
+      };
+      const { data, error } = await supabaseClient.from('engagement_fs_agreements')
+        .update(payload).eq('id', fsaHeader.id).select().single();
+      if (error) { showToast('Save failed: ' + error.message); return; }
+      fsaHeader = data;
+      fsaRenderAll();
+    }
+
+    // Adjusted balance per account (same maths as the Working TB grid).
+    function fsaAdjustedByAccount() {
+      const adjMap = wtbPostedLineMap();
+      const out = {};
+      for (const line of tbLines) {
+        const a = adjMap[line.account_code] || { debit: 0, credit: 0 };
+        out[line.account_code] = (Number(line.balance) || 0) + a.debit - a.credit;
+      }
+      return out;
+    }
+
+    // Caption totals in RAW signed TB terms (debit +), plus CY profit.
+    function fsaComputeTotals() {
+      const adj = fsaAdjustedByAccount();
+      const raw = {};
+      FS_CAPTIONS.forEach(c => { raw[c.key] = 0; });
+      let unmapped = 0, unmappedBal = 0, tbNet = 0;
+      for (const line of tbLines) {
+        const bal = adj[line.account_code] || 0;
+        tbNet += bal;
+        const key = fsaMap[line.account_code];
+        if (key && raw[key] !== undefined) raw[key] += bal;
+        else if (Math.abs(bal) >= 0.005) { unmapped++; unmappedBal += bal; }
+      }
+      const plRaw = FS_CAPTIONS.filter(c => c.st === 'pl').reduce((s, c) => s + raw[c.key], 0);
+      // TB is usually pre-close: closing retained earnings = TB RE + current-year result.
+      raw.retained_earnings += plRaw;
+      return { raw, plRaw, unmapped, unmappedBal, tbNet };
+    }
+
+    // Display value in the FS rounding unit with the caption's natural sign.
+    function fsaDisplay(c, rawVal) {
+      const v = c.nature === 'credit' ? -rawVal : rawVal;
+      return v / fsaUnit();
+    }
+
+    function fsaLineState(c, tbDisp) {
+      const ln = fsaLines[c.key] || {};
+      const fs = ln.fs_amount_cy;
+      const hasFs = fs !== null && fs !== undefined;
+      const diff = hasFs ? Number(fs) - tbDisp : null;
+      const tolerance = 1; // one FS rounding unit
+      const relevant = Math.abs(tbDisp) >= 0.005 || hasFs;
+      let ok = true, reason = '';
+      if (relevant && !hasFs) { ok = false; reason = 'FS figure not entered'; }
+      else if (hasFs && Math.abs(diff) > tolerance) {
+        const r = ln.resolution_type;
+        if (!r) { ok = false; reason = 'difference not resolved'; }
+        else if (r === 'fs_to_be_corrected') { ok = false; reason = 'FS to be corrected by management'; }
+        else if (r === 'misstatement' && !ln.journal_entry_id) { ok = false; reason = 'misstatement not linked to a journal'; }
+        else if ((r === 'classification' || r === 'rounding') && !(ln.explanation || '').trim()) { ok = false; reason = 'explanation missing'; }
+      }
+      const pyEntered = ln.fs_amount_py !== null && ln.fs_amount_py !== undefined;
+      const pyOk = !pyEntered || !!ln.py_agreed;
+      return { ln, fs, hasFs, diff, relevant, ok, reason, pyEntered, pyOk };
+    }
+
+    function fsaRenderAll() {
+      const t = fsaComputeTotals();
+      fsaRenderSchedule(t);
+      fsaRenderMapping();
+      fsaRenderStatusAndSignoff(t);
+    }
+
+    function fsaRenderSchedule(t) {
+      const body = document.getElementById('fsa-schedule');
+      const rows = [];
+      const sum = { tb: {}, cy: {}, py: {} };
+      let lastGrp = null;
+      const journals = wtbEntries || [];
+
+      const subtotal = (label, keys) => {
+        const s = k => keys.reduce((a, g) => a + (sum[k][g] || 0), 0);
+        rows.push('<tr style="font-weight:600; background:var(--gray-50);"><td>' + label + '</td>' +
+          '<td style="text-align:right;">' + fsaFmt(s('tb')) + '</td>' +
+          '<td style="text-align:right;">' + fsaFmt(s('cy')) + '</td><td></td>' +
+          '<td style="text-align:right;">' + fsaFmt(s('py')) + '</td><td></td></tr>');
+      };
+
+      for (const c of FS_CAPTIONS) {
+        if (c.grp !== lastGrp) {
+          if (lastGrp === 'ca') subtotal('Total assets', ['nca', 'ca']);
+          if (lastGrp === 'eq') subtotal('Total equity', ['eq']);
+          if (lastGrp === 'cl') subtotal('Total liabilities', ['ncl', 'cl']);
+          if (c.grp === 'pl') rows.push('<tr><td colspan="6" style="padding-top:18px; font-weight:700; color:var(--gray-900);">Statement of profit or loss</td></tr>');
+          else if (lastGrp === null) rows.push('<tr><td colspan="6" style="font-weight:700; color:var(--gray-900);">Statement of financial position</td></tr>');
+          rows.push('<tr><td colspan="6" style="font-size:12px; text-transform:uppercase; letter-spacing:0.04em; color:var(--gray-500);">' + FS_GROUP_LABELS[c.grp] + '</td></tr>');
+          lastGrp = c.grp;
+        }
+        const tbDisp = fsaDisplay(c, t.raw[c.key]);
+        const st = fsaLineState(c, tbDisp);
+        // Hide empty optional lines to keep the schedule short (toggle shows all,
+        // e.g. to key a comparative for a line with no current-year balance).
+        const showAll = document.getElementById('fsa-show-all') && document.getElementById('fsa-show-all').checked;
+        if (!showAll && !st.relevant && !st.pyEntered) continue;
+
+        // P&L subtotal maths: income positive, expenses negative.
+        const plSign = c.st === 'pl' && c.nature === 'debit' ? -1 : 1;
+        sum.tb[c.grp] = (sum.tb[c.grp] || 0) + plSign * tbDisp;
+        sum.cy[c.grp] = (sum.cy[c.grp] || 0) + plSign * (Number(st.fs) || 0);
+        sum.py[c.grp] = (sum.py[c.grp] || 0) + plSign * (Number(st.ln.fs_amount_py) || 0);
+
+        const diffCell = st.hasFs
+          ? '<span style="color:' + (Math.abs(st.diff) <= 1 ? '#15803D' : '#B91C1C') + ';">' + (Math.abs(st.diff) <= 1 ? '&#10003;' : fsaFmt(st.diff)) + '</span>'
+          : '<span style="color:var(--gray-300);">—</span>';
+        rows.push('<tr>' +
+          '<td>' + escHtml(c.label) + (c.note ? '<div class="text-sm text-muted">' + escHtml(c.note) + '</div>' : '') + '</td>' +
+          '<td style="text-align:right;">' + fsaFmt(tbDisp) + '</td>' +
+          '<td style="text-align:right;"><input type="text" class="form-control" style="text-align:right; max-width:140px; margin-left:auto;" value="' + (st.hasFs ? fsaFmt(st.fs) : '') + '" onchange="fsaSaveLine(\'' + c.key + '\', { fs_amount_cy: fsaParse(this.value) })"></td>' +
+          '<td style="text-align:right;">' + diffCell + '</td>' +
+          '<td style="text-align:right;"><input type="text" class="form-control" style="text-align:right; max-width:140px; margin-left:auto;" value="' + (st.pyEntered ? fsaFmt(st.ln.fs_amount_py) : '') + '" onchange="fsaSaveLine(\'' + c.key + '\', { fs_amount_py: fsaParse(this.value) })"></td>' +
+          '<td style="text-align:center;"><input type="checkbox"' + (st.ln.py_agreed ? ' checked' : '') + (st.pyEntered ? '' : ' disabled') + ' onchange="fsaSaveLine(\'' + c.key + '\', { py_agreed: this.checked })"></td>' +
+        '</tr>');
+
+        if (st.hasFs && Math.abs(st.diff) > 1) {
+          const r = st.ln.resolution_type || '';
+          const jOpts = journals.map(j => '<option value="' + j.id + '"' + (j.id === st.ln.journal_entry_id ? ' selected' : '') + '>' + escHtml((j.description || 'Journal').slice(0, 60)) + ' — ' + escHtml(j.isa450_status) + '</option>').join('');
+          rows.push('<tr style="background:#FEF2F2;"><td colspan="6">' +
+            '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px;">' +
+              '<span style="color:#991B1B;">Resolve difference:</span>' +
+              '<select class="form-control" style="max-width:220px;" onchange="fsaSaveLine(\'' + c.key + '\', { resolution_type: this.value || null })">' +
+                '<option value="">— Select —</option>' +
+                '<option value="rounding"' + (r === 'rounding' ? ' selected' : '') + '>Rounding</option>' +
+                '<option value="classification"' + (r === 'classification' ? ' selected' : '') + '>Classification difference</option>' +
+                '<option value="misstatement"' + (r === 'misstatement' ? ' selected' : '') + '>Misstatement (ISA 450)</option>' +
+                '<option value="fs_to_be_corrected"' + (r === 'fs_to_be_corrected' ? ' selected' : '') + '>FS to be corrected by management</option>' +
+              '</select>' +
+              (r === 'misstatement'
+                ? '<select class="form-control" style="max-width:320px;" onchange="fsaSaveLine(\'' + c.key + '\', { journal_entry_id: this.value || null })"><option value="">— Link the journal —</option>' + jOpts + '</select>'
+                : '') +
+              '<input type="text" class="form-control" style="flex:1; min-width:200px;" placeholder="Explanation" value="' + escHtml(st.ln.explanation || '') + '" onchange="fsaSaveLine(\'' + c.key + '\', { explanation: this.value.trim() || null })">' +
+            '</div></td></tr>');
+        }
+      }
+      body.innerHTML = rows.join('');
+
+      // Tie-outs
+      const assetsTb = (sum.tb.nca || 0) + (sum.tb.ca || 0);
+      const leTb     = (sum.tb.eq || 0) + (sum.tb.ncl || 0) + (sum.tb.cl || 0);
+      const assetsFs = (sum.cy.nca || 0) + (sum.cy.ca || 0);
+      const leFs     = (sum.cy.eq || 0) + (sum.cy.ncl || 0) + (sum.cy.cl || 0);
+      const tbProfit = -t.plRaw / fsaUnit();
+      const fsProfit = sum.cy.pl || 0;
+      const chk = (ok, text) => '<div style="color:' + (ok ? '#15803D' : '#B91C1C') + ';">' + (ok ? '&#10003; ' : '&#9888; ') + text + '</div>';
+      document.getElementById('fsa-tieouts').innerHTML =
+        chk(Math.abs(t.tbNet) < 0.5, 'Adjusted TB nets to zero' + (Math.abs(t.tbNet) < 0.5 ? '' : ' — out by ' + wtbFmt(t.tbNet) + ' (check the TB sign convention: debits positive, credits negative)')) +
+        chk(t.unmapped === 0, t.unmapped === 0 ? 'All TB accounts with a balance are mapped' : t.unmapped + ' account(s) with a balance are unmapped (net ' + wtbFmt(t.unmappedBal) + ')') +
+        chk(Math.abs(assetsTb - leTb) <= 1, 'Adjusted TB: total assets ' + fsaFmt(assetsTb) + ' = equity + liabilities ' + fsaFmt(leTb)) +
+        chk(Math.abs(assetsFs - leFs) <= 1, 'Per FS: total assets ' + fsaFmt(assetsFs) + ' = equity + liabilities ' + fsaFmt(leFs)) +
+        chk(Math.abs(fsProfit - tbProfit) <= 1, 'Profit for the year per FS ' + fsaFmt(fsProfit) + ' = adjusted TB ' + fsaFmt(tbProfit));
+    }
+
+    function fsaRenderMapping() {
+      const body = document.getElementById('fsa-mapping');
+      const onlyUnmapped = document.getElementById('fsa-only-unmapped').checked;
+      const adj = fsaAdjustedByAccount();
+      const optsFor = (sel) => '<option value="">— Unmapped —</option>' + FS_CAPTIONS.map(c =>
+        '<option value="' + c.key + '"' + (c.key === sel ? ' selected' : '') + '>' + escHtml((c.st === 'pl' ? 'P&L · ' : FS_GROUP_LABELS[c.grp] + ' · ') + c.label) + '</option>').join('');
+      const rows = [];
+      for (const line of tbLines) {
+        const mapped = fsaMap[line.account_code] || '';
+        if (onlyUnmapped && mapped) continue;
+        const secId = tbToSectionMap[line.id];
+        const sec = secId ? sections.find(s => s.id === secId) : null;
+        const sugg = !mapped ? fsaSuggest(line) : null;
+        rows.push('<tr' + (!mapped && Math.abs(adj[line.account_code] || 0) >= 0.005 ? ' style="background:#FFFBEB;"' : '') + '>' +
+          '<td><strong>' + escHtml(line.account_code) + '</strong></td>' +
+          '<td>' + escHtml(line.account_name) + '</td>' +
+          '<td>' + (sec ? '<span class="tb-section-badge">' + escHtml(sec.name) + '</span>' : '<span class="tb-section-badge unassigned">—</span>') + '</td>' +
+          '<td style="text-align:right;">' + wtbFmt(adj[line.account_code] || 0) + '</td>' +
+          '<td><select class="form-control" style="min-width:260px;" onchange="fsaSetMapping(\'' + encodeURIComponent(line.account_code) + '\', this.value)">' + optsFor(mapped) + '</select>' +
+            (sugg ? '<div class="text-sm text-muted">Suggested: ' + escHtml(FS_CAPTION_BY_KEY[sugg].label) + '</div>' : '') + '</td>' +
+        '</tr>');
+      }
+      body.innerHTML = rows.join('') || '<tr><td colspan="5" style="padding:16px; color:var(--gray-500);">All accounts are mapped.</td></tr>';
+    }
+
+    async function fsaSetMapping(codeEnc, captionKey) {
+      const code = decodeURIComponent(codeEnc);
+      let error;
+      if (captionKey) {
+        ({ error } = await supabaseClient.from('engagement_fs_caption_map').upsert({
+          engagement_id: engagementId, organization_id: currentOrg.id, account_code: code, caption_key: captionKey,
+        }, { onConflict: 'engagement_id,account_code' }));
+      } else {
+        ({ error } = await supabaseClient.from('engagement_fs_caption_map').delete()
+          .eq('engagement_id', engagementId).eq('account_code', code));
+      }
+      if (error) { showToast('Mapping not saved: ' + error.message); return; }
+      if (captionKey) fsaMap[code] = captionKey; else delete fsaMap[code];
+      fsaRenderAll();
+    }
+
+    async function fsaUpsertMappings(rows) {
+      if (!rows.length) return 0;
+      const { error } = await supabaseClient.from('engagement_fs_caption_map')
+        .upsert(rows, { onConflict: 'engagement_id,account_code' });
+      if (error) { showToast('Mapping not saved: ' + error.message); return 0; }
+      rows.forEach(r => { fsaMap[r.account_code] = r.caption_key; });
+      fsaRenderAll();
+      return rows.length;
+    }
+
+    async function fsaApplySuggestions() {
+      const rows = [];
+      for (const line of tbLines) {
+        if (fsaMap[line.account_code]) continue;
+        const key = fsaSuggest(line);
+        if (key) rows.push({ engagement_id: engagementId, organization_id: currentOrg.id, account_code: line.account_code, caption_key: key });
+      }
+      if (!rows.length) { showToast('No suggestions available for the unmapped accounts.'); return; }
+      const n = await fsaUpsertMappings(rows);
+      if (n) showToast(n + ' account(s) mapped from suggestions — review them before relying on the schedule.');
+    }
+
+    // Reuse last year's mapping for this client (matched by client name, like the AML carry-forward).
+    async function fsaCopyPriorMapping() {
+      if (!engagement || !engagement.client_name) { showToast('No client name on this engagement.'); return; }
+      const { data: priors } = await supabaseClient.from('engagements').select('id, year_end_date')
+        .eq('organization_id', currentOrg.id).eq('client_name', engagement.client_name).neq('id', engagementId)
+        .order('year_end_date', { ascending: false });
+      for (const p of (priors || [])) {
+        const { data: m } = await supabaseClient.from('engagement_fs_caption_map').select('account_code, caption_key').eq('engagement_id', p.id);
+        if (!m || !m.length) continue;
+        const codes = new Set(tbLines.map(l => l.account_code));
+        const rows = m.filter(r => codes.has(r.account_code) && !fsaMap[r.account_code])
+          .map(r => ({ engagement_id: engagementId, organization_id: currentOrg.id, account_code: r.account_code, caption_key: r.caption_key }));
+        if (!rows.length) { showToast('Prior-year mapping found, but every matching account is already mapped.'); return; }
+        const n = await fsaUpsertMappings(rows);
+        if (n) showToast(n + ' account(s) mapped from the ' + (p.year_end_date || 'prior') + ' engagement.');
+        return;
+      }
+      showToast('No prior engagement for "' + engagement.client_name + '" has an FS mapping yet.');
+    }
+
+    async function fsaSaveLine(captionKey, patch) {
+      if (!await fsaEnsureHeader()) return;
+      const row = Object.assign({
+        engagement_id: engagementId, organization_id: currentOrg.id, caption_key: captionKey,
+      }, patch);
+      if (patch.fs_amount_py === null) row.py_agreed = false;
+      if (patch.resolution_type !== undefined && patch.resolution_type !== 'misstatement') row.journal_entry_id = null;
+      const { data, error } = await supabaseClient.from('engagement_fs_agreement_lines')
+        .upsert(row, { onConflict: 'engagement_id,caption_key' }).select().single();
+      if (error) { showToast('Not saved: ' + error.message); return; }
+      fsaLines[captionKey] = data;
+      fsaRenderAll();
+    }
+
+    // Everything the reviewer signs. Compared on load to detect post-sign-off changes.
+    function fsaBuildSnapshot(t) {
+      const captions = {};
+      for (const c of FS_CAPTIONS) {
+        const ln = fsaLines[c.key] || {};
+        const tb = Math.round(fsaDisplay(c, t.raw[c.key]) * 100) / 100;
+        if (!tb && ln.fs_amount_cy == null && ln.fs_amount_py == null) continue;
+        captions[c.key] = {
+          tb, fs_cy: ln.fs_amount_cy ?? null, fs_py: ln.fs_amount_py ?? null,
+          py_agreed: !!ln.py_agreed, resolution: ln.resolution_type || null, journal: ln.journal_entry_id || null,
+        };
+      }
+      const mapping = Object.keys(fsaMap).sort().map(k => k + '=' + fsaMap[k]).join('|');
+      return {
+        tb_version_id: currentTbVersion ? currentTbVersion.id : null,
+        fs_upload_id: fsaHeader ? fsaHeader.fs_upload_id : null,
+        rounding_unit: fsaUnit(),
+        captions,
+        mapping_hash: fsaHash(mapping),
+      };
+    }
+    function fsaHash(str) {
+      let h = 5381;
+      for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+      return (h >>> 0).toString(16);
+    }
+    function fsaSnapshotDiff(oldS, newS) {
+      const out = [];
+      if (!oldS) return out;
+      if (oldS.tb_version_id !== newS.tb_version_id) out.push('a new TB version was uploaded');
+      if (oldS.fs_upload_id !== newS.fs_upload_id) out.push('a different FS version is linked');
+      if (oldS.rounding_unit !== newS.rounding_unit) out.push('the rounding unit changed');
+      if (oldS.mapping_hash !== newS.mapping_hash) out.push('the account mapping changed');
+      const keys = new Set([...Object.keys(oldS.captions || {}), ...Object.keys(newS.captions || {})]);
+      let tbChanged = false, fsChanged = false;
+      keys.forEach(k => {
+        const a = (oldS.captions || {})[k] || {}, b = newS.captions[k] || {};
+        if ((a.tb || 0) !== (b.tb || 0)) tbChanged = true;
+        if ((a.fs_cy ?? null) !== (b.fs_cy ?? null) || (a.fs_py ?? null) !== (b.fs_py ?? null) || !!a.py_agreed !== !!b.py_agreed
+          || (a.resolution || null) !== (b.resolution || null) || (a.journal || null) !== (b.journal || null)) fsChanged = true;
+      });
+      if (tbChanged) out.push('adjusted TB amounts changed (journals posted or edited)');
+      if (fsChanged) out.push('keyed FS figures or resolutions changed');
+      return out;
+    }
+
+    function fsaRenderStatusAndSignoff(t) {
+      const states = FS_CAPTIONS.map(c => fsaLineState(c, fsaDisplay(c, t.raw[c.key])));
+      const relevant = states.filter(s => s.relevant);
+      const cyOpen = relevant.filter(s => !s.ok);
+      const pyEnteredCount = states.filter(s => s.pyEntered).length;
+      const pyOpen = states.filter(s => !s.pyOk).length;
+      const fsLinked = !!(fsaHeader && fsaHeader.fs_upload_id);
+
+      const statuses = [
+        { label: 'FS version identified', ok: fsLinked },
+        { label: 'Mapping complete', ok: t.unmapped === 0, detail: t.unmapped ? t.unmapped + ' unmapped' : '' },
+        { label: 'Current year agreed', ok: relevant.length > 0 && cyOpen.length === 0, detail: cyOpen.length ? cyOpen.length + ' open' : '' },
+        { label: 'Comparatives agreed', ok: pyEnteredCount > 0 && pyOpen === 0, detail: pyEnteredCount === 0 ? 'none entered' : (pyOpen ? pyOpen + ' not ticked' : '') },
+      ];
+      document.getElementById('fsa-status').innerHTML = statuses.map(s =>
+        '<span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px; ' +
+        (s.ok ? 'background:#DCFCE7; color:#166534;' : 'background:#FEF3C7; color:#92400E;') + '">' +
+        (s.ok ? '&#10003;' : '&#9675;') + ' ' + s.label + (s.detail ? ' · ' + s.detail : '') + '</span>').join('');
+
+      // Blockers for reviewer sign-off
+      const blockers = [];
+      if (!fsLinked) blockers.push('Select the management FS version being agreed.');
+      if (t.unmapped) blockers.push(t.unmapped + ' TB account(s) with a balance are unmapped.');
+      if (Math.abs(t.tbNet) >= 0.5) blockers.push('The adjusted TB does not net to zero.');
+      cyOpen.slice(0, 8).forEach(s => {
+        const c = FS_CAPTIONS[states.indexOf(s)];
+        blockers.push(c.label + ': ' + s.reason + '.');
+      });
+      if (cyOpen.length > 8) blockers.push('…and ' + (cyOpen.length - 8) + ' more line(s).');
+      if (pyOpen) blockers.push(pyOpen + ' comparative(s) not yet agreed to the prior-year signed FS.');
+
+      const fmtWho = (id, at) => {
+        if (!id) return '';
+        const m = (orgMembers || []).find(x => x.user_id === id);
+        const p = m && m.profiles;
+        const name = p ? (p.full_name || p.email || '') : (id === currentUser.id ? (currentUser.email || '') : '');
+        return (name ? escHtml(name) + ' · ' : '') + new Date(at).toLocaleString();
+      };
+      const info = [];
+      info.push('<div><strong>Prepared:</strong> ' + (fsaHeader && fsaHeader.prepared_by ? fmtWho(fsaHeader.prepared_by, fsaHeader.prepared_at) : '<span class="text-muted">not yet</span>') + '</div>');
+      info.push('<div><strong>Reviewed:</strong> ' + (fsaHeader && fsaHeader.reviewed_by ? fmtWho(fsaHeader.reviewed_by, fsaHeader.reviewed_at) : '<span class="text-muted">not yet</span>') + '</div>');
+      if (pyEnteredCount === 0) info.push('<div class="text-muted" style="margin-top:4px;">No comparatives entered. That is only appropriate if the FS present no prior-year figures.</div>');
+      document.getElementById('fsa-signoff-info').innerHTML = info.join('');
+      document.getElementById('fsa-blockers').innerHTML = blockers.length
+        ? '<strong>Before reviewer sign-off:</strong><ul style="margin:4px 0 0; padding-left:18px;">' + blockers.map(b => '<li>' + escHtml(b) + '</li>').join('') + '</ul>'
+        : '';
+
+      const isReviewer = currentRole === 'admin' || currentRole === 'supervisor';
+      const signBtn = document.getElementById('fsa-signoff-btn');
+      signBtn.disabled = !isReviewer || blockers.length > 0;
+      signBtn.title = !isReviewer ? 'Only a supervisor or partner can sign off' : (blockers.length ? 'Resolve the items listed above first' : '');
+
+      // Changed-since-sign-off banner
+      const banner = document.getElementById('fsa-changed-banner');
+      const changes = fsaHeader && fsaHeader.review_snapshot ? fsaSnapshotDiff(fsaHeader.review_snapshot, fsaBuildSnapshot(t)) : [];
+      if (changes.length) {
+        banner.style.display = 'block';
+        banner.innerHTML = '&#9888; <strong>Changed since reviewer sign-off</strong> on ' + new Date(fsaHeader.reviewed_at).toLocaleString() + ': ' + escHtml(changes.join('; ')) + '. Re-perform the agreement and sign off again.';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+
+    async function fsaMarkPrepared() {
+      if (!await fsaEnsureHeader()) return;
+      const { data, error } = await supabaseClient.from('engagement_fs_agreements')
+        .update({ prepared_by: currentUser.id, prepared_at: new Date().toISOString() })
+        .eq('id', fsaHeader.id).select().single();
+      if (error) { showToast('Not saved: ' + error.message); return; }
+      fsaHeader = data;
+      await logActivity(engagementId, 'prepared_fs_agreement', 'engagement', engagementId, {});
+      fsaRenderAll();
+    }
+
+    async function fsaSignOff() {
+      if (!await fsaEnsureHeader()) return;
+      const t = fsaComputeTotals();
+      const snapshot = fsaBuildSnapshot(t);
+      const { error } = await supabaseClient.rpc('sign_off_fs_agreement', { p_engagement_id: engagementId, p_snapshot: snapshot });
+      if (error) { showToast('Sign-off failed: ' + error.message); return; }
+      await logActivity(engagementId, 'signed_off_fs_agreement', 'engagement', engagementId, { tb_version_id: snapshot.tb_version_id, fs_upload_id: snapshot.fs_upload_id });
+      const { data } = await supabaseClient.from('engagement_fs_agreements').select('*').eq('engagement_id', engagementId).single();
+      if (data) fsaHeader = data;
+      showToast('FS agreement signed off.');
+      fsaRenderAll();
     }
 
     // ---- Materiality Tab (versioned workpaper, ISA 320) ----
@@ -5319,6 +5996,24 @@
       }
       if (noTb) noTb.style.display = 'none';
 
+      await wtbLoadJournals();
+
+      const { data: matRows } = await supabaseClient
+        .from('engagement_materiality_versions')
+        .select('overall_materiality, performance_materiality_amount, trivial_amount')
+        .eq('engagement_id', engagementId).eq('is_superseded', false).limit(1);
+      wtbMateriality = (matRows && matRows[0]) || null;
+
+      if (gridWrap) gridWrap.style.display = 'block';
+      if (jCard) jCard.style.display = 'block';
+      renderWorkingTB();
+      renderWtbJournals();
+      renderWtbSum();
+    }
+
+    // Loads journal_entries + journal_lines into wtbEntries / wtbLinesAll.
+    // Shared by the Working TB and FS Agreement tabs so both use the same adjusted TB.
+    async function wtbLoadJournals() {
       const { data: entries } = await supabaseClient
         .from('journal_entries').select('*')
         .eq('engagement_id', engagementId)
@@ -5333,18 +6028,6 @@
       } else {
         wtbLinesAll = [];
       }
-
-      const { data: matRows } = await supabaseClient
-        .from('engagement_materiality_versions')
-        .select('overall_materiality, performance_materiality_amount, trivial_amount')
-        .eq('engagement_id', engagementId).eq('is_superseded', false).limit(1);
-      wtbMateriality = (matRows && matRows[0]) || null;
-
-      if (gridWrap) gridWrap.style.display = 'block';
-      if (jCard) jCard.style.display = 'block';
-      renderWorkingTB();
-      renderWtbJournals();
-      renderWtbSum();
     }
 
     // Adjusted TB reflects only CORRECTED + posted journals (ISA 450).
