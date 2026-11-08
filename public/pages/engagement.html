@@ -3899,14 +3899,16 @@
           container.innerHTML = '';
         } else if (unapprovedFinal > 0) {
           // State-aware: pending sections — button opens the blockers modal, label is honest about state
-          const label = 'Review &amp; close · ' + unapprovedFinal + ' section' + (unapprovedFinal !== 1 ? 's' : '') + ' pending';
+          const label = (window.I18n && I18n.getLang() === 'ar')
+            ? 'مراجعة وإغلاق · ' + unapprovedFinal + ' قسم قيد الانتظار'
+            : 'Review &amp; close · ' + unapprovedFinal + ' section' + (unapprovedFinal !== 1 ? 's' : '') + ' pending';
           container.innerHTML = '<button class="btn btn-outline btn-sm" onclick="openBlockersModal()">' + label + '</button>';
         } else {
           // All final sections approved. Closing/locking the file now lives in a single
           // place — Conclusion → File assembly (ISA 230) — so there is no separate
           // "Approve & Close" step (it duplicated the file-assembly date). This button
           // just takes the partner there; the actual gate + lock happen on that tab.
-          container.innerHTML = '<button class="btn btn-success btn-sm" onclick="goToFileAssembly()">Go to file assembly &rarr;</button>';
+          container.innerHTML = '<button class="btn btn-success btn-sm" onclick="goToFileAssembly()">' + ((window.I18n && I18n.getLang() === 'ar') ? 'الانتقال إلى تجميع الملف &larr;' : 'Go to file assembly &rarr;') + '</button>';
         }
       } else {
         container.innerHTML = '';
@@ -4326,6 +4328,7 @@
     }
 
     function updateStepperProgress(approvedCount, totalCount) {
+      window._lastStepperArgs = [approvedCount, totalCount];   // re-run on language switch
       const pct = totalCount > 0 ? Math.round((approvedCount / totalCount) * 100) : 0;
       const pctEl  = document.getElementById('stepper-pct');
       const fillEl = document.getElementById('stepper-fill');
@@ -4339,7 +4342,7 @@
 
       // Update execution sub-label
       const execSub = document.getElementById('step-sub-execution');
-      if (execSub) execSub.textContent = ((function(){ try { return localStorage.getItem('audexon_lang') === 'ar'; } catch(e) { return false; } })())
+      if (execSub) execSub.textContent = (window.I18n && I18n.getLang() === 'ar')
         ? ('تم ' + approvedCount + ' من ' + totalCount + ' قسم')
         : (approvedCount + ' of ' + totalCount + ' sections done');
 
@@ -10467,6 +10470,9 @@
     document.addEventListener('i18n:changed', async () => {
       const dict = await I18n.dict();
       _engMap = Object.assign({}, dict.reportLabels || {}, dict.engagementLabels || {});
+      // Labels built with counts in them can't be swapped by the map — redraw them.
+      try { renderEngagementActions(); } catch (_) {}
+      try { if (window._lastStepperArgs) updateStepperProgress(...window._lastStepperArgs); } catch (_) {}
       localizeEngagementNow();
     });
     setupEngagementLocalization();
