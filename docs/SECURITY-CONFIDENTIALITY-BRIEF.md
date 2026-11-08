@@ -26,8 +26,9 @@ Audexon runs on enterprise cloud infrastructure (Supabase on AWS for the databas
 and authentication; Netlify for application delivery). Your engagement data is held
 in a managed PostgreSQL database, not on shared spreadsheets or local machines.
 
-- **Data residency:** the database region can be set to match your regulatory
-  requirements (e.g. EU, Middle East). Confirmed per engagement.
+- **Data residency:** your data is hosted in **Frankfurt, Germany (EU)**, on AWS's
+  eu-central-1 region, under EU data-protection law. Firms with a specific
+  residency requirement can discuss a dedicated instance in another region (§5).
 - **No data on personal devices:** unlike desktop tools, working papers are never
   scattered across individual laptops that can be lost or stolen.
 
@@ -47,7 +48,7 @@ in a managed PostgreSQL database, not on shared spreadsheets or local machines.
 | Access-code gate on sign-up | **Live** |
 | Multi-factor authentication (MFA) | **Available on request / rollout** |
 | Immutable activity & audit log | **On roadmap** — who changed what, when |
-| Automated database backups | **Live** — managed, point-in-time recovery |
+| Automated database backups | **Live** — daily managed backups; point-in-time recovery available as the client base grows |
 | SOC 2 / ISO 27001 | **Roadmap** — controls being built to the standard ahead of certification |
 
 We do **not** sell, mine, or use your client data for any purpose other than
@@ -70,9 +71,10 @@ own export rights at any time, and an optional bring-your-own-cloud deployment**
 
 We rely on a short, audited list of established infrastructure providers:
 
-- **Supabase / AWS** — database, authentication, storage
+- **Supabase / AWS (Frankfurt, EU)** — database, authentication, storage
 - **Netlify** — application hosting and delivery
-- **Resend** — transactional email (alerts, invitations)
+- **Resend** — transactional email (invitations, sign-in and password-reset emails),
+  sent from audexon.com
 
 A current sub-processor list and a Data Processing Agreement (DPA) are available on
 request.
@@ -109,7 +111,7 @@ local installs suffer.
 
 ## 7. Business continuity
 
-- Managed, automated backups with point-in-time recovery.
+- Managed, automated daily backups (point-in-time recovery can be enabled).
 - Infrastructure runs on tier-1 cloud providers with their own redundancy and SLAs.
 - Data export guarantees (§6) mean your records survive any vendor event.
 
@@ -127,8 +129,10 @@ deployment discussion, contact the Audexon team.
 > 1. **Company facts (§1)** — fill in the real entity name, license type (FZ-LLC /
 >    mainland / DIFC), incorporation year, and founder credentials. Do **not** state
 >    figures you can't evidence; an ex-Deloitte partner may ask for the trade licence.
-> 2. **Supabase region** of staging/prod and whether it matches the buyer's residency
->    requirement.
+> 2. **Supabase region** — prod moved to Frankfurt (eu-central-1) on 2026-11-08
+>    (project `jfuuaelzbdtpjunyshxq`). Staging is a separate project; no client data.
+>    No Middle East region was chosen/confirmed — don't promise in-country GCC hosting.
+>    Point-in-time recovery is an add-on that is NOT enabled yet — don't claim it as live.
 > 3. **Current MFA status** — "rollout" vs "available" must be true.
 > 4. **BYOC/dedicated** — not yet technically scoped against the current Supabase
 >    setup. Frame as "available" / "on request", do not promise a delivery date.
