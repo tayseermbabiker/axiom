@@ -21,8 +21,8 @@ const AUDEXON_ENV = (() => {
 
 const AUDEXON_CONFIG = {
   production: {
-    SUPABASE_URL: 'https://gimnahydujdlgnqwyadk.supabase.co',
-    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpbW5haHlkdWpkbGducXd5YWRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODc2NTEsImV4cCI6MjA4ODQ2MzY1MX0.H-_wjPWAbXLGnWyfU8GDMkbDaID8ocs7yr8ADQaMvHE',
+    SUPABASE_URL: 'https://jfuuaelzbdtpjunyshxq.supabase.co',
+    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmdXVhZWx6YmR0cGp1bnlzaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxMTc1ODcsImV4cCI6MjEwOTY5MzU4N30.khKsOaicauviGKAltGZtAN38IR_EjugfH8IulZh51ng',
   },
   staging: {
     SUPABASE_URL: 'https://lbwowlvajgpdxsdpudem.supabase.co',
