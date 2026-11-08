@@ -1774,7 +1774,11 @@
       _cmObs = new MutationObserver(cmSched);
       _cmObs.observe(document.body, { childList: true, subtree: true });
     }
-    document.addEventListener('i18n:changed', async () => { const d = await I18n.dict(); _cmMap = Object.assign({}, d.reportLabels || {}, d.engagementLabels || {}); cmLocalizeNow(); });
+    document.addEventListener('i18n:changed', async () => {
+      const d = await I18n.dict(); _cmMap = Object.assign({}, d.reportLabels || {}, d.engagementLabels || {});
+      try { renderAttestations(); } catch (_) {}   // "✓ Attested · date" line is built per language
+      cmLocalizeNow();
+    });
     cmSetupLoc();
   </script>
 </body>

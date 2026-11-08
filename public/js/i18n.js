@@ -120,6 +120,14 @@
 
   window.I18n = { setLang, toggleLang, t, getLang, translate, dict };
 
+  // Follow a language switch made in another document of this site — e.g. the
+  // Completion Memo iframe embedded in the engagement page (loaded in the
+  // background, so it would otherwise stay in the language it booted with).
+  // 'storage' only fires when the stored value actually changes, so no loop.
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY && e.newValue && e.newValue !== active) setLang(e.newValue);
+  });
+
   // Apply on first paint. dir is already set by the inline bootstrap in <head>;
   // here we load the dictionary and swap the strings.
   document.addEventListener('DOMContentLoaded', () => setLang(active));
